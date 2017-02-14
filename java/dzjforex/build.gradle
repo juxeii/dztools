@@ -1,24 +1,5 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.4.0'
-        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1"
-    }
-}
-
-plugins {
-    id 'net.saliman.cobertura' version '2.4.0'
-    id 'com.github.kt3k.coveralls' version '2.7.1'
-}
-cobertura.coverageFormats = ['html', 'xml']
-
 apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'jacoco'
 
 group= 'com.jforex.dzplugin'
 version = '0.9.5'
@@ -39,8 +20,13 @@ repositories {
 }
 
 dependencies {
-   compile files('libs/JForex-3-SDK-3.0.18.jar')
-   compile files("${System.env.JAVA_HOME}/jre/lib/javaws.jar")
+    compile 'org.aeonbits.owner:owner:1.0.9'
+
+    compile files('libs/JForex-3-SDK-3.0.18.jar')
+    compile files('libs/JForexUtils-0.9.8.jar')
+    compile files("${System.env.JAVA_HOME}/jre/lib/javaws.jar")
+    
+    testCompile 'junit:junit:4.12'
 }
 
 gradle.projectsEvaluated {
@@ -49,15 +35,26 @@ gradle.projectsEvaluated {
     }
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled = true
-        html.enabled = true
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Dukascopy-Zorro-Plugin',
+                   'Implementation-Version': version
     }
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
 
-check.dependsOn jacocoTestReport
+task copyFatJarToPluginFolder(type: Copy, dependsOn:[fatJar]) {
+    copy {
+	    from "build/libs/libs/dzjforex-0.9.5.jar"
+	    into "${zorroPath}/Plugin/dukascopy"
+	}
+}
 
-tasks.coveralls {
-    dependsOn 'check'
+task copyPluginFolder(type: Copy) {
+    from ('Plugin') {
+        into ('Plugin')
+    }
+    into "${zorroPath}"
 }

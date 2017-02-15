@@ -9,6 +9,7 @@ import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.dataprovider.AccountInfo;
 import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.misc.StrategyForData;
 import com.jforex.dzjforex.settings.PluginConfig;
@@ -27,6 +28,7 @@ public class ZorroBridge {
     private AccountInfo accountInfo;
     private final StrategyForData strategyForData;
     private long strategyID;
+    private final CredentialsFactory credentialsFactory;
 
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
@@ -38,10 +40,10 @@ public class ZorroBridge {
         clientUtil = new ClientUtil(client, pluginConfig.CACHE_DIR());
         authentification = clientUtil.authentification();
         pinProvider = new PinProvider(client, pluginConfig.CONNECT_URL_REAL());
+        credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         loginHandler = new LoginHandler(client,
                                         authentification,
-                                        pinProvider,
-                                        pluginConfig);
+                                        credentialsFactory);
         strategyForData = new StrategyForData();
     }
 
@@ -80,6 +82,7 @@ public class ZorroBridge {
     }
 
     private void startStrategy() {
+        ZorroLogger.log("starting strategy...");
         strategyID = client.startStrategy(strategyForData);
         context = strategyForData.getContext();
 
@@ -93,6 +96,7 @@ public class ZorroBridge {
     }
 
     public int doLogout() {
+        ZorroLogger.log("doLogout called");
         return loginHandler.doLogout();
     }
 
@@ -105,6 +109,8 @@ public class ZorroBridge {
     public int doBrokerAsset(final String instrumentName,
                              final double assetParams[]) {
         ZorroLogger.log("doBrokerAsset called");
+        if (!client.isConnected())
+            return ReturnCodes.CONNECTION_LOST_NEW_LOGIN_REQUIRED;
 
         return 0;
     }

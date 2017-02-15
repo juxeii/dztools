@@ -21,6 +21,7 @@ repositories {
 
 dependencies {
     compile 'org.aeonbits.owner:owner:1.0.9'
+    compile 'commons-net:commons-net:3.3'
 
     compile files('libs/JForex-3-SDK-3.0.18.jar')
     compile files('libs/JForexUtils-0.9.8.jar')

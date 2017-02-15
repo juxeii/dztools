@@ -13,9 +13,14 @@ import com.jforex.programming.strategy.JForexUtilsStrategy;
 public class StrategyForData extends JForexUtilsStrategy {
 
     private IContext context;
+    private ITick latestTick;
 
     public IContext getContext() {
         return context;
+    }
+
+    public ITick getLatestTick() {
+        return latestTick;
     }
 
     @Override
@@ -45,5 +50,6 @@ public class StrategyForData extends JForexUtilsStrategy {
     @Override
     public void onJFTick(final Instrument instrument,
                          final ITick tick) throws JFException {
+        latestTick = tick;
     }
 }

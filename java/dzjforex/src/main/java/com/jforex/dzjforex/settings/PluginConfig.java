@@ -28,4 +28,10 @@ public interface PluginConfig extends Config {
 
     @DefaultValue("time-a.nist.gov")
     String NTP_TIME_SERVER_URL();
+
+    @DefaultValue("3000")
+    int NTP_TIMEOUT();
+
+    @DefaultValue("300000")
+    int SERVERTIME_SYNC_MILLIS();
 }

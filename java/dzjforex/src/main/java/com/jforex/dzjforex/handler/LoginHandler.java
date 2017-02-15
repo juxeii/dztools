@@ -4,8 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.misc.PinProvider;
-import com.jforex.dzjforex.settings.PluginConfig;
+import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.settings.ReturnCodes;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
@@ -14,39 +13,29 @@ public class LoginHandler {
 
     private final IClient client;
     private final Authentification authentification;
-    private final PinProvider pinProvider;
-    private final PluginConfig pluginConfig;
+    private final CredentialsFactory credentialsFactory;
 
     public LoginHandler(final IClient client,
                         final Authentification authentification,
-                        final PinProvider pinProvider,
-                        final PluginConfig pluginConfig) {
+                        final CredentialsFactory credentialsFactory) {
         this.client = client;
         this.authentification = authentification;
-        this.pinProvider = pinProvider;
-        this.pluginConfig = pluginConfig;
+        this.credentialsFactory = credentialsFactory;
     }
 
     public int doLogin(final String userName,
                        final String password,
-                       final String type) {
-        final String pin = type.equals("Demo")
-                ? null
-                : pinProvider.getPin();
-        final String jnlpAdress = type.equals("Demo")
-                ? pluginConfig.CONNECT_URL_DEMO()
-                : pluginConfig.CONNECT_URL_REAL();
-        final LoginCredentials credentials = new LoginCredentials(jnlpAdress,
-                                                                  userName,
-                                                                  password,
-                                                                  pin);
+                       final String loginType) {
+        final LoginCredentials credentials = credentialsFactory.create(userName,
+                                                                       password,
+                                                                       loginType);
         return login(credentials);
     }
 
     private int login(final LoginCredentials credentials) {
         authentification
             .login(credentials)
-            .doOnSubscribe(d -> ZorroLogger.log("Log in started..."))
+            .doOnSubscribe(d -> ZorroLogger.log("Login to Dukascopy started..."))
             .blockingAwait(2000L, TimeUnit.MILLISECONDS);
 
         if (client.isConnected()) {

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.settings;
+package com.jforex.dzjforex.config;
 
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.Sources;

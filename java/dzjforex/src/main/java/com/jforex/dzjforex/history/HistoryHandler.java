@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.handler;
+package com.jforex.dzjforex.history;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,11 +16,10 @@ import com.dukascopy.api.JFException;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.misc.BarFileWriter;
-import com.jforex.dzjforex.misc.DateTimeUtils;
+import com.jforex.dzjforex.config.HistoryConfig;
+import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.datetime.DateTimeUtils;
 import com.jforex.dzjforex.misc.InstrumentUtils;
-import com.jforex.dzjforex.settings.HistoryConfig;
-import com.jforex.dzjforex.settings.ReturnCodes;
 
 public class HistoryHandler {
 

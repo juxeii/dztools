@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.JFException;
-import com.jforex.dzjforex.settings.PluginConfig;
+import com.jforex.dzjforex.config.PluginConfig;
 
 public class StopLossTask implements Callable<IOrder> {
 

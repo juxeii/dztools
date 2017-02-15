@@ -6,11 +6,11 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.dataprovider.AccountInfo;
-import com.jforex.dzjforex.dataprovider.ServerTime;
-import com.jforex.dzjforex.misc.DateTimeUtils;
+import com.jforex.dzjforex.datetime.DateTimeUtils;
+import com.jforex.dzjforex.datetime.ServerTime;
 import com.jforex.dzjforex.misc.InstrumentUtils;
-import com.jforex.dzjforex.settings.ReturnCodes;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 

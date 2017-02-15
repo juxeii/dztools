@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.dataprovider;
+package com.jforex.dzjforex.datetime;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -10,9 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.ITick;
-import com.jforex.dzjforex.misc.NTPTimeSynchTask;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.StrategyForData;
-import com.jforex.dzjforex.settings.PluginConfig;
 
 public class ServerTime {
 

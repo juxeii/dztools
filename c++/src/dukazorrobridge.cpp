@@ -3,6 +3,8 @@
 #include <sstream>
 
 #define DLLFUNC extern "C" __declspec(dllexport)
+#define GET_MINLOT 23 // Minimum permitted amount of a lot.
+#define GET_TYPE 50
 
 int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
@@ -190,9 +192,24 @@ BrokerSell(int nTradeID,
     return dllCallHandler.BrokerSell(nTradeID, nAmount);
 }
 
-DLLFUNC double
+DLLFUNC var
 BrokerCommand(int nCommand,
               DWORD dwParameter)
 {
-    return 0l;
+    switch (nCommand)
+    {
+    case GET_MINLOT:
+        return 1000l;
+    case GET_TYPE:
+        return 1l;
+    case HISTORY_DOWNLOAD:
+        return dllCallHandler.ProcessHistoryDownload();
+    default:
+        {
+            std::stringstream buffer;
+            buffer << "Command " << nCommand << "not yet supported.";
+            BrokerError(buffer.str().c_str());
+        }
+    }
+    return 0.0;
 }

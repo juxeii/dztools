@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.datetime;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -11,7 +11,7 @@ import org.apache.commons.net.ntp.TimeInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jforex.dzjforex.settings.PluginConfig;
+import com.jforex.dzjforex.config.PluginConfig;
 
 public class NTPTimeSynchTask implements Callable<Long> {
 

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.datetime;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,7 +17,6 @@ import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.dataprovider.ServerTime;
 
 public class DateTimeUtils {
 

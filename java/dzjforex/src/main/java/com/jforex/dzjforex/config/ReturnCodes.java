@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.settings;
+package com.jforex.dzjforex.config;
 
 public class ReturnCodes {
 

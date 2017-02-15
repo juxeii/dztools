@@ -8,10 +8,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IEngine.OrderCommand;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
-import com.jforex.dzjforex.settings.PluginConfig;
 
 public class SubmitOrderTask implements Callable<IOrder> {
 

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.history;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.datetime.DateTimeUtils;
 
 public class BarFileWriter {
     private final List<IBar> bars;

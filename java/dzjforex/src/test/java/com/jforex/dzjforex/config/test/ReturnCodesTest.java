@@ -1,11 +1,11 @@
-package com.jforex.dzjforex.settings.test;
+package com.jforex.dzjforex.config.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import com.jforex.dzjforex.settings.ReturnCodes;
+import com.jforex.dzjforex.config.ReturnCodes;
 
 public class ReturnCodesTest {
 

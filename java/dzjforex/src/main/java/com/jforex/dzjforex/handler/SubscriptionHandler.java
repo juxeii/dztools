@@ -10,10 +10,10 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.dataprovider.AccountInfo;
 import com.jforex.dzjforex.misc.InstrumentUtils;
-import com.jforex.dzjforex.settings.PluginConfig;
-import com.jforex.dzjforex.settings.ReturnCodes;
 
 public class SubscriptionHandler {
 

@@ -1,6 +1,6 @@
 package com.jforex.dzjforex.misc;
 
-import com.jforex.dzjforex.settings.PluginConfig;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.connection.LoginCredentials;
 
 public class CredentialsFactory {

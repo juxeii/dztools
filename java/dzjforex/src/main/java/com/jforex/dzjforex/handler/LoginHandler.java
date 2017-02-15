@@ -1,11 +1,12 @@
 package com.jforex.dzjforex.handler;
 
-import java.util.concurrent.TimeUnit;
+import org.aeonbits.owner.ConfigFactory;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.dzjforex.settings.ReturnCodes;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 
@@ -14,6 +15,7 @@ public class LoginHandler {
     private final IClient client;
     private final Authentification authentification;
     private final CredentialsFactory credentialsFactory;
+    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     public LoginHandler(final IClient client,
                         final Authentification authentification,
@@ -33,10 +35,21 @@ public class LoginHandler {
     }
 
     private int login(final LoginCredentials credentials) {
-        authentification
+        final Throwable throwable = authentification
             .login(credentials)
             .doOnSubscribe(d -> ZorroLogger.log("Login to Dukascopy started..."))
-            .blockingAwait(2000L, TimeUnit.MILLISECONDS);
+            .blockingGet();
+        if (throwable != null) {
+            ZorroLogger.showError("Failed to login with exception " + throwable.getMessage());
+            return ReturnCodes.LOGIN_FAIL;
+        }
+
+        for (int i = 0; i < pluginConfig.CONNECTION_RETRIES() && !client.isConnected(); ++i)
+            try {
+                Thread.sleep(pluginConfig.CONNECTION_WAIT_TIME());
+            } catch (final InterruptedException e) {
+                ZorroLogger.showError("InterruptedException while waiting for login!");
+            }
 
         if (client.isConnected()) {
             ZorroLogger.log("Client is now connected...");

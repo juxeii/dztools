@@ -3,10 +3,11 @@ package com.jforex.dzjforex.config;
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.Sources;
 
-@Sources({ "classpath:Plugin.properties" })
+@Sources({ "file:./Plugin/dukascopy/Plugin.properties",
+        "classpath:Plugin.properties" })
 public interface PluginConfig extends Config {
     @Key("platform.cachedirectory")
-    @DefaultValue(".cache")
+    @DefaultValue("./Plugin/dukascopy/.cache")
     String CACHE_DIR();
 
     @Key("platform.subscribewaittime")

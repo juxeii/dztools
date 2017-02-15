@@ -6,7 +6,7 @@ import org.aeonbits.owner.Config.Sources;
 @Sources({ "classpath:Plugin.properties" })
 public interface PluginConfig extends Config {
     @Key("platform.cachedirectory")
-    @DefaultValue("./dukascopy/.cache")
+    @DefaultValue(".cache")
     String CACHE_DIR();
 
     @Key("platform.subscribewaittime")
@@ -26,15 +26,15 @@ public interface PluginConfig extends Config {
     int CONNECTION_RETRIES();
 
     @Key("connection.demourl")
-    @DefaultValue("https://www.dukascopy.com/client/demo/jclient/jforex.jnlp")
+    @DefaultValue("http://platform.dukascopy.com/demo_3/jforex_3.jnlp")
     String CONNECT_URL_DEMO();
 
     @Key("connection.liveurl")
-    @DefaultValue("https://www.dukascopy.com/client/live/jclient/jforex.jnlp")
+    @DefaultValue("http://platform.dukascopy.com/live_3/jforex_3.jnlp")
     String CONNECT_URL_REAL();
 
     @Key("ntp.serverurl")
-    @DefaultValue("time-a.nist.gov")
+    @DefaultValue("time.nist.gov")
     String NTP_TIME_SERVER_URL();
 
     @Key("ntp.timeout")

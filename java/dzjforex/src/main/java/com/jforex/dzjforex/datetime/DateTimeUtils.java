@@ -23,7 +23,7 @@ public class DateTimeUtils {
 
     private static final HashMap<Integer, Period> minuteToPeriodMap;
     private static final int DAYS_SINCE_UTC_EPOCH = 25569;
-
+    private static SimpleDateFormat simpleUTCormat;
     private final static Logger logger = LogManager.getLogger(DateTimeUtils.class);
 
     static {
@@ -36,18 +36,18 @@ public class DateTimeUtils {
         minuteToPeriodMap.put(5, Period.FIVE_MINS);
         minuteToPeriodMap.put(1, Period.ONE_MIN);
         minuteToPeriodMap.put(0, Period.TICK);
+
+        simpleUTCormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        simpleUTCormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
     }
 
     private final IDataService dataService;
     private final ServerTime serverTime;
-    private static SimpleDateFormat simpleUTCormat;
 
     public DateTimeUtils(final IDataService dataService,
                          final ServerTime serverTime) {
         this.dataService = dataService;
         this.serverTime = serverTime;
-        simpleUTCormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        simpleUTCormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
     }
 
     public int doBrokerTime(final double serverTimeData[]) {

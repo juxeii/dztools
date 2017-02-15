@@ -40,7 +40,6 @@ public class ZorroBridge {
     private SubscriptionHandler subscriptionHandler;
     private OrderHandler orderHandler;
     private HistoryHandler historyHandler;
-
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
@@ -54,7 +53,8 @@ public class ZorroBridge {
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         loginHandler = new LoginHandler(client,
                                         authentification,
-                                        credentialsFactory);
+                                        credentialsFactory,
+                                        pluginConfig);
         strategyForData = new StrategyForData();
     }
 
@@ -77,7 +77,6 @@ public class ZorroBridge {
                        final String password,
                        final String type,
                        final String accountHandlers[]) {
-        ZorroLogger.log("doLogin called");
         if (client.isConnected())
             return ReturnCodes.LOGIN_OK;
 
@@ -93,7 +92,6 @@ public class ZorroBridge {
     }
 
     private void startStrategy() {
-        ZorroLogger.log("starting strategy...");
         strategyID = client.startStrategy(strategyForData);
         context = strategyForData.getContext();
         final StrategyUtil strategyUtil = strategyForData.strategyUtil();
@@ -114,17 +112,14 @@ public class ZorroBridge {
     private void fillaccountHandlers(final String accountHandlers[]) {
         final String accountID = accountHandler.getID();
         accountHandlers[0] = accountID;
-        ZorroLogger.log("Filled account infos with " + accountID);
     }
 
     public int doLogout() {
-        ZorroLogger.log("doLogout called");
         client.stopStrategy(strategyID);
         return loginHandler.doLogout();
     }
 
     public int doBrokerTime(final double serverTimeData[]) {
-        ZorroLogger.log("doBrokerTime called");
         if (!client.isConnected())
             return ReturnCodes.CONNECTION_LOST_NEW_LOGIN_REQUIRED;
 
@@ -132,7 +127,6 @@ public class ZorroBridge {
     }
 
     public int doSubscribeAsset(final String instrumentName) {
-        ZorroLogger.log("doSubscribeAsset called");
         if (!client.isConnected())
             return ReturnCodes.ASSET_UNAVAILABLE;
 
@@ -141,7 +135,6 @@ public class ZorroBridge {
 
     public int doBrokerAsset(final String instrumentName,
                              final double assetParams[]) {
-        ZorroLogger.log("doBrokerAsset called");
         if (!client.isConnected())
             return ReturnCodes.ASSET_UNAVAILABLE;
 
@@ -149,7 +142,6 @@ public class ZorroBridge {
     }
 
     public int doBrokerAccount(final double accountHandlerParams[]) {
-        ZorroLogger.log("doBrokerAccount called");
         if (!accountHandler.isConnected())
             return ReturnCodes.ACCOUNT_UNAVAILABLE;
 

@@ -1,6 +1,6 @@
 package com.jforex.dzjforex.connection;
 
-import org.aeonbits.owner.ConfigFactory;
+import java.util.concurrent.TimeUnit;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
@@ -9,19 +9,23 @@ import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 
+import io.reactivex.Observable;
+
 public class LoginHandler {
 
     private final IClient client;
     private final Authentification authentification;
     private final CredentialsFactory credentialsFactory;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
+    private final PluginConfig pluginConfig;
 
     public LoginHandler(final IClient client,
                         final Authentification authentification,
-                        final CredentialsFactory credentialsFactory) {
+                        final CredentialsFactory credentialsFactory,
+                        final PluginConfig pluginConfig) {
         this.client = client;
         this.authentification = authentification;
         this.credentialsFactory = credentialsFactory;
+        this.pluginConfig = pluginConfig;
     }
 
     public int doLogin(final String userName,
@@ -34,38 +38,26 @@ public class LoginHandler {
     }
 
     private int login(final LoginCredentials credentials) {
-        final Throwable throwable = authentification
+        return authentification
             .login(credentials)
-            .doOnSubscribe(d -> ZorroLogger.log("Login to Dukascopy started..."))
-            .blockingGet();
-        if (throwable != null) {
-            ZorroLogger.showError("Failed to login with exception " + throwable.getMessage());
-            return ReturnCodes.LOGIN_FAIL;
-        }
-
-        for (int i = 0; i < pluginConfig.CONNECTION_RETRIES() && !client.isConnected(); ++i)
-            try {
-                Thread.sleep(pluginConfig.CONNECTION_WAIT_TIME());
-            } catch (final InterruptedException e) {
-                ZorroLogger.showError("InterruptedException while waiting for login!");
-            }
-
-        if (client.isConnected()) {
-            ZorroLogger.log("Client is now connected...");
-        } else {
-            ZorroLogger.log("Client is NOT connected!");
-        }
-
-        return client.isConnected()
-                ? ReturnCodes.LOGIN_OK
-                : ReturnCodes.LOGIN_FAIL;
+            .andThen(Observable
+                .interval(pluginConfig.CONNECTION_WAIT_TIME(), TimeUnit.MILLISECONDS)
+                .take(pluginConfig.CONNECTION_RETRIES())
+                .takeUntil(att -> (Boolean) client.isConnected())
+                .map(waitAttempt -> client.isConnected()
+                        ? ReturnCodes.LOGIN_OK
+                        : ReturnCodes.LOGIN_FAIL))
+            .onErrorResumeNext(err -> {
+                ZorroLogger.showError("Failed to login with exception " + err.getMessage());
+                return Observable.just(ReturnCodes.LOGIN_FAIL);
+            })
+            .blockingLast();
     }
 
     public int doLogout() {
         authentification
             .logout()
             .blockingAwait();
-        ZorroLogger.log("Logged out from Dukascopy.");
         return ReturnCodes.LOGOUT_OK;
     }
 }

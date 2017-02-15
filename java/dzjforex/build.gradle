@@ -12,7 +12,10 @@ The Java plugin part for Zorro which lets you trade with Dukascopy
 Project name: ${project.name}
 """
 
+def deployFolder = "${buildDir}/deploy"
+
 repositories {
+   mavenLocal()
    mavenCentral()
    maven {
        url "https://www.dukascopy.com/client/jforexlib/publicrepo"
@@ -20,12 +23,10 @@ repositories {
 }
 
 dependencies {
+    compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.1.2'
+    compile 'com.jforex.programming:JForexUtils:0.9.8'
     compile 'org.aeonbits.owner:owner:1.0.9'
     compile 'commons-net:commons-net:3.3'
-
-    compile files('libs/JForex-3-SDK-3.0.18.jar')
-    compile files('libs/JForexUtils-0.9.8.jar')
-    compile files("${System.env.JAVA_HOME}/jre/lib/javaws.jar")
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:java-hamcrest:2.0.0.0'
@@ -39,24 +40,79 @@ gradle.projectsEvaluated {
     }
 }
 
-task fatJar(type: Jar) {
+jar {
     manifest {
-        attributes 'Implementation-Title': 'Dukascopy-Zorro-Plugin',
-                   'Implementation-Version': version
+        attributes 'Implementation-Title': project.name,  
+                   'Implementation-Version': version,
+                   'Class-Path' : ". ${(configurations.runtime.collect { "lib/$it.name" }).join(' ') }"
     }
     baseName = project.name
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
 }
 
-task copyFatJarToPluginFolder(type: Copy, dependsOn:[fatJar]) {
-    from "${buildDir}/libs/dzjforex-0.9.5.jar"
+task copyJarToPluginFolder(type: Copy) {
+    from jar
     into "${zorroPath}/Plugin/dukascopy"
 }
 
-task copyPluginFolder(type: Copy) {
-    from ('Plugin') {
-        into ('Plugin')
+task copyDepsToPluginLibFolder(type: Copy) {
+    from configurations.runtime
+    into "${zorroPath}/Plugin/dukascopy/lib"
+}
+
+task deploy(dependsOn: ':jar') {
+    delete deployFolder
+    mkdir deployFolder
+    
+    def strategyFolder = "${deployFolder}/Strategy"
+    mkdir strategyFolder
+    
+    def resourceFolder = "src/main/resources"
+    copy{
+        from "src/main/resources/DukascopyDownload.c"
+        into strategyFolder
     }
-    into "${zorroPath}"
+    
+    def pluginFolder = "${deployFolder}/Plugin"
+    mkdir pluginFolder
+    
+    copy{
+        from "../../c++/Release/dukascopy.dll"
+        into pluginFolder
+    }
+    
+    def dukascopyFolder = "${pluginFolder}/dukascopy"
+    mkdir dukascopyFolder
+    
+    copy{
+        from jar
+        into dukascopyFolder
+    }
+    
+    copy{
+        from "src/main/resources/log4j2.xml"
+        into dukascopyFolder
+    }
+    
+    copy{
+        from "src/main/resources/log4j.properties"
+        into dukascopyFolder
+    }
+    
+    copy{
+        from "src/main/resources/Plugin.properties"
+        into dukascopyFolder
+    }
+    
+    def libFolder = "${dukascopyFolder}/lib"
+    mkdir libFolder
+    
+    copy{
+        from configurations.runtime
+        into libFolder
+    }
+}
+
+task dzZip(type: Zip, dependsOn: ':deploy') {
+    baseName = project.name
+    from deployFolder
 }

@@ -37,13 +37,13 @@ public class SubscriptionHandler {
         final Instrument toSubscribeInstrument = toSubscribeInstrumentOpt.get();
         final Set<Instrument> instruments = new HashSet<Instrument>();
         instruments.add(toSubscribeInstrument);
-        // we must subscribe to cross instrument also for margin calculations
-        final Optional<Instrument> crossInstrumentOpt = InstrumentProvider
-            .fromCurrencies(accountHandler.getCurrency(), toSubscribeInstrument.getPrimaryJFCurrency());
-        final Instrument crossInstrument = crossInstrumentOpt.get();
-        if (crossInstrument != null) {
-            logger.debug("crossInstrument: " + crossInstrument);
-            instruments.add(crossInstrument);
+        if (toSubscribeInstrument.getPrimaryJFCurrency() != accountHandler.getCurrency()) {
+            // we must subscribe to cross instrument also for margin
+            // calculations
+            final Instrument instrument = InstrumentProvider
+                .fromCurrencies(accountHandler.getCurrency(), toSubscribeInstrument.getPrimaryJFCurrency())
+                .get();
+            instruments.add(instrument);
         }
 
         final int subscriptionResult = subscribe(instruments);
@@ -53,7 +53,6 @@ public class SubscriptionHandler {
 
     private int subscribe(final Set<Instrument> instruments) {
         client.setSubscribedInstruments(instruments);
-
         waitForSubscription(instruments);
         if (!client.getSubscribedInstruments().containsAll(instruments)) {
             ZorroLogger.showError("Subscription for assets failed!");

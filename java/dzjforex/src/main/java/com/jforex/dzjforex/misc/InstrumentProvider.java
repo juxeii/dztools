@@ -24,6 +24,7 @@ public class InstrumentProvider {
 
     public static Optional<Instrument> fromCurrencies(final ICurrency currencyA,
                                                       final ICurrency currencyB) {
+        ZorroLogger.log("currencyA " + currencyA + " currencyB " + currencyB);
         return InstrumentFactory.maybeFromCurrencies(currencyA, currencyB);
     }
 

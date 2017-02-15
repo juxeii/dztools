@@ -81,9 +81,11 @@ BrokerLogin(const char *User,
             char *Accounts)
 {
     if (User)
-        return dllCallHandler.BrokerLogin(User, Pwd, Type, Accounts);
-    else
-        return dllCallHandler.BrokerLogout();
+        return dllCallHandler.BrokerLogin(User,
+                                          Pwd,
+                                          Type,
+                                          Accounts);
+    return dllCallHandler.BrokerLogout();
 }
 
 DLLFUNC int
@@ -141,7 +143,10 @@ BrokerAccount(char* Account,
               double *pTradeVal,
               double *pMarginVal)
 {
-    return dllCallHandler.BrokerAccount(Account, pBalance, pTradeVal, pMarginVal);
+    return dllCallHandler.BrokerAccount(Account,
+                                        pBalance,
+                                        pTradeVal,
+                                        pMarginVal);
 }
 
 DLLFUNC int
@@ -150,7 +155,10 @@ BrokerBuy(char* Asset,
           double dStopDist,
           double *pPrice)
 {
-    return dllCallHandler.BrokerBuy(Asset, nAmount, dStopDist, pPrice);
+    return dllCallHandler.BrokerBuy(Asset,
+                                    nAmount,
+                                    dStopDist,
+                                    pPrice);
 }
 
 DLLFUNC int

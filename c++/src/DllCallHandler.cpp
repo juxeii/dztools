@@ -36,19 +36,19 @@ DllCallHandler::BrokerLogin(const char *User,
                                              jAccountArray);
 
     if (Account)
+    {
+        jstring jAccount = (jstring) env->GetObjectArrayElement(jAccountArray, 0);
+        char* accountID = const_cast<char*>(env->GetStringUTFChars(jAccount, NULL));
+        std::size_t nPos = strlen(accountID);
+        if (nPos > 1023)
         {
-            jstring jAccount = (jstring) env->GetObjectArrayElement(jAccountArray, 0);
-            char* accountID = const_cast<char*>(env->GetStringUTFChars(jAccount, NULL));
-            std::size_t nPos = strlen(accountID);
-            if (nPos > 1023)
-                {
-                    BrokerError("Account number too big -> truncated");
-                    nPos = 1023;
-                }
-            std::strncpy(Account, accountID, nPos);
-            Account[nPos] = 0;
-            env->DeleteLocalRef(jAccount);
+            BrokerError("Account number too big -> truncated");
+            nPos = 1023;
         }
+        std::strncpy(Account, accountID, nPos);
+        Account[nPos] = 0;
+        env->DeleteLocalRef(jAccount);
+    }
 
     env->DeleteLocalRef(jUser);
     env->DeleteLocalRef(jPwd);
@@ -71,11 +71,11 @@ DllCallHandler::BrokerTime(DATE *pTimeUTC)
     jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::doBrokerTime.methodID, utcTimeArray);
 
     if (pTimeUTC)
-        {
-            jdouble *utcTime = env->GetDoubleArrayElements(utcTimeArray, 0);
-            *pTimeUTC = utcTime[0];
-            env->ReleaseDoubleArrayElements(utcTimeArray, utcTime, 0);
-        }
+    {
+        jdouble *utcTime = env->GetDoubleArrayElements(utcTimeArray, 0);
+        *pTimeUTC = utcTime[0];
+        env->ReleaseDoubleArrayElements(utcTimeArray, utcTime, 0);
+    }
     env->DeleteLocalRef((jobject) utcTimeArray);
 
     return res;
@@ -149,23 +149,23 @@ DllCallHandler::BrokerHistory2(const char *Asset,
     int tickArrayLength = nTicks * 5;
     jdoubleArray jTicksArray = env->NewDoubleArray(tickArrayLength);
 
-    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::doBrokerHistory.methodID, jAsset,
+    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::doBrokerHistory2.methodID, jAsset,
                                              tStart,
                                              tEnd, nTickMinutes, nTicks, jTicksArray);
     jdouble *ticksParams = env->GetDoubleArrayElements(jTicksArray, 0u);
 
     for (int i = 0; i < nTicks; ++i)
-        {
-            int paramsIndex = i * 5;
-            ticks[i].fOpen = ticksParams[paramsIndex];
-            ticks[i].fClose = ticksParams[paramsIndex + 1];
-            ticks[i].fHigh = ticksParams[paramsIndex + 2];
-            ticks[i].fLow = ticksParams[paramsIndex + 3];
-            ticks[i].time = ticksParams[paramsIndex + 4];
+    {
+        int paramsIndex = i * 5;
+        ticks[i].fOpen = ticksParams[paramsIndex];
+        ticks[i].fClose = ticksParams[paramsIndex + 1];
+        ticks[i].fHigh = ticksParams[paramsIndex + 2];
+        ticks[i].fLow = ticksParams[paramsIndex + 3];
+        ticks[i].time = ticksParams[paramsIndex + 4];
 
-            if (!BrokerProgress(100 * i / nTicks))
-                break;
-        }
+        if (!BrokerProgress(100 * i / nTicks))
+            break;
+    }
     env->DeleteLocalRef(jAsset);
     env->ReleaseDoubleArrayElements(jTicksArray, ticksParams, 0u);
     env->DeleteLocalRef((jobject) jTicksArray);
@@ -180,10 +180,10 @@ DllCallHandler::BrokerAccount(const char *Account,
                               double *pMarginVal)
 {
     if (Account)
-        {
-            BrokerError("Multiple accounts are not yet supported!");
-            return 0;
-        }
+    {
+        BrokerError("Multiple accounts are not yet supported!");
+        return 0;
+    }
     jdoubleArray jAccountParamsArray = env->NewDoubleArray(3);
 
     jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::doBrokerAccount.methodID,
@@ -245,16 +245,16 @@ DllCallHandler::BrokerTrade(const int nTradeID,
     jdouble *orderParams = env->GetDoubleArrayElements(jOrderParamsArray, 0);
 
     if (res > 0)
-        {
-            if (pOpen)
-                *pOpen = orderParams[0];
-            if (pClose)
-                *pClose = orderParams[1];
-            if (pRoll)
-                *pRoll = orderParams[2];
-            if (pProfit)
-                *pProfit = orderParams[3];
-        }
+    {
+        if (pOpen)
+            *pOpen = orderParams[0];
+        if (pClose)
+            *pClose = orderParams[1];
+        if (pRoll)
+            *pRoll = orderParams[2];
+        if (pProfit)
+            *pProfit = orderParams[3];
+    }
     env->ReleaseDoubleArrayElements(jOrderParamsArray, orderParams, 0);
     env->DeleteLocalRef((jobject) jOrderParamsArray);
 

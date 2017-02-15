@@ -1,21 +1,15 @@
-package com.jforex.dzjforex.test;
+package com.jforex.dzjforex.handler.test;
 
 import org.junit.Before;
-import org.junit.Test;
 
 import com.jforex.dzjforex.ZorroBridge;
 
 public class ZorroBridgeTest {
 
     private ZorroBridge zorroBridge;
-    
+
     @Before
-    public void setUp(){
+    public void setUp() {
         zorroBridge = new ZorroBridge();
-    }
-    
-    @Test
-    public void firstTest()  {
-        String accountInfos[] = new String[100];
     }
 }

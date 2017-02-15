@@ -1,4 +1,4 @@
-package com.jforex.dzjforex;
+package com.jforex.dzjforex.settings;
 
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.Sources;
@@ -24,7 +24,7 @@ public interface PluginConfig extends Config {
     String CONNECT_URL_DEMO();
 
     @DefaultValue("https://www.dukascopy.com/client/live/jclient/jforex.jnlp")
-    String CONNECT_URL_LIVE();
+    String CONNECT_URL_REAL();
 
     @DefaultValue("time-a.nist.gov")
     String NTP_TIME_SERVER_URL();

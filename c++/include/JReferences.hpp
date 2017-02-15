@@ -31,7 +31,7 @@ extern JMethodDesc doBrokerBuy;
 extern JMethodDesc doBrokerTrade;
 extern JMethodDesc doBrokerStop;
 extern JMethodDesc doBrokerSell;
-extern JMethodDesc doBrokerHistory;
+extern JMethodDesc doBrokerHistory2;
 extern JMethodDesc doHistoryDownload;
 extern JMethodDesc excGetMessage;
 extern JMethodDesc excGetName;

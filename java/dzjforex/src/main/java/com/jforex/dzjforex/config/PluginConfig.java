@@ -60,4 +60,8 @@ public interface PluginConfig extends Config {
     @Key("order.lotscale")
     @DefaultValue("1000000")
     int LOT_SCALE();
+
+    @Key("order.lotsize")
+    @DefaultValue("1000")
+    double LOT_SIZE();
 }

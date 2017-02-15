@@ -1,97 +1,159 @@
 package com.jforex.dzjforex.handler;
 
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.ITick;
+import com.dukascopy.api.IAccount;
+import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.ZorroLogger;
+import com.dukascopy.api.OfferSide;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.dataprovider.AccountInfo;
-import com.jforex.dzjforex.datetime.DateTimeUtils;
-import com.jforex.dzjforex.datetime.ServerTime;
-import com.jforex.dzjforex.misc.InstrumentUtils;
+import com.jforex.dzjforex.misc.InstrumentProvider;
 import com.jforex.programming.instrument.InstrumentUtil;
+import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class AccountHandler {
 
+    private final IAccount account;
     private final StrategyUtil strategyUtil;
-    private final AccountInfo accountInfo;
-    private final ServerTime serverTime;
-    private final DateTimeUtils dateTimeUtils;
+    private final CalculationUtil calculationUtil;
+    private final ICurrency accountCurrency;
+    private final String accountID;
+    private final double leverage;
+    private final double lotSize;
+    private final double lotMargin;
 
     private final static Logger logger = LogManager.getLogger(AccountHandler.class);
 
-    public AccountHandler(final StrategyUtil strategyUtil,
-                          final AccountInfo accountInfo,
-                          final ServerTime serverTime,
-                          final DateTimeUtils dateTimeUtils) {
+    public AccountHandler(final IAccount account,
+                          final StrategyUtil strategyUtil,
+                          final CalculationUtil calculationUtil,
+                          final PluginConfig pluginConfig) {
+        this.account = account;
         this.strategyUtil = strategyUtil;
-        this.accountInfo = accountInfo;
-        this.serverTime = serverTime;
-        this.dateTimeUtils = dateTimeUtils;
+        this.calculationUtil = calculationUtil;
+
+        accountCurrency = account.getAccountCurrency();
+        accountID = account.getAccountId();
+        leverage = account.getLeverage();
+        lotSize = pluginConfig.LOT_SIZE();
+        lotMargin = lotSize / leverage;
     }
 
-    public int doBrokerTime(final double serverTimeData[]) {
-        serverTimeData[0] = DateTimeUtils.getOLEDateFromMillis(serverTime.get());
+    public double getBalance() {
+        return account.getBalance();
+    }
 
-        final boolean isMarketOffline = dateTimeUtils.isMarketOffline();
-        if (isMarketOffline)
-            logger.debug("Market is offline");
+    public double getEquity() {
+        return account.getEquity();
+    }
 
-        return isMarketOffline
-                ? ReturnCodes.CONNECTION_OK_BUT_MARKET_CLOSED
-                : ReturnCodes.CONNECTION_OK;
+    public String getID() {
+        return accountID;
+    }
+
+    public ICurrency getCurrency() {
+        return accountCurrency;
+    }
+
+    public double getTradeValue() {
+        return account.getEquity() - account.getBalance();
+    }
+
+    public double getFreeMargin() {
+        return account.getCreditLine() / leverage;
+    }
+
+    public double getUsedMargin() {
+        return account.getEquity() - getFreeMargin();
+    }
+
+    public double getLeverage() {
+        return leverage;
+    }
+
+    public boolean isConnected() {
+        return account.isConnected();
+    }
+
+    public double getPipCost(final Instrument instrument) {
+        final double pipCost = calculationUtil.pipValueInCurrency(lotSize,
+                                                                  instrument,
+                                                                  accountCurrency,
+                                                                  OfferSide.ASK);
+        logger.debug("Pipcost for lotSize " + lotSize
+                + " and instrument " + instrument
+                + " is " + pipCost);
+        return pipCost;
+    }
+
+    public double getMarginForLot(final Instrument instrument) {
+        if (accountCurrency == instrument.getPrimaryJFCurrency())
+            return lotMargin;
+
+        final double conversionLot = calculationUtil.convertAmount(lotSize,
+                                                                   instrument.getPrimaryJFCurrency(),
+                                                                   accountCurrency,
+                                                                   OfferSide.ASK);
+        final double marginCost = conversionLot / leverage;
+        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
+                + " and  conversionLot " + conversionLot
+                + " and leverage " + leverage);
+        return marginCost;
+    }
+
+    public boolean isTradingPossible() {
+        if (account.getAccountState() != IAccount.AccountState.OK) {
+            logger.debug("Account state " + account.getAccountState() + " is invalid for trading!");
+            return false;
+        }
+        return account.isConnected();
     }
 
     public int doBrokerAsset(final String instrumentName,
                              final double assetParams[]) {
-        final Instrument instrument = InstrumentUtils.getByName(instrumentName);
-        if (instrument == null)
+        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        if (!instrumentOpt.isPresent())
             return ReturnCodes.ASSET_UNAVAILABLE;
 
-        return fillAssetParams(instrument, assetParams);
+        return fillAssetParams(instrumentOpt.get(), assetParams);
     }
 
     private int fillAssetParams(final Instrument instrument,
                                 final double assetParams[]) {
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
-        final ITick tick = instrumentUtil.tickQuote();
-        if (tick == null) {
-            logger.warn("No data for " + instrument + " available!");
-            ZorroLogger.log("No data for " + instrument + " available!");
-            return ReturnCodes.ASSET_UNAVAILABLE;
-        }
 
-//        final double pipCost = accountInfo.getPipCost(instrument, OfferSide.ASK);
-//        if (pipCost == 0f)
-//            return ReturnCodes.ASSET_UNAVAILABLE;
-//        assetParams[4] = pipCost;
+        final double pPrice = instrumentUtil.askQuote();
+        final double pSpread = instrumentUtil.spread();
+        final double pVolume = 0.0; // currently not supported
+        final double pPip = instrument.getPipValue();
+        final double pPipCost = getPipCost(instrument);
+        final double pLotAmount = lotSize;
+        final double pMarginCost = getMarginForLot(instrument);
+        final double pRollLong = 0.0; // currently not supported
+        final double pRollShort = 0.0; // currently not supported
 
-//        final double marginForLot = accountInfo.getMarginForLot(instrument);
-//        if (marginForLot == 0f)
-//            return ReturnCodes.ASSET_UNAVAILABLE;
-//        assetParams[6] = marginForLot;
-
-        assetParams[0] = tick.getAsk();
-        assetParams[1] = instrumentUtil.spread();
-        // Volume: not supported for Forex
-        assetParams[2] = 0f;
-        assetParams[3] = instrument.getPipValue();
-        // assetParams[5] = DukascopyParams.LOT_SIZE;
-        // RollLong : currently not available by Dukascopy
-        assetParams[7] = 0f;
-        // RollShort: currently not available by Dukascopy
-        assetParams[8] = 0f;
+        assetParams[0] = pPrice;
+        assetParams[1] = pSpread;
+        assetParams[2] = pVolume;
+        assetParams[3] = pPip;
+        assetParams[4] = pPipCost;
+        assetParams[5] = pLotAmount;
+        assetParams[6] = pMarginCost;
+        assetParams[7] = pRollLong;
+        assetParams[8] = pRollShort;
 
         return ReturnCodes.ASSET_AVAILABLE;
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
-        accountInfoParams[0] = accountInfo.getBalance();
-        accountInfoParams[1] = accountInfo.getTradeValue();
-        accountInfoParams[2] = accountInfo.getUsedMargin();
+        accountInfoParams[0] = getBalance();
+        accountInfoParams[1] = getTradeValue();
+        accountInfoParams[2] = getUsedMargin();
 
         return ReturnCodes.ACCOUNT_AVAILABLE;
     }

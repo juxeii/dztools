@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +22,7 @@ public class ServerTime {
     private final ExecutorService singleThreadExecutor;
     private long startNTPTime;
     private long ntpTimer;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
+    private final PluginConfig pluginConfig;
 
     private final static Logger logger = LogManager.getLogger(ServerTime.class);
 
@@ -32,9 +31,11 @@ public class ServerTime {
         TICK
     }
 
-    public ServerTime(final StrategyForData strategy) {
+    public ServerTime(final StrategyForData strategy,
+                      final PluginConfig pluginConfig) {
         this.strategy = strategy;
-        ntpSynchTask = new NTPTimeSynchTask();
+        this.pluginConfig = pluginConfig;
+        ntpSynchTask = new NTPTimeSynchTask(pluginConfig);
         singleThreadExecutor = Executors.newSingleThreadExecutor();
 
         init();

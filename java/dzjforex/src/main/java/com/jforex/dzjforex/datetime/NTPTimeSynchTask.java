@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 
-import org.aeonbits.owner.ConfigFactory;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
 import org.apache.logging.log4j.LogManager;
@@ -15,14 +14,16 @@ import com.jforex.dzjforex.config.PluginConfig;
 
 public class NTPTimeSynchTask implements Callable<Long> {
 
+    private final PluginConfig pluginConfig;
     private final NTPUDPClient timeClient;
     private InetAddress inetAddress;
     private TimeInfo timeInfo;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     private final static Logger logger = LogManager.getLogger(NTPTimeSynchTask.class);
 
-    public NTPTimeSynchTask() {
+    public NTPTimeSynchTask(final PluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
+
         timeClient = new NTPUDPClient();
         init();
     }

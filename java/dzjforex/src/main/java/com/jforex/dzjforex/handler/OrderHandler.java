@@ -3,6 +3,7 @@ package com.jforex.dzjforex.handler;
 import java.rmi.server.UID;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -19,7 +20,7 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.misc.InstrumentUtils;
+import com.jforex.dzjforex.misc.InstrumentProvider;
 import com.jforex.dzjforex.ordertask.CloseOrderTask;
 import com.jforex.dzjforex.ordertask.StopLossTask;
 import com.jforex.dzjforex.ordertask.SubmitOrderTask;
@@ -49,8 +50,8 @@ public class OrderHandler {
 
     public int doBrokerBuy(final String instrumentName,
                            final double tradeParams[]) {
-        final Instrument instrument = InstrumentUtils.getByName(instrumentName);
-        if (instrument == null)
+        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        if (!instrumentOpt.isPresent())
             return ReturnCodes.BROKER_BUY_FAIL;
         double amount = tradeParams[0];
         final double dStopDist = tradeParams[1];
@@ -63,6 +64,7 @@ public class OrderHandler {
         // Scale amount to millions
         amount /= pluginConfig.LOT_SCALE();
 
+        final Instrument instrument = instrumentOpt.get();
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
         final double currentAskPrice = instrumentUtil.askQuote();
         final double spread = instrumentUtil.spread();

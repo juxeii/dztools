@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.handler;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.aeonbits.owner.ConfigFactory;
@@ -12,33 +13,34 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.dataprovider.AccountInfo;
-import com.jforex.dzjforex.misc.InstrumentUtils;
+import com.jforex.dzjforex.misc.InstrumentProvider;
 
 public class SubscriptionHandler {
 
     private final IClient client;
-    private final AccountInfo accountInfo;
+    private final AccountHandler accountHandler;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     private final static Logger logger = LogManager.getLogger(SubscriptionHandler.class);
 
     public SubscriptionHandler(final IClient client,
-                               final AccountInfo accountInfo) {
+                               final AccountHandler accountHandler) {
         this.client = client;
-        this.accountInfo = accountInfo;
+        this.accountHandler = accountHandler;
     }
 
     public int doSubscribeAsset(final String instrumentName) {
-        final Instrument toSubscribeInstrument = InstrumentUtils.getByName(instrumentName);
-        if (toSubscribeInstrument == null)
+        final Optional<Instrument> toSubscribeInstrumentOpt = InstrumentProvider.fromName(instrumentName);
+        if (!toSubscribeInstrumentOpt.isPresent())
             return ReturnCodes.ASSET_UNAVAILABLE;
 
+        final Instrument toSubscribeInstrument = toSubscribeInstrumentOpt.get();
         final Set<Instrument> instruments = new HashSet<Instrument>();
         instruments.add(toSubscribeInstrument);
         // we must subscribe to cross instrument also for margin calculations
-        final Instrument crossInstrument = InstrumentUtils
-            .getfromCurrencies(accountInfo.getCurrency(), toSubscribeInstrument.getPrimaryJFCurrency());
+        final Optional<Instrument> crossInstrumentOpt = InstrumentProvider
+            .fromCurrencies(accountHandler.getCurrency(), toSubscribeInstrument.getPrimaryJFCurrency());
+        final Instrument crossInstrument = crossInstrumentOpt.get();
         if (crossInstrument != null) {
             logger.debug("crossInstrument: " + crossInstrument);
             instruments.add(crossInstrument);

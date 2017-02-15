@@ -11,8 +11,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.dzjforex.misc.PinProvider;
+import com.jforex.dzjforex.connection.CredentialsFactory;
+import com.jforex.dzjforex.connection.PinProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.connection.LoginCredentials;
 

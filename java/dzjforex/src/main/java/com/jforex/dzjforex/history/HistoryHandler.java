@@ -3,6 +3,7 @@ package com.jforex.dzjforex.history;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +20,8 @@ import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.datetime.DateTimeUtils;
-import com.jforex.dzjforex.misc.InstrumentUtils;
+import com.jforex.dzjforex.misc.InstrumentProvider;
+import com.jforex.programming.instrument.InstrumentUtil;
 
 public class HistoryHandler {
 
@@ -40,8 +42,8 @@ public class HistoryHandler {
         logger.debug("startDate " + DateTimeUtils.formatOLETime(startDate) +
                 " endDate: " + DateTimeUtils.formatOLETime(endDate) +
                 "nTicks " + nTicks + " tickMinutes " + tickMinutes);
-        final Instrument instrument = InstrumentUtils.getByName(instrumentName);
-        if (instrument == null)
+        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        if (!instrumentOpt.isPresent())
             return ReturnCodes.HISTORY_UNAVAILABLE;
 
         final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
@@ -50,6 +52,8 @@ public class HistoryHandler {
             ZorroLogger.indicateError();
             return ReturnCodes.HISTORY_UNAVAILABLE;
         }
+
+        final Instrument instrument = instrumentOpt.get();
         final long endDateTimeRounded =
                 getEndDateTimeRounded(instrument, period, DateTimeUtils.getMillisFromOLEDate(endDate));
         final long startDateTimeRounded = endDateTimeRounded - (nTicks - 1) * period.getInterval();
@@ -75,7 +79,10 @@ public class HistoryHandler {
             tickParams[tickParamsIndex + 2] = bar.getHigh();
             tickParams[tickParamsIndex + 3] = bar.getLow();
             tickParams[tickParamsIndex + 4] = DateTimeUtils.getUTCTimeFromBar(bar);
-            tickParamsIndex += 5;
+            // tickParams[tickParamsIndex + 5] = spread();
+            tickParams[tickParamsIndex + 6] = bar.getVolume();
+
+            tickParamsIndex += 7;
         }
     }
 
@@ -125,10 +132,11 @@ public class HistoryHandler {
         final int startYear = historyConfig.StartYear();
         final int endYear = historyConfig.EndYear();
 
-        final Instrument instrument = InstrumentUtils.getByName(instrumentName);
-        if (instrument == null)
+        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        if (!instrumentOpt.isPresent())
             return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
 
+        final Instrument instrument = instrumentOpt.get();
         final int numYears = endYear - startYear + 1;
         for (int i = 0; i < numYears; ++i) {
             final int currentYear = startYear + i;
@@ -170,6 +178,7 @@ public class HistoryHandler {
     private String getBarFileName(final Instrument instrument,
                                   final int year,
                                   final String histSavePath) {
-        return histSavePath + "\\" + InstrumentUtils.getNameWODash(instrument) + "_" + year + ".bar";
+        final String instrumentName = InstrumentUtil.toStringNoSeparator(instrument);
+        return histSavePath + "\\" + instrumentName + "_" + year + ".bar";
     }
 }

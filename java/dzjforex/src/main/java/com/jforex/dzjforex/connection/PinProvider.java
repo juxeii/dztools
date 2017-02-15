@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.connection;
 
 import java.awt.BorderLayout;
 

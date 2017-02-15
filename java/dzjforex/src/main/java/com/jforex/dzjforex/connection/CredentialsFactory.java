@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.connection;
 
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.connection.LoginCredentials;

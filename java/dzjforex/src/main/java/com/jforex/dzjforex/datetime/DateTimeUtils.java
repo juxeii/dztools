@@ -17,6 +17,7 @@ import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.config.ReturnCodes;
 
 public class DateTimeUtils {
 
@@ -38,15 +39,36 @@ public class DateTimeUtils {
     }
 
     private final IDataService dataService;
-    private final ServerTime serverTimeProvider;
+    private final ServerTime serverTime;
     private static SimpleDateFormat simpleUTCormat;
 
     public DateTimeUtils(final IDataService dataService,
-                         final ServerTime serverTimeProvider) {
+                         final ServerTime serverTime) {
         this.dataService = dataService;
-        this.serverTimeProvider = serverTimeProvider;
+        this.serverTime = serverTime;
         simpleUTCormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         simpleUTCormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
+    }
+
+    public int doBrokerTime(final double serverTimeData[]) {
+        final long currentServerTime = serverTime.get();
+        serverTimeData[0] = DateTimeUtils.getOLEDateFromMillis(currentServerTime);
+
+        final boolean isMarketOffline = isMarketOffline(currentServerTime);
+        if (isMarketOffline)
+            logger.debug("Market is offline");
+
+        return isMarketOffline
+                ? ReturnCodes.CONNECTION_OK_BUT_MARKET_CLOSED
+                : ReturnCodes.CONNECTION_OK;
+    }
+
+    private boolean isMarketOffline(final long currentServerTime) {
+        final Set<ITimeDomain> offlines = getOfflineTimes(currentServerTime,
+                                                          currentServerTime + Period.ONE_MIN.getInterval());
+        return offlines == null
+                ? true
+                : isServerTimeInOfflineDomains(currentServerTime, offlines);
     }
 
     public static double getOLEDateFromMillis(final long millis) {
@@ -61,12 +83,6 @@ public class DateTimeUtils {
         final Date date = new Date();
         date.setTime((long) ((oleDate - DAYS_SINCE_UTC_EPOCH) * 24 * 3600 * 1000));
         return date.getTime();
-    }
-
-    public boolean isMarketOffline() {
-        final long serverTime = serverTimeProvider.get();
-        final Set<ITimeDomain> offlines = getOfflineTimes(serverTime, serverTime + Period.ONE_MIN.getInterval());
-        return offlines == null ? true : isServerTimeInOfflineDomains(serverTime, offlines);
     }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,

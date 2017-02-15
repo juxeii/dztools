@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,14 +33,16 @@ public class OrderHandler {
     private final IEngine engine;
     private final StrategyUtil strategyUtil;
     private final HashMap<Integer, IOrder> orderMap;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
+    private final PluginConfig pluginConfig;
 
     private final static Logger logger = LogManager.getLogger(OrderHandler.class);
 
     public OrderHandler(final IContext context,
-                        final StrategyUtil strategyUtil) {
+                        final StrategyUtil strategyUtil,
+                        final PluginConfig pluginConfig) {
         this.context = context;
         this.strategyUtil = strategyUtil;
+        this.pluginConfig = pluginConfig;
         this.engine = context.getEngine();
 
         orderMap = new HashMap<Integer, IOrder>();
@@ -104,11 +105,13 @@ public class OrderHandler {
         else
             orderParams[1] = instrumentUtil.bidQuote();
         // Rollover not supported by Dukascopy
-        orderParams[2] = 0f;
+        orderParams[2] = 0.0;
         orderParams[3] = order.getProfitLossInAccountCurrency();
         final int orderAmount = (int) (order.getAmount() * pluginConfig.LOT_SCALE());
 
-        return order.getState() == IOrder.State.CLOSED ? -orderAmount : orderAmount;
+        return order.getState() == IOrder.State.CLOSED
+                ? -orderAmount
+                : orderAmount;
     }
 
     public int doBrokerStop(final int orderID,
@@ -132,6 +135,9 @@ public class OrderHandler {
 
     public int doBrokerSell(final int orderID,
                             final int amount) {
+        if (!orderMap.containsKey(orderID))
+            return ReturnCodes.UNKNOWN_ORDER_ID;
+
         final double convertedAmount = Math.abs(amount) / pluginConfig.LOT_SCALE();
         logger.debug("orderID " + orderID + " amount: " + amount + " convertedAmount " + convertedAmount);
 
@@ -168,9 +174,6 @@ public class OrderHandler {
 
     public int closeOrder(final int orderID,
                           final double amount) {
-        if (!orderMap.containsKey(orderID))
-            return ReturnCodes.UNKNOWN_ORDER_ID;
-
         IOrder order = orderMap.get(orderID);
         if (order.getState() != IOrder.State.OPENED && order.getState() != IOrder.State.FILLED) {
             logger.warn("Order " + orderID + " could not be closed. Order state: " + order.getState());
@@ -179,10 +182,9 @@ public class OrderHandler {
 
         final CloseOrderTask task = new CloseOrderTask(order, amount);
         order = getOrderFromFuture(context.executeTask(task));
-        if (order.getState() != IOrder.State.CLOSED)
-            return ReturnCodes.BROKER_SELL_FAIL;
-        else
-            return orderID;
+        return order.getState() != IOrder.State.CLOSED
+                ? ReturnCodes.BROKER_SELL_FAIL
+                : orderID;
     }
 
     public int setSLPrice(IOrder order,

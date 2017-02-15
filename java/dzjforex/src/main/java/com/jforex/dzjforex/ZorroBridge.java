@@ -105,7 +105,9 @@ public class ZorroBridge {
                                             strategyUtil.calculationUtil(),
                                             pluginConfig);
         subscriptionHandler = new SubscriptionHandler(client, accountHandler);
-        orderHandler = new OrderHandler(context, strategyUtil);
+        orderHandler = new OrderHandler(context,
+                                        strategyUtil,
+                                        pluginConfig);
         historyHandler = new HistoryHandler(context.getHistory());
     }
 

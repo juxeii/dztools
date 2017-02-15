@@ -22,7 +22,11 @@ public class ReturnCodes {
     public static final int UNKNOWN_ORDER_ID = 0;
     public static final int ORDER_RECENTLY_CLOSED = -1;
 
-    public static final int ORDER_CLOSE_FAIL = 0;
+    public static final int ADJUST_SL_OK = 1;
+
+    public static final int BROKER_SELL_FAIL = 0;
 
     public static final int HISTORY_UNAVAILABLE = 0;
+    public static final int HISTORY_DOWNLOAD_FAIL = 0;
+    public static final int HISTORY_DOWNLOAD_OK = 1;
 }

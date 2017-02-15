@@ -50,10 +50,8 @@ task fatJar(type: Jar) {
 }
 
 task copyFatJarToPluginFolder(type: Copy, dependsOn:[fatJar]) {
-    copy {
-	    from "build/libs/libs/dzjforex-0.9.5.jar"
-	    into "${zorroPath}/Plugin/dukascopy"
-	}
+    from "${buildDir}/libs/dzjforex-0.9.5.jar"
+    into "${zorroPath}/Plugin/dukascopy"
 }
 
 task copyPluginFolder(type: Copy) {

@@ -9,6 +9,7 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.jforex.programming.strategy.JForexUtilsStrategy;
+import com.jforex.programming.strategy.StrategyUtil;
 
 public class StrategyForData extends JForexUtilsStrategy {
 
@@ -17,6 +18,10 @@ public class StrategyForData extends JForexUtilsStrategy {
 
     public IContext getContext() {
         return context;
+    }
+
+    public StrategyUtil strategyUtil() {
+        return strategyUtil;
     }
 
     public ITick getLatestTick() {

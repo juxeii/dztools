@@ -8,8 +8,14 @@ import com.dukascopy.api.IContext;
 import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.dataprovider.AccountInfo;
+import com.jforex.dzjforex.dataprovider.ServerTime;
+import com.jforex.dzjforex.handler.AccountHandler;
+import com.jforex.dzjforex.handler.HistoryHandler;
 import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.dzjforex.handler.SubscriptionHandler;
 import com.jforex.dzjforex.misc.CredentialsFactory;
+import com.jforex.dzjforex.misc.DateTimeUtils;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.misc.StrategyForData;
 import com.jforex.dzjforex.settings.PluginConfig;
@@ -29,6 +35,12 @@ public class ZorroBridge {
     private final StrategyForData strategyForData;
     private long strategyID;
     private final CredentialsFactory credentialsFactory;
+    private AccountHandler accountHandler;
+    private ServerTime serverTime;
+    private DateTimeUtils dateTimeUtils;
+    private SubscriptionHandler subscriptionHandler;
+    private OrderHandler orderHandler;
+    private HistoryHandler historyHandler;
 
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
@@ -87,6 +99,15 @@ public class ZorroBridge {
         context = strategyForData.getContext();
 
         accountInfo = new AccountInfo(context.getAccount());
+        serverTime = new ServerTime(strategyForData);
+        dateTimeUtils = new DateTimeUtils(context.getDataService(), serverTime);
+        accountHandler = new AccountHandler(strategyForData.strategyUtil(),
+                                            accountInfo,
+                                            serverTime,
+                                            dateTimeUtils);
+        subscriptionHandler = new SubscriptionHandler(client, accountInfo);
+        orderHandler = new OrderHandler(context, strategyForData.strategyUtil());
+        historyHandler = new HistoryHandler(context.getHistory());
     }
 
     private void fillAccountInfos(final String accountInfos[]) {
@@ -97,56 +118,77 @@ public class ZorroBridge {
 
     public int doLogout() {
         ZorroLogger.log("doLogout called");
+        client.stopStrategy(strategyID);
         return loginHandler.doLogout();
     }
 
-    public int doBrokerTime(final double serverTime[]) {
+    public int doBrokerTime(final double serverTimeData[]) {
         ZorroLogger.log("doBrokerTime called");
+        if (!client.isConnected())
+            return ReturnCodes.CONNECTION_LOST_NEW_LOGIN_REQUIRED;
 
-        return 0;
+        return accountHandler.doBrokerTime(serverTimeData);
+    }
+
+    public int doSubscribeAsset(final String instrumentName) {
+        ZorroLogger.log("doSubscribeAsset called");
+        if (!client.isConnected())
+            return ReturnCodes.ASSET_UNAVAILABLE;
+
+        return subscriptionHandler.doSubscribeAsset(instrumentName);
     }
 
     public int doBrokerAsset(final String instrumentName,
                              final double assetParams[]) {
         ZorroLogger.log("doBrokerAsset called");
         if (!client.isConnected())
-            return ReturnCodes.CONNECTION_LOST_NEW_LOGIN_REQUIRED;
+            return ReturnCodes.ASSET_UNAVAILABLE;
 
-        return 0;
+        return accountHandler.doBrokerAsset(instrumentName, assetParams);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
         ZorroLogger.log("doBrokerAccount called");
+        if (!accountInfo.isConnected())
+            return ReturnCodes.ACCOUNT_UNAVAILABLE;
 
-        return 0;
+        return accountHandler.doBrokerAccount(accountInfoParams);
     }
 
     public int doBrokerBuy(final String instrumentName,
                            final double tradeParams[]) {
         ZorroLogger.log("doBrokerBuy called");
+        if (!accountInfo.isTradingPossible())
+            return ReturnCodes.BROKER_BUY_FAIL;
 
-        return 0;
+        return orderHandler.doBrokerBuy(instrumentName, tradeParams);
     }
 
     public int doBrokerTrade(final int orderID,
                              final double orderParams[]) {
         ZorroLogger.log("doBrokerTrade called");
+        if (!accountInfo.isTradingPossible())
+            return ReturnCodes.UNKNOWN_ORDER_ID;
 
-        return 0;
+        return orderHandler.doBrokerTrade(orderID, orderParams);
     }
 
     public int doBrokerStop(final int orderID,
                             final double newSLPrice) {
         ZorroLogger.log("doBrokerStop called");
+        if (!accountInfo.isTradingPossible())
+            return ReturnCodes.UNKNOWN_ORDER_ID;
 
-        return 0;
+        return orderHandler.doBrokerStop(orderID, newSLPrice);
     }
 
     public int doBrokerSell(final int orderID,
                             final int amount) {
         ZorroLogger.log("doBrokerSell called");
+        if (!accountInfo.isTradingPossible())
+            return ReturnCodes.BROKER_SELL_FAIL;
 
-        return 0;
+        return orderHandler.doBrokerSell(orderID, amount);
     }
 
     public int doBrokerHistory2(final String instrumentName,
@@ -156,13 +198,22 @@ public class ZorroBridge {
                                 final int nTicks,
                                 final double tickParams[]) {
         ZorroLogger.log("doBrokerHistory2 called");
+        if (!accountInfo.isConnected())
+            return ReturnCodes.HISTORY_UNAVAILABLE;
 
-        return 0;
+        return historyHandler.doBrokerHistory2(instrumentName,
+                                               startDate,
+                                               endDate,
+                                               tickMinutes,
+                                               nTicks,
+                                               tickParams);
     }
 
     public int doHistoryDownload() {
         ZorroLogger.log("doHistoryDownload called");
+        if (!client.isConnected())
+            return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
 
-        return 0;
+        return historyHandler.doHistoryDownload();
     }
 }

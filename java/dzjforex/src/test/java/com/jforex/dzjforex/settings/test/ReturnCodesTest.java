@@ -85,12 +85,27 @@ public class ReturnCodesTest {
     }
 
     @Test
+    public void adjustSLOKIsPositive() {
+        assertCode(ReturnCodes.ADJUST_SL_OK, 1);
+    }
+
+    @Test
     public void closingOrderFAILIsZero() {
-        assertCode(ReturnCodes.ORDER_CLOSE_FAIL, 0);
+        assertCode(ReturnCodes.BROKER_SELL_FAIL, 0);
     }
 
     @Test
     public void historyUnavailableIsZero() {
         assertCode(ReturnCodes.HISTORY_UNAVAILABLE, 0);
+    }
+
+    @Test
+    public void historyDownloadFAILIsZero() {
+        assertCode(ReturnCodes.HISTORY_DOWNLOAD_FAIL, 0);
+    }
+
+    @Test
+    public void historyDownloadOKIsOne() {
+        assertCode(ReturnCodes.HISTORY_DOWNLOAD_OK, 1);
     }
 }

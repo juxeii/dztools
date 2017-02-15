@@ -34,4 +34,16 @@ public interface PluginConfig extends Config {
 
     @DefaultValue("300000")
     int SERVERTIME_SYNC_MILLIS();
+
+    @DefaultValue("200")
+    long SUBSCRIPTION_WAIT_TIME();
+
+    @DefaultValue("10")
+    int SUBSCRIPTION_WAIT_TIME_RETRIES();
+
+    @DefaultValue("1000000")
+    int LOT_SCALE();
+
+    @DefaultValue("3000")
+    long ORDER_UPDATE_WAITTIME();
 }

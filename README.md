@@ -18,7 +18,7 @@ This a plugin for [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/
 
 After extracting the dztools archive you should see a *dukascopy-{version}.dll* and a folder *dukascopy* in the *Plugin* directory of your Zorro installation.
 
-Go to the *dukascopy* folder and open the *DZPluginConfig.properties* file with a text editor.
+Go to the *dukascopy* folder and open the *Plugin.properties* file with a text editor.
 
 Here you should adapt the *.cache* path to your local JForex installation path. Be careful with this step, since it may happen that the [Dukascopy API](http://www.dukascopy.com/client/javadoc/com/dukascopy/api/system/IClient.html#setCacheDirectory%28java.io.File%29) **will delete the .cache folder if it is corrupted**. Please make a copy of an instrument to a different location and set the path accordingly. If nothing gets deleted then you can use your complete *.cache* directory.
 You can leave the other entries to their default values.
@@ -42,6 +42,4 @@ Please use [pastebin](http://pastebin.com/) for uploading the logs.
 - This a very early release so **don't expect it to be bug free!**
 - Currently **only Forex** is supported(no Stocks, CFDs etc.)
 - The history downloading is sometimes not reliable; just repeat the conversion in case of errors
-- Login to a real account for the plugin is currently not supported(although the code is in place).
-- If you don't trust the binaries checkout the dztools project und build it manually(you need to know [maven](http://maven.apache.org/))
 - Follow discussions for this project on the [forum](http://www.opserver.de/ubb7/ubbthreads.php?ubb=showflat&Number=447697&#Post447697)

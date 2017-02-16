@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.connection;
+package com.jforex.dzjforex.brokerapi;
 
 import java.util.concurrent.TimeUnit;
 
@@ -6,31 +6,35 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.connection.CredentialsFactory;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 
 import io.reactivex.Observable;
 
-public class LoginHandler {
+public class BrokerLogin {
 
     private final IClient client;
     private final Authentification authentification;
     private final CredentialsFactory credentialsFactory;
     private final PluginConfig pluginConfig;
 
-    public LoginHandler(final IClient client,
-                        final Authentification authentification,
-                        final CredentialsFactory credentialsFactory,
-                        final PluginConfig pluginConfig) {
+    public BrokerLogin(final IClient client,
+                       final Authentification authentification,
+                       final CredentialsFactory credentialsFactory,
+                       final PluginConfig pluginConfig) {
         this.client = client;
         this.authentification = authentification;
         this.credentialsFactory = credentialsFactory;
         this.pluginConfig = pluginConfig;
     }
 
-    public int doLogin(final String userName,
-                       final String password,
-                       final String loginType) {
+    public int handle(final String userName,
+                      final String password,
+                      final String loginType) {
+        if (client.isConnected())
+            return ReturnCodes.LOGIN_OK;
+
         final LoginCredentials credentials = credentialsFactory.create(userName,
                                                                        password,
                                                                        loginType);

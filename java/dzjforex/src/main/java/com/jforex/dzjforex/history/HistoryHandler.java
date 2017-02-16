@@ -20,7 +20,7 @@ import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.datetime.DateTimeUtils;
-import com.jforex.dzjforex.misc.InstrumentProvider;
+import com.jforex.dzjforex.misc.InstrumentHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
 
 public class HistoryHandler {
@@ -42,7 +42,7 @@ public class HistoryHandler {
         logger.debug("startDate " + DateTimeUtils.formatOLETime(startDate) +
                 " endDate: " + DateTimeUtils.formatOLETime(endDate) +
                 "nTicks " + nTicks + " tickMinutes " + tickMinutes);
-        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(instrumentName);
         if (!instrumentOpt.isPresent())
             return ReturnCodes.HISTORY_UNAVAILABLE;
 
@@ -132,7 +132,7 @@ public class HistoryHandler {
         final int startYear = historyConfig.StartYear();
         final int endYear = historyConfig.EndYear();
 
-        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(instrumentName);
         if (!instrumentOpt.isPresent())
             return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
 

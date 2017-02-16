@@ -19,7 +19,7 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.misc.InstrumentProvider;
+import com.jforex.dzjforex.misc.InstrumentHandler;
 import com.jforex.dzjforex.ordertask.CloseOrderTask;
 import com.jforex.dzjforex.ordertask.StopLossTask;
 import com.jforex.dzjforex.ordertask.SubmitOrderTask;
@@ -51,7 +51,7 @@ public class OrderHandler {
 
     public int doBrokerBuy(final String instrumentName,
                            final double tradeParams[]) {
-        final Optional<Instrument> instrumentOpt = InstrumentProvider.fromName(instrumentName);
+        final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(instrumentName);
         if (!instrumentOpt.isPresent())
             return ReturnCodes.BROKER_BUY_FAIL;
         double amount = tradeParams[0];
@@ -88,49 +88,12 @@ public class OrderHandler {
         return orderID;
     }
 
-    public int doBrokerTrade(final int orderID,
-                             final double orderParams[]) {
-        if (!isOrderIDValid(orderID)) {
-            logger.warn("Order ID " + orderID + " is unknown!");
-            ZorroLogger.log("Order ID " + orderID + " is unknown!");
-            return ReturnCodes.UNKNOWN_ORDER_ID;
-        }
-
-        final IOrder order = orderMap.get(orderID);
-        final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(order.getInstrument());
-        orderParams[0] = order.getOpenPrice();
-
-        if (order.isLong())
-            orderParams[1] = instrumentUtil.askQuote();
-        else
-            orderParams[1] = instrumentUtil.bidQuote();
-        // Rollover not supported by Dukascopy
-        orderParams[2] = 0.0;
-        orderParams[3] = order.getProfitLossInAccountCurrency();
-        final int orderAmount = (int) (order.getAmount() * pluginConfig.LOT_SCALE());
-
-        return order.getState() == IOrder.State.CLOSED
-                ? -orderAmount
-                : orderAmount;
+    public IOrder getOrder(final int orderID) {
+        return orderMap.get(orderID);
     }
 
-    public int doBrokerStop(final int orderID,
-                            final double newSLPrice) {
-        logger.debug("orderID " + orderID + " newSLPrice: " + newSLPrice);
-
-        if (!isOrderIDValid(orderID)) {
-            logger.warn("Order ID " + orderID + " is unknown!");
-            ZorroLogger.log("Order ID " + orderID + " is unknown!");
-            return ReturnCodes.UNKNOWN_ORDER_ID;
-        }
-
-        final IOrder order = orderMap.get(orderID);
-        if (order.getStopLossPrice() == 0) {
-            logger.warn("Order has no SL set -> reject BrokerStop!");
-            ZorroLogger.log("Order has no SL set -> reject BrokerStop!");
-            return ReturnCodes.UNKNOWN_ORDER_ID;
-        }
-        return setSLPrice(order, MathUtil.roundPrice(newSLPrice, order.getInstrument()));
+    public int scaleAmount(final double amount) {
+        return (int) (amount * pluginConfig.LOT_SCALE());
     }
 
     public int doBrokerSell(final int orderID,
@@ -168,8 +131,12 @@ public class OrderHandler {
         return orderID;
     }
 
-    public boolean isOrderIDValid(final int orderID) {
-        return orderMap.containsKey(orderID);
+    public boolean isOrderKnown(final int orderID) {
+        if (!orderMap.containsKey(orderID)) {
+            logger.error("OrderID " + orderID + " is unknown!");
+            return false;
+        }
+        return true;
     }
 
     public int closeOrder(final int orderID,
@@ -189,7 +156,8 @@ public class OrderHandler {
 
     public int setSLPrice(IOrder order,
                           final double newSLPrice) {
-        final StopLossTask task = new StopLossTask(order, newSLPrice);
+        final double roundedSLPrice = MathUtil.roundPrice(newSLPrice, order.getInstrument());
+        final StopLossTask task = new StopLossTask(order, roundedSLPrice);
         order = getOrderFromFuture(context.executeTask(task));
 
         return ReturnCodes.ADJUST_SL_OK;

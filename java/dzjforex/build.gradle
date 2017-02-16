@@ -59,7 +59,7 @@ task copyDepsToPluginLibFolder(type: Copy) {
     into "${zorroPath}/Plugin/dukascopy/lib"
 }
 
-task deploy(dependsOn: ':jar') {
+task createDeployFolder(dependsOn: ':jar') {
     delete deployFolder
     mkdir deployFolder
     
@@ -112,7 +112,7 @@ task deploy(dependsOn: ':jar') {
     }
 }
 
-task dzZip(type: Zip, dependsOn: ':deploy') {
+task dzDeploy(type: Zip, dependsOn: ':createDeployFolder') {
     baseName = project.name
     from deployFolder
 }

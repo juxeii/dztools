@@ -63,7 +63,11 @@ public class DateTimeUtils {
                 : ReturnCodes.CONNECTION_OK;
     }
 
-    private boolean isMarketOffline(final long currentServerTime) {
+    public long getServerTime() {
+        return serverTime.get();
+    }
+
+    public boolean isMarketOffline(final long currentServerTime) {
         final Set<ITimeDomain> offlines = getOfflineTimes(currentServerTime,
                                                           currentServerTime + Period.ONE_MIN.getInterval());
         return offlines == null

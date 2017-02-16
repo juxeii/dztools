@@ -16,13 +16,14 @@ import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.connection.CredentialsFactory;
-import com.jforex.dzjforex.connection.PinProvider;
 import com.jforex.dzjforex.datetime.DateTimeUtils;
 import com.jforex.dzjforex.datetime.ServerTime;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
-import com.jforex.dzjforex.history.HistoryHandler;
+import com.jforex.dzjforex.history.BrokerHistory2;
+import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.misc.CredentialsFactory;
+import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.misc.StrategyForData;
 import com.jforex.dzjforex.misc.TradeCalculation;
 import com.jforex.programming.client.ClientUtil;
@@ -42,6 +43,7 @@ public class ZorroBridge {
     private AccountInfo accountInfo;
     private TradeCalculation tradeCalculation;
     private final BrokerLogin brokerLogin;
+    private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
     private BrokerTime brokerTime;
@@ -51,7 +53,7 @@ public class ZorroBridge {
     private DateTimeUtils dateTimeUtils;
     private BrokerSubscribe brokerSubscribe;
     private OrderHandler orderHandler;
-    private HistoryHandler historyHandler;
+    private BrokerHistory2 brokerHistory2;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
@@ -113,7 +115,8 @@ public class ZorroBridge {
         orderHandler = new OrderHandler(context,
                                         strategyUtil,
                                         pluginConfig);
-        historyHandler = new HistoryHandler(context.getHistory());
+        historyProvider = new HistoryProvider(context.getHistory());
+        brokerHistory2 = new BrokerHistory2(historyProvider);
         tradeCalculation = new TradeCalculation(accountInfo, strategyUtil.calculationUtil());
         brokerAsset = new BrokerAsset(accountInfo,
                                       tradeCalculation,
@@ -183,12 +186,12 @@ public class ZorroBridge {
         if (!accountInfo.isConnected())
             return ReturnCodes.HISTORY_UNAVAILABLE;
 
-        return historyHandler.doBrokerHistory2(instrumentName,
-                                               startDate,
-                                               endDate,
-                                               tickMinutes,
-                                               nTicks,
-                                               tickParams);
+        return brokerHistory2.handle(instrumentName,
+                                     startDate,
+                                     endDate,
+                                     tickMinutes,
+                                     nTicks,
+                                     tickParams);
     }
 
     public int doHistoryDownload() {
@@ -196,6 +199,6 @@ public class ZorroBridge {
         if (!client.isConnected())
             return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
 
-        return historyHandler.doHistoryDownload();
+        return brokerHistory2.doHistoryDownload();
     }
 }

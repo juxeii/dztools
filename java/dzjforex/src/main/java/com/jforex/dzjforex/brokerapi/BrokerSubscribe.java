@@ -13,7 +13,7 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
-import com.jforex.dzjforex.misc.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentHandler;
 
 import io.reactivex.Observable;
 

@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.history;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -11,61 +10,73 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.Filter;
 import com.dukascopy.api.IBar;
-import com.dukascopy.api.IHistory;
 import com.dukascopy.api.Instrument;
-import com.dukascopy.api.JFException;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.datetime.DateTimeUtils;
-import com.jforex.dzjforex.misc.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
 
-public class HistoryHandler {
+public class BrokerHistory2 {
 
-    private final IHistory history;
+    private final HistoryProvider historyProvider;
 
-    private final static Logger logger = LogManager.getLogger(HistoryHandler.class);
+    private final static Logger logger = LogManager.getLogger(BrokerHistory2.class);
 
-    public HistoryHandler(final IHistory history) {
-        this.history = history;
+    public BrokerHistory2(final HistoryProvider historyProvider) {
+        this.historyProvider = historyProvider;
     }
 
-    public int doBrokerHistory2(final String instrumentName,
-                                final double startDate,
-                                final double endDate,
-                                final int tickMinutes,
-                                final int nTicks,
-                                final double tickParams[]) {
+    public int handle(final String instrumentName,
+                      final double startDate,
+                      final double endDate,
+                      final int tickMinutes,
+                      final int nTicks,
+                      final double tickParams[]) {
         logger.debug("startDate " + DateTimeUtils.formatOLETime(startDate) +
                 " endDate: " + DateTimeUtils.formatOLETime(endDate) +
                 "nTicks " + nTicks + " tickMinutes " + tickMinutes);
-        final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(instrumentName);
-        if (!instrumentOpt.isPresent())
-            return ReturnCodes.HISTORY_UNAVAILABLE;
+        return InstrumentHandler
+            .executeForInstrument(instrumentName,
+                                  instrument -> processHistory(instrument,
+                                                               startDate,
+                                                               endDate,
+                                                               tickMinutes,
+                                                               nTicks,
+                                                               tickParams),
+                                  ReturnCodes.HISTORY_UNAVAILABLE);
+    }
 
+    private int processHistory(final Instrument instrument,
+                               final double startDate,
+                               final double endDate,
+                               final int tickMinutes,
+                               final int nTicks,
+                               final double tickParams[]) {
         final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
         if (period == null) {
-            logger.error("Invalid tickMinutes: " + tickMinutes);
-            ZorroLogger.indicateError();
+            logger.error("Invalid tickMinutes " + tickMinutes + " for period " + period);
             return ReturnCodes.HISTORY_UNAVAILABLE;
         }
 
-        final Instrument instrument = instrumentOpt.get();
-        final long endDateTimeRounded =
-                getEndDateTimeRounded(instrument, period, DateTimeUtils.getMillisFromOLEDate(endDate));
+        final long endDateTimeRounded = getEndDateTimeRounded(instrument,
+                                                              period,
+                                                              DateTimeUtils.getMillisFromOLEDate(endDate));
         final long startDateTimeRounded = endDateTimeRounded - (nTicks - 1) * period.getInterval();
-
-        final List<IBar> bars = getBars(instrument, period, startDateTimeRounded, endDateTimeRounded);
-        final int numTicks = bars.size();
-        logger.debug("numTicks " + numTicks);
-        if (numTicks == 0)
+        final List<IBar> bars = historyProvider.fetchBars(instrument,
+                                                          period,
+                                                          OfferSide.ASK,
+                                                          Filter.WEEKENDS,
+                                                          startDateTimeRounded,
+                                                          endDateTimeRounded);
+        if (bars.isEmpty())
             return ReturnCodes.HISTORY_UNAVAILABLE;
 
         fillTICKs(bars, tickParams);
-        return numTicks;
+        return bars.size();
     }
 
     private void fillTICKs(final List<IBar> bars,
@@ -86,42 +97,12 @@ public class HistoryHandler {
         }
     }
 
-    private List<IBar> getBars(final Instrument instrument,
-                               final Period period,
-                               final long startTime,
-                               long endTime) {
-        final String dateFrom = DateTimeUtils.formatDateTime(startTime);
-        final String dateTo = DateTimeUtils.formatDateTime(endTime);
-        logger.debug("Trying to fetch " + period + " bars from " + dateFrom + " to " + dateTo + " for " + instrument);
-
-        List<IBar> bars = new ArrayList<IBar>();
-        try {
-            history.getBar(instrument, period, OfferSide.ASK, 0);
-            final long prevBarStart = history.getPreviousBarStart(period, history.getLastTick(instrument).getTime());
-            if (prevBarStart < endTime)
-                endTime = prevBarStart;
-
-            bars = history.getBars(instrument, period, OfferSide.ASK, Filter.WEEKENDS, startTime, endTime);
-        } catch (final JFException e) {
-            logger.error("getBars exception: " + e.getMessage());
-            ZorroLogger.indicateError();
-        }
-        logger.debug("Fetched " + bars.size() + " bars from " + dateFrom + " to " + dateTo + " for " + instrument);
-        return bars;
-    }
-
     private long getEndDateTimeRounded(final Instrument instrument,
                                        final Period period,
                                        final long endDateTimeRaw) {
-        long endDateTimeRounded = 0L;
-        try {
-            endDateTimeRounded = history.getPreviousBarStart(period, endDateTimeRaw);
-            logger.debug("endDateTimeRaw " + DateTimeUtils.formatDateTime(endDateTimeRaw)
-                    + " endDateTimeRounded " + DateTimeUtils.formatDateTime(endDateTimeRounded));
-
-        } catch (final JFException e) {
-            logger.error("getPreviousBarStart exc: " + e.getMessage());
-        }
+        final long endDateTimeRounded = historyProvider.getPreviousBarStart(period, endDateTimeRaw);
+        logger.debug("endDateTimeRaw " + DateTimeUtils.formatDateTime(endDateTimeRaw)
+                + " endDateTimeRounded " + DateTimeUtils.formatDateTime(endDateTimeRounded));
         return endDateTimeRounded;
     }
 
@@ -160,7 +141,12 @@ public class HistoryHandler {
                                         final int year) {
         final long startTime = DateTimeUtils.getUTCYearStartTime(year);
         final long endTime = DateTimeUtils.getUTCYearEndTime(year);
-        return getBars(instrument, Period.ONE_MIN, startTime, endTime);
+        return historyProvider.fetchBars(instrument,
+                                         Period.ONE_MIN,
+                                         OfferSide.ASK,
+                                         Filter.WEEKENDS,
+                                         startTime,
+                                         endTime);
     }
 
     private boolean isWriteBarsToFileOK(final String fileName,

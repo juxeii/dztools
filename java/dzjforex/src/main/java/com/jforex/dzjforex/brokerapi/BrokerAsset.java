@@ -3,7 +3,7 @@ package com.jforex.dzjforex.brokerapi;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
-import com.jforex.dzjforex.misc.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.dzjforex.misc.TradeCalculation;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;

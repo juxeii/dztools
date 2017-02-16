@@ -6,7 +6,7 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.connection.CredentialsFactory;
+import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 

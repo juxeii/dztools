@@ -19,7 +19,6 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.misc.InstrumentHandler;
 import com.jforex.dzjforex.ordertask.CloseOrderTask;
 import com.jforex.dzjforex.ordertask.StopLossTask;
 import com.jforex.dzjforex.ordertask.SubmitOrderTask;

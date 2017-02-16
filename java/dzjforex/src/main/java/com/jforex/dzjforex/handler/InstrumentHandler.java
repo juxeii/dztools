@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc;
+package com.jforex.dzjforex.handler;
 
 import java.util.HashMap;
 import java.util.Optional;

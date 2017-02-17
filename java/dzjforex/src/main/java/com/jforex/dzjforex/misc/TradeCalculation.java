@@ -30,11 +30,14 @@ public class TradeCalculation {
     }
 
     public double pipCost(final Instrument instrument) {
+        logger.info("pipCost called lotsiz "+lotSize
+                    + " instrument "+instrument
+                    +" accountCurrency "+accountCurrency);
         final double pipCost = calculationUtil.pipValueInCurrency(lotSize,
                                                                   instrument,
                                                                   accountCurrency,
                                                                   OfferSide.ASK);
-        logger.debug("Pipcost for lotSize " + lotSize
+        logger.info("Pipcost for lotSize " + lotSize
                 + " and instrument " + instrument
                 + " is " + pipCost);
         return pipCost;

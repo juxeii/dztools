@@ -74,6 +74,9 @@ public:
     int
     ProcessHistoryDownload();
 
+    int
+    SetOrderText(const char *orderText);
+
 private:
     JNIHandler jniHandler;
     JNIEnv *env;

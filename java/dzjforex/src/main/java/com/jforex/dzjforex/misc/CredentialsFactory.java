@@ -8,12 +8,14 @@ public class CredentialsFactory {
     private final PinProvider pinProvider;
     private final PluginConfig pluginConfig;
 
-    private static final String demoName = "Demo";
+    private final String demoName;
 
     public CredentialsFactory(final PinProvider pinProvider,
                               final PluginConfig pluginConfig) {
         this.pinProvider = pinProvider;
         this.pluginConfig = pluginConfig;
+
+        demoName = pluginConfig.DEMO_LOGIN_TYPE();
     }
 
     public LoginCredentials create(final String username,

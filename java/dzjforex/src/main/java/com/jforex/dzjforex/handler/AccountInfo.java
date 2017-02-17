@@ -1,5 +1,8 @@
 package com.jforex.dzjforex.handler;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.ICurrency;
 import com.jforex.dzjforex.config.PluginConfig;
@@ -8,6 +11,8 @@ public class AccountInfo {
 
     private final IAccount account;
     private final PluginConfig pluginConfig;
+
+    private final static Logger logger = LogManager.getLogger(AccountInfo.class);
 
     public AccountInfo(final IAccount account,
                        final PluginConfig pluginConfig) {
@@ -27,6 +32,10 @@ public class AccountInfo {
         return account.getEquity();
     }
 
+    public double baseEquity() {
+        return account.getBaseEquity();
+    }
+
     public ICurrency currency() {
         return account.getAccountCurrency();
     }
@@ -40,7 +49,11 @@ public class AccountInfo {
     }
 
     public double tradeValue() {
-        return account.getEquity() - account.getBalance();
+        logger.info("tradeValue equity " + account.getEquity()
+                + " balance " + account.getBalance()
+                + " baseEquity " + account.getBaseEquity());
+
+        return account.getEquity() - account.getBaseEquity();
     }
 
     public double freeMargin() {

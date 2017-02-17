@@ -316,3 +316,11 @@ DllCallHandler::ProcessHistoryDownload()
     return (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
                                          JData::doHistoryDownload.methodID);
 }
+
+int
+DllCallHandler::SetOrderText(const char *orderText)
+{
+    return (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+                                         JData::doSetOrderText.methodID,
+                                         orderText);
+}

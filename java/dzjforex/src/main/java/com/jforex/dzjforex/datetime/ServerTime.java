@@ -10,11 +10,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.ITick;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.misc.StrategyForData;
+import com.jforex.dzjforex.misc.InfoStrategy;
 
 public class ServerTime {
 
-    private final StrategyForData strategy;
+    private final InfoStrategy strategy;
     private final NTPTimeSynchTask ntpSynchTask;
     private SynchState snychState;
     private long serverSynchTimer;
@@ -31,7 +31,7 @@ public class ServerTime {
         TICK
     }
 
-    public ServerTime(final StrategyForData strategy,
+    public ServerTime(final InfoStrategy strategy,
                       final PluginConfig pluginConfig) {
         this.strategy = strategy;
         this.pluginConfig = pluginConfig;

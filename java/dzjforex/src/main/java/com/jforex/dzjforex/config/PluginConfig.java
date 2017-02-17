@@ -18,13 +18,13 @@ public interface PluginConfig extends Config {
     @DefaultValue("10")
     int SUBSCRIPTION_WAIT_TIME_RETRIES();
 
-    @Key("connection.waittime")
-    @DefaultValue("200")
-    long CONNECTION_WAIT_TIME();
+    @Key("account.demologintype")
+    @DefaultValue("Demo")
+    String DEMO_LOGIN_TYPE();
 
-    @Key("connection.maxretries")
-    @DefaultValue("10")
-    int CONNECTION_RETRIES();
+    @Key("account.reallogintype")
+    @DefaultValue("Real")
+    String REAL_LOGIN_TYPE();
 
     @Key("connection.demourl")
     @DefaultValue("http://platform.dukascopy.com/demo_3/jforex_3.jnlp")

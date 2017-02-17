@@ -1,12 +1,12 @@
 package com.jforex.dzjforex.brokerapi;
 
-import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.misc.CredentialsFactory;
+import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 
@@ -17,21 +17,19 @@ public class BrokerLogin {
     private final IClient client;
     private final Authentification authentification;
     private final CredentialsFactory credentialsFactory;
-    private final PluginConfig pluginConfig;
 
-    public BrokerLogin(final IClient client,
-                       final Authentification authentification,
-                       final CredentialsFactory credentialsFactory,
-                       final PluginConfig pluginConfig) {
-        this.client = client;
-        this.authentification = authentification;
+    private final static Logger logger = LogManager.getLogger(BrokerLogin.class);
+
+    public BrokerLogin(final ClientUtil clientUtil,
+                       final CredentialsFactory credentialsFactory) {
+        this.client = clientUtil.client();
+        this.authentification = clientUtil.authentification();
         this.credentialsFactory = credentialsFactory;
-        this.pluginConfig = pluginConfig;
     }
 
-    public int handle(final String userName,
-                      final String password,
-                      final String loginType) {
+    public int doLogin(final String userName,
+                       final String password,
+                       final String loginType) {
         if (client.isConnected())
             return ReturnCodes.LOGIN_OK;
 
@@ -44,15 +42,9 @@ public class BrokerLogin {
     private int login(final LoginCredentials credentials) {
         return authentification
             .login(credentials)
-            .andThen(Observable
-                .interval(pluginConfig.CONNECTION_WAIT_TIME(), TimeUnit.MILLISECONDS)
-                .take(pluginConfig.CONNECTION_RETRIES())
-                .takeUntil(att -> (Boolean) client.isConnected())
-                .map(waitAttempt -> client.isConnected()
-                        ? ReturnCodes.LOGIN_OK
-                        : ReturnCodes.LOGIN_FAIL))
+            .andThen(Observable.just(ReturnCodes.LOGIN_OK))
             .onErrorResumeNext(err -> {
-                ZorroLogger.showError("Failed to login with exception " + err.getMessage());
+                logger.error("Failed to login with exception " + err.getMessage());
                 return Observable.just(ReturnCodes.LOGIN_FAIL);
             })
             .blockingLast();

@@ -11,7 +11,7 @@ import com.dukascopy.api.Period;
 import com.jforex.programming.strategy.JForexUtilsStrategy;
 import com.jforex.programming.strategy.StrategyUtil;
 
-public class StrategyForData extends JForexUtilsStrategy {
+public class InfoStrategy extends JForexUtilsStrategy {
 
     private IContext context;
     private ITick latestTick;

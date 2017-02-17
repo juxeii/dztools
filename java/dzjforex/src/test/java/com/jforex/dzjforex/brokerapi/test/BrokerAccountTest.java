@@ -25,13 +25,13 @@ public class BrokerAccountTest extends CommonUtilForTest {
     private final double accountInfoParams[] = new double[3];
     private int returnCode;
 
-    private static final double balance = 123.45;
+    private static final double equity = 123.45;
     private static final double tradeValue = 65.45;
     private static final double usedMargin = 3.19;
 
     @Before
     public void setUp() {
-        when(accountInfo.balance()).thenReturn(balance);
+        when(accountInfo.equity()).thenReturn(equity);
         when(accountInfo.tradeValue()).thenReturn(tradeValue);
         when(accountInfo.usedMargin()).thenReturn(usedMargin);
 
@@ -81,8 +81,8 @@ public class BrokerAccountTest extends CommonUtilForTest {
         }
 
         @Test
-        public void balanceIsCorrectSet() {
-            assertThat(accountInfoParams[0], equalTo(balance));
+        public void equityIsCorrectSet() {
+            assertThat(accountInfoParams[0], equalTo(equity));
         }
 
         @Test

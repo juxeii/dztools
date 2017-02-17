@@ -1,10 +1,12 @@
 #include "dukazorrobridge.hpp"
 #include "DllCallHandler.hpp"
 #include <sstream>
+#include <string>
 
 #define DLLFUNC extern "C" __declspec(dllexport)
 #define GET_MINLOT 23 // Minimum permitted amount of a lot.
 #define GET_TYPE 50
+#define SET_ORDERTEXT 131 // Order comment for trades
 
 int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
@@ -199,15 +201,17 @@ BrokerCommand(int nCommand,
     switch (nCommand)
     {
     case GET_MINLOT:
-        return 1000l;
+        return 1000;
     case GET_TYPE:
-        return 1l;
+        return 1;
     case HISTORY_DOWNLOAD:
         return dllCallHandler.ProcessHistoryDownload();
+    case SET_ORDERTEXT:
+        return dllCallHandler.SetOrderText(std::to_string(dwParameter).c_str());
     default:
         {
-            std::stringstream buffer;
-            buffer << "Command " << nCommand << "not yet supported.";
+            std::ostringstream buffer;
+            buffer << "Command " << nCommand << " not yet supported.";
             BrokerError(buffer.str().c_str());
         }
     }

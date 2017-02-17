@@ -54,6 +54,11 @@ task copyJarToPluginFolder(type: Copy) {
     into "${zorroPath}/Plugin/dukascopy"
 }
 
+task startZorro(type: Exec, dependsOn: ':jar') {
+    workingDir "${zorroPath}"
+    commandLine 'cmd', '/c', 'zorro.bat'
+}
+
 task copyDepsToPluginLibFolder(type: Copy) {
     from configurations.runtime
     into "${zorroPath}/Plugin/dukascopy/lib"

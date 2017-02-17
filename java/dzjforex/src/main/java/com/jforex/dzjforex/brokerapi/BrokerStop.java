@@ -4,16 +4,24 @@ import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.programming.math.MathUtil;
+import com.jforex.programming.order.OrderUtil;
+import com.jforex.programming.order.task.params.basic.SetSLParams;
+import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerStop {
 
+    private final OrderUtil orderUtil;
     private final OrderHandler orderHandler;
     private final AccountInfo accountInfo;
 
-    public BrokerStop(final OrderHandler orderHandler,
+    public BrokerStop(final StrategyUtil strategyUtil,
+                      final OrderHandler orderHandler,
                       final AccountInfo accountInfo) {
         this.orderHandler = orderHandler;
         this.accountInfo = accountInfo;
+
+        orderUtil = strategyUtil.orderUtil();
     }
 
     public int handle(final int orderID,
@@ -22,6 +30,20 @@ public class BrokerStop {
             return ReturnCodes.UNKNOWN_ORDER_ID;
 
         final IOrder order = orderHandler.getOrder(orderID);
-        return orderHandler.setSLPrice(order, newSLPrice);
+        return setSLPrice(order, newSLPrice);
+    }
+
+    private int setSLPrice(final IOrder order,
+                           final double newSLPrice) {
+        final double roundedSLPrice = MathUtil.roundPrice(newSLPrice, order.getInstrument());
+        final SetSLParams setSLParams = SetSLParams
+            .setSLAtPrice(order, roundedSLPrice)
+            .build();
+
+        orderUtil
+            .paramsToObservable(setSLParams)
+            .blockingLast();
+
+        return ReturnCodes.ADJUST_SL_OK;
     }
 }

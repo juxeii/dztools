@@ -1,5 +1,8 @@
 package com.jforex.dzjforex.brokerapi;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;

@@ -29,4 +29,6 @@ public class ReturnCodes {
     public static final int HISTORY_UNAVAILABLE = 0;
     public static final int HISTORY_DOWNLOAD_FAIL = 0;
     public static final int HISTORY_DOWNLOAD_OK = 1;
+
+    public static final int BROKER_COMMAND_OK = 1;
 }

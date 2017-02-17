@@ -26,6 +26,7 @@ public class AccountInfoTest extends CommonUtilForTest {
     private static final ICurrency accountCurrency = CurrencyFactory.EUR;
     private static final String id = "1234";
     private static final double equity = 614527.45;
+    private static final double basEquity = 614740.45;
     private static final double balance = 54331.78;
     private static final double leverage = 100;
     private static final double creditLine = 556.23;
@@ -38,6 +39,7 @@ public class AccountInfoTest extends CommonUtilForTest {
 
         when(accountMock.getAccountId()).thenReturn(id);
         when(accountMock.getEquity()).thenReturn(equity);
+        when(accountMock.getBaseEquity()).thenReturn(basEquity);
         when(accountMock.getBalance()).thenReturn(balance);
         when(accountMock.getLeverage()).thenReturn(leverage);
         when(accountMock.getCreditLine()).thenReturn(creditLine);
@@ -60,6 +62,13 @@ public class AccountInfoTest extends CommonUtilForTest {
         assertThat(accountInfo.equity(), equalTo(equity));
 
         verify(accountMock).getEquity();
+    }
+    
+    @Test
+    public void basEquityIsCorrect() {
+        assertThat(accountInfo.baseEquity(), equalTo(basEquity));
+
+        verify(accountMock).getBaseEquity();
     }
 
     @Test
@@ -90,7 +99,7 @@ public class AccountInfoTest extends CommonUtilForTest {
 
     @Test
     public void tradeValueIsCorrect() {
-        assertThat(accountInfo.tradeValue(), equalTo(equity - balance));
+        assertThat(accountInfo.tradeValue(), equalTo(equity - basEquity));
     }
 
     @Test

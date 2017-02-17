@@ -108,4 +108,9 @@ public class ReturnCodesTest {
     public void historyDownloadOKIsOne() {
         assertCode(ReturnCodes.HISTORY_DOWNLOAD_OK, 1);
     }
+
+    @Test
+    public void brokerCommandOKIsOne() {
+        assertCode(ReturnCodes.BROKER_COMMAND_OK, 1);
+    }
 }

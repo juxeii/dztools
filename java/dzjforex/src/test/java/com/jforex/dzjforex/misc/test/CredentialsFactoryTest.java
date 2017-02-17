@@ -29,19 +29,13 @@ public class CredentialsFactoryTest extends CommonUtilForTest {
     private PluginConfig pluginConfigMock;
     private LoginCredentials credentials;
 
-    private static final String jnlpDEMO = "jnlpDEMO";
-    private static final String jnlpReal = "jnlpReal";
-    private static final String username = "John";
-    private static final String password = "Doe123";
-    private static final String pin = "4242";
-    private static final String loginTypeDemo = "Demo";
-    private static final String loginTypeReal = "Real";
-
     @Before
     public void setUp() {
         when(pinProviderMock.getPin()).thenReturn(pin);
         when(pluginConfigMock.CONNECT_URL_DEMO()).thenReturn(jnlpDEMO);
         when(pluginConfigMock.CONNECT_URL_REAL()).thenReturn(jnlpReal);
+        when(pluginConfigMock.DEMO_LOGIN_TYPE()).thenReturn(loginTypeDemo);
+        when(pluginConfigMock.REAL_LOGIN_TYPE()).thenReturn(loginTypeReal);
 
         credentialsFactory = new CredentialsFactory(pinProviderMock, pluginConfigMock);
     }

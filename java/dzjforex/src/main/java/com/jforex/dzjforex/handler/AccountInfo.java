@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.handler;
 
 import com.dukascopy.api.IAccount;
+import com.dukascopy.api.IAccount.AccountState;
 import com.dukascopy.api.ICurrency;
 import com.jforex.dzjforex.config.PluginConfig;
 
@@ -13,6 +14,10 @@ public class AccountInfo {
                        final PluginConfig pluginConfig) {
         this.account = account;
         this.pluginConfig = pluginConfig;
+    }
+
+    public AccountState state() {
+        return account.getAccountState();
     }
 
     public String id() {

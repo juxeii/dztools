@@ -3,6 +3,8 @@ package com.jforex.dzjforex.brokerapi.test;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,15 +12,13 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerLogin;
-import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.misc.CredentialsFactory;
+import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.programming.client.ClientUtil;
-import com.jforex.programming.connection.Authentification;
-import com.jforex.programming.connection.ConnectionLostException;
+import com.jforex.dzjforex.test.util.RxTestUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
-import io.reactivex.Completable;
 
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerLoginTest extends CommonUtilForTest {
@@ -26,27 +26,27 @@ public class BrokerLoginTest extends CommonUtilForTest {
     private BrokerLogin brokerLogin;
 
     @Mock
-    private ClientUtil clientUtilMock;
-    @Mock
-    private CredentialsFactory credentialsFactoryMock;
+    private LoginHandler loginHandlerMock;
     @Mock
     private IClient clientMock;
     @Mock
-    private Authentification authentificationMock;
+    private PluginConfig pluginConfigMock;
+    private final long loginRetryDelay = 5000L;
     private int returnCode;
 
     @Before
     public void setUp() {
-        when(clientUtilMock.client()).thenReturn(clientMock);
-        when(clientUtilMock.authentification()).thenReturn(authentificationMock);
+        when(pluginConfigMock.LOGIN_RETRY_DELAY()).thenReturn(loginRetryDelay);
 
-        brokerLogin = new BrokerLogin(clientUtilMock, credentialsFactoryMock);
+        brokerLogin = new BrokerLogin(loginHandlerMock,
+                                      clientMock,
+                                      pluginConfigMock);
     }
 
     private void callLogin() {
-        returnCode = brokerLogin.doLogin(username,
-                                         password,
-                                         loginTypeDemo);
+        returnCode = brokerLogin.login(username,
+                                       password,
+                                       loginTypeDemo);
     }
 
     public class WhenClientIsConnected {
@@ -60,77 +60,108 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
         @Test
         public void loginCallDoesNothing() {
-            verifyZeroInteractions(credentialsFactoryMock);
-            verifyZeroInteractions(authentificationMock);
+            verifyZeroInteractions(loginHandlerMock);
         }
 
         @Test
         public void returnValueIsLoginOK() {
-            assertThat(returnCode, equalTo(ReturnCodes.LOGIN_OK));
+            assertThat(returnCode, equalTo(Constant.LOGIN_OK));
         }
     }
 
     @Test
-    public void logoutCallsAuthentification() {
-        when(authentificationMock.logout())
-            .thenReturn(Completable.complete());
+    public void logoutCallsLoginHandler() {
+        when(loginHandlerMock.logout()).thenReturn(Constant.LOGOUT_OK);
 
-        brokerLogin.doLogout();
+        returnCode = brokerLogin.logout();
 
-        verify(authentificationMock).logout();
+        assertThat(returnCode, equalTo(Constant.LOGOUT_OK));
+        verify(loginHandlerMock).logout();
     }
 
     public class WhenClientIsDisconnected {
 
+        private void setLoginResult(final int loginResult) {
+            when(loginHandlerMock.login(username,
+                                        password,
+                                        loginTypeDemo))
+                                            .thenReturn(loginResult);
+        }
+
+        private void verifyLoginCall(final int times) {
+            verify(loginHandlerMock, times(times)).login(username,
+                                                         password,
+                                                         loginTypeDemo);
+        }
+
         @Before
         public void setUp() {
             when(clientMock.isConnected()).thenReturn(false);
-
-            when(credentialsFactoryMock.create(username,
-                                               password,
-                                               loginTypeDemo))
-                                                   .thenReturn(loginCredentials);
         }
 
-        public class WhenAuthentificationIsOK {
+        public class WhenLoginIsOK {
 
             @Before
             public void setUp() {
-                when(authentificationMock.login(loginCredentials))
-                    .thenReturn(Completable.complete());
+                setLoginResult(Constant.LOGIN_OK);
 
                 callLogin();
             }
 
             @Test
             public void returnValueIsLoginOK() {
-                assertThat(returnCode, equalTo(ReturnCodes.LOGIN_OK));
+                assertThat(returnCode, equalTo(Constant.LOGIN_OK));
             }
 
             @Test
-            public void authentificationIsCalledWithCredentials() {
-                verify(authentificationMock).login(loginCredentials);
+            public void loginHandlerIsCalledCorrect() {
+                verifyLoginCall(1);
             }
         }
 
-        public class WhenAuthentificationFailes {
+        public class WhenLoginIsOKFailes {
 
             @Before
             public void setUp() {
-                when(authentificationMock.login(loginCredentials))
-                    .thenReturn(Completable.error(new ConnectionLostException("Login fail!")));
+                setLoginResult(Constant.LOGIN_FAIL);
 
                 callLogin();
             }
 
             @Test
             public void returnValueIsLoginFAIL() {
-                assertThat(returnCode, equalTo(ReturnCodes.LOGIN_FAIL));
+                assertThat(returnCode, equalTo(Constant.LOGIN_FAIL));
             }
 
             @Test
-            public void authentificationIsCalledWithCredentials() {
-                verify(authentificationMock).login(loginCredentials);
+            public void loginHandlerIsCalledCorrect() {
+                verifyLoginCall(1);
+            }
+
+            public class WhenRetryLogin {
+
+                @Before
+                public void setUp() {
+                    setLoginResult(Constant.LOGIN_OK);
+                }
+
+                @Test
+                public void withinRetryDelayDoesNotLoginOnHandler() {
+                    RxTestUtil.advanceTimeBy(200L, TimeUnit.MILLISECONDS);
+
+                    callLogin();
+
+                    verifyLoginCall(1);
+                }
+
+                @Test
+                public void afterRetryDelayLoginOnHandlerIsCalledAgain() {
+                    RxTestUtil.advanceTimeBy(loginRetryDelay, TimeUnit.MILLISECONDS);
+
+                    callLogin();
+
+                    verifyLoginCall(2);
+                }
             }
         }
     }

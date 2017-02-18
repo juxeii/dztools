@@ -71,9 +71,9 @@ task createDeployFolder(dependsOn: ':jar') {
     def strategyFolder = "${deployFolder}/Strategy"
     mkdir strategyFolder
     
-    def resourceFolder = "src/main/resources"
+    def configFolder = "src/main/config"
     copy{
-        from "src/main/resources/DukascopyDownload.c"
+        from "${configFolder}/DukascopyDownload.c"
         into strategyFolder
     }
     
@@ -94,17 +94,17 @@ task createDeployFolder(dependsOn: ':jar') {
     }
     
     copy{
-        from "src/main/resources/log4j2.xml"
+        from "${configFolder}/log4j2.xml"
         into dukascopyFolder
     }
     
     copy{
-        from "src/main/resources/log4j.properties"
+        from "${configFolder}/log4j.properties"
         into dukascopyFolder
     }
     
     copy{
-        from "src/main/resources/Plugin.properties"
+        from "${configFolder}/Plugin.properties"
         into dukascopyFolder
     }
     

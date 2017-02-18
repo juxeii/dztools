@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.InstrumentHandler;
 
@@ -34,7 +34,7 @@ public class BrokerSubscribe {
     public int handle(final String instrumentName) {
         return InstrumentHandler.executeForInstrument(instrumentName,
                                                       this::handleForValidInstrument,
-                                                      ReturnCodes.ASSET_UNAVAILABLE);
+                                                      Constant.ASSET_UNAVAILABLE);
     }
 
     private int handleForValidInstrument(final Instrument toSubscribeInstrument) {
@@ -62,10 +62,10 @@ public class BrokerSubscribe {
             .map(waitAttempt -> {
                 if (allInstrumentsSubscribed(instruments)) {
                     logger.info("Subscription for " + instruments + " done.");
-                    return ReturnCodes.ASSET_AVAILABLE;
+                    return Constant.ASSET_AVAILABLE;
                 }
                 logger.error("Subscription for " + instruments + " failed!");
-                return ReturnCodes.ASSET_AVAILABLE;
+                return Constant.ASSET_AVAILABLE;
             })
             .blockingLast();
     }

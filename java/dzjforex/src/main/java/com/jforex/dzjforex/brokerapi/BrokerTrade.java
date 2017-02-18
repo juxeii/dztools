@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
@@ -27,14 +27,14 @@ public class BrokerTrade {
         logger.info("BrokerTrade fillTradeParams called for id " + orderID);
         if (!orderHandler.isOrderKnown(orderID)) {
             logger.info("BrokerTrade orderID " + orderID + " not found");
-            return ReturnCodes.UNKNOWN_ORDER_ID;
+            return Constant.UNKNOWN_ORDER_ID;
         }
 
         final IOrder order = orderHandler.getOrder(orderID);
         fillOrderParams(order, orderParams);
         if (order.getState() == IOrder.State.CLOSED) {
             logger.info("BrokerTrade recently closed!");
-            return ReturnCodes.ORDER_RECENTLY_CLOSED;
+            return Constant.ORDER_RECENTLY_CLOSED;
         }
         final int noOfContracts = orderHandler.scaleAmount(order.getAmount());
         logger.info("noOfContracts = " + noOfContracts);

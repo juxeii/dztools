@@ -7,7 +7,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
@@ -39,7 +39,7 @@ public class BrokerBuy extends BrokerOrderBase {
         final Optional<Instrument> maybeInstrument = maybeInstrumentForTrading(assetName);
         return maybeInstrument.isPresent()
                 ? doBrokerBuyForValidInstrument(maybeInstrument.get(), tradeParams)
-                : ReturnCodes.BROKER_BUY_FAIL;
+                : Constant.BROKER_BUY_FAIL;
     }
 
     private int doBrokerBuyForValidInstrument(final Instrument instrument,
@@ -124,7 +124,7 @@ public class BrokerBuy extends BrokerOrderBase {
 
         final IOrder order = orderEvent.order();
         if (order == null)
-            return ReturnCodes.BROKER_BUY_FAIL;
+            return Constant.BROKER_BUY_FAIL;
 
         orderHandler.storeOrder(orderID, order);
         tradeParams[2] = orderHandler.getOrder(orderID).getOpenPrice();

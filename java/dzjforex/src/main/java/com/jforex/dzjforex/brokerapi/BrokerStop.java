@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.math.MathUtil;
@@ -33,7 +33,7 @@ public class BrokerStop {
                      final double newSLPrice) {
         logger.info("setSL called with newSLPrice " + newSLPrice);
         if (!accountInfo.isTradingAllowed() || !orderHandler.isOrderKnown(orderID))
-            return ReturnCodes.UNKNOWN_ORDER_ID;
+            return Constant.UNKNOWN_ORDER_ID;
 
         final IOrder order = orderHandler.getOrder(orderID);
         return setSLPrice(order, newSLPrice);
@@ -51,6 +51,6 @@ public class BrokerStop {
             .paramsToObservable(setSLParams)
             .blockingLast();
 
-        return ReturnCodes.ADJUST_SL_OK;
+        return Constant.ADJUST_SL_OK;
     }
 }

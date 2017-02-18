@@ -1,5 +1,7 @@
 package com.jforex.dzjforex;
 
+import java.time.Clock;
+
 import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,9 +18,10 @@ import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
 import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.dzjforex.history.BrokerHistory2;
 import com.jforex.dzjforex.history.HistoryProvider;
@@ -45,6 +48,7 @@ public class ZorroBridge {
     private final CredentialsFactory credentialsFactory;
     private AccountInfo accountInfo;
     private TradeCalculation tradeCalculation;
+    private final LoginHandler loginHandler;
     private final BrokerLogin brokerLogin;
     private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
@@ -72,7 +76,10 @@ public class ZorroBridge {
         clientUtil = new ClientUtil(client, pluginConfig.CACHE_DIR());
         pinProvider = new PinProvider(client, pluginConfig.CONNECT_URL_REAL());
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        brokerLogin = new BrokerLogin(clientUtil, credentialsFactory);
+        loginHandler = new LoginHandler(clientUtil.authentification(), credentialsFactory);
+        brokerLogin = new BrokerLogin(loginHandler,
+                                      client,
+                                      pluginConfig);
         infoStrategy = new InfoStrategy();
     }
 
@@ -112,8 +119,11 @@ public class ZorroBridge {
 
         ntpFetch = new NTPFetch(pluginConfig);
         ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
-        tickTimeProvider = new TickTimeProvider(strategyUtil.tickQuoteProvider().repository());
-        serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
+        tickTimeProvider = new TickTimeProvider(strategyUtil.tickQuoteProvider().repository(),
+                                                Clock.systemDefaultZone());
+        serverTimeProvider = new ServerTimeProvider(ntpProvider,
+                                                    tickTimeProvider,
+                                                    Clock.systemDefaultZone());
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     dateTimeUtils);
@@ -135,10 +145,10 @@ public class ZorroBridge {
                        final String password,
                        final String type,
                        final String accountInfos[]) {
-        final int loginResult = brokerLogin.doLogin(userName,
-                                                    password,
-                                                    type);
-        if (loginResult == ReturnCodes.LOGIN_OK) {
+        final int loginResult = brokerLogin.login(userName,
+                                                  password,
+                                                  type);
+        if (loginResult == Constant.LOGIN_OK) {
             strategyID = client.startStrategy(infoStrategy);
             initComponents();
             accountInfos[0] = accountInfo.id();
@@ -149,7 +159,7 @@ public class ZorroBridge {
 
     public int doLogout() {
         client.stopStrategy(strategyID);
-        return brokerLogin.doLogout();
+        return brokerLogin.logout();
     }
 
     public int doBrokerTime(final double serverTimeData[]) {
@@ -198,7 +208,7 @@ public class ZorroBridge {
                                 final double tickParams[]) {
         ZorroLogger.log("doBrokerHistory2 called");
         if (!accountInfo.isConnected())
-            return ReturnCodes.HISTORY_UNAVAILABLE;
+            return Constant.HISTORY_UNAVAILABLE;
 
         return brokerHistory2.handle(instrumentName,
                                      startDate,
@@ -211,13 +221,13 @@ public class ZorroBridge {
     public int doHistoryDownload() {
         ZorroLogger.log("doHistoryDownload called");
         if (!client.isConnected())
-            return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
+            return Constant.HISTORY_DOWNLOAD_FAIL;
 
         return brokerHistory2.doHistoryDownload();
     }
 
     public int doSetOrderText(final String orderText) {
         ZorroLogger.log("doSetOrderText for " + orderText + " called but not yet supported!");
-        return ReturnCodes.BROKER_COMMAND_OK;
+        return Constant.BROKER_COMMAND_OK;
     }
 }

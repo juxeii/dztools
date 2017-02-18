@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.brokerapi;
 
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.dzjforex.misc.TradeCalculation;
@@ -26,7 +26,7 @@ public class BrokerAsset {
                       final double assetParams[]) {
         return InstrumentHandler.executeForInstrument(instrumentName,
                                                       instrument -> fillAssetParams(instrument, assetParams),
-                                                      ReturnCodes.ASSET_UNAVAILABLE);
+                                                      Constant.ASSET_UNAVAILABLE);
     }
 
     private int fillAssetParams(final Instrument instrument,
@@ -53,6 +53,6 @@ public class BrokerAsset {
         assetParams[7] = pRollLong;
         assetParams[8] = pRollShort;
 
-        return ReturnCodes.ASSET_AVAILABLE;
+        return Constant.ASSET_AVAILABLE;
     }
 }

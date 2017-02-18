@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IAccount;
+import com.dukascopy.api.IAccount.AccountState;
 import com.dukascopy.api.ICurrency;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
@@ -23,8 +24,9 @@ public class AccountInfoTest extends CommonUtilForTest {
     @Mock
     private PluginConfig pluginConfigMock;
 
-    private static final ICurrency accountCurrency = CurrencyFactory.EUR;
+    private static final AccountState state = IAccount.AccountState.OK;
     private static final String id = "1234";
+    private static final ICurrency accountCurrency = CurrencyFactory.EUR;
     private static final double equity = 614527.45;
     private static final double basEquity = 614740.45;
     private static final double balance = 54331.78;
@@ -37,6 +39,7 @@ public class AccountInfoTest extends CommonUtilForTest {
     public void setUp() {
         when(pluginConfigMock.LOT_SIZE()).thenReturn(lotSize);
 
+        when(accountMock.getAccountState()).thenReturn(state);
         when(accountMock.getAccountId()).thenReturn(id);
         when(accountMock.getEquity()).thenReturn(equity);
         when(accountMock.getBaseEquity()).thenReturn(basEquity);
@@ -48,6 +51,13 @@ public class AccountInfoTest extends CommonUtilForTest {
         when(accountMock.getAccountCurrency()).thenReturn(accountCurrency);
 
         accountInfo = new AccountInfo(accountMock, pluginConfigMock);
+    }
+
+    @Test
+    public void stateIsCorrect() {
+        assertThat(accountInfo.state(), equalTo(state));
+
+        verify(accountMock).getAccountState();
     }
 
     @Test
@@ -63,7 +73,7 @@ public class AccountInfoTest extends CommonUtilForTest {
 
         verify(accountMock).getEquity();
     }
-    
+
     @Test
     public void basEquityIsCorrect() {
         assertThat(accountInfo.baseEquity(), equalTo(basEquity));

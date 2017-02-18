@@ -31,14 +31,14 @@ public class NTPProvider {
             .interval(0L,
                       pluginConfig.NTP_SYNC_INTERVAL(),
                       TimeUnit.MILLISECONDS)
-            .doOnSubscribe(d -> logger.info("Starting NTP synch task..."))
+            .doOnSubscribe(d -> logger.debug("Starting NTP synch task..."))
             .flatMap(counter -> ntpFetch.observable())
             .subscribe(this::onNTPTime,
-                       err -> logger.info("NTP synchronization task failed with error: " + err.getMessage()));
+                       err -> logger.debug("NTP synchronization task failed with error: " + err.getMessage()));
     }
 
     private void onNTPTime(final long ntpTime) {
-        logger.info("New NTP received " + DateTimeUtil.formatMillis(ntpTime));
+        logger.debug("New NTP received " + DateTimeUtil.formatMillis(ntpTime));
         latestNTPTime = ntpTime;
     }
 

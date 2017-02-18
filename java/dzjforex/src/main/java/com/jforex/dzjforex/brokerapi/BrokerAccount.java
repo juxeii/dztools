@@ -1,6 +1,6 @@
 package com.jforex.dzjforex.brokerapi;
 
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 
 public class BrokerAccount {
@@ -13,10 +13,10 @@ public class BrokerAccount {
 
     public int handle(final double accountInfoParams[]) {
         if (!isAccountAvailable())
-            return ReturnCodes.ACCOUNT_UNAVAILABLE;
+            return Constant.ACCOUNT_UNAVAILABLE;
 
         fillAccountParams(accountInfoParams);
-        return ReturnCodes.ACCOUNT_AVAILABLE;
+        return Constant.ACCOUNT_AVAILABLE;
     }
 
     private boolean isAccountAvailable() {

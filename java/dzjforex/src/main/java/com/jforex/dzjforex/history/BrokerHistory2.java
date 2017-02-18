@@ -15,7 +15,7 @@ import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.HistoryConfig;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.programming.instrument.InstrumentUtil;
@@ -47,7 +47,7 @@ public class BrokerHistory2 {
                                                                tickMinutes,
                                                                nTicks,
                                                                tickParams),
-                                  ReturnCodes.HISTORY_UNAVAILABLE);
+                                  Constant.HISTORY_UNAVAILABLE);
     }
 
     private int processHistory(final Instrument instrument,
@@ -59,7 +59,7 @@ public class BrokerHistory2 {
         final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
         if (period == null) {
             logger.error("Invalid tickMinutes " + tickMinutes + " for period " + period);
-            return ReturnCodes.HISTORY_UNAVAILABLE;
+            return Constant.HISTORY_UNAVAILABLE;
         }
 
         final long endDateTimeRounded = getEndDateTimeRounded(instrument,
@@ -73,7 +73,7 @@ public class BrokerHistory2 {
                                                           startDateTimeRounded,
                                                           endDateTimeRounded);
         if (bars.isEmpty())
-            return ReturnCodes.HISTORY_UNAVAILABLE;
+            return Constant.HISTORY_UNAVAILABLE;
 
         fillTICKs(bars, tickParams);
         return bars.size();
@@ -115,7 +115,7 @@ public class BrokerHistory2 {
 
         final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(instrumentName);
         if (!instrumentOpt.isPresent())
-            return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
+            return Constant.HISTORY_DOWNLOAD_FAIL;
 
         final Instrument instrument = instrumentOpt.get();
         final int numYears = endYear - startYear + 1;
@@ -126,15 +126,15 @@ public class BrokerHistory2 {
             final List<IBar> bars = fetchBarsForYear(instrument, currentYear);
             if (bars.size() == 0) {
                 ZorroLogger.log("Load " + instrument + " for " + currentYear + " failed!");
-                return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
+                return Constant.HISTORY_DOWNLOAD_FAIL;
             }
             ZorroLogger.log("Load " + instrument + " for " + currentYear + " OK");
 
             final String fileName = getBarFileName(instrument, currentYear, savePath);
             if (!isWriteBarsToFileOK(fileName, bars))
-                return ReturnCodes.HISTORY_DOWNLOAD_FAIL;
+                return Constant.HISTORY_DOWNLOAD_FAIL;
         }
-        return ReturnCodes.HISTORY_DOWNLOAD_OK;
+        return Constant.HISTORY_DOWNLOAD_OK;
     }
 
     private List<IBar> fetchBarsForYear(final Instrument instrument,

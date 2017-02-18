@@ -3,7 +3,7 @@ package com.jforex.dzjforex.brokerapi;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.order.OrderStaticUtil;
@@ -34,7 +34,7 @@ public class BrokerSell extends BrokerOrderBase {
         logger.info("closeTrade called");
         if (!orderHandler.isOrderKnown(nTradeID) || !accountInfo.isTradingAllowed()) {
             logger.info("Close trade not possible");
-            return ReturnCodes.UNKNOWN_ORDER_ID;
+            return Constant.UNKNOWN_ORDER_ID;
         }
 
         final double convertedAmount = Math.abs(nAmount) / pluginConfig.LOT_SCALE();
@@ -51,7 +51,7 @@ public class BrokerSell extends BrokerOrderBase {
         final IOrder order = orderHandler.getOrder(nTradeID);
         if (order.getState() != IOrder.State.OPENED && order.getState() != IOrder.State.FILLED) {
             logger.warn("Order " + nTradeID + " could not be closed. Order state: " + order.getState());
-            return ReturnCodes.BROKER_SELL_FAIL;
+            return Constant.BROKER_SELL_FAIL;
         }
 
         final CloseParams closeParams = CloseParams
@@ -69,7 +69,7 @@ public class BrokerSell extends BrokerOrderBase {
 
         if (orderEvent.order() == null) {
             logger.info("closeOrder failed");
-            return ReturnCodes.BROKER_SELL_FAIL;
+            return Constant.BROKER_SELL_FAIL;
         } else if (!OrderStaticUtil.isClosed.test(order)) {
             final int newOrderID = orderHandler.createID();
             orderHandler.storeOrder(newOrderID, order);

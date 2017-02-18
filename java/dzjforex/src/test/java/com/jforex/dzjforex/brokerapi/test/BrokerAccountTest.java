@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
-import com.jforex.dzjforex.config.ReturnCodes;
+import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
@@ -57,7 +57,7 @@ public class BrokerAccountTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIsUnavailable() {
-            assertReturnCode(ReturnCodes.ACCOUNT_UNAVAILABLE);
+            assertReturnCode(Constant.ACCOUNT_UNAVAILABLE);
         }
 
         @Test
@@ -77,7 +77,7 @@ public class BrokerAccountTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIsAvailable() {
-            assertReturnCode(ReturnCodes.ACCOUNT_AVAILABLE);
+            assertReturnCode(Constant.ACCOUNT_AVAILABLE);
         }
 
         @Test

@@ -10,6 +10,10 @@ public interface PluginConfig extends Config {
     @DefaultValue("./Plugin/dukascopy/.cache")
     String CACHE_DIR();
 
+    @Key("platform.login.retrydelay")
+    @DefaultValue("5000")
+    long LOGIN_RETRY_DELAY();
+
     @Key("platform.subscribewaittime")
     @DefaultValue("200")
     long SUBSCRIPTION_WAIT_TIME();

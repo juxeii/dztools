@@ -1,59 +1,72 @@
 package com.jforex.dzjforex.brokerapi;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.programming.client.ClientUtil;
-import com.jforex.programming.connection.Authentification;
-import com.jforex.programming.connection.LoginCredentials;
+import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.handler.LoginHandler;
 
 import io.reactivex.Observable;
 
 public class BrokerLogin {
 
+    private final LoginHandler loginHandler;
     private final IClient client;
-    private final Authentification authentification;
-    private final CredentialsFactory credentialsFactory;
+    private Observable<Long> retryDelayTimer;
+    private boolean isLoginAvailable = true;
 
     private final static Logger logger = LogManager.getLogger(BrokerLogin.class);
 
-    public BrokerLogin(final ClientUtil clientUtil,
-                       final CredentialsFactory credentialsFactory) {
-        this.client = clientUtil.client();
-        this.authentification = clientUtil.authentification();
-        this.credentialsFactory = credentialsFactory;
+    public BrokerLogin(final LoginHandler loginHandler,
+                       final IClient client,
+                       final PluginConfig pluginConfigMock) {
+        this.loginHandler = loginHandler;
+        this.client = client;
+
+        initRetryDelayTimer(pluginConfigMock.LOGIN_RETRY_DELAY());
     }
 
-    public int doLogin(final String userName,
-                       final String password,
-                       final String loginType) {
-        if (client.isConnected())
-            return ReturnCodes.LOGIN_OK;
-
-        final LoginCredentials credentials = credentialsFactory.create(userName,
-                                                                       password,
-                                                                       loginType);
-        return login(credentials);
-    }
-
-    private int login(final LoginCredentials credentials) {
-        return authentification
-            .login(credentials)
-            .andThen(Observable.just(ReturnCodes.LOGIN_OK))
-            .onErrorResumeNext(err -> {
-                logger.error("Failed to login with exception " + err.getMessage());
-                return Observable.just(ReturnCodes.LOGIN_FAIL);
+    private void initRetryDelayTimer(final long retryDelay) {
+        retryDelayTimer = Observable
+            .timer(retryDelay, TimeUnit.MILLISECONDS)
+            .doOnSubscribe(d -> {
+                isLoginAvailable = false;
+                logger.debug("Starting login retry delay timer. Login is not available until timer elapsed.");
             })
-            .blockingLast();
+            .doOnComplete(() -> {
+                isLoginAvailable = true;
+                logger.debug("Login retry delay timer completed. Login is available again.");
+            });
     }
 
-    public int doLogout() {
-        authentification
-            .logout()
-            .blockingAwait();
-        return ReturnCodes.LOGOUT_OK;
+    public int login(final String username,
+                     final String password,
+                     final String loginType) {
+        if (client.isConnected())
+            return Constant.LOGIN_OK;
+        if (!isLoginAvailable)
+            return Constant.LOGIN_FAIL;
+
+        return handleLoginResult(loginHandler.login(username,
+                                                    password,
+                                                    loginType));
+    }
+
+    private int handleLoginResult(final int loginResult) {
+        if (loginResult == Constant.LOGIN_FAIL)
+            startRetryDelayTimer();
+        return loginResult;
+    }
+
+    private void startRetryDelayTimer() {
+        retryDelayTimer.subscribe();
+    }
+
+    public int logout() {
+        return loginHandler.logout();
     }
 }

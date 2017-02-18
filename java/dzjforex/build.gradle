@@ -30,7 +30,7 @@ dependencies {
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:java-hamcrest:2.0.0.0'
-    testCompile 'org.mockito:mockito-core:2.7.2'
+    testCompile 'org.mockito:mockito-core:2.7.9'
     testCompile 'de.bechte.junit:junit-hierarchicalcontextrunner:4.12.1'
 }
 

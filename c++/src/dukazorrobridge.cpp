@@ -1,6 +1,5 @@
 #include "dukazorrobridge.hpp"
 #include "DllCallHandler.hpp"
-#include <sstream>
 #include <string>
 
 #define DLLFUNC extern "C" __declspec(dllexport)
@@ -75,7 +74,7 @@ BrokerHTTP(FARPROC fpSend,
            FARPROC fpResult,
            FARPROC fpFree)
 {
-
+    BrokerError("BrokerHTTP not yet supported!");
 }
 
 DLLFUNC int
@@ -207,12 +206,16 @@ BrokerCommand(int nCommand,
     case HISTORY_DOWNLOAD:
         return dllCallHandler.ProcessHistoryDownload();
     case SET_ORDERTEXT:
-        return dllCallHandler.SetOrderText(std::to_string(dwParameter).c_str());
+    {
+        std::string orderText{ reinterpret_cast<char*>(dwParameter) };
+        return dllCallHandler.SetOrderText(orderText.c_str());
+    }
     default:
         {
-            std::ostringstream buffer;
-            buffer << "Command " << nCommand << " not yet supported.";
-            BrokerError(buffer.str().c_str());
+           char str[80];
+           sprintf(str, "Command %i not yet supported.", nCommand);
+           puts(str);
+           BrokerError(str);
         }
     }
     return 0.0;

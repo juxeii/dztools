@@ -11,8 +11,9 @@ import org.mockito.Mock;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.datetime.DateTimeUtils;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.time.ServerTimeProvider;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
@@ -22,9 +23,11 @@ public class BrokerTimeTest extends CommonUtilForTest {
     private BrokerTime brokerTime;
 
     @Mock
-    private IClient client;
+    private IClient clientMock;
     @Mock
-    private DateTimeUtils dateTimeUtils;
+    private ServerTimeProvider serverTimeProviderMock;
+    @Mock
+    private DateTimeUtils dateTimeUtilsMock;
     private final double serverTimeParams[] = new double[1];
     private int returnCode;
 
@@ -32,15 +35,15 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        when(dateTimeUtils.getServerTime()).thenReturn(serverTime);
-//        when(accountInfo.tradeValue()).thenReturn(tradeValue);
-//        when(accountInfo.usedMargin()).thenReturn(usedMargin);
+        when(serverTimeProviderMock.get()).thenReturn(serverTime);
 
-        brokerTime = new BrokerTime(client, dateTimeUtils);
+        brokerTime = new BrokerTime(clientMock,
+                                    serverTimeProviderMock,
+                                    dateTimeUtilsMock);
     }
 
     private void setClientConnectivity(final boolean isClientConnected) {
-        when(client.isConnected()).thenReturn(isClientConnected);
+        when(clientMock.isConnected()).thenReturn(isClientConnected);
     }
 
     private void assertReturnCode(final int expectedReturnCode) {
@@ -56,7 +59,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
         @Before
         public void setUp() {
             setClientConnectivity(false);
-            returnCode = brokerTime.handle(serverTimeParams);
+            returnCode = brokerTime.doBrokerTime(serverTimeParams);
         }
 
         @Test
@@ -72,21 +75,21 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
     public class TestWhenClientIsConnected {
 
-        private void setMarketConnectivityAndStartHandle(final boolean isMarketOffline) {
-            when(dateTimeUtils.isMarketOffline(anyLong())).thenReturn(isMarketOffline);
-            returnCode = brokerTime.handle(serverTimeParams);
+        private void setMarketConnectivityAndStart(final boolean isMarketOffline) {
+            when(dateTimeUtilsMock.isMarketOffline(serverTime)).thenReturn(isMarketOffline);
+            returnCode = brokerTime.doBrokerTime(serverTimeParams);
         }
 
         @Before
         public void setUp() {
-            when(client.isConnected()).thenReturn(true);
+            when(clientMock.isConnected()).thenReturn(true);
         }
 
         public class WhenMarketIsOpen {
 
             @Before
             public void setUp() {
-                setMarketConnectivityAndStartHandle(false);
+                setMarketConnectivityAndStart(false);
             }
 
             @Test
@@ -104,7 +107,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setMarketConnectivityAndStartHandle(true);
+                setMarketConnectivityAndStart(true);
             }
 
             @Test

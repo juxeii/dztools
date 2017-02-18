@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.datetime.DateTimeUtils;
+import com.jforex.dzjforex.time.DateTimeUtils;
 
 public class BarFileWriter {
     private final List<IBar> bars;

@@ -22,27 +22,29 @@ public class BrokerTrade {
         this.strategyUtil = strategyUtil;
     }
 
-    public int handle(final int orderID,
-                      final double orderParams[]) {
-        logger.info("BrokerTrade handle called");
+    public int fillTradeParams(final int orderID,
+                               final double orderParams[]) {
+        logger.info("BrokerTrade fillTradeParams called for id " + orderID);
         if (!orderHandler.isOrderKnown(orderID)) {
             logger.info("BrokerTrade orderID " + orderID + " not found");
             return ReturnCodes.UNKNOWN_ORDER_ID;
         }
 
         final IOrder order = orderHandler.getOrder(orderID);
-        if (order.getState() == IOrder.State.CLOSED)
-            return ReturnCodes.ORDER_RECENTLY_CLOSED;
-
         fillOrderParams(order, orderParams);
-        final int scaledAmount = orderHandler.scaleAmount(order.getAmount());
-        logger.info("scaledAmount = " + scaledAmount);
+        if (order.getState() == IOrder.State.CLOSED) {
+            logger.info("BrokerTrade recently closed!");
+            return ReturnCodes.ORDER_RECENTLY_CLOSED;
+        }
+        final int noOfContracts = orderHandler.scaleAmount(order.getAmount());
+        logger.info("noOfContracts = " + noOfContracts);
 
-        return scaledAmount;
+        return noOfContracts;
     }
 
     private void fillOrderParams(final IOrder order,
                                  final double orderParams[]) {
+        logger.info("BrokerTrade fillOrderParams called");
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(order.getInstrument());
         final double pOpen = order.getOpenPrice();
         final double pClose = order.isLong()

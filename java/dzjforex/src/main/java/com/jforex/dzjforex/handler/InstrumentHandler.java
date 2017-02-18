@@ -32,12 +32,12 @@ public class InstrumentHandler {
     public static int executeForInstrument(final String instrumentName,
                                            final Function<Instrument, Integer> handleFunction,
                                            final int returncodeForInvalidInstrument) {
-        final Optional<Instrument> iInstrumentOpt = fromName(instrumentName);
-        if (!iInstrumentOpt.isPresent()) {
+        final Optional<Instrument> instrumentOpt = fromName(instrumentName);
+        if (!instrumentOpt.isPresent()) {
             logger.error("Invalid instrument name " + instrumentName + " detected!");
             return returncodeForInvalidInstrument;
         }
-        return handleFunction.apply(iInstrumentOpt.get());
+        return handleFunction.apply(instrumentOpt.get());
     }
 
     private static Optional<Instrument> createNewName(final String instrumentName) {

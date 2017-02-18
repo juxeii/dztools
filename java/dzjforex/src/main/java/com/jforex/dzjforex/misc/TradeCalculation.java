@@ -30,16 +30,13 @@ public class TradeCalculation {
     }
 
     public double pipCost(final Instrument instrument) {
-        logger.info("pipCost called lotsiz "+lotSize
-                    + " instrument "+instrument
-                    +" accountCurrency "+accountCurrency);
         final double pipCost = calculationUtil.pipValueInCurrency(lotSize,
                                                                   instrument,
                                                                   accountCurrency,
                                                                   OfferSide.ASK);
-        logger.info("Pipcost for lotSize " + lotSize
-                + " and instrument " + instrument
-                + " is " + pipCost);
+//        logger.info("Pipcost for lotSize " + lotSize
+//                + " and instrument " + instrument
+//                + " is " + pipCost);
         return pipCost;
     }
 
@@ -52,7 +49,7 @@ public class TradeCalculation {
                                                                    accountCurrency,
                                                                    OfferSide.ASK);
         final double marginCost = conversionLot / leverage;
-        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
+        logger.info("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
                 + " and  conversionLot " + conversionLot
                 + " and leverage " + leverage);
         return marginCost;

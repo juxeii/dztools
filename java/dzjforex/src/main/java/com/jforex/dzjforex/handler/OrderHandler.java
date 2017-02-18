@@ -58,7 +58,7 @@ public class OrderHandler {
         return true;
     }
 
-    private synchronized void resumeOrderIDs() {
+    private void resumeOrderIDs() {
         List<IOrder> orders = null;
         try {
             orders = engine.getOrders();

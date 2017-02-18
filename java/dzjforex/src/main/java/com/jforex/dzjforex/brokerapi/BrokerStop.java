@@ -1,5 +1,8 @@
 package com.jforex.dzjforex.brokerapi;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
@@ -15,6 +18,8 @@ public class BrokerStop {
     private final OrderHandler orderHandler;
     private final AccountInfo accountInfo;
 
+    private final static Logger logger = LogManager.getLogger(BrokerStop.class);
+
     public BrokerStop(final StrategyUtil strategyUtil,
                       final OrderHandler orderHandler,
                       final AccountInfo accountInfo) {
@@ -24,8 +29,9 @@ public class BrokerStop {
         orderUtil = strategyUtil.orderUtil();
     }
 
-    public int handle(final int orderID,
-                      final double newSLPrice) {
+    public int setSL(final int orderID,
+                     final double newSLPrice) {
+        logger.info("setSL called with newSLPrice " + newSLPrice);
         if (!accountInfo.isTradingAllowed() || !orderHandler.isOrderKnown(orderID))
             return ReturnCodes.UNKNOWN_ORDER_ID;
 
@@ -35,6 +41,7 @@ public class BrokerStop {
 
     private int setSLPrice(final IOrder order,
                            final double newSLPrice) {
+        logger.info("setSL internal called with newSLPrice " + newSLPrice);
         final double roundedSLPrice = MathUtil.roundPrice(newSLPrice, order.getInstrument());
         final SetSLParams setSLParams = SetSLParams
             .setSLAtPrice(order, roundedSLPrice)

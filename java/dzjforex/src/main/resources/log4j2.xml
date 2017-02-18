@@ -10,8 +10,8 @@
     </Appenders>
     <Loggers>
         <Root level="debug">
-            <AppenderRef ref="STDOUT" level="info" />
-            <AppenderRef ref="dzplugin" level="info" />
+            <AppenderRef ref="STDOUT" level="debug" />
+            <AppenderRef ref="dzplugin" level="debug" />
         </Root>
     </Loggers>
 </Configuration>

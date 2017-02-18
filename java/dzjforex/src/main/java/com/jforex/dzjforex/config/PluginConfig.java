@@ -16,7 +16,7 @@ public interface PluginConfig extends Config {
 
     @Key("platform.subscribemaxretries")
     @DefaultValue("10")
-    int SUBSCRIPTION_WAIT_TIME_RETRIES();
+    long SUBSCRIPTION_WAIT_TIME_RETRIES();
 
     @Key("account.demologintype")
     @DefaultValue("Demo")
@@ -39,12 +39,16 @@ public interface PluginConfig extends Config {
     String NTP_TIME_SERVER_URL();
 
     @Key("ntp.timeout")
-    @DefaultValue("3000")
-    int NTP_TIMEOUT();
+    @DefaultValue("5000")
+    long NTP_TIMEOUT();
 
-    @Key("ntp.syntime")
+    @Key("ntp.syncinterval")
     @DefaultValue("300000")
-    int SERVERTIME_SYNC_MILLIS();
+    long NTP_SYNC_INTERVAL();
+
+    @Key("ntp.retrydelay")
+    @DefaultValue("5000")
+    int NTP_RETRY_DELAY();
 
     @Key("order.labelprefix")
     @DefaultValue("zorro")
@@ -60,7 +64,7 @@ public interface PluginConfig extends Config {
 
     @Key("order.lotscale")
     @DefaultValue("1000000")
-    int LOT_SCALE();
+    double LOT_SCALE();
 
     @Key("order.lotsize")
     @DefaultValue("1000")

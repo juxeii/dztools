@@ -320,7 +320,13 @@ DllCallHandler::ProcessHistoryDownload()
 int
 DllCallHandler::SetOrderText(const char *orderText)
 {
-    return (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                         JData::doSetOrderText.methodID,
-                                         orderText);
+    jstring jOrderText = env->NewStringUTF(orderText);
+
+    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+                                     JData::doSetOrderText.methodID,
+                                     jOrderText);
+
+    env->DeleteLocalRef(jOrderText);
+
+    return res;
 }

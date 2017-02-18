@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.datetime;
+package com.jforex.dzjforex.time;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,7 +17,6 @@ import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.config.ReturnCodes;
 
 public class DateTimeUtils {
 
@@ -42,29 +41,9 @@ public class DateTimeUtils {
     }
 
     private final IDataService dataService;
-    private final ServerTime serverTime;
 
-    public DateTimeUtils(final IDataService dataService,
-                         final ServerTime serverTime) {
+    public DateTimeUtils(final IDataService dataService) {
         this.dataService = dataService;
-        this.serverTime = serverTime;
-    }
-
-    public int doBrokerTime(final double serverTimeData[]) {
-        final long currentServerTime = serverTime.get();
-        serverTimeData[0] = DateTimeUtils.getOLEDateFromMillis(currentServerTime);
-
-        final boolean isMarketOffline = isMarketOffline(currentServerTime);
-        if (isMarketOffline)
-            logger.debug("Market is offline");
-
-        return isMarketOffline
-                ? ReturnCodes.CONNECTION_OK_BUT_MARKET_CLOSED
-                : ReturnCodes.CONNECTION_OK;
-    }
-
-    public long getServerTime() {
-        return serverTime.get();
     }
 
     public boolean isMarketOffline(final long currentServerTime) {

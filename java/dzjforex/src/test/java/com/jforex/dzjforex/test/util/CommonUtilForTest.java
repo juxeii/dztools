@@ -10,6 +10,8 @@ import com.jforex.programming.connection.LoginCredentials;
 
 public class CommonUtilForTest extends BDDMockito {
 
+    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
+
     protected static final String jnlpDEMO = "jnlpDEMO";
     protected static final String jnlpReal = "jnlpReal";
     protected static final String username = "John";

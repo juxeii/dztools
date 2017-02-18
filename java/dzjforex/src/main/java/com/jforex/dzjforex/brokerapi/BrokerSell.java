@@ -1,9 +1,5 @@
 package com.jforex.dzjforex.brokerapi;
 
-import org.aeonbits.owner.ConfigFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
@@ -11,7 +7,6 @@ import com.jforex.dzjforex.config.ReturnCodes;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.order.OrderStaticUtil;
-import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.event.OrderEventType;
 import com.jforex.programming.order.task.params.basic.CloseParams;
@@ -19,39 +14,40 @@ import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Observable;
 
-public class BrokerSell {
+public class BrokerSell extends BrokerOrderBase {
 
-    private final OrderUtil orderUtil;
     private final OrderHandler orderHandler;
-    private final AccountInfo accountInfo;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
-
-    private final static Logger logger = LogManager.getLogger(BrokerBuy.class);
 
     public BrokerSell(final StrategyUtil strategyUtil,
                       final OrderHandler orderHandler,
-                      final AccountInfo accountInfo) {
-        this.orderHandler = orderHandler;
-        this.accountInfo = accountInfo;
+                      final AccountInfo accountInfo,
+                      final PluginConfig pluginConfig) {
+        super(strategyUtil,
+              accountInfo,
+              pluginConfig);
 
-        orderUtil = strategyUtil.orderUtil();
+        this.orderHandler = orderHandler;
     }
 
-    public int handle(final int nTradeID,
-                      final int nAmount) {
-        if (!orderHandler.isOrderKnown(nTradeID) || !accountInfo.isTradingAllowed())
+    public int closeTrade(final int nTradeID,
+                          final int nAmount) {
+        logger.info("closeTrade called");
+        if (!orderHandler.isOrderKnown(nTradeID) || !accountInfo.isTradingAllowed()) {
+            logger.info("Close trade not possible");
             return ReturnCodes.UNKNOWN_ORDER_ID;
+        }
 
         final double convertedAmount = Math.abs(nAmount) / pluginConfig.LOT_SCALE();
-        logger.debug("nTradeID " + nTradeID
+        logger.info("nTradeID " + nTradeID
                 + " amount: " + nAmount
                 + " convertedAmount " + convertedAmount);
 
         return closeOrder(nTradeID, convertedAmount);
     }
 
-    public int closeOrder(final int nTradeID,
-                          final double convertedAmount) {
+    private int closeOrder(final int nTradeID,
+                           final double convertedAmount) {
+        logger.info("closeOrder called");
         final IOrder order = orderHandler.getOrder(nTradeID);
         if (order.getState() != IOrder.State.OPENED && order.getState() != IOrder.State.FILLED) {
             logger.warn("Order " + nTradeID + " could not be closed. Order state: " + order.getState());
@@ -72,12 +68,16 @@ public class BrokerSell {
             .blockingLast();
 
         if (orderEvent.order() == null) {
+            logger.info("closeOrder failed");
             return ReturnCodes.BROKER_SELL_FAIL;
         } else if (!OrderStaticUtil.isClosed.test(order)) {
             final int newOrderID = orderHandler.createID();
             orderHandler.storeOrder(newOrderID, order);
+            logger.info("order only partially closed id " + newOrderID);
             return newOrderID;
-        } else
+        } else {
+            logger.info("order closed completely id " + nTradeID);
             return nTradeID;
+        }
     }
 }

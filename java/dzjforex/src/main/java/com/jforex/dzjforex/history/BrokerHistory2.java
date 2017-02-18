@@ -16,8 +16,8 @@ import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.config.ReturnCodes;
-import com.jforex.dzjforex.datetime.DateTimeUtils;
 import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.programming.instrument.InstrumentUtil;
 
 public class BrokerHistory2 {

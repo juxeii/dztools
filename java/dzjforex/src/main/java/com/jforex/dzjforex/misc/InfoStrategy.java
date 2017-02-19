@@ -24,10 +24,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
         return strategyUtil;
     }
 
-    public ITick getLatestTick() {
-        return latestTick;
-    }
-
     @Override
     public void onJFAccount(final IAccount arg0) throws JFException {
     }
@@ -55,6 +51,5 @@ public class InfoStrategy extends JForexUtilsStrategy {
     @Override
     public void onJFTick(final Instrument instrument,
                          final ITick tick) throws JFException {
-        latestTick = tick;
     }
 }

@@ -1,14 +1,13 @@
 package com.jforex.dzjforex.brokerapi;
 
-import java.util.Optional;
-
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.order.OrderParams;
@@ -36,21 +35,15 @@ public class BrokerBuy extends BrokerOrderBase {
 
     public int doBrokerBuy(final String assetName,
                            final double tradeParams[]) {
-        final Optional<Instrument> maybeInstrument = maybeInstrumentForTrading(assetName);
-        return maybeInstrument.isPresent()
-                ? doBrokerBuyForValidInstrument(maybeInstrument.get(), tradeParams)
-                : Constant.BROKER_BUY_FAIL;
-    }
-
-    private int doBrokerBuyForValidInstrument(final Instrument instrument,
-                                              final double tradeParams[]) {
+        final Instrument instrument = InstrumentHandler
+            .fromName(assetName)
+            .get();
         final double amount = createTradeAmount(tradeParams[0]);
         final OrderCommand orderCommand = commandForNoOfContracts(tradeParams[0]);
         final double dStopDist = tradeParams[1];
         final double slPrice = calculateSLPrice(instrument,
                                                 orderCommand,
                                                 dStopDist);
-
         return submitOrder(instrument,
                            orderCommand,
                            amount,

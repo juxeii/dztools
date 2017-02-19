@@ -33,7 +33,7 @@ public class BrokerOrderBase {
 
     protected Optional<Instrument> maybeInstrumentForTrading(final String assetName) {
         return isTradingAllowed()
-                ? maybeInstrumentFromAssetName(assetName)
+                ? InstrumentHandler.fromName(assetName)
                 : Optional.empty();
     }
 
@@ -43,12 +43,5 @@ public class BrokerOrderBase {
             return false;
         }
         return true;
-    }
-
-    protected Optional<Instrument> maybeInstrumentFromAssetName(final String assetName) {
-        final Optional<Instrument> instrumentOpt = InstrumentHandler.fromName(assetName);
-        if (!instrumentOpt.isPresent())
-            logger.error("Invalid asset name " + assetName + " detected!");
-        return instrumentOpt;
     }
 }

@@ -1,5 +1,6 @@
-package com.jforex.dzjforex.history;
+package com.jforex.dzjforex.brokerapi;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +15,15 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.HistoryConfig;
 import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.history.BarFileWriter;
+import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.programming.instrument.InstrumentUtil;
+
+import io.reactivex.Observable;
 
 public class BrokerHistory2 {
 
@@ -30,32 +35,24 @@ public class BrokerHistory2 {
         this.historyProvider = historyProvider;
     }
 
-    public int handle(final String instrumentName,
-                      final double startDate,
-                      final double endDate,
-                      final int tickMinutes,
-                      final int nTicks,
-                      final double tickParams[]) {
-        logger.debug("startDate " + DateTimeUtils.formatOLETime(startDate) +
-                " endDate: " + DateTimeUtils.formatOLETime(endDate) +
-                "nTicks " + nTicks + " tickMinutes " + tickMinutes);
-        return InstrumentHandler
-            .executeForInstrument(instrumentName,
-                                  instrument -> processHistory(instrument,
-                                                               startDate,
-                                                               endDate,
-                                                               tickMinutes,
-                                                               nTicks,
-                                                               tickParams),
-                                  Constant.HISTORY_UNAVAILABLE);
-    }
+    public int get(final String assetName,
+                   final double startDate,
+                   final double endDate,
+                   final int tickMinutes,
+                   final int nTicks,
+                   final double tickParams[]) {
+        final Instrument instrument = InstrumentHandler
+            .fromName(assetName)
+            .get();
+        logger.debug("Retrieving price history for instrument " + instrument + ": \n "
+                + "startDate: " + DateTimeUtils.formatOLETime(startDate) + ": \n "
+                + "endDate: " + DateTimeUtils.formatOLETime(endDate) + ": \n "
+                + "nTicks: " + nTicks + ": \n "
+                + "tickMinutes: " + tickMinutes);
+        if (tickMinutes == 0) {
+            return getTicks(instrument, startDate, endDate, nTicks, tickParams);
+        }
 
-    private int processHistory(final Instrument instrument,
-                               final double startDate,
-                               final double endDate,
-                               final int tickMinutes,
-                               final int nTicks,
-                               final double tickParams[]) {
         final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
         if (period == null) {
             logger.error("Invalid tickMinutes " + tickMinutes + " for period " + period);
@@ -79,6 +76,33 @@ public class BrokerHistory2 {
         return bars.size();
     }
 
+    public List<IBar> fetchBars(final Instrument instrument,
+                                final Period period,
+                                final OfferSide offerSide,
+                                final Filter filter,
+                                final long startTime,
+                                final long endTime) {
+        return Observable
+            .fromCallable(() -> {
+                history.getBar(instrument,
+                               period,
+                               offerSide,
+                               0);
+                final long prevBarStart = getPreviousBarStart(period, history.getLastTick(instrument).getTime());
+                final long adjustedEndTime = prevBarStart < endTime ? prevBarStart : endTime;
+
+                return history.getBars(instrument,
+                                       period,
+                                       offerSide,
+                                       filter,
+                                       startTime,
+                                       adjustedEndTime);
+            })
+            .doOnError(err -> logger.error("fetchBars exception: " + err.getMessage()))
+            .onErrorResumeNext(Observable.just(new ArrayList<>()))
+            .blockingFirst();
+    }
+
     private void fillTICKs(final List<IBar> bars,
                            final double tickParams[]) {
         int tickParamsIndex = 0;
@@ -95,6 +119,33 @@ public class BrokerHistory2 {
 
             tickParamsIndex += 7;
         }
+    }
+
+    public int getTicks(final Instrument instrument,
+                        final double startDate,
+                        final double endDate,
+                        final int nTicks,
+                        final double tickParams[]) {
+        logger.debug("Retrieving ticks for instrument " + instrument + ": \n "
+                + "startDate: " + DateTimeUtils.formatOLETime(startDate) + ": \n "
+                + "endDate: " + DateTimeUtils.formatOLETime(endDate) + ": \n "
+                + "nTicks: " + nTicks);
+
+        final long endDateTimeRounded = getEndDateTimeRounded(instrument,
+                                                              period,
+                                                              DateTimeUtils.getMillisFromOLEDate(endDate));
+        final long startDateTimeRounded = endDateTimeRounded - (nTicks - 1) * period.getInterval();
+        final List<IBar> bars = historyProvider.fetchBars(instrument,
+                                                          period,
+                                                          OfferSide.ASK,
+                                                          Filter.WEEKENDS,
+                                                          startDateTimeRounded,
+                                                          endDateTimeRounded);
+        if (bars.isEmpty())
+            return Constant.HISTORY_UNAVAILABLE;
+
+        fillTICKs(bars, tickParams);
+        return bars.size();
     }
 
     private long getEndDateTimeRounded(final Instrument instrument,

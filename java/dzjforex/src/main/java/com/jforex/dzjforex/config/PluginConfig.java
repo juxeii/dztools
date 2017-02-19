@@ -14,13 +14,29 @@ public interface PluginConfig extends Config {
     @DefaultValue("5000")
     long LOGIN_RETRY_DELAY();
 
-    @Key("platform.subscribewaittime")
-    @DefaultValue("200")
-    long SUBSCRIPTION_WAIT_TIME();
+    @Key("order.labelprefix")
+    @DefaultValue("zorro")
+    String ORDER_PREFIX_LABEL();
 
-    @Key("platform.subscribemaxretries")
-    @DefaultValue("10")
-    long SUBSCRIPTION_WAIT_TIME_RETRIES();
+    @Key("order.updatewaittime")
+    @DefaultValue("3000")
+    long ORDER_UPDATE_WAITTIME();
+
+    @Key("order.maxslippage")
+    @DefaultValue("3.0")
+    double DEFAULT_SLIPPAGE();
+
+    @Key("order.lotscale")
+    @DefaultValue("1000000")
+    double LOT_SCALE();
+
+    @Key("order.lotsize")
+    @DefaultValue("1000")
+    double LOT_SIZE();
+
+    @Key("history.download.retries")
+    @DefaultValue("3")
+    int historyDownloadRetries();
 
     @Key("account.demologintype")
     @DefaultValue("Demo")
@@ -53,24 +69,4 @@ public interface PluginConfig extends Config {
     @Key("ntp.retrydelay")
     @DefaultValue("5000")
     int NTP_RETRY_DELAY();
-
-    @Key("order.labelprefix")
-    @DefaultValue("zorro")
-    String ORDER_PREFIX_LABEL();
-
-    @Key("order.updatewaittime")
-    @DefaultValue("3000")
-    long ORDER_UPDATE_WAITTIME();
-
-    @Key("order.maxslippage")
-    @DefaultValue("3.0")
-    double DEFAULT_SLIPPAGE();
-
-    @Key("order.lotscale")
-    @DefaultValue("1000000")
-    double LOT_SCALE();
-
-    @Key("order.lotsize")
-    @DefaultValue("1000")
-    double LOT_SIZE();
 }

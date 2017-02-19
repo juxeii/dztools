@@ -6,11 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mockito.BDDMockito;
 
+import com.dukascopy.api.ICurrency;
 import com.jforex.programming.connection.LoginCredentials;
+import com.jforex.programming.currency.CurrencyFactory;
 
 public class CommonUtilForTest extends BDDMockito {
-
-    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
 
     protected static final String jnlpDEMO = "jnlpDEMO";
     protected static final String jnlpReal = "jnlpReal";
@@ -19,6 +19,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected static final String pin = "1234";
     protected static final String loginTypeDemo = "Demo";
     protected static final String loginTypeReal = "Real";
+    protected static final ICurrency accountCurrency = CurrencyFactory.EUR;
+
     protected static final LoginCredentials loginCredentials =
             new LoginCredentials(jnlpDEMO,
                                  username,
@@ -28,6 +30,8 @@ public class CommonUtilForTest extends BDDMockito {
                                  username,
                                  password,
                                  pin);
+
+    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final Logger logger = LogManager.getLogger(CommonUtilForTest.class);
 
     public CommonUtilForTest() {

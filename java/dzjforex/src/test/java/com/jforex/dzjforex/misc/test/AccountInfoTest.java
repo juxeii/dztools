@@ -14,6 +14,7 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
+import com.jforex.programming.math.CalculationUtil;
 
 public class AccountInfoTest extends CommonUtilForTest {
 
@@ -21,6 +22,8 @@ public class AccountInfoTest extends CommonUtilForTest {
 
     @Mock
     private IAccount accountMock;
+    @Mock
+    private CalculationUtil calculationUtilMock;
     @Mock
     private PluginConfig pluginConfigMock;
 
@@ -50,7 +53,9 @@ public class AccountInfoTest extends CommonUtilForTest {
         when(accountMock.isConnected()).thenReturn(false);
         when(accountMock.getAccountCurrency()).thenReturn(accountCurrency);
 
-        accountInfo = new AccountInfo(accountMock, pluginConfigMock);
+        accountInfo = new AccountInfo(accountMock,
+                                      calculationUtilMock,
+                                      pluginConfigMock);
     }
 
     @Test

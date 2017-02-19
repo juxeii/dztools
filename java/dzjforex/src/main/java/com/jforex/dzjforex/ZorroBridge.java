@@ -12,6 +12,7 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
+import com.jforex.dzjforex.brokerapi.BrokerHistory2;
 import com.jforex.dzjforex.brokerapi.BrokerLogin;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
@@ -23,12 +24,10 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.OrderHandler;
-import com.jforex.dzjforex.history.BrokerHistory2;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
-import com.jforex.dzjforex.misc.TradeCalculation;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
@@ -47,7 +46,6 @@ public class ZorroBridge {
     private long strategyID;
     private final CredentialsFactory credentialsFactory;
     private AccountInfo accountInfo;
-    private TradeCalculation tradeCalculation;
     private final LoginHandler loginHandler;
     private final BrokerLogin brokerLogin;
     private HistoryProvider historyProvider;
@@ -104,17 +102,16 @@ public class ZorroBridge {
         final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
 
         dateTimeUtils = new DateTimeUtils(context.getDataService());
-        accountInfo = new AccountInfo(context.getAccount(), pluginConfig);
+        accountInfo = new AccountInfo(context.getAccount(),
+                                      strategyUtil.calculationUtil(),
+                                      pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         orderHandler = new OrderHandler(context,
                                         strategyUtil,
                                         pluginConfig);
-        historyProvider = new HistoryProvider(context.getHistory());
+        historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
         brokerHistory2 = new BrokerHistory2(historyProvider);
-        tradeCalculation = new TradeCalculation(accountInfo, strategyUtil.calculationUtil());
-        brokerAsset = new BrokerAsset(accountInfo,
-                                      tradeCalculation,
-                                      strategyUtil);
+        brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
         brokerAccount = new BrokerAccount(accountInfo);
 
         ntpFetch = new NTPFetch(pluginConfig);
@@ -167,12 +164,12 @@ public class ZorroBridge {
     }
 
     public int doSubscribeAsset(final String instrumentName) {
-        return brokerSubscribe.handle(instrumentName);
+        return brokerSubscribe.subscribe(instrumentName);
     }
 
     public int doBrokerAsset(final String instrumentName,
                              final double assetParams[]) {
-        return brokerAsset.handle(instrumentName, assetParams);
+        return brokerAsset.fillAssetParams(instrumentName, assetParams);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
@@ -191,7 +188,6 @@ public class ZorroBridge {
 
     public int doBrokerStop(final int orderID,
                             final double newSLPrice) {
-        ZorroLogger.log("doBrokerStop called");
         return brokerStop.setSL(orderID, newSLPrice);
     }
 
@@ -206,16 +202,15 @@ public class ZorroBridge {
                                 final int tickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
-        ZorroLogger.log("doBrokerHistory2 called");
         if (!accountInfo.isConnected())
             return Constant.HISTORY_UNAVAILABLE;
 
-        return brokerHistory2.handle(instrumentName,
-                                     startDate,
-                                     endDate,
-                                     tickMinutes,
-                                     nTicks,
-                                     tickParams);
+        return brokerHistory2.get(instrumentName,
+                                  startDate,
+                                  endDate,
+                                  tickMinutes,
+                                  nTicks,
+                                  tickParams);
     }
 
     public int doHistoryDownload() {

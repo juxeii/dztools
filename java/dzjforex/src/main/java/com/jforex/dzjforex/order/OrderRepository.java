@@ -1,6 +1,5 @@
-package com.jforex.dzjforex.handler;
+package com.jforex.dzjforex.order;
 
-import java.rmi.server.UID;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,17 +14,17 @@ import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.strategy.StrategyUtil;
 
-public class OrderHandler {
+public class OrderRepository {
 
     private final IEngine engine;
     private final HashMap<Integer, IOrder> orderMap;
     private final PluginConfig pluginConfig;
 
-    private final static Logger logger = LogManager.getLogger(OrderHandler.class);
+    private final static Logger logger = LogManager.getLogger(OrderRepository.class);
 
-    public OrderHandler(final IContext context,
-                        final StrategyUtil strategyUtil,
-                        final PluginConfig pluginConfig) {
+    public OrderRepository(final IContext context,
+                           final StrategyUtil strategyUtil,
+                           final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
         this.engine = context.getEngine();
 
@@ -40,10 +39,6 @@ public class OrderHandler {
 
     public IOrder getOrder(final int orderID) {
         return orderMap.get(orderID);
-    }
-
-    public int createID() {
-        return Math.abs(new UID().hashCode());
     }
 
     public int scaleAmount(final double amount) {

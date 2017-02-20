@@ -18,9 +18,21 @@ public interface PluginConfig extends Config {
     @DefaultValue("zorro")
     String orderLabelPrefix();
 
+    @Key("order.transmit.retries")
+    @DefaultValue("3")
+    int orderSubmitRetries();
+
+    @Key("order.transmit.retrydelay")
+    @DefaultValue("1500")
+    long orderSubmitRetryDelay();
+
     @Key("order.maxslippage")
     @DefaultValue("3.0")
     double orderMaxSlippage();
+
+    @Key("order.minpipsforstoploss")
+    @DefaultValue("5.0")
+    double minPipsForSL();
 
     @Key("order.lotscale")
     @DefaultValue("1000000")

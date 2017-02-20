@@ -23,7 +23,6 @@ import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.LoginHandler;
-import com.jforex.dzjforex.handler.OrderHandler;
 import com.jforex.dzjforex.history.BarFetchTimeCalculator;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
@@ -31,6 +30,12 @@ import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
+import com.jforex.dzjforex.order.CloseHandler;
+import com.jforex.dzjforex.order.OrderRepository;
+import com.jforex.dzjforex.order.ResumeOrders;
+import com.jforex.dzjforex.order.SetSLHandler;
+import com.jforex.dzjforex.order.SubmitHandler;
+import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
@@ -56,12 +61,17 @@ public class ZorroBridge {
     private BrokerAccount brokerAccount;
     private BrokerTime brokerTime;
     private BrokerTrade brokerTrade;
+    private TradeUtil tradeUtil;
     private BrokerStop brokerStop;
     private BrokerBuy brokerBuy;
+    private SubmitHandler submitHandler;
+    private CloseHandler closeHandler;
+    private SetSLHandler setSLHandler;
     private BrokerSell brokerSell;
     private DateTimeUtils dateTimeUtils;
     private BrokerSubscribe brokerSubscribe;
-    private OrderHandler orderHandler;
+    private OrderRepository orderRepository;
+    private ResumeOrders resumeOrders;
     private BrokerHistory2 brokerHistory2;
     private BarFetcher barFetcher;
     private BarFetchTimeCalculator barFetchTimeCalculator;
@@ -112,9 +122,9 @@ public class ZorroBridge {
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
-        orderHandler = new OrderHandler(context,
-                                        strategyUtil,
-                                        pluginConfig);
+        orderRepository = new OrderRepository(context,
+                                              strategyUtil,
+                                              pluginConfig);
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
         barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
@@ -133,18 +143,18 @@ public class ZorroBridge {
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     dateTimeUtils);
-        brokerTrade = new BrokerTrade(orderHandler, strategyUtil);
-        brokerStop = new BrokerStop(strategyUtil,
-                                    orderHandler,
-                                    accountInfo);
-        brokerBuy = new BrokerBuy(strategyUtil,
-                                  orderHandler,
+        brokerTrade = new BrokerTrade(orderRepository, strategyUtil);
+
+        tradeUtil = new TradeUtil(orderRepository,
+                                  strategyUtil,
                                   accountInfo,
                                   pluginConfig);
-        brokerSell = new BrokerSell(strategyUtil,
-                                    orderHandler,
-                                    accountInfo,
-                                    pluginConfig);
+        setSLHandler = new SetSLHandler(tradeUtil);
+        brokerStop = new BrokerStop(setSLHandler, tradeUtil);
+        submitHandler = new SubmitHandler(tradeUtil);
+        brokerBuy = new BrokerBuy(submitHandler, tradeUtil);
+        closeHandler = new CloseHandler(tradeUtil);
+        brokerSell = new BrokerSell(closeHandler, tradeUtil);
     }
 
     public int doLogin(final String userName,
@@ -157,6 +167,7 @@ public class ZorroBridge {
         if (loginResult == Constant.LOGIN_OK) {
             strategyID = client.startStrategy(infoStrategy);
             initComponents();
+            resumeOrders.resume();
             accountInfos[0] = accountInfo.id();
         }
 
@@ -187,7 +198,7 @@ public class ZorroBridge {
 
     public int doBrokerBuy(final String instrumentName,
                            final double tradeParams[]) {
-        return brokerBuy.doBrokerBuy(instrumentName, tradeParams);
+        return brokerBuy.openTrade(instrumentName, tradeParams);
     }
 
     public int doBrokerTrade(final int orderID,

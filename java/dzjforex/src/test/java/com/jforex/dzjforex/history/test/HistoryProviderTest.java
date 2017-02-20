@@ -1,12 +1,8 @@
 package com.jforex.dzjforex.history.test;
 
-import org.junit.runner.RunWith;
-
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
-
-@RunWith(HierarchicalContextRunner.class)
+//@RunWith(HierarchicalContextRunner.class)
 public class HistoryProviderTest extends CommonUtilForTest {
 
 //    private HistoryProvider historyProvider;

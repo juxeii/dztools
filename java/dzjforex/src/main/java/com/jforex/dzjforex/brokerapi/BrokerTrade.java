@@ -5,18 +5,18 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerTrade {
 
-    private final OrderHandler orderHandler;
+    private final OrderRepository orderHandler;
     private final StrategyUtil strategyUtil;
 
     private final static Logger logger = LogManager.getLogger(BrokerTrade.class);
 
-    public BrokerTrade(final OrderHandler orderHandler,
+    public BrokerTrade(final OrderRepository orderHandler,
                        final StrategyUtil strategyUtil) {
         this.orderHandler = orderHandler;
         this.strategyUtil = strategyUtil;

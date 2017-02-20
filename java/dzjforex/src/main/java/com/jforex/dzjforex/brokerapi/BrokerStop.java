@@ -5,51 +5,42 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
-import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.dzjforex.order.SetSLHandler;
+import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.math.MathUtil;
-import com.jforex.programming.order.OrderUtil;
-import com.jforex.programming.order.task.params.basic.SetSLParams;
-import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerStop {
 
-    private final OrderUtil orderUtil;
-    private final OrderHandler orderHandler;
-    private final AccountInfo accountInfo;
+    private final SetSLHandler setSLHandler;
+    private final TradeUtil tradeUtil;
 
     private final static Logger logger = LogManager.getLogger(BrokerStop.class);
 
-    public BrokerStop(final StrategyUtil strategyUtil,
-                      final OrderHandler orderHandler,
-                      final AccountInfo accountInfo) {
-        this.orderHandler = orderHandler;
-        this.accountInfo = accountInfo;
-
-        orderUtil = strategyUtil.orderUtil();
+    public BrokerStop(final SetSLHandler setSLHandler,
+                      final TradeUtil tradeUtil) {
+        this.setSLHandler = setSLHandler;
+        this.tradeUtil = tradeUtil;
     }
 
-    public int setSL(final int orderID,
-                     final double newSLPrice) {
-        logger.info("setSL called with newSLPrice " + newSLPrice);
-        if (!accountInfo.isTradingAllowed() || !orderHandler.isOrderKnown(orderID))
-            return Constant.UNKNOWN_ORDER_ID;
+    public int setSL(final int nTradeID,
+                     final double dStop) {
+        if (!tradeUtil.isOrderIDKnown(nTradeID)) {
+            logger.error("Cannot set stop loss for trade with unknown ID " + nTradeID);
+            return Constant.ADJUST_SL_FAIL;
+        }
+        if (!tradeUtil.isTradingAllowed())
+            return Constant.ADJUST_SL_FAIL;
 
-        final IOrder order = orderHandler.getOrder(orderID);
-        return setSLPrice(order, newSLPrice);
+        logger.info("Trying to set stop loss for order ID " + nTradeID
+                + " and dStop " + dStop);
+        return setSLForValidOrderID(nTradeID, dStop);
     }
 
-    private int setSLPrice(final IOrder order,
-                           final double newSLPrice) {
-        logger.info("setSL internal called with newSLPrice " + newSLPrice);
+    private int setSLForValidOrderID(final int nTradeID,
+                                     final double newSLPrice) {
+        final IOrder order = tradeUtil.getOrder(nTradeID);
         final double roundedSLPrice = MathUtil.roundPrice(newSLPrice, order.getInstrument());
-        final SetSLParams setSLParams = SetSLParams
-            .setSLAtPrice(order, roundedSLPrice)
-            .build();
-
-        orderUtil
-            .paramsToObservable(setSLParams)
-            .blockingLast();
+        setSLHandler.setSL(order, roundedSLPrice);
 
         return Constant.ADJUST_SL_OK;
     }

@@ -1,82 +1,56 @@
 package com.jforex.dzjforex.brokerapi;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.ZorroLogger;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
-import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.dzjforex.order.CloseHandler;
+import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.order.OrderStaticUtil;
-import com.jforex.programming.order.event.OrderEvent;
-import com.jforex.programming.order.event.OrderEventType;
-import com.jforex.programming.order.task.params.basic.CloseParams;
-import com.jforex.programming.strategy.StrategyUtil;
 
-import io.reactivex.Observable;
+public class BrokerSell {
 
-public class BrokerSell extends BrokerOrderBase {
+    private final CloseHandler closeHandler;
+    private final TradeUtil tradeUtil;
 
-    private final OrderHandler orderHandler;
+    private final static Logger logger = LogManager.getLogger(BrokerSell.class);
 
-    public BrokerSell(final StrategyUtil strategyUtil,
-                      final OrderHandler orderHandler,
-                      final AccountInfo accountInfo,
-                      final PluginConfig pluginConfig) {
-        super(strategyUtil,
-              accountInfo,
-              pluginConfig);
-
-        this.orderHandler = orderHandler;
+    public BrokerSell(final CloseHandler closeHandler,
+                      final TradeUtil tradeUtil) {
+        this.closeHandler = closeHandler;
+        this.tradeUtil = tradeUtil;
     }
 
     public int closeTrade(final int nTradeID,
                           final int nAmount) {
-        logger.info("closeTrade called");
-        if (!orderHandler.isOrderKnown(nTradeID) || !accountInfo.isTradingAllowed()) {
-            logger.info("Close trade not possible");
+        if (!tradeUtil.isOrderIDKnown(nTradeID)) {
+            logger.error("Cannot close trade with unknown ID " + nTradeID);
             return Constant.UNKNOWN_ORDER_ID;
         }
+        if (!tradeUtil.isTradingAllowed())
+            return Constant.BROKER_SELL_FAIL;
 
-        final double convertedAmount = Math.abs(nAmount) / pluginConfig.lotScale();
-        logger.info("nTradeID " + nTradeID
-                + " amount: " + nAmount
-                + " convertedAmount " + convertedAmount);
-
-        return closeOrder(nTradeID, convertedAmount);
+        logger.info("Trying to close trade for order ID " + nTradeID
+                + " and nAmount " + nAmount);
+        return closeTradeForValidOrderID(nTradeID, nAmount);
     }
 
-    private int closeOrder(final int nTradeID,
-                           final double convertedAmount) {
-        logger.info("closeOrder called");
-        final IOrder order = orderHandler.getOrder(nTradeID);
-        if (order.getState() != IOrder.State.OPENED && order.getState() != IOrder.State.FILLED) {
-            logger.warn("Order " + nTradeID + " could not be closed. Order state: " + order.getState());
+    private int closeTradeForValidOrderID(final int nTradeID,
+                                          final double nAmount) {
+        final IOrder order = tradeUtil.getOrder(nTradeID);
+        final double amountToClose = tradeUtil.contractsToAmount(nAmount);
+        if (!closeHandler.closeOrder(order, amountToClose)) {
             return Constant.BROKER_SELL_FAIL;
         }
 
-        final CloseParams closeParams = CloseParams
-            .withOrder(order)
-            .closePartial(convertedAmount)
-            .build();
-
-        final OrderEvent orderEvent = orderUtil
-            .paramsToObservable(closeParams)
-            .onErrorResumeNext(err -> {
-                ZorroLogger.showError("Failed to close trade! " + err.getMessage());
-                return Observable.just(new OrderEvent(null, OrderEventType.CLOSE_REJECTED, true));
-            })
-            .blockingLast();
-
-        if (orderEvent.order() == null) {
-            logger.info("closeOrder failed");
-            return Constant.BROKER_SELL_FAIL;
-        } else if (!OrderStaticUtil.isClosed.test(order)) {
-            final int newOrderID = orderHandler.createID();
-            orderHandler.storeOrder(newOrderID, order);
-            logger.info("order only partially closed id " + newOrderID);
+        if (!OrderStaticUtil.isClosed.test(order)) {
+            final int newOrderID = tradeUtil.createOrderID();
+            tradeUtil.storeOrder(newOrderID, order);
+            logger.info("Order " + nTradeID + " was partially closed. New ID is " + newOrderID);
             return newOrderID;
         } else {
-            logger.info("order closed completely id " + nTradeID);
+            logger.info("Order " + nTradeID + " closed. Returning old ID " + nTradeID);
             return nTradeID;
         }
     }

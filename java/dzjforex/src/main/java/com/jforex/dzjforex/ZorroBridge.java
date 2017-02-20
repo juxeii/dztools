@@ -24,7 +24,10 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.OrderHandler;
+import com.jforex.dzjforex.history.BarFetchTimeCalculator;
+import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
@@ -60,6 +63,9 @@ public class ZorroBridge {
     private BrokerSubscribe brokerSubscribe;
     private OrderHandler orderHandler;
     private BrokerHistory2 brokerHistory2;
+    private BarFetcher barFetcher;
+    private BarFetchTimeCalculator barFetchTimeCalculator;
+    private TickFetcher tickFetcher;
     private NTPFetch ntpFetch;
     private NTPProvider ntpProvider;
     private ServerTimeProvider serverTimeProvider;
@@ -71,8 +77,8 @@ public class ZorroBridge {
     public ZorroBridge() {
         initClientInstance();
 
-        clientUtil = new ClientUtil(client, pluginConfig.CACHE_DIR());
-        pinProvider = new PinProvider(client, pluginConfig.CONNECT_URL_REAL());
+        clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
+        pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         loginHandler = new LoginHandler(clientUtil.authentification(), credentialsFactory);
         brokerLogin = new BrokerLogin(loginHandler,
@@ -110,7 +116,10 @@ public class ZorroBridge {
                                         strategyUtil,
                                         pluginConfig);
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
-        brokerHistory2 = new BrokerHistory2(historyProvider);
+        barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
+        barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
+        tickFetcher = new TickFetcher(historyProvider);
+        brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);
         brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
         brokerAccount = new BrokerAccount(accountInfo);
 
@@ -202,9 +211,6 @@ public class ZorroBridge {
                                 final int tickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
-        if (!accountInfo.isConnected())
-            return Constant.HISTORY_UNAVAILABLE;
-
         return brokerHistory2.get(instrumentName,
                                   startDate,
                                   endDate,
@@ -213,13 +219,13 @@ public class ZorroBridge {
                                   tickParams);
     }
 
-    public int doHistoryDownload() {
-        ZorroLogger.log("doHistoryDownload called");
-        if (!client.isConnected())
-            return Constant.HISTORY_DOWNLOAD_FAIL;
-
-        return brokerHistory2.doHistoryDownload();
-    }
+//    public int doHistoryDownload() {
+//        ZorroLogger.log("doHistoryDownload called");
+//        if (!client.isConnected())
+//            return Constant.HISTORY_DOWNLOAD_FAIL;
+//
+//        return brokerHistory2.doHistoryDownload();
+//    }
 
     public int doSetOrderText(final String orderText) {
         ZorroLogger.log("doSetOrderText for " + orderText + " called but not yet supported!");

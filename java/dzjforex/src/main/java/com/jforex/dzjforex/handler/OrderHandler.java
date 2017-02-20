@@ -47,7 +47,7 @@ public class OrderHandler {
     }
 
     public int scaleAmount(final double amount) {
-        return (int) (amount * pluginConfig.LOT_SCALE());
+        return (int) (amount * pluginConfig.lotScale());
     }
 
     public boolean isOrderKnown(final int orderID) {
@@ -72,14 +72,14 @@ public class OrderHandler {
 
     private void resumeOrderIDIfFound(final IOrder order) {
         final String label = order.getLabel();
-        if (label.startsWith(pluginConfig.ORDER_PREFIX_LABEL())) {
+        if (label.startsWith(pluginConfig.orderLabelPrefix())) {
             final int id = getOrderIDFromLabel(label);
             orderMap.put(id, order);
         }
     }
 
     private int getOrderIDFromLabel(final String label) {
-        final String idName = label.substring(pluginConfig.ORDER_PREFIX_LABEL().length());
+        final String idName = label.substring(pluginConfig.orderLabelPrefix().length());
         return Integer.parseInt(idName);
     }
 }

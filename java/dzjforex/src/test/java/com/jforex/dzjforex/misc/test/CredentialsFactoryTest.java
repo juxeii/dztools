@@ -32,10 +32,10 @@ public class CredentialsFactoryTest extends CommonUtilForTest {
     @Before
     public void setUp() {
         when(pinProviderMock.getPin()).thenReturn(pin);
-        when(pluginConfigMock.CONNECT_URL_DEMO()).thenReturn(jnlpDEMO);
-        when(pluginConfigMock.CONNECT_URL_REAL()).thenReturn(jnlpReal);
-        when(pluginConfigMock.DEMO_LOGIN_TYPE()).thenReturn(loginTypeDemo);
-        when(pluginConfigMock.REAL_LOGIN_TYPE()).thenReturn(loginTypeReal);
+        when(pluginConfigMock.demoConnectURL()).thenReturn(jnlpDEMO);
+        when(pluginConfigMock.realConnectURL()).thenReturn(jnlpReal);
+        when(pluginConfigMock.demoLoginType()).thenReturn(loginTypeDemo);
+        when(pluginConfigMock.realLoginType()).thenReturn(loginTypeReal);
 
         credentialsFactory = new CredentialsFactory(pinProviderMock, pluginConfigMock);
     }

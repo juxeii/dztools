@@ -8,65 +8,61 @@ import org.aeonbits.owner.Config.Sources;
 public interface PluginConfig extends Config {
     @Key("platform.cachedirectory")
     @DefaultValue("./Plugin/dukascopy/.cache")
-    String CACHE_DIR();
+    String cacheDirectory();
 
     @Key("platform.login.retrydelay")
     @DefaultValue("5000")
-    long LOGIN_RETRY_DELAY();
+    long loginRetryDelay();
 
     @Key("order.labelprefix")
     @DefaultValue("zorro")
-    String ORDER_PREFIX_LABEL();
-
-    @Key("order.updatewaittime")
-    @DefaultValue("3000")
-    long ORDER_UPDATE_WAITTIME();
+    String orderLabelPrefix();
 
     @Key("order.maxslippage")
     @DefaultValue("3.0")
-    double DEFAULT_SLIPPAGE();
+    double orderMaxSlippage();
 
     @Key("order.lotscale")
     @DefaultValue("1000000")
-    double LOT_SCALE();
+    double lotScale();
 
     @Key("order.lotsize")
     @DefaultValue("1000")
-    double LOT_SIZE();
+    double lotSize();
 
     @Key("history.download.retries")
     @DefaultValue("3")
     int historyDownloadRetries();
 
+    @Key("history.download.retrydelay")
+    @DefaultValue("1000")
+    long historyRetryDelay();
+
     @Key("account.demologintype")
     @DefaultValue("Demo")
-    String DEMO_LOGIN_TYPE();
+    String demoLoginType();
 
     @Key("account.reallogintype")
     @DefaultValue("Real")
-    String REAL_LOGIN_TYPE();
+    String realLoginType();
 
     @Key("connection.demourl")
     @DefaultValue("http://platform.dukascopy.com/demo_3/jforex_3.jnlp")
-    String CONNECT_URL_DEMO();
+    String demoConnectURL();
 
     @Key("connection.liveurl")
     @DefaultValue("http://platform.dukascopy.com/live_3/jforex_3.jnlp")
-    String CONNECT_URL_REAL();
+    String realConnectURL();
 
     @Key("ntp.serverurl")
     @DefaultValue("time.nist.gov")
-    String NTP_TIME_SERVER_URL();
-
-    @Key("ntp.timeout")
-    @DefaultValue("5000")
-    long NTP_TIMEOUT();
+    String ntpServerURL();
 
     @Key("ntp.syncinterval")
     @DefaultValue("300000")
-    long NTP_SYNC_INTERVAL();
+    long ntpSynchInterval();
 
     @Key("ntp.retrydelay")
     @DefaultValue("5000")
-    int NTP_RETRY_DELAY();
+    int ntpRetryDelay();
 }

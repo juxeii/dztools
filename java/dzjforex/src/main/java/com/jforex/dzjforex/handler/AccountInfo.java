@@ -52,7 +52,7 @@ public class AccountInfo {
     }
 
     public double lotSize() {
-        return pluginConfig.LOT_SIZE();
+        return pluginConfig.lotSize();
     }
 
     public double lotMargin() {

@@ -40,7 +40,7 @@ public class AccountInfoTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        when(pluginConfigMock.LOT_SIZE()).thenReturn(lotSize);
+        when(pluginConfigMock.lotSize()).thenReturn(lotSize);
 
         when(accountMock.getAccountState()).thenReturn(state);
         when(accountMock.getAccountId()).thenReturn(id);
@@ -104,7 +104,7 @@ public class AccountInfoTest extends CommonUtilForTest {
     public void lotSizeIsCorrect() {
         assertThat(accountInfo.lotSize(), equalTo(lotSize));
 
-        verify(pluginConfigMock).LOT_SIZE();
+        verify(pluginConfigMock).lotSize();
     }
 
     @Test

@@ -27,7 +27,7 @@ public class BrokerLogin {
         this.loginHandler = loginHandler;
         this.client = client;
 
-        initRetryDelayTimer(pluginConfigMock.LOGIN_RETRY_DELAY());
+        initRetryDelayTimer(pluginConfigMock.loginRetryDelay());
     }
 
     private void initRetryDelayTimer(final long retryDelay) {

@@ -32,7 +32,7 @@ public class NTPProviderTest extends CommonUtilForTest {
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
-        when(pluginConfigMock.NTP_SYNC_INTERVAL()).thenReturn(ntpSynchInterval);
+        when(pluginConfigMock.ntpSynchInterval()).thenReturn(ntpSynchInterval);
 
         when(ntpFetchMock.observable()).thenReturn(Observable.just(firstNTP),
                                                    Observable.just(secondNTP),

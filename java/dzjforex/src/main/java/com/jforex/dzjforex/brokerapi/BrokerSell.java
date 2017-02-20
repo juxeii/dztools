@@ -37,7 +37,7 @@ public class BrokerSell extends BrokerOrderBase {
             return Constant.UNKNOWN_ORDER_ID;
         }
 
-        final double convertedAmount = Math.abs(nAmount) / pluginConfig.LOT_SCALE();
+        final double convertedAmount = Math.abs(nAmount) / pluginConfig.lotScale();
         logger.info("nTradeID " + nTradeID
                 + " amount: " + nAmount
                 + " convertedAmount " + convertedAmount);

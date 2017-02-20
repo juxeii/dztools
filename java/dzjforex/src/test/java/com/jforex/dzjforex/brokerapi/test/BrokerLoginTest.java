@@ -36,7 +36,7 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        when(pluginConfigMock.LOGIN_RETRY_DELAY()).thenReturn(loginRetryDelay);
+        when(pluginConfigMock.loginRetryDelay()).thenReturn(loginRetryDelay);
 
         brokerLogin = new BrokerLogin(loginHandlerMock,
                                       clientMock,

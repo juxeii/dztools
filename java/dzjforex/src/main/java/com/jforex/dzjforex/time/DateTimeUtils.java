@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IDataService;
+import com.dukascopy.api.ITick;
 import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
@@ -111,5 +112,9 @@ public class DateTimeUtils {
 
     public static double getUTCTimeFromBar(final IBar bar) {
         return getOLEDateFromMillisRounded(bar.getTime());
+    }
+
+    public static double getUTCTimeFromTick(final ITick tick) {
+        return getOLEDateFromMillisRounded(tick.getTime());
     }
 }

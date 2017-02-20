@@ -15,7 +15,7 @@ public class CredentialsFactory {
         this.pinProvider = pinProvider;
         this.pluginConfig = pluginConfig;
 
-        demoName = pluginConfig.DEMO_LOGIN_TYPE();
+        demoName = pluginConfig.demoLoginType();
     }
 
     public LoginCredentials create(final String username,
@@ -29,8 +29,8 @@ public class CredentialsFactory {
 
     private String createJnlpAdress(final String loginType) {
         return loginType.equals(demoName)
-                ? pluginConfig.CONNECT_URL_DEMO()
-                : pluginConfig.CONNECT_URL_REAL();
+                ? pluginConfig.demoConnectURL()
+                : pluginConfig.realConnectURL();
     }
 
     private String createPin(final String loginType) {

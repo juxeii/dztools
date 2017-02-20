@@ -29,7 +29,7 @@ public class NTPProvider {
     private void startNTPSynchTask() {
         Observable
             .interval(0L,
-                      pluginConfig.NTP_SYNC_INTERVAL(),
+                      pluginConfig.ntpSynchInterval(),
                       TimeUnit.MILLISECONDS)
             .doOnSubscribe(d -> logger.debug("Starting NTP synch task..."))
             .flatMap(counter -> ntpFetch.observable())

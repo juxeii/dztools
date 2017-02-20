@@ -2,6 +2,7 @@ package com.jforex.dzjforex.history;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +18,7 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.misc.DateTimeUtil;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 
 public class HistoryProvider {
 
@@ -50,8 +52,9 @@ public class HistoryProvider {
                                                       filter,
                                                       startTime,
                                                       endTime))
-            .retry(pluginConfig.historyDownloadRetries())
             .doOnError(err -> logger.error("Fetching bars  for " + instrument + " failed! " + err.getMessage()))
+            .doOnComplete(() -> logger.debug("Fetching bars  for " + instrument + " completed."))
+            .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()))
             .blockingFirst();
     }
@@ -70,6 +73,12 @@ public class HistoryProvider {
                 + "endTime: " + DateTimeUtil.formatMillis(endTime));
     }
 
+    private ObservableSource<Long> historyRetryWhen(final Observable<Throwable> errors) {
+        return errors
+            .zipWith(Observable.range(1, pluginConfig.historyDownloadRetries()), (n, i) -> i)
+            .flatMap(retryCount -> Observable.timer(pluginConfig.historyRetryDelay(), TimeUnit.MILLISECONDS));
+    }
+
     public List<ITick> fetchTicks(final Instrument instrument,
                                   final long startTime,
                                   final long endTime) {
@@ -82,7 +91,8 @@ public class HistoryProvider {
                                                        endTime))
             .doOnError(err -> logger.error("Fetching ticks  for " + instrument
                     + " failed! " + err.getMessage()))
-            .retry(pluginConfig.historyDownloadRetries())
+            .doOnComplete(() -> logger.debug("Fetching bars  for " + instrument + " completed."))
+            .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()))
             .blockingFirst();
     }
@@ -93,5 +103,19 @@ public class HistoryProvider {
         logger.debug("Starting to fetch ticks for " + instrument + "\n"
                 + "startTime: " + DateTimeUtil.formatMillis(startTime) + "\n"
                 + "endTime: " + DateTimeUtil.formatMillis(endTime));
+    }
+
+    public long getPreviousBarStart(final Period period,
+                                    final long barTime) {
+        return Observable
+            .fromCallable(() -> history.getPreviousBarStart(period, barTime))
+            .doOnSubscribe(d -> logger.debug("Starting to fetch previous bar start for \n"
+                    + "period: " + period + "\n"
+                    + "barTime: " + DateTimeUtil.formatMillis(barTime)))
+            .doOnError(err -> logger.error("Fetching previous bar start failed! " + err.getMessage()))
+            .doOnComplete(() -> logger.debug("Fetching previous bar start completed."))
+            .retryWhen(this::historyRetryWhen)
+            .onErrorResumeNext(Observable.just(0L))
+            .blockingFirst();
     }
 }

@@ -14,7 +14,6 @@ import com.jforex.programming.strategy.StrategyUtil;
 public class InfoStrategy extends JForexUtilsStrategy {
 
     private IContext context;
-    private ITick latestTick;
 
     public IContext getContext() {
         return context;

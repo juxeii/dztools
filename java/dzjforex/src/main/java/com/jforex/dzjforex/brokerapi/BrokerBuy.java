@@ -76,7 +76,7 @@ public class BrokerBuy extends BrokerOrderBase {
     }
 
     private double createTradeAmount(final double noOfContracts) {
-        return Math.abs(noOfContracts) / pluginConfig.LOT_SCALE();
+        return Math.abs(noOfContracts) / pluginConfig.lotScale();
     }
 
     private int submitOrder(final Instrument instrument,
@@ -85,7 +85,7 @@ public class BrokerBuy extends BrokerOrderBase {
                             final double SLPrice,
                             final double tradeParams[]) {
         final int orderID = orderHandler.createID();
-        final String orderLabel = pluginConfig.ORDER_PREFIX_LABEL() + orderID;
+        final String orderLabel = pluginConfig.orderLabelPrefix() + orderID;
 
         logger.info("Try to open position for " + instrument +
                 " with cmd " + cmd + " ,amount " + amount +

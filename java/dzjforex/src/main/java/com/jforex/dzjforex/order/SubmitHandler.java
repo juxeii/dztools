@@ -24,14 +24,12 @@ public class SubmitHandler {
         this.tradeUtil = tradeUtil;
     }
 
-    public IOrder submit(final int orderID,
-                         final Instrument instrument,
+    public IOrder submit(final Instrument instrument,
                          final OrderCommand command,
                          final double amount,
                          final String label,
                          final double slPrice) {
         logger.info("Trying to open trade for " + instrument + "\n"
-                + "orderID:  " + orderID + "\n"
                 + "command:  " + command + "\n"
                 + "amount:  " + amount + "\n"
                 + "label:  " + label + "\n"
@@ -47,16 +45,20 @@ public class SubmitHandler {
 
         final SubmitParams submitParams = SubmitParams
             .withOrderParams(orderParams)
-            .doOnComplete(() -> logger.info("Opening trade " + instrument
-                    + " with order ID " + orderID + " done."))
+            .doOnFullFill(orderEvent -> {
+                final IOrder order = orderEvent.order();
+                logger.info("Opening trade " + instrument
+                        + " with label " + order.getLabel() + " and"
+                        + " order ID " + order.getId() + " done.");
+            })
             .build();
 
         final OrderEvent orderEvent = tradeUtil
             .orderUtil()
             .paramsToObservable(submitParams)
             .onErrorResumeNext(err -> {
-                ZorroLogger.showError("Failed to open trade with ID "
-                        + orderID + "! " + err.getMessage());
+                final String errorMsg = "Failed to open trade with label " + label + "! " + err.getMessage();
+                ZorroLogger.logError(errorMsg, logger);
                 return Observable.just(new OrderEvent(null, OrderEventType.FILL_REJECTED, true));
             })
             .blockingLast();

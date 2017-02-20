@@ -32,7 +32,6 @@ import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.order.CloseHandler;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.ResumeOrders;
 import com.jforex.dzjforex.order.SetSLHandler;
 import com.jforex.dzjforex.order.SubmitHandler;
 import com.jforex.dzjforex.order.TradeUtil;
@@ -71,7 +70,6 @@ public class ZorroBridge {
     private DateTimeUtils dateTimeUtils;
     private BrokerSubscribe brokerSubscribe;
     private OrderRepository orderRepository;
-    private ResumeOrders resumeOrders;
     private BrokerHistory2 brokerHistory2;
     private BarFetcher barFetcher;
     private BarFetchTimeCalculator barFetchTimeCalculator;
@@ -113,7 +111,6 @@ public class ZorroBridge {
     }
 
     private void initComponents() {
-        logger.info("initComponents()");
         context = infoStrategy.getContext();
         final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
 
@@ -122,10 +119,9 @@ public class ZorroBridge {
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
-        orderRepository = new OrderRepository(context,
-                                              strategyUtil,
-                                              pluginConfig);
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
+        orderRepository = new OrderRepository(context.getEngine(), historyProvider);
+
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
         barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
         tickFetcher = new TickFetcher(historyProvider);
@@ -143,12 +139,12 @@ public class ZorroBridge {
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     dateTimeUtils);
-        brokerTrade = new BrokerTrade(orderRepository, strategyUtil);
 
         tradeUtil = new TradeUtil(orderRepository,
                                   strategyUtil,
                                   accountInfo,
                                   pluginConfig);
+        brokerTrade = new BrokerTrade(tradeUtil);
         setSLHandler = new SetSLHandler(tradeUtil);
         brokerStop = new BrokerStop(setSLHandler, tradeUtil);
         submitHandler = new SubmitHandler(tradeUtil);
@@ -167,7 +163,6 @@ public class ZorroBridge {
         if (loginResult == Constant.LOGIN_OK) {
             strategyID = client.startStrategy(infoStrategy);
             initComponents();
-            resumeOrders.resume();
             accountInfos[0] = accountInfo.id();
         }
 
@@ -230,16 +225,13 @@ public class ZorroBridge {
                                   tickParams);
     }
 
-//    public int doHistoryDownload() {
-//        ZorroLogger.log("doHistoryDownload called");
-//        if (!client.isConnected())
-//            return Constant.HISTORY_DOWNLOAD_FAIL;
-//
-//        return brokerHistory2.doHistoryDownload();
-//    }
+    public int doHistoryDownload() {
+        // Currently not supported
+        return Constant.HISTORY_DOWNLOAD_FAIL;
+    }
 
     public int doSetOrderText(final String orderText) {
-        ZorroLogger.log("doSetOrderText for " + orderText + " called but not yet supported!");
+        ZorroLogger.logError("doSetOrderText for " + orderText + " called but not yet supported!");
         return Constant.BROKER_COMMAND_OK;
     }
 }

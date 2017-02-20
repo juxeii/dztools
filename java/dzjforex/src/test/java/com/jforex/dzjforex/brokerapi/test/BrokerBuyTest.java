@@ -57,6 +57,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
         private final String assetName = "EUR/USD";
         private int returnCode;
+        private final String orderIDName = "1234";
         private final int orderID = 1234;
         private final double tradeAmount = 0.0125;
         private final double dStopDist = 0.00023;
@@ -66,8 +67,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
         private void setupSubmitHandlerOrder(final IOrder order,
                                              final double slPrice) {
-            when(submitHandlerMock.submit(orderID,
-                                          buyInstrument,
+            when(submitHandlerMock.submit(buyInstrument,
                                           command,
                                           tradeAmount,
                                           orderLabel,
@@ -79,14 +79,12 @@ public class BrokerBuyTest extends CommonUtilForTest {
         public void setUp() {
             when(tradeUtilMock.maybeInstrumentForTrading(assetName))
                 .thenReturn(Optional.of(buyInstrument));
-            when(tradeUtilMock.createOrderID())
-                .thenReturn(orderID);
             when(tradeUtilMock.contractsToAmount(nAmount))
                 .thenReturn(tradeAmount);
             when(tradeUtilMock.orderCommandForContracts(nAmount))
                 .thenReturn(command);
-            when(tradeUtilMock.orderLabelPrefix())
-                .thenReturn(orderLabelPrefix);
+            when(tradeUtilMock.createLabel())
+                .thenReturn(orderLabel);
             when(tradeUtilMock.calculateSL(buyInstrument,
                                            command,
                                            dStopDist))
@@ -100,6 +98,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
             @Before
             public void setUp() {
                 when(orderMock.getOpenPrice()).thenReturn(openPrice);
+                when(orderMock.getId()).thenReturn(orderIDName);
             }
 
             public class WhendStopDistIsNegative {
@@ -125,8 +124,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
                 @Test
                 public void callToSubmitHandlerIsCorrectWithNoSL() {
-                    verify(submitHandlerMock).submit(orderID,
-                                                     buyInstrument,
+                    verify(submitHandlerMock).submit(buyInstrument,
                                                      command,
                                                      tradeAmount,
                                                      orderLabel,
@@ -157,8 +155,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
                 @Test
                 public void callToSubmitHandlerIsCorrectWithNoSL() {
-                    verify(submitHandlerMock).submit(orderID,
-                                                     buyInstrument,
+                    verify(submitHandlerMock).submit(buyInstrument,
                                                      command,
                                                      tradeAmount,
                                                      orderLabel,
@@ -189,8 +186,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
                 @Test
                 public void callToSubmitHandlerIsCorrect() {
-                    verify(submitHandlerMock).submit(orderID,
-                                                     buyInstrument,
+                    verify(submitHandlerMock).submit(buyInstrument,
                                                      command,
                                                      tradeAmount,
                                                      orderLabel,
@@ -222,8 +218,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
             @Test
             public void callToSubmitHandlerIsCorrect() {
-                verify(submitHandlerMock).submit(orderID,
-                                                 buyInstrument,
+                verify(submitHandlerMock).submit(buyInstrument,
                                                  command,
                                                  tradeAmount,
                                                  orderLabel,

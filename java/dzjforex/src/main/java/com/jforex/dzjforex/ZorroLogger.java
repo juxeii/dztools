@@ -1,8 +1,16 @@
 package com.jforex.dzjforex;
 
+import org.apache.logging.log4j.Logger;
+
 public class ZorroLogger {
 
-    public static int log(final String errorMsg) {
+    public static int logError(final String errorMsg,
+                               final Logger logger) {
+        logger.error(errorMsg);
+        return logError(errorMsg);
+    }
+
+    public static int logError(final String errorMsg) {
         return jcallback_BrokerError(errorMsg);
     }
 
@@ -11,19 +19,19 @@ public class ZorroLogger {
     }
 
     public static void logDiagnose(final String errorMsg) {
-        log("#" + errorMsg);
+        logError("#" + errorMsg);
     }
 
     public static void logPopUp(final String errorMsg) {
-        log("!" + errorMsg);
+        logError("!" + errorMsg);
     }
 
     public static void indicateError() {
-        log("Severe error occured, check dzplugin.log logfile!");
+        logError("Severe error occured, check dzplugin.log logfile!");
     }
 
     public static void showError(final String errorMsg) {
-        log(errorMsg);
+        logError(errorMsg);
     }
 
     private static native int jcallback_BrokerError(String errorMsg);

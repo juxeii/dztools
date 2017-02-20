@@ -21,25 +21,19 @@ public class CloseHandler {
         this.tradeUtil = tradeUtil;
     }
 
-    public boolean closeOrder(final IOrder order,
-                              final double amount) {
-        logger.info("Trying to close order with label " + order.getLabel()
-                + " and amount " + amount);
-
+    public void closeOrder(final IOrder order) {
         final CloseParams closeParams = CloseParams
             .withOrder(order)
-            .closePartial(amount)
+            .doOnStart(() -> logger.info("Trying to close order with label " + order.getLabel()))
+            .doOnError(err -> ZorroLogger.logError("Failed to close trade! " + err.getMessage(), logger))
             .build();
 
-        final OrderEvent orderEvent = tradeUtil
+        tradeUtil
             .orderUtil()
             .paramsToObservable(closeParams)
             .onErrorResumeNext(err -> {
-                ZorroLogger.showError("Failed to close trade! " + err.getMessage());
                 return Observable.just(new OrderEvent(null, OrderEventType.CLOSE_REJECTED, true));
             })
             .blockingLast();
-
-        return orderEvent.order() != null;
     }
 }

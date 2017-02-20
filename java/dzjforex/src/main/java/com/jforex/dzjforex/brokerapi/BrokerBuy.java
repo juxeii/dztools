@@ -39,18 +39,21 @@ public class BrokerBuy {
 
     private int submit(final Instrument instrument,
                        final double tradeParams[]) {
-        final int orderID = tradeUtil.createOrderID();
-        final IOrder order = getSubmitOrder(orderID,
-                                            instrument,
-                                            tradeParams);
+        final IOrder order = getSubmitOrder(instrument, tradeParams);
+        if (order == null)
+            return Constant.BROKER_BUY_FAIL;
 
-        return evaluateReturnValue(order,
-                                   orderID,
-                                   tradeParams);
+        final int orderID = Integer.parseInt(order.getId());
+        tradeUtil.storeOrder(orderID, order);
+        tradeParams[2] = order.getOpenPrice();
+        final double dStopDist = tradeParams[1];
+
+        return dStopDist == -1
+                ? Constant.BROKER_BUY_OPPOSITE_CLOSE
+                : orderID;
     }
 
-    private IOrder getSubmitOrder(final int orderID,
-                                  final Instrument instrument,
+    private IOrder getSubmitOrder(final Instrument instrument,
                                   final double tradeParams[]) {
         final double contracts = tradeParams[0];
         final double dStopDist = tradeParams[1];
@@ -60,28 +63,12 @@ public class BrokerBuy {
         final double slPrice = tradeUtil.calculateSL(instrument,
                                                      orderCommand,
                                                      dStopDist);
-        final String label = tradeUtil.orderLabelPrefix() + orderID;
+        final String label = tradeUtil.createLabel();
 
-        return submitHandler.submit(orderID,
-                                    instrument,
+        return submitHandler.submit(instrument,
                                     orderCommand,
                                     amount,
                                     label,
                                     slPrice);
-    }
-
-    private int evaluateReturnValue(final IOrder order,
-                                    final int orderID,
-                                    final double tradeParams[]) {
-        if (order == null)
-            return Constant.BROKER_BUY_FAIL;
-
-        tradeUtil.storeOrder(orderID, order);
-        tradeParams[2] = order.getOpenPrice();
-        final double dStopDist = tradeParams[1];
-
-        return dStopDist == -1
-                ? Constant.BROKER_BUY_OPPOSITE_CLOSE
-                : orderID;
     }
 }

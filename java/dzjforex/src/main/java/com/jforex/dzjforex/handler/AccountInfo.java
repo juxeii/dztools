@@ -93,7 +93,7 @@ public class AccountInfo {
                                                                   instrument,
                                                                   currency(),
                                                                   OfferSide.ASK);
-        logger.debug("Pipcost for lotSize " + lotSize()
+        logger.trace("Pipcost for lotSize " + lotSize()
                 + " and instrument " + instrument
                 + " is " + pipCost);
         return pipCost;
@@ -109,7 +109,7 @@ public class AccountInfo {
                                                                    accountCurrency,
                                                                    OfferSide.ASK);
         final double marginCost = conversionLot / leverage();
-        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
+        logger.trace("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
                 + " and  conversionLot " + conversionLot
                 + " and leverage " + leverage());
         return marginCost;

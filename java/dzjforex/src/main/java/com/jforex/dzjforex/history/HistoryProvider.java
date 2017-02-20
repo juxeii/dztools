@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.Filter;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IHistory;
+import com.dukascopy.api.IOrder;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
@@ -116,6 +117,22 @@ public class HistoryProvider {
             .doOnComplete(() -> logger.debug("Fetching previous bar start completed."))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(0L))
+            .blockingFirst();
+    }
+
+    public IOrder orderByID(final int orderID) {
+        return Observable
+            .fromCallable(() -> history.getHistoricalOrderById(String.valueOf(orderID)))
+            .doOnSubscribe(d -> logger.debug("Seeking orderID " + orderID + " in history..."))
+            .onErrorResumeNext(err -> {
+                logger.error("Seeking orderID " + orderID + " in history failed! " + err.getMessage());
+                return Observable.just(null);
+            })
+            .doOnNext(order -> {
+                if (order == null)
+                    logger.error("Found no order for orderID " + orderID + " in history!");
+            })
+            .doOnComplete(() -> logger.debug("Found order ID " + orderID + " in history."))
             .blockingFirst();
     }
 }

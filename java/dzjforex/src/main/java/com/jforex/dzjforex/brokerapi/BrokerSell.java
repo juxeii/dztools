@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
+import com.jforex.dzjforex.ZorroLogger;
 import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.order.CloseHandler;
 import com.jforex.dzjforex.order.TradeUtil;
@@ -26,7 +27,7 @@ public class BrokerSell {
                           final int nAmount) {
         if (!tradeUtil.isOrderIDKnown(nTradeID)) {
             logger.error("Cannot close trade with unknown ID " + nTradeID);
-            return Constant.UNKNOWN_ORDER_ID;
+            return Constant.BROKER_SELL_FAIL;
         }
         if (!tradeUtil.isTradingAllowed())
             return Constant.BROKER_SELL_FAIL;
@@ -40,18 +41,20 @@ public class BrokerSell {
                                           final double nAmount) {
         final IOrder order = tradeUtil.getOrder(nTradeID);
         final double amountToClose = tradeUtil.contractsToAmount(nAmount);
-        if (!closeHandler.closeOrder(order, amountToClose)) {
+        if (amountToClose < order.getAmount()) {
+            final String errorMsg = "Partical close not supported! Data:\n"
+                    + "nTradeID: " + nTradeID + "\n"
+                    + "nAmount: " + nAmount + "\n"
+                    + "order amount: " + order.getAmount();
+            ZorroLogger.logError(errorMsg, logger);
             return Constant.BROKER_SELL_FAIL;
         }
 
-        if (!OrderStaticUtil.isClosed.test(order)) {
-            final int newOrderID = tradeUtil.createOrderID();
-            tradeUtil.storeOrder(newOrderID, order);
-            logger.info("Order " + nTradeID + " was partially closed. New ID is " + newOrderID);
-            return newOrderID;
-        } else {
-            logger.info("Order " + nTradeID + " closed. Returning old ID " + nTradeID);
-            return nTradeID;
-        }
+        closeHandler.closeOrder(order);
+        if (!OrderStaticUtil.isClosed.test(order))
+            return Constant.BROKER_SELL_FAIL;
+
+        logger.info("Order with label " + order.getLabel() + " closed. Returning old nTradeID " + nTradeID);
+        return nTradeID;
     }
 }

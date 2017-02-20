@@ -74,7 +74,7 @@ BrokerHTTP(FARPROC fpSend,
            FARPROC fpResult,
            FARPROC fpFree)
 {
-    BrokerError("BrokerHTTP not yet supported!");
+    //BrokerError("BrokerHTTP not yet supported!");
 }
 
 DLLFUNC int

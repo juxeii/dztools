@@ -37,10 +37,11 @@ public class BrokerStop {
     }
 
     private int setSLForValidOrderID(final int nTradeID,
-                                     final double newSLPrice) {
+                                     final double dStop) {
         final IOrder order = tradeUtil.getOrder(nTradeID);
-        final double roundedSLPrice = MathUtil.roundPrice(newSLPrice, order.getInstrument());
-        setSLHandler.setSL(order, roundedSLPrice);
+        final double slPrice = MathUtil.roundPrice(dStop, order.getInstrument());
+        if (tradeUtil.isSLPriceDistanceOK(order.getInstrument(), slPrice))
+            setSLHandler.setSL(order, slPrice);
 
         return Constant.ADJUST_SL_OK;
     }

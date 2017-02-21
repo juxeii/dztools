@@ -135,4 +135,22 @@ public class HistoryProvider {
             .doOnComplete(() -> logger.debug("Found order ID " + orderID + " in history."))
             .blockingFirst();
     }
+
+    public List<IOrder> ordersByInstrument(final Instrument instrument,
+                                           final long from,
+                                           final long to) {
+        return Observable
+            .fromCallable(() -> history.getOrdersHistory(instrument,
+                                                         from,
+                                                         to))
+            .doOnSubscribe(d -> logger.debug("Seeking orders for " + instrument
+                    + " from " + DateTimeUtil.formatMillis(from)
+                    + " from " + DateTimeUtil.formatMillis(to)))
+            .onErrorResumeNext(err -> {
+                logger.error("Seeking orders for " + instrument + " in history failed! " + err.getMessage());
+                return Observable.just(new ArrayList<>());
+            })
+            .retryWhen(this::historyRetryWhen)
+            .blockingFirst();
+    }
 }

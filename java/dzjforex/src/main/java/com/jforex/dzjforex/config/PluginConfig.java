@@ -50,6 +50,10 @@ public interface PluginConfig extends Config {
     @DefaultValue("1000")
     long historyRetryDelay();
 
+    @Key("history.orderdays")
+    @DefaultValue("7")
+    int historyOrderInDays();
+
     @Key("account.demologintype")
     @DefaultValue("Demo")
     String demoLoginType();

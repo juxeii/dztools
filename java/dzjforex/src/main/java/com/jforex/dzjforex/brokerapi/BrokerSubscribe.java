@@ -34,6 +34,10 @@ public class BrokerSubscribe {
                 : Constant.ASSET_UNAVAILABLE;
     }
 
+    public Set<Instrument> subscribedInstruments() {
+        return client.getSubscribedInstruments();
+    }
+
     private int subscribeValidinstrumentName(final Instrument instrumentToSubscribe) {
         final Set<Instrument> instrumentsToSubscribe = new HashSet<Instrument>();
         instrumentsToSubscribe.add(instrumentToSubscribe);

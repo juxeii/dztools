@@ -31,7 +31,9 @@ import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.order.CloseHandler;
+import com.jforex.dzjforex.order.LabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
+import com.jforex.dzjforex.order.SetLabel;
 import com.jforex.dzjforex.order.SetSLHandler;
 import com.jforex.dzjforex.order.SubmitHandler;
 import com.jforex.dzjforex.order.TradeUtil;
@@ -61,9 +63,11 @@ public class ZorroBridge {
     private BrokerTime brokerTime;
     private BrokerTrade brokerTrade;
     private TradeUtil tradeUtil;
+    private LabelUtil labelUtil;
     private BrokerStop brokerStop;
     private BrokerBuy brokerBuy;
     private SubmitHandler submitHandler;
+    private SetLabel setLabel;
     private CloseHandler closeHandler;
     private SetSLHandler setSLHandler;
     private BrokerSell brokerSell;
@@ -120,7 +124,7 @@ public class ZorroBridge {
                                       pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
-        orderRepository = new OrderRepository(context.getEngine(), historyProvider);
+        labelUtil = new LabelUtil(Clock.systemDefaultZone(), pluginConfig);
 
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
         barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
@@ -136,6 +140,12 @@ public class ZorroBridge {
         serverTimeProvider = new ServerTimeProvider(ntpProvider,
                                                     tickTimeProvider,
                                                     Clock.systemDefaultZone());
+        orderRepository = new OrderRepository(context.getEngine(),
+                                              historyProvider,
+                                              brokerSubscribe,
+                                              pluginConfig,
+                                              serverTimeProvider,
+                                              labelUtil);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     dateTimeUtils);
@@ -143,13 +153,15 @@ public class ZorroBridge {
         tradeUtil = new TradeUtil(orderRepository,
                                   strategyUtil,
                                   accountInfo,
+                                  labelUtil,
                                   pluginConfig);
         brokerTrade = new BrokerTrade(tradeUtil);
         setSLHandler = new SetSLHandler(tradeUtil);
         brokerStop = new BrokerStop(setSLHandler, tradeUtil);
         submitHandler = new SubmitHandler(tradeUtil);
         brokerBuy = new BrokerBuy(submitHandler, tradeUtil);
-        closeHandler = new CloseHandler(tradeUtil);
+        setLabel = new SetLabel(tradeUtil);
+        closeHandler = new CloseHandler(tradeUtil, setLabel);
         brokerSell = new BrokerSell(closeHandler, tradeUtil);
     }
 

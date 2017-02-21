@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.order;
 
-import java.rmi.server.UID;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +15,8 @@ import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.order.OrderUtil;
+import com.jforex.programming.order.task.params.RetryParams;
+import com.jforex.programming.rx.RetryDelay;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class TradeUtil {
@@ -22,6 +24,7 @@ public class TradeUtil {
     private final OrderRepository orderRepository;
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
+    private final LabelUtil labelUtil;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
 
@@ -30,10 +33,12 @@ public class TradeUtil {
     public TradeUtil(final OrderRepository orderRepository,
                      final StrategyUtil strategyUtil,
                      final AccountInfo accountInfo,
+                     final LabelUtil orderLabel,
                      final PluginConfig pluginConfig) {
         this.orderRepository = orderRepository;
         this.strategyUtil = strategyUtil;
         this.accountInfo = accountInfo;
+        this.labelUtil = orderLabel;
         this.pluginConfig = pluginConfig;
 
         orderUtil = strategyUtil.orderUtil();
@@ -55,8 +60,17 @@ public class TradeUtil {
         return accountInfo;
     }
 
+    public LabelUtil labelUtil() {
+        return labelUtil;
+    }
+
     public PluginConfig pluginConfig() {
         return pluginConfig;
+    }
+
+    public RetryParams retryParams() {
+        final RetryDelay delay = new RetryDelay(pluginConfig.orderSubmitRetryDelay(), TimeUnit.MILLISECONDS);
+        return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
     public void storeOrder(final int orderID,
@@ -65,15 +79,11 @@ public class TradeUtil {
     }
 
     public boolean isOrderIDKnown(final int orderID) {
-        return orderRepository.orderByID(orderID) != null;
+        return orderRepository.isOrderIDKnown(orderID);
     }
 
     public IOrder getOrder(final int orderID) {
         return orderRepository.orderByID(orderID);
-    }
-
-    public String orderLabelPrefix() {
-        return pluginConfig.orderLabelPrefix();
     }
 
     public Optional<Instrument> maybeInstrumentForTrading(final String assetName) {
@@ -146,9 +156,5 @@ public class TradeUtil {
 
     public double contractsToAmount(final double contracts) {
         return Math.abs(contracts) / pluginConfig.lotScale();
-    }
-
-    public String createLabel() {
-        return orderLabelPrefix() + Math.abs(new UID().hashCode());
     }
 }

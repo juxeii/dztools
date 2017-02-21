@@ -43,7 +43,9 @@ public class BrokerBuy {
         if (order == null)
             return Constant.BROKER_BUY_FAIL;
 
-        final int orderID = Integer.parseInt(order.getId());
+        final int orderID = tradeUtil
+            .labelUtil()
+            .orderId(order);
         tradeUtil.storeOrder(orderID, order);
         tradeParams[2] = order.getOpenPrice();
         final double dStopDist = tradeParams[1];
@@ -63,7 +65,9 @@ public class BrokerBuy {
         final double slPrice = tradeUtil.calculateSL(instrument,
                                                      orderCommand,
                                                      dStopDist);
-        final String label = tradeUtil.createLabel();
+        final String label = tradeUtil
+            .labelUtil()
+            .create();
 
         return submitHandler.submit(instrument,
                                     orderCommand,

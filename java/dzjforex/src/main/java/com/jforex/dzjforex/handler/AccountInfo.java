@@ -40,12 +40,12 @@ public class AccountInfo {
     }
 
     public double equity() {
-        logger.debug("equity: " + account.getEquity());
+        // logger.debug("equity: " + account.getEquity());
         return account.getEquity();
     }
 
     public double baseEquity() {
-        logger.debug("baseEquity: " + account.getBaseEquity());
+        // logger.debug("baseEquity: " + account.getBaseEquity());
         return account.getBaseEquity();
     }
 
@@ -62,7 +62,7 @@ public class AccountInfo {
     }
 
     public double tradeValue() {
-        logger.debug("tradeValue: " + (equity() - baseEquity()));
+        // logger.debug("tradeValue: " + (equity() - baseEquity()));
         return equity() - baseEquity();
     }
 
@@ -71,7 +71,7 @@ public class AccountInfo {
     }
 
     public double usedMargin() {
-        logger.debug("usedMargin: " + (account.getEquity() - freeMargin()));
+        // logger.debug("usedMargin: " + (account.getEquity() - freeMargin()));
         return equity() - freeMargin();
     }
 
@@ -97,9 +97,9 @@ public class AccountInfo {
                                                                   instrument,
                                                                   currency(),
                                                                   OfferSide.ASK);
-        logger.debug("Pipcost for lotSize " + lotSize()
-                + " and instrument " + instrument
-                + " is " + pipCost);
+//        logger.debug("Pipcost for lotSize " + lotSize()
+//                + " and instrument " + instrument
+//                + " is " + pipCost);
         return pipCost;
     }
 
@@ -113,9 +113,9 @@ public class AccountInfo {
                                                                    accountCurrency,
                                                                    OfferSide.ASK);
         final double marginCost = conversionLot / leverage();
-        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
-                + " and  conversionLot " + conversionLot
-                + " and leverage " + leverage());
+//        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
+//                + " and  conversionLot " + conversionLot
+//                + " and leverage " + leverage());
         return marginCost;
     }
 }

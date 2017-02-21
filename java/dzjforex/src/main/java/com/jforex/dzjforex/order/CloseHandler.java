@@ -49,8 +49,9 @@ public class CloseHandler {
             })
             .blockingLast();
 
-        if (orderEvent.order() == null)
+        if (orderEvent.order() == null) {
             return Constant.ORDER_CLOSE_FAIL;
+        }
 
         if (amount < order.getAmount()) {
             final String newLabel = tradeUtil

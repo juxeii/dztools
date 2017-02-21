@@ -33,9 +33,9 @@ public class BrokerAccount {
         accountInfoParams[1] = accountInfo.tradeValue();
         accountInfoParams[2] = accountInfo.usedMargin();
 
-        logger.debug("BrokerAccount call: \n"
-                + "equity:  " + accountInfoParams[0] + "\n"
-                + "tradeValue:  " + accountInfoParams[1] + "\n"
-                + "usedMargin:  " + accountInfoParams[2] + "\n");
+//        logger.debug("BrokerAccount call: \n"
+//                + "equity:  " + accountInfoParams[0] + "\n"
+//                + "tradeValue:  " + accountInfoParams[1] + "\n"
+//                + "usedMargin:  " + accountInfoParams[2] + "\n");
     }
 }

@@ -182,8 +182,10 @@ public class ZorroBridge {
     }
 
     public int doLogout() {
-        client.stopStrategy(strategyID);
-        return brokerLogin.logout();
+        logger.info("Logout called");
+//        client.stopStrategy(strategyID);
+//        return brokerLogin.logout();
+        return Constant.LOGOUT_OK;
     }
 
     public int doBrokerTime(final double serverTimeData[]) {

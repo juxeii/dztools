@@ -18,16 +18,22 @@ public class SetSLHandler {
 
     public void setSL(final IOrder order,
                       final double slPrice) {
-        logger.info("Trying to set stop loss " + slPrice
-                + " on order with label " + order.getLabel());
-
         final SetSLParams setSLParams = SetSLParams
             .setSLAtPrice(order, slPrice)
+            .doOnStart(() -> logger.info("Trying to set stop loss " + slPrice
+                    + " on order with label " + order.getLabel()))
+            .doOnComplete(() -> logger.info("Stop loss " + slPrice
+                    + " on order with label " + order.getLabel() + " was set."))
+            .doOnError(err -> logger.error("Setting stop loss " + slPrice
+                    + " on order with label " + order.getLabel()
+                    + " failed! " + err.getMessage()))
             .build();
 
         tradeUtil
             .orderUtil()
             .paramsToObservable(setSLParams)
+            .doOnComplete(() -> logger.info("Stop loss " + slPrice
+                    + " on order with label " + order.getLabel() + " was set."))
             .blockingLast();
     }
 }

@@ -26,12 +26,12 @@ public class BrokerTrade {
 
     public int fillTradeParams(final int orderID,
                                final double orderParams[]) {
-        if (!tradeUtil.isOrderIDKnown(orderID)) {
+        final IOrder order = orderRepository.orderByID(orderID);
+        if (order == null) {
             logger.error("BrokerTrade orderID " + orderID + " not found");
             return Constant.UNKNOWN_ORDER_ID;
         }
 
-        final IOrder order = orderRepository.orderByID(orderID);
         fillOrderParams(order, orderParams);
         if (order.getState() == IOrder.State.CLOSED) {
             logger.info("Order with ID " + orderID + " was recently closed.");

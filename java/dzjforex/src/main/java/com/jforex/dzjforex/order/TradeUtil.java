@@ -78,10 +78,6 @@ public class TradeUtil {
         orderRepository.storeOrder(orderID, order);
     }
 
-    public boolean isOrderIDKnown(final int orderID) {
-        return orderRepository.isOrderIDKnown(orderID);
-    }
-
     public IOrder getOrder(final int orderID) {
         return orderRepository.orderByID(orderID);
     }
@@ -156,5 +152,9 @@ public class TradeUtil {
 
     public double contractsToAmount(final double contracts) {
         return Math.abs(contracts) / pluginConfig.lotScale();
+    }
+
+    public IOrder orderByID(final int orderID) {
+        return orderRepository.orderByID(orderID);
     }
 }

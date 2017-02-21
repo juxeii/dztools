@@ -23,7 +23,10 @@ public class BrokerSell {
 
     public int closeTrade(final int nTradeID,
                           final int nAmount) {
-        if (!tradeUtil.isOrderIDKnown(nTradeID) || !tradeUtil.isTradingAllowed())
+        if (!tradeUtil.isTradingAllowed())
+            return Constant.BROKER_SELL_FAIL;
+        final IOrder order = tradeUtil.orderByID(nTradeID);
+        if (order == null)
             return Constant.BROKER_SELL_FAIL;
 
         logger.info("Trying to close trade for nTradeID " + nTradeID

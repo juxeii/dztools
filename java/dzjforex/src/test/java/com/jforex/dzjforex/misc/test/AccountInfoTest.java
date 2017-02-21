@@ -61,50 +61,36 @@ public class AccountInfoTest extends CommonUtilForTest {
     @Test
     public void stateIsCorrect() {
         assertThat(accountInfo.state(), equalTo(state));
-
-        verify(accountMock).getAccountState();
     }
 
     @Test
     public void idIsCorrect() {
         assertThat(accountInfo.id(), equalTo(id));
-
-        verify(accountMock).getAccountId();
     }
 
     @Test
     public void equityIsCorrect() {
         assertThat(accountInfo.equity(), equalTo(equity));
-
-        verify(accountMock).getEquity();
     }
 
     @Test
     public void basEquityIsCorrect() {
         assertThat(accountInfo.baseEquity(), equalTo(basEquity));
-
-        verify(accountMock).getBaseEquity();
     }
 
     @Test
     public void balanceIsCorrect() {
         assertThat(accountInfo.balance(), equalTo(balance));
-
-        verify(accountMock).getBalance();
     }
 
     @Test
     public void currencyIsCorrect() {
         assertThat(accountInfo.currency(), equalTo(accountCurrency));
-
-        verify(accountMock).getAccountCurrency();
     }
 
     @Test
     public void lotSizeIsCorrect() {
         assertThat(accountInfo.lotSize(), equalTo(lotSize));
-
-        verify(pluginConfigMock).lotSize();
     }
 
     @Test
@@ -130,22 +116,16 @@ public class AccountInfoTest extends CommonUtilForTest {
     @Test
     public void leverageIsCorrect() {
         assertThat(accountInfo.leverage(), equalTo(leverage));
-
-        verify(accountMock).getLeverage();
     }
 
     @Test
     public void isConnectedIsCorrect() {
         assertThat(accountInfo.isConnected(), equalTo(false));
-
-        verify(accountMock).isConnected();
     }
 
     @Test
     public void isNFACompliantIsCorrect() {
         assertThat(accountInfo.isNFACompliant(), equalTo(isGlobal));
-
-        verify(accountMock).isGlobal();
     }
 
     @Test

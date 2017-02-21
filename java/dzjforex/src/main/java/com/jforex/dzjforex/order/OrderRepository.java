@@ -58,15 +58,29 @@ public class OrderRepository {
                 final long to = DateTimeUtil.millisFromDateTime(toDate);
                 final long from = DateTimeUtil.millisFromDateTime(fromDate);
 
-                final List<IOrder> allOrders = historyProvider.ordersByInstrument(instrument,
-                                                                                  from,
-                                                                                  to);
-                final List<IOrder> filteredOrders = allOrders
+                final List<IOrder> historyOrders = historyProvider.ordersByInstrument(instrument,
+                                                                                      from,
+                                                                                      to);
+                // final List<IOrder> filteredOrders = new ArrayList<>();
+                // for (int i = 0; i < historyOrders.size(); ++i) {
+                // final IOrder order = historyOrders.get(i);
+                // if (labelUtil.isZorroOrder(order)) {
+                // logger.debug("Found");
+                // logger.debug("Found order " + order.getLabel() + " in
+                // history");
+                // filteredOrders.add(order);
+                // }
+                // }
+                final List<IOrder> filteredOrders = historyOrders
                     .stream()
                     .filter(labelUtil::isZorroOrder)
+                    .map(order -> {
+                        logger.debug("Found order " + order.getLabel() + " inhistory");
+                        return order;
+                    })
                     .collect(Collectors.toList());
 
-                logger.debug("Found " + filteredOrders.size() + " zorro orders for " + instrument);
+                logger.debug("Found " + filteredOrders.size() + " zorro history orders for " + instrument);
                 return filteredOrders;
             })
             .flatMap(List::stream)
@@ -79,8 +93,8 @@ public class OrderRepository {
     }
 
     public IOrder orderByID(final int orderID) {
-        logger.trace("Looking up orderID " + orderID + " in cache...");
-        if (isOrderIDKnown(orderID)) {
+        logger.debug("Looking up orderID " + orderID + " in cache...");
+        if (orderByTradeId.containsKey(orderID)) {
             final IOrder order = orderByTradeId.get(orderID);
             logger.trace("Found orderID " + orderID
                     + " in cache with order label " + order.getLabel());
@@ -93,11 +107,12 @@ public class OrderRepository {
         logger.debug("Seeking orderID " + orderID + " in live engine...");
         IOrder order = null;
         try {
-            order = engine.getOrder(String.valueOf(orderID));
+            order = engine.getOrder(labelUtil.labelFromId(orderID));
         } catch (final JFException e) {
-            logger.error("Order with ID " + orderID + " not found in live engine. Seeking order ID in history now.");
+            logger.error("Exception while engine.getOrder for " + orderID + "!");
         }
         if (order == null) {
+            logger.error("Order with ID " + orderID + " not found in live engine. Seeking order ID in history now.");
             return orderFromHistory(orderID);
         }
 
@@ -107,21 +122,24 @@ public class OrderRepository {
     }
 
     private IOrder orderFromHistory(final int orderID) {
+        logger.debug("Seeking orderID " + orderID + " in history...");
         if (historyOrderByTradeId == null)
             fillOrdersHistoryCache();
 
+        logger.debug("After history import...");
         final IOrder order = historyOrderByTradeId.get(orderID);
-        if (order != null)
+        logger.debug("After map lookup.");
+        if (order != null) {
             storeOrder(orderID, order);
+            logger.debug("OrderID " + orderID + " found in history");
+        } else {
+            logger.warn("OrderID " + orderID + " not found in history!");
+        }
         return order;
     }
 
     public void storeOrder(final int orderID,
                            final IOrder order) {
         orderByTradeId.put(orderID, order);
-    }
-
-    public boolean isOrderIDKnown(final int orderID) {
-        return orderByTradeId.containsKey(orderID);
     }
 }

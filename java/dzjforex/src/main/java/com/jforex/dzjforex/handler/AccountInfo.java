@@ -40,10 +40,12 @@ public class AccountInfo {
     }
 
     public double equity() {
+        logger.debug("equity: " + account.getEquity());
         return account.getEquity();
     }
 
     public double baseEquity() {
+        logger.debug("baseEquity: " + account.getBaseEquity());
         return account.getBaseEquity();
     }
 
@@ -60,7 +62,8 @@ public class AccountInfo {
     }
 
     public double tradeValue() {
-        return account.getEquity() - account.getBaseEquity();
+        logger.debug("tradeValue: " + (equity() - baseEquity()));
+        return equity() - baseEquity();
     }
 
     public double freeMargin() {
@@ -68,7 +71,8 @@ public class AccountInfo {
     }
 
     public double usedMargin() {
-        return account.getEquity() - freeMargin();
+        logger.debug("usedMargin: " + (account.getEquity() - freeMargin()));
+        return equity() - freeMargin();
     }
 
     public double leverage() {
@@ -84,8 +88,8 @@ public class AccountInfo {
     }
 
     public boolean isTradingAllowed() {
-        return account.getAccountState() == IAccount.AccountState.OK
-                || account.getAccountState() == IAccount.AccountState.OK_NO_MARGIN_CALL;
+        return state() == IAccount.AccountState.OK
+                || state() == IAccount.AccountState.OK_NO_MARGIN_CALL;
     }
 
     public double pipCost(final Instrument instrument) {
@@ -93,7 +97,7 @@ public class AccountInfo {
                                                                   instrument,
                                                                   currency(),
                                                                   OfferSide.ASK);
-        logger.trace("Pipcost for lotSize " + lotSize()
+        logger.debug("Pipcost for lotSize " + lotSize()
                 + " and instrument " + instrument
                 + " is " + pipCost);
         return pipCost;
@@ -109,7 +113,7 @@ public class AccountInfo {
                                                                    accountCurrency,
                                                                    OfferSide.ASK);
         final double marginCost = conversionLot / leverage();
-        logger.trace("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
+        logger.debug("marginCost for conversion instrument " + instrument.getPrimaryJFCurrency()
                 + " and  conversionLot " + conversionLot
                 + " and leverage " + leverage());
         return marginCost;

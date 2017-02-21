@@ -27,9 +27,14 @@ public class LabelUtil {
     }
 
     public boolean isZorroOrder(final IOrder order) {
-        return order
-            .getLabel()
-            .startsWith(pluginConfig.orderLabelPrefix());
+        final String label = order.getLabel();
+        return label == null
+                ? false
+                : label.startsWith(pluginConfig.orderLabelPrefix());
+    }
+
+    public String labelFromId(final int orderId) {
+        return pluginConfig.orderLabelPrefix() + String.valueOf(orderId);
     }
 
     private String orderLabelPrefix() {

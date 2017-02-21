@@ -24,7 +24,8 @@ public class BrokerStop {
 
     public int setSL(final int nTradeID,
                      final double dStop) {
-        if (!tradeUtil.isOrderIDKnown(nTradeID)) {
+        final IOrder order = tradeUtil.orderByID(nTradeID);
+        if (order == null) {
             logger.error("Cannot set stop loss for trade with unknown ID " + nTradeID);
             return Constant.ADJUST_SL_FAIL;
         }
@@ -33,12 +34,11 @@ public class BrokerStop {
 
         logger.info("Trying to set stop loss for order ID " + nTradeID
                 + " and dStop " + dStop);
-        return setSLForValidOrderID(nTradeID, dStop);
+        return setSLForValidOrderID(order, dStop);
     }
 
-    private int setSLForValidOrderID(final int nTradeID,
+    private int setSLForValidOrderID(final IOrder order,
                                      final double dStop) {
-        final IOrder order = tradeUtil.getOrder(nTradeID);
         final double slPrice = MathUtil.roundPrice(dStop, order.getInstrument());
         if (tradeUtil.isSLPriceDistanceOK(order.getInstrument(), slPrice))
             setSLHandler.setSL(order, slPrice);

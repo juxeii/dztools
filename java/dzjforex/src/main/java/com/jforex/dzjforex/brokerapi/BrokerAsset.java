@@ -6,9 +6,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -31,7 +31,7 @@ public class BrokerAsset {
         final Optional<Instrument> maybeInstrument = InstrumentHandler.fromName(assetName);
         return maybeInstrument.isPresent()
                 ? fillAssetParamsForValidInstrument(maybeInstrument.get(), assetParams)
-                : Constant.ASSET_UNAVAILABLE;
+                : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
     }
 
     private int fillAssetParamsForValidInstrument(final Instrument instrument,
@@ -58,7 +58,7 @@ public class BrokerAsset {
         assetParams[7] = pRollLong;
         assetParams[8] = pRollShort;
 
-        logger.trace("Asset params for " + instrument + ": \n"
+        logger.trace("BrokerAsset instrument params for " + instrument + ": \n"
                 + " pPrice: " + pPrice + "\n"
                 + " pSpread: " + pSpread + "\n"
                 + " pVolume: " + pVolume + "\n"
@@ -69,6 +69,6 @@ public class BrokerAsset {
                 + " pRollLong: " + pRollLong + "\n"
                 + " pRollShort: " + pRollShort);
 
-        return Constant.ASSET_AVAILABLE;
+        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 }

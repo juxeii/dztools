@@ -10,7 +10,7 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerHistory2;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
@@ -51,7 +51,7 @@ public class BrokerHistory2Test extends CommonUtilForTest {
     public void anInvalidAssetNameGivesHistoryUnavailable() {
         assetName = "Invalid";
 
-        assertThat(callGet(), equalTo(Constant.HISTORY_UNAVAILABLE));
+        assertThat(callGet(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
     }
 
     public class WhenAssetNameIsValid {

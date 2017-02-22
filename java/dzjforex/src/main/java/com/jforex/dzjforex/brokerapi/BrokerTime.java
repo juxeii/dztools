@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.brokerapi;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 
@@ -22,7 +22,7 @@ public class BrokerTime {
     public int doBrokerTime(final double pTimeUTC[]) {
         return client.isConnected()
                 ? fillServerTimeAndReturnStatus(pTimeUTC)
-                : Constant.CONNECTION_LOST_NEW_LOGIN_REQUIRED;
+                : ZorroReturnValues.CONNECTION_LOST_NEW_LOGIN_REQUIRED.getValue();
     }
 
     private int fillServerTimeAndReturnStatus(final double pTimeUTC[]) {
@@ -30,7 +30,7 @@ public class BrokerTime {
         pTimeUTC[0] = DateTimeUtils.getOLEDateFromMillis(serverTime);
 
         return dateTimeUtils.isMarketOffline(serverTime)
-                ? Constant.CONNECTION_OK_BUT_MARKET_CLOSED
-                : Constant.CONNECTION_OK;
+                ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
+                : ZorroReturnValues.CONNECTION_OK.getValue();
     }
 }

@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.test.util.RxTestUtil;
 import com.jforex.dzjforex.time.NTPFetch;
@@ -21,8 +20,6 @@ public class NTPProviderTest extends CommonUtilForTest {
 
     @Mock
     private NTPFetch ntpFetchMock;
-    @Mock
-    private PluginConfig pluginConfigMock;
 
     private static final long ntpSynchInterval = 5000L;
     private static final long firstNTP = 12;

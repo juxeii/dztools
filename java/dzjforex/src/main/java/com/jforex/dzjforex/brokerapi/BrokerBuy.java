@@ -8,55 +8,64 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.order.SubmitHandler;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderSubmit;
+import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.order.TradeUtil;
 
 public class BrokerBuy {
 
-    private final SubmitHandler submitHandler;
+    private final OrderSubmit orderSubmit;
     private final TradeUtil tradeUtil;
 
     private final static Logger logger = LogManager.getLogger(BrokerBuy.class);
 
-    public BrokerBuy(final SubmitHandler submitHandler,
+    public BrokerBuy(final OrderSubmit submitHandler,
                      final TradeUtil tradeUtil) {
-        this.submitHandler = submitHandler;
+        this.orderSubmit = submitHandler;
         this.tradeUtil = tradeUtil;
     }
 
     public int openTrade(final String assetName,
                          final double tradeParams[]) {
+        if (!tradeUtil.isTradingAllowed())
+            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
         final Optional<Instrument> maybeInstrument = tradeUtil.maybeInstrumentForTrading(assetName);
         if (!maybeInstrument.isPresent())
-            return Constant.BROKER_BUY_FAIL;
+            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
 
-        logger.info("Trying to open trade for assetName " + assetName + "\n"
-                + "nAmount:  " + tradeParams[0] + "\n"
-                + "dStopDist:  " + tradeParams[1]);
+        logger.info("Trying to open trade for " + assetName
+                + " with nAmount:  " + tradeParams[0]
+                + " and dStopDist:  " + tradeParams[1]);
         return submit(maybeInstrument.get(), tradeParams);
     }
 
     private int submit(final Instrument instrument,
                        final double tradeParams[]) {
-        final IOrder order = getSubmitOrder(instrument, tradeParams);
-        if (order == null)
-            return Constant.BROKER_BUY_FAIL;
-
+        final String label = tradeUtil
+            .labelUtil()
+            .create();
         final int orderID = tradeUtil
             .labelUtil()
-            .orderId(order);
-        tradeUtil.storeOrder(orderID, order);
+            .idFromLabel(label);
+        final OrderSubmitResult submitResult = getSubmitResult(instrument,
+                                                               label,
+                                                               tradeParams);
+        if (submitResult == OrderSubmitResult.FAIL)
+            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
+
+        final IOrder order = tradeUtil.orderByID(orderID);
         tradeParams[2] = order.getOpenPrice();
         final double dStopDist = tradeParams[1];
 
         return dStopDist == -1
-                ? Constant.BROKER_BUY_OPPOSITE_CLOSE
+                ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()
                 : orderID;
     }
 
-    private IOrder getSubmitOrder(final Instrument instrument,
-                                  final double tradeParams[]) {
+    private OrderSubmitResult getSubmitResult(final Instrument instrument,
+                                              final String label,
+                                              final double tradeParams[]) {
         final double contracts = tradeParams[0];
         final double dStopDist = tradeParams[1];
 
@@ -65,14 +74,11 @@ public class BrokerBuy {
         final double slPrice = tradeUtil.calculateSL(instrument,
                                                      orderCommand,
                                                      dStopDist);
-        final String label = tradeUtil
-            .labelUtil()
-            .create();
 
-        return submitHandler.submit(instrument,
-                                    orderCommand,
-                                    amount,
-                                    label,
-                                    slPrice);
+        return orderSubmit.run(instrument,
+                               orderCommand,
+                               amount,
+                               label,
+                               slPrice);
     }
 }

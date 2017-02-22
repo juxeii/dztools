@@ -120,22 +120,6 @@ public class HistoryProvider {
             .blockingFirst();
     }
 
-    public IOrder orderByID(final int orderID) {
-        return Observable
-            .fromCallable(() -> history.getHistoricalOrderById(String.valueOf(orderID)))
-            .doOnSubscribe(d -> logger.debug("Seeking orderID " + orderID + " in history..."))
-            .onErrorResumeNext(err -> {
-                logger.error("Seeking orderID " + orderID + " in history failed! " + err.getMessage());
-                return Observable.just(null);
-            })
-            .doOnNext(order -> {
-                if (order == null)
-                    logger.error("Found no order for orderID " + orderID + " in history!");
-            })
-            .doOnComplete(() -> logger.debug("Found order ID " + orderID + " in history."))
-            .blockingFirst();
-    }
-
     public List<IOrder> ordersByInstrument(final Instrument instrument,
                                            final long from,
                                            final long to) {

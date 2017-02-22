@@ -3,14 +3,12 @@ package com.jforex.dzjforex.time.test;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.time.Clock;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
@@ -27,8 +25,6 @@ public class ServerTimeProviderTest extends CommonUtilForTest {
     private NTPProvider ntpProviderMock;
     @Mock
     private TickTimeProvider tickTimeProviderMock;
-    @Mock
-    private Clock clockMock;
     private final long latestNTP = 42L;
     private long latestTickTime = 12L;
     private final long currentTime = 5L;
@@ -48,7 +44,8 @@ public class ServerTimeProviderTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(ntpProviderMock.get()).thenReturn(Constant.INVALID_SERVER_TIME);
+            when(ntpProviderMock.get())
+                .thenReturn((long) ZorroReturnValues.INVALID_SERVER_TIME.getValue());
         }
 
         @Test

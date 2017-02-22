@@ -4,51 +4,71 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.order.CloseHandler;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderClose;
+import com.jforex.dzjforex.order.OrderCloseResult;
+import com.jforex.dzjforex.order.OrderSetLabel;
+import com.jforex.dzjforex.order.OrderSetLabelResult;
 import com.jforex.dzjforex.order.TradeUtil;
 
 public class BrokerSell {
 
-    private final CloseHandler closeHandler;
     private final TradeUtil tradeUtil;
+    private final OrderClose orderClose;
+    private final OrderSetLabel orderSetLabel;
 
     private final static Logger logger = LogManager.getLogger(BrokerSell.class);
 
-    public BrokerSell(final CloseHandler closeHandler,
-                      final TradeUtil tradeUtil) {
-        this.closeHandler = closeHandler;
+    public BrokerSell(final TradeUtil tradeUtil,
+                      final OrderClose orderClose,
+                      final OrderSetLabel orderSetLabel) {
         this.tradeUtil = tradeUtil;
+        this.orderClose = orderClose;
+        this.orderSetLabel = orderSetLabel;
     }
 
     public int closeTrade(final int nTradeID,
                           final int nAmount) {
         if (!tradeUtil.isTradingAllowed())
-            return Constant.BROKER_SELL_FAIL;
+            return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
         final IOrder order = tradeUtil.orderByID(nTradeID);
         if (order == null)
-            return Constant.BROKER_SELL_FAIL;
+            return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
 
         logger.info("Trying to close trade for nTradeID " + nTradeID
                 + " and nAmount " + nAmount);
-        return closeTradeForValidOrderID(nTradeID, nAmount);
+        return closeTradeForValidOrder(order, nAmount);
     }
 
-    private int closeTradeForValidOrderID(final int nTradeID,
-                                          final double nAmount) {
-        final IOrder order = tradeUtil.getOrder(nTradeID);
+    private int closeTradeForValidOrder(final IOrder order,
+                                        final double nAmount) {
         final double amountToClose = tradeUtil.contractsToAmount(nAmount);
 
-        final int closeResult = closeHandler.closeOrder(order, amountToClose);
-        if (closeResult == Constant.ORDER_CLOSE_OK)
-            return nTradeID;
-        if (closeResult == Constant.ORDER_CLOSE_FAIL)
-            return Constant.BROKER_SELL_FAIL;
+        final OrderCloseResult closeResult = orderClose.run(order, amountToClose);
+        if (closeResult == OrderCloseResult.FAIL) {
+            return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
+        }
+        if (amountToClose < order.getAmount()) {
+            return setNewLabel(order);
+        }
 
-        final int newOrderID = tradeUtil
+        return tradeUtil
             .labelUtil()
-            .orderId(order);
-        tradeUtil.storeOrder(newOrderID, order);
-        return newOrderID;
+            .idFromOrder(order);
+    }
+
+    private int setNewLabel(final IOrder order) {
+        final String newLabel = tradeUtil
+            .labelUtil()
+            .create();
+        final OrderSetLabelResult setLabelResult = orderSetLabel.run(order, newLabel);
+        if (setLabelResult == OrderSetLabelResult.OK) {
+            final int newOrderID = tradeUtil
+                .labelUtil()
+                .idFromOrder(order);
+            tradeUtil.storeOrder(newOrderID, order);
+            return newOrderID;
+        }
+        return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
     }
 }

@@ -10,8 +10,8 @@ import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.handler.AccountInfo;
 import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.order.OrderUtil;
@@ -24,7 +24,7 @@ public class TradeUtil {
     private final OrderRepository orderRepository;
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
-    private final LabelUtil labelUtil;
+    private final OrderLabelUtil labelUtil;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
 
@@ -33,7 +33,7 @@ public class TradeUtil {
     public TradeUtil(final OrderRepository orderRepository,
                      final StrategyUtil strategyUtil,
                      final AccountInfo accountInfo,
-                     final LabelUtil orderLabel,
+                     final OrderLabelUtil orderLabel,
                      final PluginConfig pluginConfig) {
         this.orderRepository = orderRepository;
         this.strategyUtil = strategyUtil;
@@ -60,7 +60,7 @@ public class TradeUtil {
         return accountInfo;
     }
 
-    public LabelUtil labelUtil() {
+    public OrderLabelUtil labelUtil() {
         return labelUtil;
     }
 
@@ -76,10 +76,6 @@ public class TradeUtil {
     public void storeOrder(final int orderID,
                            final IOrder order) {
         orderRepository.storeOrder(orderID, order);
-    }
-
-    public IOrder getOrder(final int orderID) {
-        return orderRepository.orderByID(orderID);
     }
 
     public Optional<Instrument> maybeInstrumentForTrading(final String assetName) {

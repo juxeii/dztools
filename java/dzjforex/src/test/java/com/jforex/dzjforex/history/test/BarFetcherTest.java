@@ -16,7 +16,7 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.BarFetchTimeCalculator;
 import com.jforex.dzjforex.history.BarFetchTimes;
 import com.jforex.dzjforex.history.BarFetcher;
@@ -137,7 +137,7 @@ public class BarFetcherTest extends CommonUtilForTest {
     public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
         setReturnedTickList(new ArrayList<>());
 
-        assertThat(callFetch(), equalTo(Constant.HISTORY_UNAVAILABLE));
+        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
     }
 
     public class WhenHistoryProviderReturnsBarMockList {

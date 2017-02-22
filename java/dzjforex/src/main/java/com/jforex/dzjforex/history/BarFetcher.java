@@ -11,7 +11,7 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.DateTimeUtils;
 
 public class BarFetcher {
@@ -51,7 +51,7 @@ public class BarFetcher {
                                                           barFetchTimes.startTime(),
                                                           barFetchTimes.endTime());
         return bars.isEmpty()
-                ? Constant.HISTORY_UNAVAILABLE
+                ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillBars(bars, tickParams);
     }
 

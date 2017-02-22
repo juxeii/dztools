@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.jforex.programming.instrument.InstrumentFactory;
 
@@ -19,11 +18,6 @@ public class InstrumentHandler {
         return instrumentByZorroName.containsKey(assetName)
                 ? Optional.of(instrumentByZorroName.get(assetName))
                 : createNewName(assetName);
-    }
-
-    public static Optional<Instrument> fromCurrencies(final ICurrency currencyA,
-                                                      final ICurrency currencyB) {
-        return InstrumentFactory.maybeFromCurrencies(currencyA, currencyB);
     }
 
     private static Optional<Instrument> createNewName(final String assetName) {

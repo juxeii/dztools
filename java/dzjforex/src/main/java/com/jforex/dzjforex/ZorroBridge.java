@@ -19,23 +19,25 @@ import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
 import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
-import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.history.BarFetchTimeCalculator;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PinProvider;
-import com.jforex.dzjforex.order.CloseHandler;
-import com.jforex.dzjforex.order.LabelUtil;
+import com.jforex.dzjforex.order.HistoryOrders;
+import com.jforex.dzjforex.order.OrderClose;
+import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.SetLabel;
-import com.jforex.dzjforex.order.SetSLHandler;
-import com.jforex.dzjforex.order.SubmitHandler;
+import com.jforex.dzjforex.order.OrderSetLabel;
+import com.jforex.dzjforex.order.OrderSetSL;
+import com.jforex.dzjforex.order.OrderSubmit;
+import com.jforex.dzjforex.order.RunningOrders;
 import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.NTPFetch;
@@ -63,16 +65,18 @@ public class ZorroBridge {
     private BrokerTime brokerTime;
     private BrokerTrade brokerTrade;
     private TradeUtil tradeUtil;
-    private LabelUtil labelUtil;
+    private OrderLabelUtil labelUtil;
     private BrokerStop brokerStop;
     private BrokerBuy brokerBuy;
-    private SubmitHandler submitHandler;
-    private SetLabel setLabel;
-    private CloseHandler closeHandler;
-    private SetSLHandler setSLHandler;
+    private OrderSubmit submitHandler;
+    private OrderSetLabel setLabel;
+    private OrderClose orderClose;
+    private OrderSetSL setSLHandler;
     private BrokerSell brokerSell;
     private DateTimeUtils dateTimeUtils;
     private BrokerSubscribe brokerSubscribe;
+    private RunningOrders runningOrders;
+    private HistoryOrders historyOrders;
     private OrderRepository orderRepository;
     private BrokerHistory2 brokerHistory2;
     private BarFetcher barFetcher;
@@ -124,7 +128,7 @@ public class ZorroBridge {
                                       pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
-        labelUtil = new LabelUtil(Clock.systemDefaultZone(), pluginConfig);
+        labelUtil = new OrderLabelUtil(pluginConfig, Clock.systemDefaultZone());
 
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
         barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
@@ -140,11 +144,14 @@ public class ZorroBridge {
         serverTimeProvider = new ServerTimeProvider(ntpProvider,
                                                     tickTimeProvider,
                                                     Clock.systemDefaultZone());
-        orderRepository = new OrderRepository(context.getEngine(),
-                                              historyProvider,
-                                              brokerSubscribe,
-                                              pluginConfig,
-                                              serverTimeProvider,
+
+        runningOrders = new RunningOrders(context.getEngine());
+        historyOrders = new HistoryOrders(historyProvider,
+                                          brokerSubscribe,
+                                          pluginConfig,
+                                          serverTimeProvider);
+        orderRepository = new OrderRepository(runningOrders,
+                                              historyOrders,
                                               labelUtil);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
@@ -156,13 +163,15 @@ public class ZorroBridge {
                                   labelUtil,
                                   pluginConfig);
         brokerTrade = new BrokerTrade(tradeUtil);
-        setSLHandler = new SetSLHandler(tradeUtil);
+        setSLHandler = new OrderSetSL(tradeUtil);
         brokerStop = new BrokerStop(setSLHandler, tradeUtil);
-        submitHandler = new SubmitHandler(tradeUtil);
+        submitHandler = new OrderSubmit(tradeUtil);
         brokerBuy = new BrokerBuy(submitHandler, tradeUtil);
-        setLabel = new SetLabel(tradeUtil);
-        closeHandler = new CloseHandler(tradeUtil, setLabel);
-        brokerSell = new BrokerSell(closeHandler, tradeUtil);
+        setLabel = new OrderSetLabel(tradeUtil);
+        orderClose = new OrderClose(tradeUtil);
+        brokerSell = new BrokerSell(tradeUtil,
+                                    orderClose,
+                                    setLabel);
     }
 
     public int doLogin(final String userName,
@@ -172,7 +181,7 @@ public class ZorroBridge {
         final int loginResult = brokerLogin.login(userName,
                                                   password,
                                                   type);
-        if (loginResult == Constant.LOGIN_OK) {
+        if (loginResult == ZorroReturnValues.LOGIN_OK.getValue()) {
             strategyID = client.startStrategy(infoStrategy);
             initComponents();
             accountInfos[0] = accountInfo.id();
@@ -185,7 +194,7 @@ public class ZorroBridge {
         logger.info("Logout called");
 //        client.stopStrategy(strategyID);
 //        return brokerLogin.logout();
-        return Constant.LOGOUT_OK;
+        return ZorroReturnValues.LOGOUT_OK.getValue();
     }
 
     public int doBrokerTime(final double serverTimeData[]) {
@@ -241,11 +250,11 @@ public class ZorroBridge {
 
     public int doHistoryDownload() {
         // Currently not supported
-        return Constant.HISTORY_DOWNLOAD_FAIL;
+        return ZorroReturnValues.HISTORY_DOWNLOAD_FAIL.getValue();
     }
 
     public int doSetOrderText(final String orderText) {
         ZorroLogger.logError("doSetOrderText for " + orderText + " called but not yet supported!");
-        return Constant.BROKER_COMMAND_OK;
+        return ZorroReturnValues.BROKER_COMMAND_OK.getValue();
     }
 }

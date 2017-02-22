@@ -3,7 +3,7 @@ package com.jforex.dzjforex.brokerapi;
 import java.util.Optional;
 
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.InstrumentHandler;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.TickFetcher;
@@ -33,7 +33,7 @@ public class BrokerHistory2 {
                                         tickMinutes,
                                         nTicks,
                                         tickParams)
-                : Constant.HISTORY_UNAVAILABLE;
+                : ZorroReturnValues.HISTORY_UNAVAILABLE.getValue();
     }
 
     private int getForValidInstrument(final Instrument instrument,

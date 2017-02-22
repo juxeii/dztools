@@ -10,7 +10,7 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerTime;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.ServerTimeProvider;
@@ -64,7 +64,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIndicatesNewLoginRequired() {
-            assertReturnCode(Constant.CONNECTION_LOST_NEW_LOGIN_REQUIRED);
+            assertReturnCode(ZorroReturnValues.CONNECTION_LOST_NEW_LOGIN_REQUIRED.getValue());
         }
 
         @Test
@@ -99,7 +99,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
             @Test
             public void returnCodeIsConnected() {
-                assertReturnCode(Constant.CONNECTION_OK);
+                assertReturnCode(ZorroReturnValues.CONNECTION_OK.getValue());
             }
         }
 
@@ -112,7 +112,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
             @Test
             public void returnCodeIsConnectedButMarketClosed() {
-                assertReturnCode(Constant.CONNECTION_OK_BUT_MARKET_CLOSED);
+                assertReturnCode(ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue());
             }
 
             @Test

@@ -3,8 +3,8 @@ package com.jforex.dzjforex.brokerapi;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.AccountInfo;
 
 public class BrokerAccount {
 
@@ -17,15 +17,11 @@ public class BrokerAccount {
     }
 
     public int handle(final double accountInfoParams[]) {
-        if (!isAccountAvailable())
-            return Constant.ACCOUNT_UNAVAILABLE;
+        if (!accountInfo.isConnected())
+            return ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue();
 
         fillAccountParams(accountInfoParams);
-        return Constant.ACCOUNT_AVAILABLE;
-    }
-
-    private boolean isAccountAvailable() {
-        return accountInfo.isConnected();
+        return ZorroReturnValues.ACCOUNT_AVAILABLE.getValue();
     }
 
     private void fillAccountParams(final double accountInfoParams[]) {
@@ -33,9 +29,9 @@ public class BrokerAccount {
         accountInfoParams[1] = accountInfo.tradeValue();
         accountInfoParams[2] = accountInfo.usedMargin();
 
-//        logger.debug("BrokerAccount call: \n"
-//                + "equity:  " + accountInfoParams[0] + "\n"
-//                + "tradeValue:  " + accountInfoParams[1] + "\n"
-//                + "usedMargin:  " + accountInfoParams[2] + "\n");
+        logger.trace("BrokerAccount fill params: \n"
+                + "baseEquity:  " + accountInfoParams[0] + "\n"
+                + "tradeValue:  " + accountInfoParams[1] + "\n"
+                + "usedMargin:  " + accountInfoParams[2] + "\n");
     }
 }

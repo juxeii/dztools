@@ -15,8 +15,8 @@ import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
 
@@ -43,12 +43,12 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
 
     @Test
     public void returnCodeIsAssetUnAvailableWhenAssetNameIsInvalid() {
-        assertThat(brokerSubscribe.subscribe("Invalid"), equalTo(Constant.ASSET_UNAVAILABLE));
+        assertThat(brokerSubscribe.subscribe("Invalid"), equalTo(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
     }
 
     @Test
     public void returnCodeIsAssetAvailableWhenAssetNameIsValid() {
-        assertThat(brokerSubscribe.subscribe(assetName), equalTo(Constant.ASSET_AVAILABLE));
+        assertThat(brokerSubscribe.subscribe(assetName), equalTo(ZorroReturnValues.ASSET_AVAILABLE.getValue()));
     }
 
     public class WhenAccountCurrencyIsBaseCurrency {

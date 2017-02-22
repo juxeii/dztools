@@ -3,7 +3,7 @@ package com.jforex.dzjforex.handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
@@ -35,10 +35,10 @@ public class LoginHandler {
     private int loginWithCredentials(final LoginCredentials credentials) {
         return authentification
             .login(credentials)
-            .andThen(Observable.just(Constant.LOGIN_OK))
+            .andThen(Observable.just(ZorroReturnValues.LOGIN_OK.getValue()))
             .onErrorResumeNext(err -> {
                 logger.error("Failed to login with exception " + err.getMessage());
-                return Observable.just(Constant.LOGIN_FAIL);
+                return Observable.just(ZorroReturnValues.LOGIN_FAIL.getValue());
             })
             .blockingLast();
     }
@@ -47,6 +47,6 @@ public class LoginHandler {
         authentification
             .logout()
             .blockingAwait();
-        return Constant.LOGOUT_OK;
+        return ZorroReturnValues.LOGOUT_OK.getValue();
     }
 }

@@ -12,8 +12,8 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerLogin;
-import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.test.util.RxTestUtil;
@@ -65,17 +65,17 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
         @Test
         public void returnValueIsLoginOK() {
-            assertThat(returnCode, equalTo(Constant.LOGIN_OK));
+            assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_OK.getValue()));
         }
     }
 
     @Test
     public void logoutCallsLoginHandler() {
-        when(loginHandlerMock.logout()).thenReturn(Constant.LOGOUT_OK);
+        when(loginHandlerMock.logout()).thenReturn(ZorroReturnValues.LOGOUT_OK.getValue());
 
         returnCode = brokerLogin.logout();
 
-        assertThat(returnCode, equalTo(Constant.LOGOUT_OK));
+        assertThat(returnCode, equalTo(ZorroReturnValues.LOGOUT_OK.getValue()));
         verify(loginHandlerMock).logout();
     }
 
@@ -103,14 +103,14 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setLoginResult(Constant.LOGIN_OK);
+                setLoginResult(ZorroReturnValues.LOGIN_OK.getValue());
 
                 callLogin();
             }
 
             @Test
             public void returnValueIsLoginOK() {
-                assertThat(returnCode, equalTo(Constant.LOGIN_OK));
+                assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_OK.getValue()));
             }
 
             @Test
@@ -123,14 +123,14 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setLoginResult(Constant.LOGIN_FAIL);
+                setLoginResult(ZorroReturnValues.LOGIN_FAIL.getValue());
 
                 callLogin();
             }
 
             @Test
             public void returnValueIsLoginFAIL() {
-                assertThat(returnCode, equalTo(Constant.LOGIN_FAIL));
+                assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_FAIL.getValue()));
             }
 
             @Test
@@ -142,7 +142,7 @@ public class BrokerLoginTest extends CommonUtilForTest {
 
                 @Before
                 public void setUp() {
-                    setLoginResult(Constant.LOGIN_OK);
+                    setLoginResult(ZorroReturnValues.LOGIN_OK.getValue());
                 }
 
                 @Test

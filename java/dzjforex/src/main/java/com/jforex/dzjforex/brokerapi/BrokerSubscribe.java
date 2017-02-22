@@ -10,9 +10,10 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.misc.AccountInfo;
+import com.jforex.programming.instrument.InstrumentFactory;
 
 public class BrokerSubscribe {
 
@@ -31,7 +32,7 @@ public class BrokerSubscribe {
         final Optional<Instrument> maybeInstrument = InstrumentHandler.fromName(instrumentName);
         return maybeInstrument.isPresent()
                 ? subscribeValidinstrumentName(maybeInstrument.get())
-                : Constant.ASSET_UNAVAILABLE;
+                : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
     }
 
     public Set<Instrument> subscribedInstruments() {
@@ -45,7 +46,7 @@ public class BrokerSubscribe {
 
         logger.info("Subscribing " + instrumentsToSubscribe + " now.");
         client.setSubscribedInstruments(instrumentsToSubscribe);
-        return Constant.ASSET_AVAILABLE;
+        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 
     private void createCrossInstrumentIfNeeded(final Set<Instrument> instrumentsToSubscribe,
@@ -54,8 +55,8 @@ public class BrokerSubscribe {
         final ICurrency crossCurrency = toSubscribeInstrument.getPrimaryJFCurrency();
 
         if (crossCurrency != accountCurrency) {
-            final Instrument crossInstrument = InstrumentHandler
-                .fromCurrencies(accountCurrency, crossCurrency)
+            final Instrument crossInstrument = InstrumentFactory
+                .maybeFromCurrencies(accountCurrency, crossCurrency)
                 .get();
             instrumentsToSubscribe.add(crossInstrument);
             logger.debug("Created cross instrument " + crossInstrument + " for subscription: \n"

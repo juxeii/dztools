@@ -2,7 +2,7 @@ package com.jforex.dzjforex.time;
 
 import java.time.Clock;
 
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.programming.quote.TickQuoteRepository;
 
 public class TickTimeProvider {
@@ -21,8 +21,8 @@ public class TickTimeProvider {
     public long get() {
         final long latestTickTimeFromRepository = fromRepository();
 
-        return latestTickTimeFromRepository == Constant.INVALID_SERVER_TIME
-                ? Constant.INVALID_SERVER_TIME
+        return latestTickTimeFromRepository == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
+                ? ZorroReturnValues.INVALID_SERVER_TIME.getValue()
                 : getForValidTickTime(latestTickTimeFromRepository);
     }
 
@@ -40,7 +40,7 @@ public class TickTimeProvider {
             .map(quote -> quote.tick())
             .mapToLong(tick -> tick.getTime())
             .max()
-            .orElseGet(() -> Constant.INVALID_SERVER_TIME);
+            .orElseGet(() -> ZorroReturnValues.INVALID_SERVER_TIME.getValue());
     }
 
     private long setNewAndSynch(final long latestTickTimeFromRepository) {

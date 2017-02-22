@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -25,13 +25,13 @@ public class BrokerAccountTest extends CommonUtilForTest {
     private final double accountInfoParams[] = new double[3];
     private int returnCode;
 
-    private static final double equity = 123.45;
+    private static final double baseEquity = 123.45;
     private static final double tradeValue = 65.45;
     private static final double usedMargin = 3.19;
 
     @Before
     public void setUp() {
-        when(accountInfo.equity()).thenReturn(equity);
+        when(accountInfo.baseEquity()).thenReturn(baseEquity);
         when(accountInfo.tradeValue()).thenReturn(tradeValue);
         when(accountInfo.usedMargin()).thenReturn(usedMargin);
 
@@ -57,7 +57,7 @@ public class BrokerAccountTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIsUnavailable() {
-            assertReturnCode(Constant.ACCOUNT_UNAVAILABLE);
+            assertReturnCode(ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue());
         }
 
         @Test
@@ -77,12 +77,12 @@ public class BrokerAccountTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIsAvailable() {
-            assertReturnCode(Constant.ACCOUNT_AVAILABLE);
+            assertReturnCode(ZorroReturnValues.ACCOUNT_AVAILABLE.getValue());
         }
 
         @Test
-        public void equityIsCorrectSet() {
-            assertThat(accountInfoParams[0], equalTo(equity));
+        public void baseEquityIsCorrectSet() {
+            assertThat(accountInfoParams[0], equalTo(baseEquity));
         }
 
         @Test

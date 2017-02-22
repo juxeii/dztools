@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.instrument.InstrumentUtil;
@@ -29,13 +29,13 @@ public class BrokerTrade {
         final IOrder order = orderRepository.orderByID(orderID);
         if (order == null) {
             logger.error("BrokerTrade orderID " + orderID + " not found");
-            return Constant.UNKNOWN_ORDER_ID;
+            return ZorroReturnValues.UNKNOWN_ORDER_ID.getValue();
         }
 
         fillOrderParams(order, orderParams);
         if (order.getState() == IOrder.State.CLOSED) {
             logger.info("Order with ID " + orderID + " was recently closed.");
-            return Constant.ORDER_RECENTLY_CLOSED;
+            return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();
         }
         final int noOfContracts = tradeUtil.scaleAmount(order.getAmount());
 

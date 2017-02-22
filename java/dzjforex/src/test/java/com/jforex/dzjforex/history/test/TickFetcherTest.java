@@ -13,7 +13,7 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
@@ -105,7 +105,7 @@ public class TickFetcherTest extends CommonUtilForTest {
     public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
         setReturnedTickList(new ArrayList<>());
 
-        assertThat(callFetch(), equalTo(Constant.HISTORY_UNAVAILABLE));
+        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
     }
 
     public class WhenHistoryProviderReturnsTickMockList {

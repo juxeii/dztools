@@ -5,36 +5,44 @@ import java.time.Clock;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.PluginConfig;
 
-public class LabelUtil {
+public class OrderLabelUtil {
 
-    private final Clock clock;
     private final PluginConfig pluginConfig;
+    private final Clock clock;
 
-    public LabelUtil(final Clock clock,
-                     final PluginConfig pluginConfig) {
-        this.clock = clock;
+    private static final int longModulo = 1000000000;
+
+    public OrderLabelUtil(final PluginConfig pluginConfig,
+                          final Clock clock) {
         this.pluginConfig = pluginConfig;
+        this.clock = clock;
     }
 
     public String create() {
         return orderLabelPrefix() + nowAsInteger();
     }
 
-    public int orderId(final IOrder order) {
-        final String orderLabel = order.getLabel();
+    public int idFromOrder(final IOrder order) {
+        final String label = order.getLabel();
+        return label == null
+                ? 0
+                : idFromLabel(order.getLabel());
+    }
+
+    public int idFromLabel(final String orderLabel) {
         final String idName = orderLabel.substring(orderLabelPrefix().length());
         return Integer.parseInt(idName);
     }
 
-    public boolean isZorroOrder(final IOrder order) {
+    public String labelFromId(final int orderId) {
+        return pluginConfig.orderLabelPrefix() + String.valueOf(orderId);
+    }
+
+    public boolean hasZorroPrefix(final IOrder order) {
         final String label = order.getLabel();
         return label == null
                 ? false
                 : label.startsWith(pluginConfig.orderLabelPrefix());
-    }
-
-    public String labelFromId(final int orderId) {
-        return pluginConfig.orderLabelPrefix() + String.valueOf(orderId);
     }
 
     private String orderLabelPrefix() {
@@ -46,6 +54,6 @@ public class LabelUtil {
     }
 
     private int dateMillisToInt(final long dateMillis) {
-        return (int) (dateMillis % 1000000000);
+        return (int) (dateMillis % longModulo);
     }
 }

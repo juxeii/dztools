@@ -9,9 +9,10 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IAccount.AccountState;
-import com.dukascopy.api.ICurrency;
+import com.dukascopy.api.Instrument;
+import com.dukascopy.api.OfferSide;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.math.CalculationUtil;
@@ -27,9 +28,9 @@ public class AccountInfoTest extends CommonUtilForTest {
     @Mock
     private PluginConfig pluginConfigMock;
 
+    private static final Instrument tradeInstrument = Instrument.EURUSD;
     private static final AccountState state = IAccount.AccountState.OK;
     private static final String id = "1234";
-    private static final ICurrency accountCurrency = CurrencyFactory.EUR;
     private static final double equity = 614527.45;
     private static final double basEquity = 614740.45;
     private static final double balance = 54331.78;
@@ -144,5 +145,38 @@ public class AccountInfoTest extends CommonUtilForTest {
         when(accountMock.getAccountState()).thenReturn(accountState);
 
         assertThat(accountInfo.isTradingAllowed(), equalTo(isExpectedAllowed));
+    }
+
+    @Test
+    public void pipCostCalculationIsCorrect() {
+        final double mockedPipCost = 42.42;
+
+        when(calculationUtilMock.pipValueInCurrency(lotSize,
+                                                    tradeInstrument,
+                                                    accountCurrency,
+                                                    OfferSide.ASK))
+                                                        .thenReturn(mockedPipCost);
+
+        assertThat(accountInfo.pipCost(tradeInstrument), equalTo(mockedPipCost));
+    }
+
+    @Test
+    public void marginPerLotEqualsLotMargingWhenAccountCurrencyEqualsPrimaryCurrency() {
+        assertThat(accountInfo.marginPerLot(Instrument.EURJPY), equalTo(accountInfo.lotMargin()));
+    }
+
+    @Test
+    public void marginPerLotCalculationIsCorrect() {
+        final Instrument instrumentForCalculation = Instrument.GBPAUD;
+        final double mockedConversionAmount = 0.123;
+
+        when(calculationUtilMock.convertAmount(lotSize,
+                                               CurrencyFactory.GBP,
+                                               accountCurrency,
+                                               OfferSide.ASK))
+                                                   .thenReturn(mockedConversionAmount);
+
+        assertThat(accountInfo.marginPerLot(instrumentForCalculation),
+                   equalTo(mockedConversionAmount / leverage));
     }
 }

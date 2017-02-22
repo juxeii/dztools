@@ -1,6 +1,6 @@
 package com.jforex.dzjforex.order;
 
-public enum SetLabelResult {
+public enum OrderSetLabelResult {
 
     OK,
     FAIL

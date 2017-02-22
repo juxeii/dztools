@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.programming.math.MathUtil;
 
@@ -38,7 +38,7 @@ public class TickFetcher {
                                                              DateTimeUtils.getMillisFromOLEDate(startDate),
                                                              DateTimeUtils.getMillisFromOLEDate(endDate));
         return ticks.isEmpty()
-                ? Constant.HISTORY_UNAVAILABLE
+                ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillTicks(instrument,
                             ticks,
                             tickParams);

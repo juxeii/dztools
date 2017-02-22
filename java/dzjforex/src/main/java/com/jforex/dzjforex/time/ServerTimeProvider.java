@@ -5,7 +5,7 @@ import java.time.Clock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 
 public class ServerTimeProvider {
 
@@ -27,7 +27,7 @@ public class ServerTimeProvider {
 
     public long get() {
         final long ntpFromProvider = ntpProvider.get();
-        return ntpFromProvider == Constant.INVALID_SERVER_TIME
+        return ntpFromProvider == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
                 ? serverTimeFromTick()
                 : serverTimeFromNTPProvider(ntpFromProvider);
     }

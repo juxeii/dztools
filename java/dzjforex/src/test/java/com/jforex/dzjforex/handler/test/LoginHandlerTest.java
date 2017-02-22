@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.config.Constant;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
@@ -57,7 +57,7 @@ public class LoginHandlerTest extends CommonUtilForTest {
 
         @Test
         public void returnValueIsLoginOK() {
-            assertThat(returnCode, equalTo(Constant.LOGIN_OK));
+            assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_OK.getValue()));
         }
     }
 
@@ -67,7 +67,7 @@ public class LoginHandlerTest extends CommonUtilForTest {
 
         returnCode = loginHandler.logout();
 
-        assertThat(returnCode, equalTo(Constant.LOGOUT_OK));
+        assertThat(returnCode, equalTo(ZorroReturnValues.LOGOUT_OK.getValue()));
         verify(authentificationMock).logout();
     }
 
@@ -83,7 +83,7 @@ public class LoginHandlerTest extends CommonUtilForTest {
 
         @Test
         public void returnValueIsLoginFAIL() {
-            assertThat(returnCode, equalTo(Constant.LOGIN_FAIL));
+            assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_FAIL.getValue()));
         }
 
         @Test

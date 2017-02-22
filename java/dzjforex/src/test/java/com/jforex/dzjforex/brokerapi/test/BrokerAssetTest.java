@@ -10,8 +10,8 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
-import com.jforex.dzjforex.config.Constant;
-import com.jforex.dzjforex.handler.AccountInfo;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
@@ -41,7 +41,7 @@ public class BrokerAssetTest extends CommonUtilForTest {
     @Test
     public void anInvalidAssetNameGivesAssetUnavailable() {
         assertThat(brokerAsset.fillAssetParams("Invalid", assetParams),
-                   equalTo(Constant.ASSET_UNAVAILABLE));
+                   equalTo(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
     }
 
     public class WhenAssetNameIsValid {
@@ -71,7 +71,7 @@ public class BrokerAssetTest extends CommonUtilForTest {
 
         @Test
         public void returnCodeIsAssetAvailable() {
-            assertThat(returnCode, equalTo(Constant.ASSET_AVAILABLE));
+            assertThat(returnCode, equalTo(ZorroReturnValues.ASSET_AVAILABLE.getValue()));
         }
 
         @Test

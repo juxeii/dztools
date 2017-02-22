@@ -6,8 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.config.Constant;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
 
 import io.reactivex.Observable;
@@ -47,9 +47,9 @@ public class BrokerLogin {
                      final String password,
                      final String loginType) {
         if (client.isConnected())
-            return Constant.LOGIN_OK;
+            return ZorroReturnValues.LOGIN_OK.getValue();
         if (!isLoginAvailable)
-            return Constant.LOGIN_FAIL;
+            return ZorroReturnValues.LOGIN_FAIL.getValue();
 
         return handleLoginResult(loginHandler.login(username,
                                                     password,
@@ -57,7 +57,7 @@ public class BrokerLogin {
     }
 
     private int handleLoginResult(final int loginResult) {
-        if (loginResult == Constant.LOGIN_FAIL)
+        if (loginResult == ZorroReturnValues.LOGIN_FAIL.getValue())
             startRetryDelayTimer();
         return loginResult;
     }

@@ -45,16 +45,14 @@ public class BrokerSell {
         final double amountToClose = tradeUtil.contractsToAmount(nAmount);
 
         final OrderCloseResult closeResult = orderClose.run(order, amountToClose);
-        if (closeResult == OrderCloseResult.FAIL) {
+        if (closeResult == OrderCloseResult.FAIL)
             return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
-        }
-        if (amountToClose < order.getAmount()) {
-            return setNewLabel(order);
-        }
 
-        return tradeUtil
-            .labelUtil()
-            .idFromOrder(order);
+        return amountToClose < order.getAmount()
+                ? setNewLabel(order)
+                : tradeUtil
+                    .labelUtil()
+                    .idFromOrder(order);
     }
 
     private int setNewLabel(final IOrder order) {

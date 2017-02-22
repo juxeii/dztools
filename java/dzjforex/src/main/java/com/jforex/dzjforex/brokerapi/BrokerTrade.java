@@ -27,12 +27,10 @@ public class BrokerTrade {
     public int fillTradeParams(final int orderID,
                                final double orderParams[]) {
         final IOrder order = orderRepository.orderByID(orderID);
-        if (order == null) {
-            logger.error("BrokerTrade orderID " + orderID + " not found");
+        if (order == null)
             return ZorroReturnValues.UNKNOWN_ORDER_ID.getValue();
-        }
 
-        fillOrderParams(order, orderParams);
+        fillTradeParams(order, orderParams);
         if (order.getState() == IOrder.State.CLOSED) {
             logger.info("Order with ID " + orderID + " was recently closed.");
             return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();
@@ -48,7 +46,7 @@ public class BrokerTrade {
         return noOfContracts;
     }
 
-    private void fillOrderParams(final IOrder order,
+    private void fillTradeParams(final IOrder order,
                                  final double orderParams[]) {
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(order.getInstrument());
         final double pOpen = order.getOpenPrice();

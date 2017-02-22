@@ -1,11 +1,18 @@
 package com.jforex.dzjforex.time;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,15 +21,17 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.IDataService;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.ITimeDomain;
-import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.dukascopy.api.Unit;
-import com.jforex.dzjforex.ZorroLogger;
+
+import io.reactivex.Observable;
 
 public class DateTimeUtils {
 
     private static final int DAYS_SINCE_UTC_EPOCH = 25569;
     private static SimpleDateFormat simpleUTCormat;
+    private static final LocalDateTime ZERO_COM_TIME = LocalDateTime.of(1899, 12, 30, 0, 0);
+    private static final BigDecimal MILLIS_PER_DAY = new BigDecimal(86400000);
     private final static Logger logger = LogManager.getLogger(DateTimeUtils.class);
 
     static {
@@ -45,17 +54,39 @@ public class DateTimeUtils {
     }
 
     public static double getOLEDateFromMillis(final long millis) {
-        return DAYS_SINCE_UTC_EPOCH + (double) millis / (1000f * 3600f * 24f);
+        return DAYS_SINCE_UTC_EPOCH + (double) millis / (1000 * 3600 * 24);
     }
 
     public static double getOLEDateFromMillisRounded(final long millis) {
         return getOLEDateFromMillis(millis) + 1e-8;
     }
 
-    public static long getMillisFromOLEDate(final double oleDate) {
-        final Date date = new Date();
-        date.setTime((long) ((oleDate - DAYS_SINCE_UTC_EPOCH) * 24 * 3600 * 1000));
-        return date.getTime();
+    public static LocalDateTime dateTimeFromOLEDate(final double oleTime) {
+        final BigDecimal comTime = BigDecimal.valueOf(oleTime);
+        final BigDecimal daysAfterZero = comTime.setScale(0, RoundingMode.DOWN);
+        final BigDecimal fraction = comTime
+            .subtract(daysAfterZero)
+            .abs();
+        final BigDecimal fractionMillisAfterZero = fraction
+            .multiply(MILLIS_PER_DAY)
+            .setScale(0, RoundingMode.HALF_DOWN);
+
+        return ZERO_COM_TIME
+            .plusDays(daysAfterZero.intValue())
+            .plusNanos(millisToNano(fractionMillisAfterZero.intValue()));
+    }
+
+    public static long millisFromOLEDate(final double oleTime) {
+        return dateTimeFromOLEDate(oleTime)
+            .toInstant(ZoneOffset.UTC)
+            .toEpochMilli();
+    }
+
+    public static long millisFromOLEDateRoundMinutes(final double oleTime) {
+        return dateTimeFromOLEDate(oleTime)
+            .toInstant(ZoneOffset.UTC)
+            .truncatedTo(ChronoUnit.MINUTES)
+            .toEpochMilli();
     }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,
@@ -68,14 +99,13 @@ public class DateTimeUtils {
 
     private Set<ITimeDomain> getOfflineTimes(final long startTime,
                                              final long endTime) {
-        Set<ITimeDomain> offlineTimes = null;
-        try {
-            offlineTimes = dataService.getOfflineTimeDomains(startTime, endTime);
-        } catch (final JFException e) {
-            logger.error("getOfflineTimes exc: " + e.getMessage());
-            ZorroLogger.indicateError();
-        }
-        return offlineTimes;
+        return Observable
+            .fromCallable(() -> dataService.getOfflineTimeDomains(startTime, endTime))
+            .onErrorResumeNext(err -> {
+                logger.error("Get market offline times  failed!" + err.getMessage());
+                return Observable.just(new HashSet<>());
+            })
+            .blockingFirst();
     }
 
     public static String formatDateTime(final long dateTime) {
@@ -83,7 +113,7 @@ public class DateTimeUtils {
     }
 
     public static String formatOLETime(final double oleTime) {
-        final long dateTime = getMillisFromOLEDate(oleTime);
+        final long dateTime = millisFromOLEDate(oleTime);
         return formatDateTime(dateTime);
     }
 
@@ -116,5 +146,9 @@ public class DateTimeUtils {
 
     public static double getUTCTimeFromTick(final ITick tick) {
         return getOLEDateFromMillisRounded(tick.getTime());
+    }
+
+    public static long millisToNano(final long millis) {
+        return TimeUnit.MILLISECONDS.toNanos(millis);
     }
 }

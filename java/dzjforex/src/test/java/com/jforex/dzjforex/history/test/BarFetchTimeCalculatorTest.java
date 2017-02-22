@@ -19,16 +19,18 @@ public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
     @Mock
     private HistoryProvider historyProviderMock;
-    private final long endTime = 42L;
-    private final long previousBarStart = 41L;
-    private final int nTicks = 270;
+    private final long endTime = 4200000L;
+    private final int nTicks = 5;
     private final Period period = Period.ONE_MIN;
     private BarFetchTimes barFetchTimes;
+    private final long expectedStartTime = 3960000L;
 
     @Before
     public void setUp() {
-        when(historyProviderMock.getPreviousBarStart(period, endTime))
-            .thenReturn(previousBarStart);
+        when(historyProviderMock.getBarStart(period, expectedStartTime))
+            .thenReturn(expectedStartTime);
+        when(historyProviderMock.getBarStart(period, endTime))
+            .thenReturn(endTime);
 
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProviderMock);
 
@@ -39,17 +41,13 @@ public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
     @Test
     public void endTimeIsCorrect() {
-        assertThat(barFetchTimes.endTime(), equalTo(previousBarStart));
+        assertThat(barFetchTimes.endTime(), equalTo(endTime));
 
-        verify(historyProviderMock).getPreviousBarStart(period, endTime);
+        verify(historyProviderMock).getBarStart(period, endTime);
     }
 
     @Test
     public void startTimeIsCorrect() {
-        final int numberOfBarsBeforeEndTimeBar = nTicks - 1;
-        final long intervalToStartBarTime = numberOfBarsBeforeEndTimeBar * period.getInterval();
-        final long expectedStartTime = previousBarStart - intervalToStartBarTime;
-
         assertThat(barFetchTimes.startTime(), equalTo(expectedStartTime));
     }
 }

@@ -16,18 +16,20 @@ public class BarFetchTimeCalculator {
         this.historyProvider = historyProvider;
     }
 
-    public BarFetchTimes calculate(final long endTime,
+    public BarFetchTimes calculate(final double endTimeUTC,
                                    final int nTicks,
                                    final Period period) {
-        final long endTimeRounded = historyProvider.getPreviousBarStart(period, endTime);
-        final long startTimeRounded = endTimeRounded - (nTicks - 1) * period.getInterval();
+        final long endTimeInMillis = DateTimeUtils.millisFromOLEDate(endTimeUTC);
+        final long endTimeForBar = historyProvider.getBarStart(period, endTimeInMillis);
+        final long startTimeEstimation = endTimeForBar - (nTicks - 1) * period.getInterval();
+        final long startTimeForBar = historyProvider.getBarStart(period, startTimeEstimation);
         logger.debug("Calculated bar fetch times: \n"
-                + "endTime raw: " + DateTimeUtils.formatDateTime(endTime) + "\n"
+                + "endTimeForBar: " + DateTimeUtils.formatDateTime(endTimeForBar) + "\n"
                 + "nTicks: " + nTicks + "\n"
                 + "period: " + period + "\n"
-                + "endTimeRounded: " + DateTimeUtils.formatDateTime(endTimeRounded) + "\n"
-                + "startTimeRounded: " + DateTimeUtils.formatDateTime(startTimeRounded));
+                + "endTimeForBar: " + DateTimeUtils.formatDateTime(endTimeForBar) + "\n"
+                + "startTimeForBar: " + DateTimeUtils.formatDateTime(startTimeForBar));
 
-        return new BarFetchTimes(startTimeRounded, endTimeRounded);
+        return new BarFetchTimes(startTimeForBar, endTimeForBar);
     }
 }

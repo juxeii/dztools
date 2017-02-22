@@ -6,13 +6,13 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.Filter;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.programming.misc.DateTimeUtil;
 
 public class BarFetcher {
 
@@ -34,22 +34,25 @@ public class BarFetcher {
                      final int nTicks,
                      final double tickParams[]) {
         logger.debug("Requested bars for instrument " + instrument + ": \n "
-                + "startDate: " + DateTimeUtils.formatOLETime(startDate) + ": \n "
-                + "endDate: " + DateTimeUtils.formatOLETime(endDate) + ": \n "
+                + "startDateUTCRaw: " + startDate + ": \n "
+                + "endDateUTCRaw: " + endDate + ": \n "
+                + "startDate: " + DateTimeUtil.formatMillis(DateTimeUtils.millisFromOLEDateRoundMinutes(startDate))
+                + ": \n "
+                + "endDate: " + DateTimeUtil.formatMillis(DateTimeUtils.millisFromOLEDateRoundMinutes(endDate))
+                + ": \n "
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
         final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
-        final long endTimeInMillis = DateTimeUtils.getMillisFromOLEDate(endDate);
-        final BarFetchTimes barFetchTimes = barFetchTimeCalculator.calculate(endTimeInMillis,
+        final BarFetchTimes barFetchTimes = barFetchTimeCalculator.calculate(endDate,
                                                                              nTicks,
                                                                              period);
         final List<IBar> bars = historyProvider.fetchBars(instrument,
                                                           period,
                                                           OfferSide.ASK,
-                                                          Filter.WEEKENDS,
                                                           barFetchTimes.startTime(),
                                                           barFetchTimes.endTime());
+        logger.debug("Fetched " + bars.size() + " bars for " + instrument + " with nTicks " + nTicks);
         return bars.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillBars(bars, tickParams);

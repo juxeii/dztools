@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.dukascopy.api.Filter;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
@@ -60,7 +59,6 @@ public class BarFetcherTest extends CommonUtilForTest {
     private final Instrument fetchInstrument = Instrument.EURUSD;
     private final Period period = Period.ONE_MIN;
     private final OfferSide offerSide = OfferSide.ASK;
-    private final Filter filter = Filter.WEEKENDS;
     private final double startDate = 12.4;
     private final double endDate = 13.7;
     private final int tickMinutes = 1;
@@ -91,7 +89,7 @@ public class BarFetcherTest extends CommonUtilForTest {
         barMockList.add(barAMock);
         barMockList.add(barBMock);
         tickParams = new double[barMockList.size() * 7];
-        when(barFetchTimeCalculatorMock.calculate(DateTimeUtils.getMillisFromOLEDate(endDate),
+        when(barFetchTimeCalculatorMock.calculate(endDate,
                                                   nTicks,
                                                   period))
                                                       .thenReturn(barFetchTimes);
@@ -127,7 +125,6 @@ public class BarFetcherTest extends CommonUtilForTest {
         when(historyProviderMock.fetchBars(fetchInstrument,
                                            period,
                                            offerSide,
-                                           filter,
                                            calculatedBarStartTime,
                                            calculatedBarEndTime))
                                                .thenReturn(barList);
@@ -161,7 +158,6 @@ public class BarFetcherTest extends CommonUtilForTest {
             verify(historyProviderMock).fetchBars(fetchInstrument,
                                                   period,
                                                   offerSide,
-                                                  filter,
                                                   calculatedBarStartTime,
                                                   calculatedBarEndTime);
         }

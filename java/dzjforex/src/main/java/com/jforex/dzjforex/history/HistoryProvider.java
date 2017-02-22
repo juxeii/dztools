@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.Filter;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
@@ -37,20 +36,17 @@ public class HistoryProvider {
     public List<IBar> fetchBars(final Instrument instrument,
                                 final Period period,
                                 final OfferSide offerSide,
-                                final Filter filter,
                                 final long startTime,
                                 final long endTime) {
-        return Observable
+        final List<IBar> bars = Observable
             .fromCallable(() -> history.getBars(instrument,
                                                 period,
                                                 offerSide,
-                                                filter,
                                                 startTime,
                                                 endTime))
             .doOnSubscribe(d -> logFetchBarsSubscribe(instrument,
                                                       period,
                                                       offerSide,
-                                                      filter,
                                                       startTime,
                                                       endTime))
             .doOnError(err -> logger.error("Fetching bars  for " + instrument + " failed! " + err.getMessage()))
@@ -58,18 +54,18 @@ public class HistoryProvider {
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()))
             .blockingFirst();
+
+        return bars;
     }
 
     private void logFetchBarsSubscribe(final Instrument instrument,
                                        final Period period,
                                        final OfferSide offerSide,
-                                       final Filter filter,
                                        final long startTime,
                                        final long endTime) {
         logger.debug("Starting to fetch bars for " + instrument + "\n"
                 + "period: " + period + "\n"
                 + "offerSide: " + offerSide + "\n"
-                + "filter: " + filter + "\n"
                 + "startTime: " + DateTimeUtil.formatMillis(startTime) + "\n"
                 + "endTime: " + DateTimeUtil.formatMillis(endTime));
     }
@@ -106,15 +102,15 @@ public class HistoryProvider {
                 + "endTime: " + DateTimeUtil.formatMillis(endTime));
     }
 
-    public long getPreviousBarStart(final Period period,
-                                    final long barTime) {
+    public long getBarStart(final Period period,
+                            final long barTime) {
         return Observable
-            .fromCallable(() -> history.getPreviousBarStart(period, barTime))
-            .doOnSubscribe(d -> logger.debug("Starting to fetch previous bar start for \n"
+            .fromCallable(() -> history.getBarStart(period, barTime))
+            .doOnSubscribe(d -> logger.debug("Starting to fetch bar start for \n"
                     + "period: " + period + "\n"
                     + "barTime: " + DateTimeUtil.formatMillis(barTime)))
-            .doOnError(err -> logger.error("Fetching previous bar start failed! " + err.getMessage()))
-            .doOnComplete(() -> logger.debug("Fetching previous bar start completed."))
+            .doOnError(err -> logger.error("Fetching bar start failed! " + err.getMessage()))
+            .doOnComplete(() -> logger.debug("Fetching bar start completed."))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(0L))
             .blockingFirst();
@@ -127,11 +123,8 @@ public class HistoryProvider {
             .fromCallable(() -> history.getOrdersHistory(instrument,
                                                          from,
                                                          to))
-            .doOnSubscribe(d -> logger.debug("Seeking orders for " + instrument
-                    + " from " + DateTimeUtil.formatMillis(from)
-                    + " from " + DateTimeUtil.formatMillis(to)))
             .onErrorResumeNext(err -> {
-                logger.error("Seeking orders for " + instrument + " in history failed! " + err.getMessage());
+                logger.error("Seeking history orders for " + instrument + " failed! " + err.getMessage());
                 return Observable.just(new ArrayList<>());
             })
             .retryWhen(this::historyRetryWhen)

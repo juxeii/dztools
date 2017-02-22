@@ -96,8 +96,8 @@ public class TickFetcherTest extends CommonUtilForTest {
 
     private void setReturnedTickList(final List<ITick> tickList) {
         when(historyProviderMock.fetchTicks(Instrument.EURUSD,
-                                            DateTimeUtils.getMillisFromOLEDate(startDate),
-                                            DateTimeUtils.getMillisFromOLEDate(endDate)))
+                                            DateTimeUtils.millisFromOLEDate(startDate),
+                                            DateTimeUtils.millisFromOLEDate(endDate)))
                                                 .thenReturn(tickList);
     }
 
@@ -127,8 +127,8 @@ public class TickFetcherTest extends CommonUtilForTest {
         @Test
         public void fetchWasCalledCorrectOnHistoryProvider() {
             verify(historyProviderMock).fetchTicks(Instrument.EURUSD,
-                                                   DateTimeUtils.getMillisFromOLEDate(startDate),
-                                                   DateTimeUtils.getMillisFromOLEDate(endDate));
+                                                   DateTimeUtils.millisFromOLEDate(startDate),
+                                                   DateTimeUtils.millisFromOLEDate(endDate));
         }
 
         @Test

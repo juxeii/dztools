@@ -17,7 +17,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -96,8 +96,8 @@ public class TickFetcherTest extends CommonUtilForTest {
 
     private void setReturnedTickList(final List<ITick> tickList) {
         when(historyProviderMock.fetchTicks(Instrument.EURUSD,
-                                            DateTimeUtils.millisFromOLEDate(startDate),
-                                            DateTimeUtils.millisFromOLEDate(endDate)))
+                                            TimeConvert.millisFromOLEDate(startDate),
+                                            TimeConvert.millisFromOLEDate(endDate)))
                                                 .thenReturn(tickList);
     }
 
@@ -127,8 +127,8 @@ public class TickFetcherTest extends CommonUtilForTest {
         @Test
         public void fetchWasCalledCorrectOnHistoryProvider() {
             verify(historyProviderMock).fetchTicks(Instrument.EURUSD,
-                                                   DateTimeUtils.millisFromOLEDate(startDate),
-                                                   DateTimeUtils.millisFromOLEDate(endDate));
+                                                   TimeConvert.millisFromOLEDate(startDate),
+                                                   TimeConvert.millisFromOLEDate(endDate));
         }
 
         @Test
@@ -137,7 +137,7 @@ public class TickFetcherTest extends CommonUtilForTest {
             assertThat(tickParams[1], equalTo(tickBAsk));
             assertThat(tickParams[2], equalTo(tickBAsk));
             assertThat(tickParams[3], equalTo(tickBAsk));
-            assertThat(tickParams[4], equalTo(DateTimeUtils.getUTCTimeFromTick(tickBMock)));
+            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromTick(tickBMock)));
             assertThat(tickParams[5], equalTo(MathUtil.roundPrice(tickBAsk - tickBBid, fetchInstrument)));
             assertThat(tickParams[6], equalTo(tickBVol));
 
@@ -145,7 +145,7 @@ public class TickFetcherTest extends CommonUtilForTest {
             assertThat(tickParams[8], equalTo(tickAAsk));
             assertThat(tickParams[9], equalTo(tickAAsk));
             assertThat(tickParams[10], equalTo(tickAAsk));
-            assertThat(tickParams[11], equalTo(DateTimeUtils.getUTCTimeFromTick(tickAMock)));
+            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromTick(tickAMock)));
             assertThat(tickParams[12], equalTo(MathUtil.roundPrice(tickAAsk - tickABid, fetchInstrument)));
             assertThat(tickParams[13], equalTo(tickAVol));
         }

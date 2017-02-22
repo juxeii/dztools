@@ -311,13 +311,6 @@ DllCallHandler::BrokerSell(const int nTradeID,
 }
 
 int
-DllCallHandler::ProcessHistoryDownload()
-{
-    return (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                         JData::doHistoryDownload.methodID);
-}
-
-int
 DllCallHandler::SetOrderText(const char *orderText)
 {
     jstring jOrderText = env->NewStringUTF(orderText);

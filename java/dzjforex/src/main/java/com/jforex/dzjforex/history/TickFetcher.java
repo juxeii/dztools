@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
 public class TickFetcher {
@@ -29,14 +29,14 @@ public class TickFetcher {
                      final int nTicks,
                      final double tickParams[]) {
         logger.debug("Trying to fetch ticks for instrument " + instrument + ": \n "
-                + "startDate: " + DateTimeUtils.formatOLETime(startDate) + ": \n "
-                + "endDate: " + DateTimeUtils.formatOLETime(endDate) + ": \n "
+                + "startDate: " + TimeConvert.formatOLETime(startDate) + ": \n "
+                + "endDate: " + TimeConvert.formatOLETime(endDate) + ": \n "
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
         final List<ITick> ticks = historyProvider.fetchTicks(instrument,
-                                                             DateTimeUtils.millisFromOLEDate(startDate),
-                                                             DateTimeUtils.millisFromOLEDate(endDate));
+                                                             TimeConvert.millisFromOLEDate(startDate),
+                                                             TimeConvert.millisFromOLEDate(endDate));
         return ticks.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillTicks(instrument,
@@ -59,7 +59,7 @@ public class TickFetcher {
             tickParams[tickParamsIndex + 1] = ask;
             tickParams[tickParamsIndex + 2] = ask;
             tickParams[tickParamsIndex + 3] = ask;
-            tickParams[tickParamsIndex + 4] = DateTimeUtils.getUTCTimeFromTick(tick);
+            tickParams[tickParamsIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
             tickParams[tickParamsIndex + 5] = spread;
             tickParams[tickParamsIndex + 6] = tick.getAskVolume();
 

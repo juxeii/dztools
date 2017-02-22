@@ -12,6 +12,7 @@ import com.jforex.dzjforex.history.BarFetchTimeCalculator;
 import com.jforex.dzjforex.history.BarFetchTimes;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.time.TimeConvert;
 
 public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
@@ -19,31 +20,32 @@ public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
     @Mock
     private HistoryProvider historyProviderMock;
-    private final long endTime = 4200000L;
+    private final double endTimeUTC = 420.34836465;
+    private final long endTimeMillis = TimeConvert.millisFromOLEDate(endTimeUTC);
     private final int nTicks = 5;
     private final Period period = Period.ONE_MIN;
     private BarFetchTimes barFetchTimes;
-    private final long expectedStartTime = 3960000L;
+    private final long expectedStartTime = -2172843741294L;
 
     @Before
     public void setUp() {
         when(historyProviderMock.getBarStart(period, expectedStartTime))
             .thenReturn(expectedStartTime);
-        when(historyProviderMock.getBarStart(period, endTime))
-            .thenReturn(endTime);
+        when(historyProviderMock.getBarStart(period, endTimeMillis))
+            .thenReturn(endTimeMillis);
 
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProviderMock);
 
-        barFetchTimes = barFetchTimeCalculator.calculate(endTime,
+        barFetchTimes = barFetchTimeCalculator.calculate(endTimeUTC,
                                                          nTicks,
                                                          period);
     }
 
     @Test
     public void endTimeIsCorrect() {
-        assertThat(barFetchTimes.endTime(), equalTo(endTime));
+        assertThat(barFetchTimes.endTime(), equalTo(endTimeMillis));
 
-        verify(historyProviderMock).getBarStart(period, endTime);
+        verify(historyProviderMock).getBarStart(period, endTimeMillis);
     }
 
     @Test

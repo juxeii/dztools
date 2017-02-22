@@ -29,6 +29,7 @@ import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
+import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
@@ -39,11 +40,11 @@ import com.jforex.dzjforex.order.OrderSetSL;
 import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.order.RunningOrders;
 import com.jforex.dzjforex.order.TradeUtil;
-import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.dzjforex.time.TickTimeProvider;
+import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -62,6 +63,7 @@ public class ZorroBridge {
     private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
+    private MarketData marketData;
     private BrokerTime brokerTime;
     private BrokerTrade brokerTrade;
     private TradeUtil tradeUtil;
@@ -73,7 +75,7 @@ public class ZorroBridge {
     private OrderClose orderClose;
     private OrderSetSL setSLHandler;
     private BrokerSell brokerSell;
-    private DateTimeUtils dateTimeUtils;
+    private TimeConvert dateTimeUtils;
     private BrokerSubscribe brokerSubscribe;
     private RunningOrders runningOrders;
     private HistoryOrders historyOrders;
@@ -122,7 +124,6 @@ public class ZorroBridge {
         context = infoStrategy.getContext();
         final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
 
-        dateTimeUtils = new DateTimeUtils(context.getDataService());
         accountInfo = new AccountInfo(context.getAccount(),
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
@@ -153,9 +154,10 @@ public class ZorroBridge {
         orderRepository = new OrderRepository(runningOrders,
                                               historyOrders,
                                               labelUtil);
+        marketData = new MarketData(context.getDataService());
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
-                                    dateTimeUtils);
+                                    marketData);
 
         tradeUtil = new TradeUtil(orderRepository,
                                   strategyUtil,
@@ -246,11 +248,6 @@ public class ZorroBridge {
                                   tickMinutes,
                                   nTicks,
                                   tickParams);
-    }
-
-    public int doHistoryDownload() {
-        // Currently not supported
-        return ZorroReturnValues.HISTORY_DOWNLOAD_FAIL.getValue();
     }
 
     public int doSetOrderText(final String orderText) {

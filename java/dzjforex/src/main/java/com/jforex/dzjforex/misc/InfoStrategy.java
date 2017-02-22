@@ -24,18 +24,18 @@ public class InfoStrategy extends JForexUtilsStrategy {
     }
 
     @Override
-    public void onJFAccount(final IAccount arg0) throws JFException {
+    public void onJFAccount(final IAccount account) throws JFException {
     }
 
     @Override
-    public void onJFBar(final Instrument arg0,
-                        final Period arg1,
-                        final IBar arg2,
-                        final IBar arg3) throws JFException {
+    public void onJFBar(final Instrument instrument,
+                        final Period period,
+                        final IBar askBar,
+                        final IBar bidBar) throws JFException {
     }
 
     @Override
-    public void onJFMessage(final IMessage arg0) throws JFException {
+    public void onJFMessage(final IMessage message) throws JFException {
     }
 
     @Override

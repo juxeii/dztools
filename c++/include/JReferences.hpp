@@ -32,7 +32,6 @@ extern JMethodDesc doBrokerTrade;
 extern JMethodDesc doBrokerStop;
 extern JMethodDesc doBrokerSell;
 extern JMethodDesc doBrokerHistory2;
-extern JMethodDesc doHistoryDownload;
 extern JMethodDesc doSetOrderText;
 
 extern JMethodDesc excGetMessage;

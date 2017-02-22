@@ -72,9 +72,6 @@ public:
                const int nAmount);
 
     int
-    ProcessHistoryDownload();
-
-    int
     SetOrderText(const char *orderText);
 
 private:

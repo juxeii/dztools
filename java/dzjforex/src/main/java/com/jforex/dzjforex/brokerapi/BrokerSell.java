@@ -64,7 +64,6 @@ public class BrokerSell {
             final int newOrderID = tradeUtil
                 .labelUtil()
                 .idFromOrder(order);
-            tradeUtil.storeOrder(newOrderID, order);
             return newOrderID;
         }
         return ZorroReturnValues.BROKER_SELL_FAIL.getValue();

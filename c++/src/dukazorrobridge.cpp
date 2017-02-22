@@ -11,7 +11,6 @@ int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
 int
 (__cdecl *BrokerProgress)(const int percent) = nullptr;
-const int HISTORY_DOWNLOAD = 666;
 static DllCallHandler dllCallHandler;
 
 BOOL APIENTRY
@@ -203,8 +202,6 @@ BrokerCommand(int nCommand,
         return 1000;
     case GET_TYPE:
         return 1;
-    case HISTORY_DOWNLOAD:
-        return dllCallHandler.ProcessHistoryDownload();
     case SET_ORDERTEXT:
     {
         std::string orderText{ reinterpret_cast<char*>(dwParameter) };

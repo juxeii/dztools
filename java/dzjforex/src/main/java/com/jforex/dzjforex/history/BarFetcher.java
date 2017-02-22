@@ -11,7 +11,7 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.misc.DateTimeUtil;
 
 public class BarFetcher {
@@ -36,14 +36,14 @@ public class BarFetcher {
         logger.debug("Requested bars for instrument " + instrument + ": \n "
                 + "startDateUTCRaw: " + startDate + ": \n "
                 + "endDateUTCRaw: " + endDate + ": \n "
-                + "startDate: " + DateTimeUtil.formatMillis(DateTimeUtils.millisFromOLEDateRoundMinutes(startDate))
+                + "startDate: " + DateTimeUtil.formatMillis(TimeConvert.millisFromOLEDateRoundMinutes(startDate))
                 + ": \n "
-                + "endDate: " + DateTimeUtil.formatMillis(DateTimeUtils.millisFromOLEDateRoundMinutes(endDate))
+                + "endDate: " + DateTimeUtil.formatMillis(TimeConvert.millisFromOLEDateRoundMinutes(endDate))
                 + ": \n "
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
-        final Period period = DateTimeUtils.getPeriodFromMinutes(tickMinutes);
+        final Period period = TimeConvert.getPeriodFromMinutes(tickMinutes);
         final BarFetchTimes barFetchTimes = barFetchTimeCalculator.calculate(endDate,
                                                                              nTicks,
                                                                              period);
@@ -68,7 +68,7 @@ public class BarFetcher {
             tickParams[tickParamsIndex + 1] = bar.getClose();
             tickParams[tickParamsIndex + 2] = bar.getHigh();
             tickParams[tickParamsIndex + 3] = bar.getLow();
-            tickParams[tickParamsIndex + 4] = DateTimeUtils.getUTCTimeFromBar(bar);
+            tickParams[tickParamsIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
             // tickParams[tickParamsIndex + 5] = spread not available for bars
             tickParams[tickParamsIndex + 6] = bar.getVolume();
 

@@ -21,7 +21,7 @@ import com.jforex.dzjforex.history.BarFetchTimes;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.time.TimeConvert;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
@@ -168,7 +168,7 @@ public class BarFetcherTest extends CommonUtilForTest {
             assertThat(tickParams[1], equalTo(barBClose));
             assertThat(tickParams[2], equalTo(barBHigh));
             assertThat(tickParams[3], equalTo(barBLow));
-            assertThat(tickParams[4], equalTo(DateTimeUtils.getUTCTimeFromBar(barBMock)));
+            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromBar(barBMock)));
             assertThat(tickParams[5], equalTo(0.0));
             assertThat(tickParams[6], equalTo(barBVol));
 
@@ -176,7 +176,7 @@ public class BarFetcherTest extends CommonUtilForTest {
             assertThat(tickParams[8], equalTo(barAClose));
             assertThat(tickParams[9], equalTo(barAHigh));
             assertThat(tickParams[10], equalTo(barALow));
-            assertThat(tickParams[11], equalTo(DateTimeUtils.getUTCTimeFromBar(barAMock)));
+            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromBar(barAMock)));
             assertThat(tickParams[12], equalTo(0.0));
             assertThat(tickParams[13], equalTo(barAVol));
         }

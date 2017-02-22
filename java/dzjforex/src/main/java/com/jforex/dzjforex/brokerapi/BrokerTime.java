@@ -2,21 +2,22 @@ package com.jforex.dzjforex.brokerapi;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.time.DateTimeUtils;
+import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.time.ServerTimeProvider;
+import com.jforex.dzjforex.time.TimeConvert;
 
 public class BrokerTime {
 
     private final IClient client;
     private final ServerTimeProvider serverTimeProvider;
-    private final DateTimeUtils dateTimeUtils;
+    private final MarketData marketData;
 
     public BrokerTime(final IClient client,
                       final ServerTimeProvider serverTimeProvider,
-                      final DateTimeUtils dateTimeUtils) {
+                      final MarketData marketData) {
         this.client = client;
         this.serverTimeProvider = serverTimeProvider;
-        this.dateTimeUtils = dateTimeUtils;
+        this.marketData = marketData;
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {
@@ -27,9 +28,9 @@ public class BrokerTime {
 
     private int fillServerTimeAndReturnStatus(final double pTimeUTC[]) {
         final long serverTime = serverTimeProvider.get();
-        pTimeUTC[0] = DateTimeUtils.getOLEDateFromMillis(serverTime);
+        pTimeUTC[0] = TimeConvert.getOLEDateFromMillis(serverTime);
 
-        return dateTimeUtils.isMarketOffline(serverTime)
+        return marketData.isMarketOffline(serverTime)
                 ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
                 : ZorroReturnValues.CONNECTION_OK.getValue();
     }

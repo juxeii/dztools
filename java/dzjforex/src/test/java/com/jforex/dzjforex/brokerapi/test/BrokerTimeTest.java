@@ -11,9 +11,10 @@ import org.mockito.Mock;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.time.DateTimeUtils;
 import com.jforex.dzjforex.time.ServerTimeProvider;
+import com.jforex.dzjforex.time.TimeConvert;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
@@ -27,7 +28,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
     @Mock
     private ServerTimeProvider serverTimeProviderMock;
     @Mock
-    private DateTimeUtils dateTimeUtilsMock;
+    private MarketData marketDataMock;
     private final double serverTimeParams[] = new double[1];
     private int returnCode;
 
@@ -39,7 +40,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
         brokerTime = new BrokerTime(clientMock,
                                     serverTimeProviderMock,
-                                    dateTimeUtilsMock);
+                                    marketDataMock);
     }
 
     private void setClientConnectivity(final boolean isClientConnected) {
@@ -51,7 +52,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
     }
 
     private void assertServerTimeWasSetCorrect() {
-        assertThat(serverTimeParams[0], equalTo(DateTimeUtils.getOLEDateFromMillis(serverTime)));
+        assertThat(serverTimeParams[0], equalTo(TimeConvert.getOLEDateFromMillis(serverTime)));
     }
 
     public class TestWhenClientIsDisconnected {
@@ -76,7 +77,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
     public class TestWhenClientIsConnected {
 
         private void setMarketConnectivityAndStart(final boolean isMarketOffline) {
-            when(dateTimeUtilsMock.isMarketOffline(serverTime)).thenReturn(isMarketOffline);
+            when(marketDataMock.isMarketOffline(serverTime)).thenReturn(isMarketOffline);
             returnCode = brokerTime.doBrokerTime(serverTimeParams);
         }
 

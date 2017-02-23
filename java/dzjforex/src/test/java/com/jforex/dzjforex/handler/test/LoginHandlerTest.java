@@ -36,9 +36,7 @@ public class LoginHandlerTest extends CommonUtilForTest {
                                            loginTypeDemo))
                                                .thenReturn(loginCredentials);
 
-        loginHandler = new LoginHandler(authentificationMock,
-                                        credentialsFactoryMock,
-                                        zorroMock);
+        loginHandler = new LoginHandler(authentificationMock, credentialsFactoryMock);
     }
 
     private void callLogin() {
@@ -60,12 +58,6 @@ public class LoginHandlerTest extends CommonUtilForTest {
         @Test
         public void returnValueIsLoginOK() {
             assertThat(returnCode, equalTo(ZorroReturnValues.LOGIN_OK.getValue()));
-        }
-
-        @Test
-        public void zorroProgressWasStartedAndStopped() {
-            verify(zorroMock).startProgressInterval();
-            verify(zorroMock).startProgressInterval();
         }
     }
 

@@ -17,7 +17,7 @@ namespace JData
 extern jobject JDukaZorroBridgeObject;
 
 extern jclass JDukaZorroBridgeClass;
-extern jclass JZorroLoggerClass;
+extern jclass JZorroClass;
 extern jclass ExceptionClass;
 
 extern JMethodDesc constructor;
@@ -42,7 +42,7 @@ extern const int nativesTableSize;
 
 extern const char* JVMClassPathOption;
 extern const char* DukaZorroBridgePath;
-extern const char* ZorroLoggerPath;
+extern const char* ZorroPath;
 extern const char* ExcPath;
 
 extern const std::vector<JMethodDesc*> dukaZorroBridgeMethods;

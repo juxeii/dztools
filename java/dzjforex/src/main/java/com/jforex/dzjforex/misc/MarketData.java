@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.misc;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,11 +23,15 @@ public class MarketData {
 
     public boolean isMarketOffline(final long currentServerTime) {
         final long lookUpEnTime = currentServerTime + Period.ONE_MIN.getInterval();
-        final Set<ITimeDomain> offlineDomains = getOfflineTimes(currentServerTime, lookUpEnTime);
 
-        return offlineDomains.isEmpty()
-                ? true
-                : isServerTimeInOfflineDomains(currentServerTime, offlineDomains);
+        return Observable
+            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEnTime))
+            .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
+            .onErrorResumeNext(err -> {
+                logger.error("Get market offline times  failed!" + err.getMessage());
+                return Observable.just(true);
+            })
+            .blockingFirst();
     }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,
@@ -38,16 +41,5 @@ public class MarketData {
             .anyMatch(timeDomain -> {
                 return serverTime >= timeDomain.getStart() && serverTime <= timeDomain.getEnd();
             });
-    }
-
-    private Set<ITimeDomain> getOfflineTimes(final long startTime,
-                                             final long endTime) {
-        return Observable
-            .fromCallable(() -> dataService.getOfflineTimeDomains(startTime, endTime))
-            .onErrorResumeNext(err -> {
-                logger.error("Get market offline times  failed!" + err.getMessage());
-                return Observable.just(new HashSet<>());
-            })
-            .blockingFirst();
     }
 }

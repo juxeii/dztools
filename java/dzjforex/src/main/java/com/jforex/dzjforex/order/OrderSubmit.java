@@ -41,7 +41,7 @@ public class OrderSubmit {
             .doOnError(err -> logger.error("Opening trade for " + instrument
                     + " with label  " + label + " failed!" + err.getMessage()))
             .doOnComplete(() -> logger.info("Opening trade for " + instrument
-                    + " with label  " + label + " dnoe."))
+                    + " with label  " + label + " done."))
             .retryOnReject(tradeUtil.retryParams())
             .build();
 

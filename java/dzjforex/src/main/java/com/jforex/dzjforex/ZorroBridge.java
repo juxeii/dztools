@@ -56,7 +56,7 @@ public class ZorroBridge {
     private final PinProvider pinProvider;
     private final InfoStrategy infoStrategy;
     private long strategyID;
-    private final Zorro zorro;
+    private final Zorro zorro = new Zorro();
     private final CredentialsFactory credentialsFactory;
     private AccountInfo accountInfo;
     private final LoginHandler loginHandler;
@@ -76,7 +76,7 @@ public class ZorroBridge {
     private OrderClose orderClose;
     private OrderSetSL setSLHandler;
     private BrokerSell brokerSell;
-    private TimeConvert dateTimeUtils;
+    private TimeConvert timeConvert;
     private BrokerSubscribe brokerSubscribe;
     private RunningOrders runningOrders;
     private HistoryOrders historyOrders;
@@ -99,10 +99,8 @@ public class ZorroBridge {
         clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
         pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        zorro = new Zorro(pluginConfig);
         loginHandler = new LoginHandler(clientUtil.authentification(),
-                                        credentialsFactory,
-                                        zorro);
+                                        credentialsFactory);
         brokerLogin = new BrokerLogin(loginHandler,
                                       client,
                                       pluginConfig);

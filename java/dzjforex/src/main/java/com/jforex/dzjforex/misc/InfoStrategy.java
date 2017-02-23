@@ -56,6 +56,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
     @Override
     public void onJFTick(final Instrument instrument,
                          final ITick tick) throws JFException {
-        zorro.callProgress(0);
+        Zorro.callProgress(0);
     }
 }

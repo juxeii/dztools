@@ -30,7 +30,7 @@ public class BrokerTrade {
 
         fillTradeParams(order, orderParams);
         if (order.getState() == IOrder.State.CLOSED) {
-            logger.info("Order with ID " + nTradeID + " was recently closed.");
+            logger.debug("Order with ID " + nTradeID + " was recently closed.");
             return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();
         }
         final int noOfContracts = tradeUtil.scaleAmount(order.getAmount());

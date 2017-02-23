@@ -1,11 +1,8 @@
 package com.jforex.dzjforex;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class Zorro {
-
-    private final static Logger logger = LogManager.getLogger(Zorro.class);
+public class ZorroLogger {
 
     public static int logError(final String errorMsg,
                                final Logger logger) {
@@ -17,7 +14,7 @@ public class Zorro {
         return jcallback_BrokerError(errorMsg);
     }
 
-    public static int callProgress(final int progress) {
+    public static int logProgress(final int progress) {
         return jcallback_BrokerProgress(progress);
     }
 

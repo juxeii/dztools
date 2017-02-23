@@ -56,6 +56,7 @@ public class ZorroBridge {
     private final PinProvider pinProvider;
     private final InfoStrategy infoStrategy;
     private long strategyID;
+    private final Zorro zorro;
     private final CredentialsFactory credentialsFactory;
     private AccountInfo accountInfo;
     private final LoginHandler loginHandler;
@@ -98,11 +99,14 @@ public class ZorroBridge {
         clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
         pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        loginHandler = new LoginHandler(clientUtil.authentification(), credentialsFactory);
+        zorro = new Zorro(pluginConfig);
+        loginHandler = new LoginHandler(clientUtil.authentification(),
+                                        credentialsFactory,
+                                        zorro);
         brokerLogin = new BrokerLogin(loginHandler,
                                       client,
                                       pluginConfig);
-        infoStrategy = new InfoStrategy();
+        infoStrategy = new InfoStrategy(zorro);
     }
 
     private void initClientInstance() {
@@ -117,7 +121,7 @@ public class ZorroBridge {
         } catch (final InstantiationException e) {
             logger.error("IClient InstantiationException occured!" + e.getMessage());
         }
-        ZorroLogger.indicateError();
+        Zorro.indicateError();
     }
 
     private void initComponents() {
@@ -251,7 +255,7 @@ public class ZorroBridge {
     }
 
     public int doSetOrderText(final String orderText) {
-        ZorroLogger.logError("doSetOrderText for " + orderText + " called but not yet supported!");
+        Zorro.logError("doSetOrderText for " + orderText + " called but not yet supported!");
         return ZorroReturnValues.BROKER_COMMAND_OK.getValue();
     }
 }

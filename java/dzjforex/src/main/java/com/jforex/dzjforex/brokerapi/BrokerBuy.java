@@ -20,21 +20,21 @@ public class BrokerBuy {
 
     private final static Logger logger = LogManager.getLogger(BrokerBuy.class);
 
-    public BrokerBuy(final OrderSubmit submitHandler,
+    public BrokerBuy(final OrderSubmit orderSubmit,
                      final TradeUtil tradeUtil) {
-        this.orderSubmit = submitHandler;
+        this.orderSubmit = orderSubmit;
         this.tradeUtil = tradeUtil;
     }
 
-    public int openTrade(final String assetName,
+    public int openTrade(final String instrumentName,
                          final double tradeParams[]) {
         if (!tradeUtil.isTradingAllowed())
             return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
-        final Optional<Instrument> maybeInstrument = tradeUtil.maybeInstrumentForTrading(assetName);
+        final Optional<Instrument> maybeInstrument = tradeUtil.maybeInstrumentForTrading(instrumentName);
         if (!maybeInstrument.isPresent())
             return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
 
-        logger.info("Trying to open trade for " + assetName
+        logger.info("Trying to open trade for " + instrumentName
                 + " with nAmount:  " + tradeParams[0]
                 + " and dStopDist:  " + tradeParams[1]);
         return submit(maybeInstrument.get(), tradeParams);
@@ -74,11 +74,12 @@ public class BrokerBuy {
         final double slPrice = tradeUtil.calculateSL(instrument,
                                                      orderCommand,
                                                      dStopDist);
+        final OrderSubmitResult submitResult = orderSubmit.run(instrument,
+                                                               orderCommand,
+                                                               amount,
+                                                               label,
+                                                               slPrice);
 
-        return orderSubmit.run(instrument,
-                               orderCommand,
-                               amount,
-                               label,
-                               slPrice);
+        return submitResult;
     }
 }

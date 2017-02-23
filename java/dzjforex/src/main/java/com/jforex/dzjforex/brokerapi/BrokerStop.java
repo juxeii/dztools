@@ -11,14 +11,14 @@ import com.jforex.programming.math.MathUtil;
 
 public class BrokerStop {
 
-    private final OrderSetSL setSLHandler;
+    private final OrderSetSL orderSetSL;
     private final TradeUtil tradeUtil;
 
     private final static Logger logger = LogManager.getLogger(BrokerStop.class);
 
-    public BrokerStop(final OrderSetSL setSLHandler,
+    public BrokerStop(final OrderSetSL orderSetSL,
                       final TradeUtil tradeUtil) {
-        this.setSLHandler = setSLHandler;
+        this.orderSetSL = orderSetSL;
         this.tradeUtil = tradeUtil;
     }
 
@@ -39,7 +39,7 @@ public class BrokerStop {
                                      final double dStop) {
         final double slPrice = MathUtil.roundPrice(dStop, order.getInstrument());
         if (tradeUtil.isSLPriceDistanceOK(order.getInstrument(), slPrice))
-            setSLHandler.run(order, slPrice);
+            orderSetSL.run(order, slPrice);
 
         return ZorroReturnValues.ADJUST_SL_OK.getValue();
     }

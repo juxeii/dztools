@@ -4,7 +4,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +51,15 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
     @Test
     public void returnCodeIsAssetAvailableWhenAssetNameIsValid() {
         assertThat(brokerSubscribe.subscribe(assetName), equalTo(ZorroReturnValues.ASSET_AVAILABLE.getValue()));
+    }
+
+    @Test
+    public void subscribedInstrumentsReturnsSetFromIClient() {
+        final Set<Instrument> subscribedInstruments = new HashSet<>();
+
+        when(clientMock.getSubscribedInstruments()).thenReturn(subscribedInstruments);
+
+        assertThat(brokerSubscribe.subscribedInstruments(), equalTo(subscribedInstruments));
     }
 
     public class WhenAccountCurrencyIsBaseCurrency {

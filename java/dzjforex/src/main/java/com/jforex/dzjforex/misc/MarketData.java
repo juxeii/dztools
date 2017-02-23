@@ -23,19 +23,21 @@ public class MarketData {
     }
 
     public boolean isMarketOffline(final long currentServerTime) {
-        final Set<ITimeDomain> offlines = getOfflineTimes(currentServerTime,
-                                                          currentServerTime + Period.ONE_MIN.getInterval());
-        return offlines == null
+        final long lookUpEnTime = currentServerTime + Period.ONE_MIN.getInterval();
+        final Set<ITimeDomain> offlineDomains = getOfflineTimes(currentServerTime, lookUpEnTime);
+
+        return offlineDomains.isEmpty()
                 ? true
-                : isServerTimeInOfflineDomains(currentServerTime, offlines);
+                : isServerTimeInOfflineDomains(currentServerTime, offlineDomains);
     }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,
-                                                 final Set<ITimeDomain> offlines) {
-        for (final ITimeDomain offline : offlines)
-            if (serverTime >= offline.getStart() && serverTime <= offline.getEnd())
-                return true;
-        return false;
+                                                 final Set<ITimeDomain> offlineDomains) {
+        return offlineDomains
+            .stream()
+            .anyMatch(timeDomain -> {
+                return serverTime >= timeDomain.getStart() && serverTime <= timeDomain.getEnd();
+            });
     }
 
     private Set<ITimeDomain> getOfflineTimes(final long startTime,

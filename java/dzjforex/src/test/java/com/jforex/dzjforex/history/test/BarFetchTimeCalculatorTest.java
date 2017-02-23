@@ -14,6 +14,8 @@ import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.TimeConvert;
 
+import io.reactivex.Observable;
+
 public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
     private BarFetchTimeCalculator barFetchTimeCalculator;
@@ -29,10 +31,10 @@ public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        when(historyProviderMock.getBarStart(period, expectedStartTime))
-            .thenReturn(expectedStartTime);
-        when(historyProviderMock.getBarStart(period, endTimeMillis))
-            .thenReturn(endTimeMillis);
+        when(historyProviderMock.fetchBarStart(period, expectedStartTime))
+            .thenReturn(Observable.just(expectedStartTime));
+        when(historyProviderMock.fetchBarStart(period, endTimeMillis))
+            .thenReturn(Observable.just(endTimeMillis));
 
         barFetchTimeCalculator = new BarFetchTimeCalculator(historyProviderMock);
 
@@ -45,7 +47,7 @@ public class BarFetchTimeCalculatorTest extends CommonUtilForTest {
     public void endTimeIsCorrect() {
         assertThat(barFetchTimes.endTime(), equalTo(endTimeMillis));
 
-        verify(historyProviderMock).getBarStart(period, endTimeMillis);
+        verify(historyProviderMock).fetchBarStart(period, endTimeMillis);
     }
 
     @Test

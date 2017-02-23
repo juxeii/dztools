@@ -21,6 +21,7 @@ import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Observable;
 
 @RunWith(HierarchicalContextRunner.class)
 public class TickFetcherTest extends CommonUtilForTest {
@@ -98,7 +99,7 @@ public class TickFetcherTest extends CommonUtilForTest {
         when(historyProviderMock.fetchTicks(Instrument.EURUSD,
                                             TimeConvert.millisFromOLEDate(startDate),
                                             TimeConvert.millisFromOLEDate(endDate)))
-                                                .thenReturn(tickList);
+                                                .thenReturn(Observable.just(tickList));
     }
 
     @Test

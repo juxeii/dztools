@@ -34,9 +34,12 @@ public class TickFetcher {
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
-        final List<ITick> ticks = historyProvider.fetchTicks(instrument,
-                                                             TimeConvert.millisFromOLEDate(startDate),
-                                                             TimeConvert.millisFromOLEDate(endDate));
+        final List<ITick> ticks = historyProvider
+            .fetchTicks(instrument,
+                        TimeConvert.millisFromOLEDate(startDate),
+                        TimeConvert.millisFromOLEDate(endDate))
+            .blockingFirst();
+
         return ticks.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillTicks(instrument,

@@ -12,22 +12,34 @@ import org.mockito.Mock;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.JFException;
+import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderCloseResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
+import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.OrderSetLabelResult;
 import com.jforex.dzjforex.order.OrderSetSLResult;
 import com.jforex.dzjforex.order.OrderSubmitResult;
+import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
+import com.jforex.programming.strategy.StrategyUtil;
 
 public class CommonUtilForTest extends BDDMockito {
 
     @Mock
+    protected Zorro zorroMock;
+    @Mock
     protected IEngine engineMock;
     @Mock
-    protected OrderLabelUtil labelUtilMock;
+    protected TradeUtil tradeUtilMock;
+    @Mock
+    protected StrategyUtil strategyUtilMock;
+    @Mock
+    protected OrderRepository orderRepositoryMock;
+    @Mock
+    protected OrderLabelUtil orderLabelUtilMock;
     @Mock
     protected PluginConfig pluginConfigMock;
     @Mock
@@ -59,6 +71,10 @@ public class CommonUtilForTest extends BDDMockito {
 
     public CommonUtilForTest() {
         initMocks(this);
+
+        when(tradeUtilMock.strategyUtil()).thenReturn(strategyUtilMock);
+        when(tradeUtilMock.orderRepository()).thenReturn(orderRepositoryMock);
+        when(tradeUtilMock.labelUtil()).thenReturn(orderLabelUtilMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
 

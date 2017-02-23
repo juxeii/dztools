@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.ZorroLogger;
+import com.jforex.dzjforex.Zorro;
 
 // Code from http://www.dukascopy.com/wiki/#JForex_SDK_LIVE_mode
 public class PinProvider {
@@ -38,7 +38,7 @@ public class PinProvider {
             pd = new PinDialog();
         } catch (final Exception e) {
             logger.error("getPin exc: " + e.getMessage());
-            ZorroLogger.indicateError();
+            Zorro.indicateError();
         }
         return pd.pinfield.getText();
     }
@@ -77,7 +77,7 @@ public class PinProvider {
                     captchaImage.setIcon(new ImageIcon(client.getCaptchaImage(liveURL)));
                 } catch (final Exception ex) {
                     logger.error("getPin exc: " + ex.getMessage());
-                    ZorroLogger.indicateError();
+                    Zorro.indicateError();
                 }
             });
             getContentPane().add(buttonPane, BorderLayout.SOUTH);

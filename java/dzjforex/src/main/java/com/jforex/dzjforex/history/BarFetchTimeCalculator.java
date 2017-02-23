@@ -20,9 +20,10 @@ public class BarFetchTimeCalculator {
                                    final int nTicks,
                                    final Period period) {
         final long endTimeInMillis = TimeConvert.millisFromOLEDate(endTimeUTC);
-        final long endTimeForBar = historyProvider.getBarStart(period, endTimeInMillis);
-        final long startTimeEstimation = endTimeForBar - (nTicks - 1) * period.getInterval();
-        final long startTimeForBar = historyProvider.getBarStart(period, startTimeEstimation);
+        final long endTimeForBar = historyProvider
+            .fetchBarStart(period, endTimeInMillis)
+            .blockingFirst();
+        final long startTimeForBar = endTimeForBar - (nTicks - 1) * period.getInterval();
         logger.debug("Calculated bar fetch times: \n"
                 + "endTimeForBar: " + TimeConvert.formatDateTime(endTimeForBar) + "\n"
                 + "nTicks: " + nTicks + "\n"

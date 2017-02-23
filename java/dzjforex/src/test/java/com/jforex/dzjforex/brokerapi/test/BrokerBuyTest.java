@@ -1,210 +1,211 @@
 package com.jforex.dzjforex.brokerapi.test;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+
+import java.util.Optional;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+
+import com.dukascopy.api.IEngine.OrderCommand;
+import com.dukascopy.api.IOrder;
+import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.brokerapi.BrokerBuy;
+import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderSubmit;
+import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
-//@RunWith(HierarchicalContextRunner.class)
+import de.bechte.junit.runners.context.HierarchicalContextRunner;
+
+@RunWith(HierarchicalContextRunner.class)
 public class BrokerBuyTest extends CommonUtilForTest {
 
-//    private BrokerBuy brokerBuy;
-//
-//    @Mock
-//    private SubmitHandler submitHandlerMock;
-//    @Mock
-//    private TradeUtil tradeUtilMock;
-//    @Mock
-//    private IOrder orderMock;
-//    private final Instrument buyInstrument = Instrument.EURUSD;
-//    private final OrderCommand command = OrderCommand.BUY;
-//    private final int nAmount = 12500;
-//    private final double tradeParams[] = new double[3];
-//
-//    @Before
-//    public void setUp() {
-//        tradeParams[0] = nAmount;
-//
-//        brokerBuy = new BrokerBuy(submitHandlerMock, tradeUtilMock);
-//    }
-//
-//    @Test
-//    public void anInvalidAssetNameGivesBrokerBuyFail() {
-//        when(tradeUtilMock.maybeInstrumentForTrading("Invalid"))
-//            .thenReturn(Optional.empty());
-//
-//        assertThat(brokerBuy.openTrade("Invalid", tradeParams),
-//                   equalTo(Constant.BROKER_BUY_FAIL));
-//    }
-//
-//    public class WhenAssetNameIsValid {
-//
-//        private final String assetName = "EUR/USD";
-//        private int returnCode;
-//        private final String orderIDName = "1234";
-//        private final int orderID = 1234;
-//        private final double tradeAmount = 0.0125;
-//        private final double dStopDist = 0.00023;
-//        private final double slPrice = 1.32456;
-//        private final String orderLabelPrefix = "Zorro";
-//        private final String orderLabel = orderLabelPrefix + orderID;
-//
-//        private void setupSubmitHandlerOrder(final IOrder order,
-//                                             final double slPrice) {
-//            when(submitHandlerMock.submit(buyInstrument,
-//                                          command,
-//                                          tradeAmount,
-//                                          orderLabel,
-//                                          slPrice))
-//                                              .thenReturn(order);
-//        }
-//
-//        @Before
-//        public void setUp() {
-//            when(tradeUtilMock.maybeInstrumentForTrading(assetName))
-//                .thenReturn(Optional.of(buyInstrument));
-//            when(tradeUtilMock.contractsToAmount(nAmount))
-//                .thenReturn(tradeAmount);
-//            when(tradeUtilMock.orderCommandForContracts(nAmount))
-//                .thenReturn(command);
-//            when(tradeUtilMock.create())
-//                .thenReturn(orderLabel);
-//            when(tradeUtilMock.calculateSL(buyInstrument,
-//                                           command,
-//                                           dStopDist))
-//                                               .thenReturn(slPrice);
-//        }
-//
-//        public class WhenOrderIsValid {
-//
-//            private final double openPrice = 1.32665;
-//
-//            @Before
-//            public void setUp() {
-//                when(orderMock.getOpenPrice()).thenReturn(openPrice);
-//                when(orderMock.getId()).thenReturn(orderIDName);
-//            }
-//
-//            public class WhendStopDistIsNegative {
-//
-//                @Before
-//                public void setUp() {
-//                    setupSubmitHandlerOrder(orderMock, 0.0);
-//
-//                    tradeParams[1] = -1;
-//
-//                    returnCode = brokerBuy.openTrade(assetName, tradeParams);
-//                }
-//
-//                @Test
-//                public void returnCodeIsBuyOpposite() {
-//                    assertThat(returnCode, equalTo(Constant.BROKER_BUY_OPPOSITE_CLOSE));
-//                }
-//
-//                @Test
-//                public void openPriceIsStoredAtTradeparams() {
-//                    assertThat(tradeParams[2], equalTo(openPrice));
-//                }
-//
-//                @Test
-//                public void callToSubmitHandlerIsCorrectWithNoSL() {
-//                    verify(submitHandlerMock).submit(buyInstrument,
-//                                                     command,
-//                                                     tradeAmount,
-//                                                     orderLabel,
-//                                                     0.0);
-//                }
-//            }
-//
-//            public class WhendStopDistIsZero {
-//
-//                @Before
-//                public void setUp() {
-//                    setupSubmitHandlerOrder(orderMock, 0.0);
-//
-//                    tradeParams[1] = 0.0;
-//
-//                    returnCode = brokerBuy.openTrade(assetName, tradeParams);
-//                }
-//
-//                @Test
-//                public void returnCodeIsOrderID() {
-//                    assertThat(returnCode, equalTo(orderID));
-//                }
-//
-//                @Test
-//                public void openPriceIsStoredAtTradeparams() {
-//                    assertThat(tradeParams[2], equalTo(openPrice));
-//                }
-//
-//                @Test
-//                public void callToSubmitHandlerIsCorrectWithNoSL() {
-//                    verify(submitHandlerMock).submit(buyInstrument,
-//                                                     command,
-//                                                     tradeAmount,
-//                                                     orderLabel,
-//                                                     0.0);
-//                }
-//            }
-//
-//            public class WhendStopDistIsPositive {
-//
-//                @Before
-//                public void setUp() {
-//                    setupSubmitHandlerOrder(orderMock, slPrice);
-//
-//                    tradeParams[1] = dStopDist;
-//
-//                    returnCode = brokerBuy.openTrade(assetName, tradeParams);
-//                }
-//
-//                @Test
-//                public void returnCodeIsOrderID() {
-//                    assertThat(returnCode, equalTo(orderID));
-//                }
-//
-//                @Test
-//                public void openPriceIsStoredAtTradeparams() {
-//                    assertThat(tradeParams[2], equalTo(openPrice));
-//                }
-//
-//                @Test
-//                public void callToSubmitHandlerIsCorrect() {
-//                    verify(submitHandlerMock).submit(buyInstrument,
-//                                                     command,
-//                                                     tradeAmount,
-//                                                     orderLabel,
-//                                                     slPrice);
-//                }
-//            }
-//        }
-//
-//        public class WhenOrderIsInValid {
-//
-//            @Before
-//            public void setUp() {
-//                setupSubmitHandlerOrder(null, slPrice);
-//
-//                tradeParams[1] = dStopDist;
-//
-//                returnCode = brokerBuy.openTrade(assetName, tradeParams);
-//            }
-//
-//            @Test
-//            public void returnCodeIsBrokerBuyFail() {
-//                assertThat(returnCode, equalTo(Constant.BROKER_BUY_FAIL));
-//            }
-//
-//            @Test
-//            public void openPriceIsNotStoredAtTradeparams() {
-//                assertThat(tradeParams[2], equalTo(0.0));
-//            }
-//
-//            @Test
-//            public void callToSubmitHandlerIsCorrect() {
-//                verify(submitHandlerMock).submit(buyInstrument,
-//                                                 command,
-//                                                 tradeAmount,
-//                                                 orderLabel,
-//                                                 slPrice);
-//            }
-//        }
-//    }
+    private BrokerBuy brokerBuy;
+
+    @Mock
+    private OrderSubmit orderSubmitMock;
+    @Mock
+    private IOrder orderMock;
+    private int openTradeResult;
+    private final String instrumentName = "EUR/USD";
+    private final int tradeId = 1;
+    private final String newLabel = "Zorro" + tradeId;
+    private final Instrument tradeInstrument = Instrument.EURUSD;
+    private final OrderCommand command = OrderCommand.BUY;
+    private final int nAmount = 12500;
+    private final double dStopDist = 0.0015;
+    private final double orderAmount = 0.0125;
+    private final double slPrice = 1.23457;
+    private final double openPrice = 1.23466;
+    private final double tradeParams[] = new double[3];
+
+    @Before
+    public void setUp() {
+        tradeParams[0] = nAmount;
+        tradeParams[1] = dStopDist;
+
+        brokerBuy = new BrokerBuy(orderSubmitMock, tradeUtilMock);
+    }
+
+    private int callOpenTrade() {
+        return brokerBuy.openTrade(instrumentName, tradeParams);
+    }
+
+    @Test
+    public void whenTradingIsNotAllowedReturnValueIsBrokerBuyFail() {
+        when(tradeUtilMock.isTradingAllowed()).thenReturn(false);
+
+        assertThat(callOpenTrade(),
+                   equalTo(ZorroReturnValues.BROKER_BUY_FAIL.getValue()));
+        verifyZeroInteractions(orderSubmitMock);
+    }
+
+    public class WhenTradingIsAllowed {
+
+        @Before
+        public void setUp() {
+            when(tradeUtilMock.isTradingAllowed()).thenReturn(true);
+        }
+
+        @Test
+        public void whenInstrumentNameIsInvalidReturnValueIsBrokerBuyFail() {
+            when(tradeUtilMock.maybeInstrumentForTrading(instrumentName))
+                .thenReturn(Optional.empty());
+
+            assertThat(callOpenTrade(),
+                       equalTo(ZorroReturnValues.BROKER_BUY_FAIL.getValue()));
+            verifyZeroInteractions(orderSubmitMock);
+        }
+
+        public class WhenInstrumentNameIsValid {
+
+            private void setSubmitResult(final OrderSubmitResult result) {
+                when(orderSubmitMock.run(tradeInstrument,
+                                         command,
+                                         orderAmount,
+                                         newLabel,
+                                         slPrice))
+                                             .thenReturn(result);
+            }
+
+            private void verifySubmitCall(final double slPrice) {
+                verify(orderSubmitMock).run(tradeInstrument,
+                                            command,
+                                            orderAmount,
+                                            newLabel,
+                                            slPrice);
+            }
+
+            @Before
+            public void setUp() {
+                when(tradeUtilMock.maybeInstrumentForTrading(instrumentName))
+                    .thenReturn(Optional.of(tradeInstrument));
+                when(tradeUtilMock.contractsToAmount(nAmount))
+                    .thenReturn(orderAmount);
+                when(tradeUtilMock.orderCommandForContracts(nAmount))
+                    .thenReturn(command);
+                when(tradeUtilMock.orderByID(tradeId))
+                    .thenReturn(orderMock);
+                when(tradeUtilMock.calculateSL(tradeInstrument,
+                                               command,
+                                               dStopDist))
+                                                   .thenReturn(slPrice);
+
+                when(orderLabelUtilMock.create())
+                    .thenReturn(newLabel);
+                when(orderLabelUtilMock.idFromLabel(newLabel))
+                    .thenReturn(tradeId);
+
+                when(orderMock.getOpenPrice())
+                    .thenReturn(openPrice);
+            }
+
+            public class WhenSubmitFails {
+
+                @Before
+                public void setUp() {
+                    setSubmitResult(OrderSubmitResult.FAIL);
+
+                    openTradeResult = callOpenTrade();
+                }
+
+                @Test
+                public void returnValueIsBrokerBuyFail() {
+                    assertThat(openTradeResult,
+                               equalTo(ZorroReturnValues.BROKER_BUY_FAIL.getValue()));
+                }
+
+                @Test
+                public void submitIsCalled() {
+                    verifySubmitCall(slPrice);
+                }
+            }
+
+            public class WhenSubmitOK {
+
+                @Before
+                public void setUp() {
+                    setSubmitResult(OrderSubmitResult.OK);
+                }
+
+                public class WhenOppositeClose {
+
+                    @Before
+                    public void setUp() {
+                        tradeParams[1] = -1;
+
+                        when(tradeUtilMock.calculateSL(tradeInstrument,
+                                                       command,
+                                                       dStopDist))
+                                                           .thenReturn(0.0);
+
+                        openTradeResult = callOpenTrade();
+                    }
+
+                    @Test
+                    public void returnValueIsOppositeClose() {
+                        assertThat(openTradeResult,
+                                   equalTo(ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()));
+                    }
+
+                    @Test
+                    public void submitIsCalled() {
+                        verifySubmitCall(0.0);
+                    }
+
+                    @Test
+                    public void openPriceIsFilled() {
+                        assertThat(tradeParams[2], equalTo(openPrice));
+                    }
+                }
+
+                public class WhenNormalBuy {
+
+                    @Before
+                    public void setUp() {
+                        openTradeResult = callOpenTrade();
+                    }
+
+                    @Test
+                    public void returnValueIsTradeId() {
+                        assertThat(openTradeResult, equalTo(tradeId));
+                    }
+
+                    @Test
+                    public void submitIsCalled() {
+                        verifySubmitCall(slPrice);
+                    }
+
+                    @Test
+                    public void openPriceIsFilled() {
+                        assertThat(tradeParams[2], equalTo(openPrice));
+                    }
+                }
+            }
+        }
+    }
 }

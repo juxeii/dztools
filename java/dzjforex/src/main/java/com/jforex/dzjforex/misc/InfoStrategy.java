@@ -8,12 +8,18 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
+import com.jforex.dzjforex.Zorro;
 import com.jforex.programming.strategy.JForexUtilsStrategy;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class InfoStrategy extends JForexUtilsStrategy {
 
+    private final Zorro zorro;
     private IContext context;
+
+    public InfoStrategy(final Zorro zorro) {
+        this.zorro = zorro;
+    }
 
     public IContext getContext() {
         return context;
@@ -50,5 +56,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
     @Override
     public void onJFTick(final Instrument instrument,
                          final ITick tick) throws JFException {
+        zorro.callProgress(0);
     }
 }

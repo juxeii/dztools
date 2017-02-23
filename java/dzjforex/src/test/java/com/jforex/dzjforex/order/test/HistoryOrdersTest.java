@@ -23,6 +23,7 @@ import com.jforex.dzjforex.test.util.CommonOrderForTest;
 import com.jforex.programming.misc.DateTimeUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Observable;
 
 @RunWith(HierarchicalContextRunner.class)
 public class HistoryOrdersTest extends CommonOrderForTest {
@@ -65,12 +66,25 @@ public class HistoryOrdersTest extends CommonOrderForTest {
         private final long from = DateTimeUtil.millisFromDateTime(fromDate);
         private final Set<Instrument> subscribedInstruments = new HashSet<>();
 
+        private final List<IOrder> ordersForEURUSD = new ArrayList<>();
+        private final List<IOrder> ordersForGBPJPY = new ArrayList<>();
+        private List<IOrder> returnedList;
+
         @Before
         public void setUp() {
             subscribedInstruments.add(Instrument.EURUSD);
             subscribedInstruments.add(Instrument.GBPJPY);
             when(brokerSubscribeMock.subscribedInstruments())
                 .thenReturn(subscribedInstruments);
+
+            when(historyProviderMock.ordersByInstrument(Instrument.EURUSD,
+                                                        from,
+                                                        to))
+                                                            .thenReturn(Observable.just(ordersForEURUSD));
+            when(historyProviderMock.ordersByInstrument(Instrument.GBPJPY,
+                                                        from,
+                                                        to))
+                                                            .thenReturn(Observable.just(ordersForGBPJPY));
         }
 
         @Test
@@ -87,24 +101,11 @@ public class HistoryOrdersTest extends CommonOrderForTest {
 
         public class WithOrdersPresent {
 
-            private final List<IOrder> ordersForEURUSD = new ArrayList<>();
-            private final List<IOrder> ordersForGBPJPY = new ArrayList<>();
-            private List<IOrder> returnedList;
-
             @Before
             public void setUp() {
                 ordersForEURUSD.add(orderEURUSDMockA);
                 ordersForEURUSD.add(orderEURUSDMockB);
                 ordersForGBPJPY.add(orderGBPJPYMock);
-
-                when(historyProviderMock.ordersByInstrument(Instrument.EURUSD,
-                                                            from,
-                                                            to))
-                                                                .thenReturn(ordersForEURUSD);
-                when(historyProviderMock.ordersByInstrument(Instrument.GBPJPY,
-                                                            from,
-                                                            to))
-                                                                .thenReturn(ordersForGBPJPY);
 
                 returnedList = historyOrders.get();
             }

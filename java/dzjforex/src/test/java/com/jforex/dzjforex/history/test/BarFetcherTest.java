@@ -24,6 +24,7 @@ import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.TimeConvert;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Observable;
 
 @RunWith(HierarchicalContextRunner.class)
 public class BarFetcherTest extends CommonUtilForTest {
@@ -127,7 +128,7 @@ public class BarFetcherTest extends CommonUtilForTest {
                                            offerSide,
                                            calculatedBarStartTime,
                                            calculatedBarEndTime))
-                                               .thenReturn(barList);
+                                               .thenReturn(Observable.just(barList));
     }
 
     @Test

@@ -15,8 +15,6 @@ import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.programming.misc.DateTimeUtil;
 
-import io.reactivex.Observable;
-
 public class HistoryOrders {
 
     private final HistoryProvider historyProvider;
@@ -61,14 +59,12 @@ public class HistoryOrders {
     private List<IOrder> getForInstrument(final Instrument instrument,
                                           final long from,
                                           final long to) {
-        final List<IOrder> orders = Observable
-            .fromCallable(() -> historyProvider.ordersByInstrument(instrument,
-                                                                   from,
-                                                                   to))
-            .doOnSubscribe(d -> logger.debug("Fetching history orders for " + instrument))
-            .flatMap(Observable::fromIterable)
-            .toList()
-            .blockingGet();
+        final List<IOrder> orders = historyProvider
+            .ordersByInstrument(instrument,
+                                from,
+                                to)
+            .blockingFirst();
+
         logger.debug("Fetched " + orders.size() + " history orders for " + instrument);
 
         return orders;

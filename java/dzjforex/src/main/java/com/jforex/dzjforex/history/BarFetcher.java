@@ -47,11 +47,14 @@ public class BarFetcher {
         final BarFetchTimes barFetchTimes = barFetchTimeCalculator.calculate(endDate,
                                                                              nTicks,
                                                                              period);
-        final List<IBar> bars = historyProvider.fetchBars(instrument,
-                                                          period,
-                                                          OfferSide.ASK,
-                                                          barFetchTimes.startTime(),
-                                                          barFetchTimes.endTime());
+        final List<IBar> bars = historyProvider
+            .fetchBars(instrument,
+                       period,
+                       OfferSide.ASK,
+                       barFetchTimes.startTime(),
+                       barFetchTimes.endTime())
+            .blockingFirst();
+
         logger.debug("Fetched " + bars.size() + " bars for " + instrument + " with nTicks " + nTicks);
         return bars.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()

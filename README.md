@@ -16,7 +16,7 @@ This a plugin for [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/
 
 ## Configuration/Usage
 
-After extracting the dztools archive you should see a *dukascopy-{version}.dll* and a folder *dukascopy* in the *Plugin* directory of your Zorro installation.
+After extracting the dztools archive you should see a *dukascopy.dll* and a folder *dukascopy* in the *Plugin* directory of your Zorro installation.
 
 Go to the *dukascopy* folder and open the *Plugin.properties* file with a text editor.
 

@@ -38,8 +38,9 @@ public class LoginHandler {
     }
 
     private int loginWithCredentials(final LoginCredentials credentials) {
-        loginState = LoginState.CONNECTING;
+        logger.debug("Login to Dukascopy...");
 
+        loginState = LoginState.CONNECTING;
         authentification
             .login(credentials)
             .subscribeOn(Schedulers.io())

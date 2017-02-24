@@ -44,7 +44,6 @@ import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.dzjforex.time.TickTimeProvider;
-import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -56,7 +55,7 @@ public class ZorroBridge {
     private final PinProvider pinProvider;
     private final InfoStrategy infoStrategy;
     private long strategyID;
-    private final Zorro zorro = new Zorro();
+    private final Zorro zorro;
     private final CredentialsFactory credentialsFactory;
     private AccountInfo accountInfo;
     private final LoginHandler loginHandler;
@@ -76,7 +75,6 @@ public class ZorroBridge {
     private OrderClose orderClose;
     private OrderSetSL setSLHandler;
     private BrokerSell brokerSell;
-    private TimeConvert timeConvert;
     private BrokerSubscribe brokerSubscribe;
     private RunningOrders runningOrders;
     private HistoryOrders historyOrders;
@@ -96,15 +94,17 @@ public class ZorroBridge {
     public ZorroBridge() {
         initClientInstance();
 
+        zorro = new Zorro(pluginConfig);
         clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
         pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
         credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         loginHandler = new LoginHandler(clientUtil.authentification(),
-                                        credentialsFactory);
+                                        credentialsFactory,
+                                        zorro);
         brokerLogin = new BrokerLogin(loginHandler,
                                       client,
                                       pluginConfig);
-        infoStrategy = new InfoStrategy(zorro);
+        infoStrategy = new InfoStrategy();
     }
 
     private void initClientInstance() {

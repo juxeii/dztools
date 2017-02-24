@@ -14,12 +14,7 @@ import com.jforex.programming.strategy.StrategyUtil;
 
 public class InfoStrategy extends JForexUtilsStrategy {
 
-    private final Zorro zorro;
     private IContext context;
-
-    public InfoStrategy(final Zorro zorro) {
-        this.zorro = zorro;
-    }
 
     public IContext getContext() {
         return context;

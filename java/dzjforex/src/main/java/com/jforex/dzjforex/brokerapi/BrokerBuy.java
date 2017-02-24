@@ -35,8 +35,8 @@ public class BrokerBuy {
             return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
 
         logger.info("Trying to open trade for " + instrumentName
-                + " with nAmount:  " + tradeParams[0]
-                + " and dStopDist:  " + tradeParams[1]);
+                + " with nAmount: " + tradeParams[0]
+                + " and dStopDist: " + tradeParams[1]);
         return submit(maybeInstrument.get(), tradeParams);
     }
 

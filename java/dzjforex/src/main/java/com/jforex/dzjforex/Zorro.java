@@ -32,7 +32,7 @@ public class Zorro {
         }
     }
 
-    public static int callProgress(final int progress) {
+    public int callProgress(final int progress) {
         return jcallback_BrokerProgress(progress);
     }
 

@@ -12,7 +12,7 @@ This a plugin for [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/
 
 4.) Download the [dukascopy.zip](https://github.com/juxeii/dztools/releases) archive.
 
-5.) Extract the archive into *${yourZorroInstallPath}* folder.
+5.) Extract the archive into *${yourZorroInstallPath\Plugin}* folder.
 
 ## Configuration/Usage
 

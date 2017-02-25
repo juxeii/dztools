@@ -1,7 +1,6 @@
 package com.jforex.dzjforex;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,22 +13,36 @@ import io.reactivex.schedulers.Schedulers;
 public class Zorro {
 
     private final PluginConfig pluginConfig;
+    private int taskResult;
+    private final Observable<Integer> heartBeat;
 
+    private final static int running = 10;
+    private final static int heartBeatIndication = 1;
     private final static Logger logger = LogManager.getLogger(Zorro.class);
 
     public Zorro(final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
+
+        heartBeat = Observable
+            .interval(0L,
+                      pluginConfig.zorroProgressInterval(),
+                      TimeUnit.MILLISECONDS)
+            .map(i -> running);
     }
 
-    public void progressWait(final BooleanSupplier condition) {
-        while (condition.getAsBoolean()) {
-            callProgress(1);
-            Observable
-                .timer(pluginConfig.zorroProgressInterval(),
-                       TimeUnit.MILLISECONDS,
-                       Schedulers.io())
-                .blockingFirst();
-        }
+    public int progressWait(final Observable<Integer> task) {
+        Observable.merge(heartBeat, task)
+            .subscribeOn(Schedulers.io())
+            .takeUntil(i -> i != running)
+            .blockingSubscribe(i -> {
+                logger.info("Tick " + i);
+                if (i != running) {
+                    taskResult = i;
+                } else
+                    callProgress(heartBeatIndication);
+            });
+
+        return taskResult;
     }
 
     public int callProgress(final int progress) {

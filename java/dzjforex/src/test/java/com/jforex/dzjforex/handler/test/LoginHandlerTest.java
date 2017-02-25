@@ -3,22 +3,16 @@ package com.jforex.dzjforex.handler.test;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.test.util.RxTestUtil;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.ConnectionLostException;
 
@@ -60,16 +54,11 @@ public class LoginHandlerTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
+            when(zorroMock.progressWait(any()))
+                .thenReturn(ZorroReturnValues.LOGIN_OK.getValue());
+
             when(authentificationMock.login(loginCredentials))
                 .thenReturn(Completable.complete());
-
-            Mockito.doAnswer(new Answer<Void>() {
-                @Override
-                public Void answer(final InvocationOnMock invocation) throws Throwable {
-                    RxTestUtil.advanceTimeBy(1500L, TimeUnit.MILLISECONDS);
-                    return null;
-                }
-            }).when(zorroMock).progressWait(any());
 
             callLogin();
         }
@@ -113,6 +102,11 @@ public class LoginHandlerTest extends CommonUtilForTest {
         @Test
         public void authentificationIsCalledWithCredentials() {
             verify(authentificationMock).login(loginCredentials);
+        }
+
+        @Test
+        public void progressWaitIsCalled() {
+            verify(zorroMock).progressWait(any());
         }
     }
 }

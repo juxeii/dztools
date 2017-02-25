@@ -79,12 +79,14 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         }
 
         @Test
-        public void instrumentSubscriberCallContainsGBPAUDAndEURGBP() {
+        public void instrumentSubscriberCallContainsGBPAUDAndEURGBPAndEURAUD() {
             assetName = "GBP/AUD";
 
             brokerSubscribe.subscribe(assetName);
 
-            assertInstrumentSubscriberCall(Instrument.GBPAUD, Instrument.EURGBP);
+            assertInstrumentSubscriberCall(Instrument.GBPAUD,
+                                           Instrument.EURGBP,
+                                           Instrument.EURAUD);
         }
     }
 
@@ -105,12 +107,14 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         }
 
         @Test
-        public void instrumentSubscriberCallContainsEURUSDAndEURJPY() {
+        public void instrumentSubscriberCallContainsEURUSDAndEURJPYAndUSDJPY() {
             assetName = "EUR/USD";
 
             brokerSubscribe.subscribe(assetName);
 
-            assertInstrumentSubscriberCall(Instrument.EURUSD, Instrument.EURJPY);
+            assertInstrumentSubscriberCall(Instrument.EURUSD,
+                                           Instrument.EURJPY,
+                                           Instrument.USDJPY);
         }
     }
 

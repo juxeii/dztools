@@ -45,7 +45,6 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected Clock clockMock;
 
-    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final String jnlpDEMO = "jnlpDEMO";
     protected static final String jnlpReal = "jnlpReal";
     protected static final String username = "John";
@@ -66,6 +65,7 @@ public class CommonUtilForTest extends BDDMockito {
                                  password,
                                  pin);
 
+    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final JFException jfException = new JFException("");
     protected static final Logger logger = LogManager.getLogger(CommonUtilForTest.class);
 

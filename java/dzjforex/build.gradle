@@ -12,7 +12,7 @@ The Java plugin part for Zorro which lets you trade with Dukascopy
 Project name: ${project.name}
 """
 
-def deployFolder = "${buildDir}/deploy"
+def pluginFolder = "${buildDir}/Plugin"
 
 repositories {
    mavenLocal()
@@ -64,20 +64,8 @@ task copyDepsToPluginLibFolder(type: Copy) {
     into "${zorroPath}/Plugin/dukascopy/lib"
 }
 
-task createDeployFolder(dependsOn: ':jar') {
-    delete deployFolder
-    mkdir deployFolder
-    
-    def strategyFolder = "${deployFolder}/Strategy"
-    mkdir strategyFolder
-    
-    def configFolder = "src/main/config"
-    copy{
-        from "${configFolder}/DukascopyDownload.c"
-        into strategyFolder
-    }
-    
-    def pluginFolder = "${deployFolder}/Plugin"
+task createPluginFolder(dependsOn: ':jar') {
+    delete pluginFolder
     mkdir pluginFolder
     
     copy{
@@ -87,6 +75,7 @@ task createDeployFolder(dependsOn: ':jar') {
     
     def dukascopyFolder = "${pluginFolder}/dukascopy"
     mkdir dukascopyFolder
+    def configFolder = "src/main/config"
     
     copy{
         from jar
@@ -117,7 +106,7 @@ task createDeployFolder(dependsOn: ':jar') {
     }
 }
 
-task dzDeploy(type: Zip, dependsOn: ':createDeployFolder') {
+task dzDeploy(type: Zip, dependsOn: ':createPluginFolder') {
     baseName = project.name
-    from deployFolder
+    from pluginFolder
 }

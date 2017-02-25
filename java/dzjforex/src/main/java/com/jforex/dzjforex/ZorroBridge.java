@@ -22,7 +22,6 @@ import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
-import com.jforex.dzjforex.history.BarFetchTimeCalculator;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
@@ -81,7 +80,6 @@ public class ZorroBridge {
     private OrderRepository orderRepository;
     private BrokerHistory2 brokerHistory2;
     private BarFetcher barFetcher;
-    private BarFetchTimeCalculator barFetchTimeCalculator;
     private TickFetcher tickFetcher;
     private NTPFetch ntpFetch;
     private NTPProvider ntpProvider;
@@ -133,8 +131,7 @@ public class ZorroBridge {
         historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
         labelUtil = new OrderLabelUtil(pluginConfig, Clock.systemDefaultZone());
 
-        barFetchTimeCalculator = new BarFetchTimeCalculator(historyProvider);
-        barFetcher = new BarFetcher(historyProvider, barFetchTimeCalculator);
+        barFetcher = new BarFetcher(historyProvider);
         tickFetcher = new TickFetcher(historyProvider);
         brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);
         brokerAsset = new BrokerAsset(accountInfo, strategyUtil);

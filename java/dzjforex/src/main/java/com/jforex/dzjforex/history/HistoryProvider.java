@@ -82,19 +82,6 @@ public class HistoryProvider {
             .onErrorResumeNext(Observable.just(new ArrayList<>()));
     }
 
-    public Observable<Long> fetchBarStart(final Period period,
-                                          final long barTime) {
-        return Observable
-            .fromCallable(() -> history.getBarStart(period, barTime))
-            .doOnSubscribe(d -> logger.debug("Starting to fetch bar start for "
-                    + "period: " + period
-                    + "barTime: " + DateTimeUtil.formatMillis(barTime)))
-            .doOnComplete(() -> logger.debug("Fetching bar start completed."))
-            .retryWhen(this::historyRetryWhen)
-            .doOnError(err -> logger.error("Fetching bar start failed! " + err.getMessage()))
-            .onErrorResumeNext(Observable.just(0L));
-    }
-
     public Observable<List<IOrder>> ordersByInstrument(final Instrument instrument,
                                                        final long from,
                                                        final long to) {

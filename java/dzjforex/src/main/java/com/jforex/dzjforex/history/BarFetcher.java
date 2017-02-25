@@ -17,14 +17,11 @@ import com.jforex.programming.misc.DateTimeUtil;
 public class BarFetcher {
 
     private final HistoryProvider historyProvider;
-    private final BarFetchTimeCalculator barFetchTimeCalculator;
 
     private final static Logger logger = LogManager.getLogger(BarFetcher.class);
 
-    public BarFetcher(final HistoryProvider historyProvider,
-                      final BarFetchTimeCalculator barFetchTimeCalculator) {
+    public BarFetcher(final HistoryProvider historyProvider) {
         this.historyProvider = historyProvider;
-        this.barFetchTimeCalculator = barFetchTimeCalculator;
     }
 
     public int fetch(final Instrument instrument,
@@ -33,29 +30,31 @@ public class BarFetcher {
                      final int tickMinutes,
                      final int nTicks,
                      final double tickParams[]) {
+        final long startMillis = TimeConvert.millisFromOLEDateRoundMinutes(startDate);
+        final long endMillis = TimeConvert.millisFromOLEDateRoundMinutes(endDate);
+
         logger.debug("Requested bars for instrument " + instrument + ": \n "
                 + "startDateUTCRaw: " + startDate + ": \n "
                 + "endDateUTCRaw: " + endDate + ": \n "
-                + "startDate: " + DateTimeUtil.formatMillis(TimeConvert.millisFromOLEDateRoundMinutes(startDate))
+                + "startDate: " + DateTimeUtil.formatMillis(startMillis)
                 + ": \n "
-                + "endDate: " + DateTimeUtil.formatMillis(TimeConvert.millisFromOLEDateRoundMinutes(endDate))
+                + "endDate: " + DateTimeUtil.formatMillis(endMillis)
                 + ": \n "
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
         final Period period = TimeConvert.getPeriodFromMinutes(tickMinutes);
-        final BarFetchTimes barFetchTimes = barFetchTimeCalculator.calculate(endDate,
-                                                                             nTicks,
-                                                                             period);
+
+        final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
         final List<IBar> bars = historyProvider
             .fetchBars(instrument,
                        period,
                        OfferSide.ASK,
-                       barFetchTimes.startTime(),
-                       barFetchTimes.endTime())
+                       startMillisAdapted,
+                       endMillis)
             .blockingFirst();
-
         logger.debug("Fetched " + bars.size() + " bars for " + instrument + " with nTicks " + nTicks);
+
         return bars.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillBars(bars, tickParams);

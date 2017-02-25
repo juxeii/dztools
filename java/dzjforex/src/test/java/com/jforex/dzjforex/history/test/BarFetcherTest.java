@@ -16,8 +16,6 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.history.BarFetchTimeCalculator;
-import com.jforex.dzjforex.history.BarFetchTimes;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
@@ -33,8 +31,6 @@ public class BarFetcherTest extends CommonUtilForTest {
 
     @Mock
     private HistoryProvider historyProviderMock;
-    @Mock
-    private BarFetchTimeCalculator barFetchTimeCalculatorMock;
     @Mock
     private IBar barAMock;
     @Mock
@@ -66,9 +62,6 @@ public class BarFetcherTest extends CommonUtilForTest {
     private final int nTicks = 270;
     private double tickParams[];
     private final List<IBar> barMockList = new ArrayList<>();
-    private final long calculatedBarStartTime = 11L;
-    private final long calculatedBarEndTime = 17L;
-    private final BarFetchTimes barFetchTimes = new BarFetchTimes(calculatedBarStartTime, calculatedBarEndTime);
 
     @Before
     public void setUp() {
@@ -90,12 +83,8 @@ public class BarFetcherTest extends CommonUtilForTest {
         barMockList.add(barAMock);
         barMockList.add(barBMock);
         tickParams = new double[barMockList.size() * 7];
-        when(barFetchTimeCalculatorMock.calculate(endDate,
-                                                  nTicks,
-                                                  period))
-                                                      .thenReturn(barFetchTimes);
 
-        barFetcher = new BarFetcher(historyProviderMock, barFetchTimeCalculatorMock);
+        barFetcher = new BarFetcher(historyProviderMock);
     }
 
     private void setBarExpectations(final IBar barMock,
@@ -123,11 +112,11 @@ public class BarFetcherTest extends CommonUtilForTest {
     }
 
     private void setReturnedTickList(final List<IBar> barList) {
-        when(historyProviderMock.fetchBars(fetchInstrument,
-                                           period,
-                                           offerSide,
-                                           calculatedBarStartTime,
-                                           calculatedBarEndTime))
+        when(historyProviderMock.fetchBars(eq(fetchInstrument),
+                                           eq(period),
+                                           eq(offerSide),
+                                           anyLong(),
+                                           anyLong()))
                                                .thenReturn(Observable.just(barList));
     }
 
@@ -156,11 +145,11 @@ public class BarFetcherTest extends CommonUtilForTest {
 
         @Test
         public void fetchWasCalledCorrectOnHistoryProvider() {
-            verify(historyProviderMock).fetchBars(fetchInstrument,
-                                                  period,
-                                                  offerSide,
-                                                  calculatedBarStartTime,
-                                                  calculatedBarEndTime);
+            verify(historyProviderMock).fetchBars(eq(fetchInstrument),
+                                                  eq(period),
+                                                  eq(offerSide),
+                                                  anyLong(),
+                                                  anyLong());
         }
 
         @Test

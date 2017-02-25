@@ -11,7 +11,7 @@ import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentRepository;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.programming.instrument.InstrumentFactory;
 
@@ -29,7 +29,7 @@ public class BrokerSubscribe {
     }
 
     public int subscribe(final String instrumentName) {
-        final Optional<Instrument> maybeInstrument = InstrumentHandler.fromName(instrumentName);
+        final Optional<Instrument> maybeInstrument = InstrumentRepository.maybeFromName(instrumentName);
         return maybeInstrument.isPresent()
                 ? subscribeValidinstrumentName(maybeInstrument.get())
                 : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();

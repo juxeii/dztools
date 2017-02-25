@@ -10,7 +10,7 @@ import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentRepository;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.MathUtil;
@@ -80,7 +80,7 @@ public class TradeUtil {
 
     public Optional<Instrument> maybeInstrumentForTrading(final String assetName) {
         return isTradingAllowed()
-                ? InstrumentHandler.fromName(assetName)
+                ? InstrumentRepository.maybeFromName(assetName)
                 : Optional.empty();
     }
 

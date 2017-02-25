@@ -88,6 +88,9 @@ public class LoginHandlerTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
+            when(zorroMock.progressWait(any()))
+                .thenReturn(ZorroReturnValues.LOGIN_FAIL.getValue());
+
             when(authentificationMock.login(loginCredentials))
                 .thenReturn(Completable.error(new ConnectionLostException("Login fail!")));
 

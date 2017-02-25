@@ -9,14 +9,14 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.Instrument;
 import com.jforex.programming.instrument.InstrumentFactory;
 
-public class InstrumentHandler {
+public class InstrumentRepository {
 
-    private static final HashMap<String, Instrument> instrumentByZorroName = new HashMap<String, Instrument>();
-    private final static Logger logger = LogManager.getLogger(InstrumentHandler.class);
+    private final static HashMap<String, Instrument> instrumentByAssetName = new HashMap<String, Instrument>();
+    private final static Logger logger = LogManager.getLogger(InstrumentRepository.class);
 
-    public static Optional<Instrument> fromName(final String assetName) {
-        return instrumentByZorroName.containsKey(assetName)
-                ? Optional.of(instrumentByZorroName.get(assetName))
+    public static Optional<Instrument> maybeFromName(final String assetName) {
+        return instrumentByAssetName.containsKey(assetName)
+                ? Optional.of(instrumentByAssetName.get(assetName))
                 : createNewName(assetName);
     }
 
@@ -26,7 +26,7 @@ public class InstrumentHandler {
             logger.error("Invalid asset name " + assetName + " provided!");
             return Optional.empty();
         }
-        instrumentByZorroName.put(assetName, instrumentOpt.get());
+        instrumentByAssetName.put(assetName, instrumentOpt.get());
         return instrumentOpt;
     }
 }

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.InstrumentHandler;
+import com.jforex.dzjforex.handler.InstrumentRepository;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.TickFetcher;
 
@@ -25,7 +25,7 @@ public class BrokerHistory2 {
                    final int tickMinutes,
                    final int nTicks,
                    final double tickParams[]) {
-        final Optional<Instrument> maybeInstrument = InstrumentHandler.fromName(assetName);
+        final Optional<Instrument> maybeInstrument = InstrumentRepository.maybeFromName(assetName);
         return maybeInstrument.isPresent()
                 ? getForValidInstrument(maybeInstrument.get(),
                                         startDate,

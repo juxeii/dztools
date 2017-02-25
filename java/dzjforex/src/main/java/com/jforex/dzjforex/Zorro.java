@@ -35,10 +35,9 @@ public class Zorro {
             .subscribeOn(Schedulers.io())
             .takeUntil(i -> i != running)
             .blockingSubscribe(i -> {
-                logger.info("Tick " + i);
-                if (i != running) {
+                if (i != running)
                     taskResult = i;
-                } else
+                else
                     callProgress(heartBeatIndication);
             });
 

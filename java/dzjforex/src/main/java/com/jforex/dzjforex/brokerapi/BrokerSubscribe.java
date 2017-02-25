@@ -44,8 +44,8 @@ public class BrokerSubscribe {
         instrumentsToSubscribe.add(instrumentToSubscribe);
         createCrossInstrumentIfNeeded(instrumentsToSubscribe, instrumentToSubscribe);
 
-        logger.info("Subscribing " + instrumentsToSubscribe + " now.");
         client.setSubscribedInstruments(instrumentsToSubscribe);
+        logger.debug("Subscribed instruments are:" + instrumentsToSubscribe);
         return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 

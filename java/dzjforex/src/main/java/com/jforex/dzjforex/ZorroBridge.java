@@ -12,18 +12,15 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
-import com.jforex.dzjforex.brokerapi.BrokerHistory2;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.handler.HistoryHandler;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.TimeHandler;
-import com.jforex.dzjforex.history.BarFetcher;
-import com.jforex.dzjforex.history.HistoryProvider;
-import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.HistoryOrders;
@@ -47,9 +44,9 @@ public class ZorroBridge {
     private long strategyID;
     private final Zorro zorro;
     private final LoginHandler loginHandler;
+    private HistoryHandler historyHandler;
 
     private AccountInfo accountInfo;
-    private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
     private BrokerTrade brokerTrade;
@@ -66,9 +63,6 @@ public class ZorroBridge {
     private RunningOrders runningOrders;
     private HistoryOrders historyOrders;
     private OrderRepository orderRepository;
-    private BrokerHistory2 brokerHistory2;
-    private BarFetcher barFetcher;
-    private TickFetcher tickFetcher;
     private TimeHandler timeHandler;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
@@ -108,12 +102,8 @@ public class ZorroBridge {
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
-        historyProvider = new HistoryProvider(context.getHistory(), pluginConfig);
         labelUtil = new OrderLabelUtil(pluginConfig, Clock.systemDefaultZone());
 
-        barFetcher = new BarFetcher(historyProvider);
-        tickFetcher = new TickFetcher(historyProvider);
-        brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);
         brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
         brokerAccount = new BrokerAccount(accountInfo);
 
@@ -121,9 +111,10 @@ public class ZorroBridge {
                                       client,
                                       infoStrategy,
                                       pluginConfig);
+        historyHandler = new HistoryHandler(infoStrategy.getContext().getHistory(), pluginConfig);
 
         runningOrders = new RunningOrders(context.getEngine());
-        historyOrders = new HistoryOrders(historyProvider,
+        historyOrders = new HistoryOrders(historyHandler.historyProvider(),
                                           brokerSubscribe,
                                           pluginConfig,
                                           timeHandler.serverTimeProvider());
@@ -214,12 +205,12 @@ public class ZorroBridge {
                                 final int tickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
-        return brokerHistory2.get(instrumentName,
-                                  startDate,
-                                  endDate,
-                                  tickMinutes,
-                                  nTicks,
-                                  tickParams);
+        return historyHandler.brokerHistory2(instrumentName,
+                                             startDate,
+                                             endDate,
+                                             tickMinutes,
+                                             nTicks,
+                                             tickParams);
     }
 
     public int doSetOrderText(final String orderText) {

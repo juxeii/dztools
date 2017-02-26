@@ -60,7 +60,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
         @Before
         public void setUp() {
             setClientConnectivity(false);
-            returnCode = brokerTime.doBrokerTime(serverTimeParams);
+            returnCode = brokerTime.get(serverTimeParams);
         }
 
         @Test
@@ -78,7 +78,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
         private void setMarketConnectivityAndStart(final boolean isMarketOffline) {
             when(marketDataMock.isMarketOffline(serverTime)).thenReturn(isMarketOffline);
-            returnCode = brokerTime.doBrokerTime(serverTimeParams);
+            returnCode = brokerTime.get(serverTimeParams);
         }
 
         @Before

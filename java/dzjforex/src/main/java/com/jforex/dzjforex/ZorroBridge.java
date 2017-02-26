@@ -17,18 +17,17 @@ import com.jforex.dzjforex.brokerapi.BrokerLogin;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
-import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.handler.TimeHandler;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
@@ -39,10 +38,6 @@ import com.jforex.dzjforex.order.OrderSetSL;
 import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.order.RunningOrders;
 import com.jforex.dzjforex.order.TradeUtil;
-import com.jforex.dzjforex.time.NTPFetch;
-import com.jforex.dzjforex.time.NTPProvider;
-import com.jforex.dzjforex.time.ServerTimeProvider;
-import com.jforex.dzjforex.time.TickTimeProvider;
 import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -62,8 +57,6 @@ public class ZorroBridge {
     private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
-    private MarketData marketData;
-    private BrokerTime brokerTime;
     private BrokerTrade brokerTrade;
     private TradeUtil tradeUtil;
     private OrderLabelUtil labelUtil;
@@ -81,10 +74,7 @@ public class ZorroBridge {
     private BrokerHistory2 brokerHistory2;
     private BarFetcher barFetcher;
     private TickFetcher tickFetcher;
-    private NTPFetch ntpFetch;
-    private NTPProvider ntpProvider;
-    private ServerTimeProvider serverTimeProvider;
-    private TickTimeProvider tickTimeProvider;
+    private TimeHandler timeHandler;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
@@ -137,26 +127,19 @@ public class ZorroBridge {
         brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
         brokerAccount = new BrokerAccount(accountInfo);
 
-        ntpFetch = new NTPFetch(pluginConfig);
-        ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
-        tickTimeProvider = new TickTimeProvider(strategyUtil.tickQuoteProvider().repository(),
-                                                Clock.systemDefaultZone());
-        serverTimeProvider = new ServerTimeProvider(ntpProvider,
-                                                    tickTimeProvider,
-                                                    Clock.systemDefaultZone());
+        timeHandler = new TimeHandler(Clock.systemDefaultZone(),
+                                      client,
+                                      infoStrategy,
+                                      pluginConfig);
 
         runningOrders = new RunningOrders(context.getEngine());
         historyOrders = new HistoryOrders(historyProvider,
                                           brokerSubscribe,
                                           pluginConfig,
-                                          serverTimeProvider);
+                                          timeHandler.serverTimeProvider());
         orderRepository = new OrderRepository(runningOrders,
                                               historyOrders,
                                               labelUtil);
-        marketData = new MarketData(context.getDataService());
-        brokerTime = new BrokerTime(client,
-                                    serverTimeProvider,
-                                    marketData);
 
         tradeUtil = new TradeUtil(orderRepository,
                                   strategyUtil,
@@ -198,8 +181,8 @@ public class ZorroBridge {
         return ZorroReturnValues.LOGOUT_OK.getValue();
     }
 
-    public int doBrokerTime(final double serverTimeData[]) {
-        return brokerTime.doBrokerTime(serverTimeData);
+    public int doBrokerTime(final double pTimeUTC[]) {
+        return timeHandler.brokerTime(pTimeUTC);
     }
 
     public int doSubscribeAsset(final String instrumentName) {

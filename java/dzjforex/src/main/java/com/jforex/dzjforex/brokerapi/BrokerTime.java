@@ -20,7 +20,7 @@ public class BrokerTime {
         this.marketData = marketData;
     }
 
-    public int doBrokerTime(final double pTimeUTC[]) {
+    public int get(final double pTimeUTC[]) {
         return client.isConnected()
                 ? fillServerTimeAndReturnStatus(pTimeUTC)
                 : ZorroReturnValues.CONNECTION_LOST_NEW_LOGIN_REQUIRED.getValue();

@@ -6,7 +6,6 @@ import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
@@ -15,12 +14,13 @@ import com.jforex.dzjforex.handler.HistoryHandler;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.TimeHandler;
 import com.jforex.dzjforex.handler.TradeHandler;
+import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.programming.client.ClientUtil;
 
 public class ZorroBridge {
 
-    private IClient client;
+    private final IClient client;
     private final ClientUtil clientUtil;
     private final InfoStrategy infoStrategy;
     private long strategyID;
@@ -36,29 +36,14 @@ public class ZorroBridge {
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        initClientInstance();
-
-        zorro = new Zorro(pluginConfig);
+        client = ClientProvider.get();
         clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
+        zorro = new Zorro(pluginConfig);
+
         loginHandler = new LoginHandler(clientUtil,
                                         zorro,
                                         pluginConfig);
         infoStrategy = new InfoStrategy();
-    }
-
-    private void initClientInstance() {
-        try {
-            client = ClientFactory.getDefaultInstance();
-            logger.debug("IClient successfully initialized.");
-            return;
-        } catch (final ClassNotFoundException e) {
-            logger.error("IClient ClassNotFoundException occured! " + e.getMessage());
-        } catch (final IllegalAccessException e) {
-            logger.error("IClient IllegalAccessException occured!" + e.getMessage());
-        } catch (final InstantiationException e) {
-            logger.error("IClient InstantiationException occured!" + e.getMessage());
-        }
-        Zorro.indicateError();
     }
 
     private void initComponents() {

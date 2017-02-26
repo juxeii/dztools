@@ -6,57 +6,30 @@ import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.IContext;
 import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.brokerapi.BrokerBuy;
-import com.jforex.dzjforex.brokerapi.BrokerSell;
-import com.jforex.dzjforex.brokerapi.BrokerStop;
-import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.AccountHandler;
 import com.jforex.dzjforex.handler.HistoryHandler;
 import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.handler.TimeHandler;
+import com.jforex.dzjforex.handler.TradeHandler;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.order.HistoryOrders;
-import com.jforex.dzjforex.order.OrderClose;
-import com.jforex.dzjforex.order.OrderLabelUtil;
-import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetLabel;
-import com.jforex.dzjforex.order.OrderSetSL;
-import com.jforex.dzjforex.order.OrderSubmit;
-import com.jforex.dzjforex.order.RunningOrders;
-import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.client.ClientUtil;
-import com.jforex.programming.strategy.StrategyUtil;
 
 public class ZorroBridge {
 
     private IClient client;
     private final ClientUtil clientUtil;
-    private IContext context;
     private final InfoStrategy infoStrategy;
     private long strategyID;
     private final Zorro zorro;
     private AccountHandler accountHandler;
     private final LoginHandler loginHandler;
     private HistoryHandler historyHandler;
+    private TradeHandler tradeHandler;
 
-    private BrokerTrade brokerTrade;
-    private TradeUtil tradeUtil;
-    private OrderLabelUtil labelUtil;
-    private BrokerStop brokerStop;
-    private BrokerBuy brokerBuy;
-    private OrderSubmit submitHandler;
-    private OrderSetLabel setLabel;
-    private OrderClose orderClose;
-    private OrderSetSL setSLHandler;
-    private BrokerSell brokerSell;
-    private RunningOrders runningOrders;
-    private HistoryOrders historyOrders;
-    private OrderRepository orderRepository;
     private TimeHandler timeHandler;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
@@ -89,45 +62,20 @@ public class ZorroBridge {
     }
 
     private void initComponents() {
-        context = infoStrategy.getContext();
-        final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
-
         accountHandler = new AccountHandler(client,
                                             infoStrategy,
                                             pluginConfig);
-
-        labelUtil = new OrderLabelUtil(pluginConfig, Clock.systemDefaultZone());
 
         timeHandler = new TimeHandler(Clock.systemDefaultZone(),
                                       client,
                                       infoStrategy,
                                       pluginConfig);
         historyHandler = new HistoryHandler(infoStrategy.getContext().getHistory(), pluginConfig);
-
-        runningOrders = new RunningOrders(context.getEngine());
-        historyOrders = new HistoryOrders(historyHandler.historyProvider(),
-                                          accountHandler.brokerSubscribe(),
-                                          pluginConfig,
-                                          timeHandler.serverTimeProvider());
-        orderRepository = new OrderRepository(runningOrders,
-                                              historyOrders,
-                                              labelUtil);
-
-        tradeUtil = new TradeUtil(orderRepository,
-                                  strategyUtil,
-                                  accountHandler.accountInfo(),
-                                  labelUtil,
-                                  pluginConfig);
-        brokerTrade = new BrokerTrade(tradeUtil);
-        setSLHandler = new OrderSetSL(tradeUtil);
-        brokerStop = new BrokerStop(setSLHandler, tradeUtil);
-        submitHandler = new OrderSubmit(tradeUtil);
-        brokerBuy = new BrokerBuy(submitHandler, tradeUtil);
-        setLabel = new OrderSetLabel(tradeUtil);
-        orderClose = new OrderClose(tradeUtil);
-        brokerSell = new BrokerSell(tradeUtil,
-                                    orderClose,
-                                    setLabel);
+        tradeHandler = new TradeHandler(historyHandler.historyProvider(),
+                                        accountHandler,
+                                        timeHandler,
+                                        infoStrategy,
+                                        pluginConfig);
     }
 
     public int doLogin(final String userName,
@@ -172,22 +120,22 @@ public class ZorroBridge {
 
     public int doBrokerBuy(final String instrumentName,
                            final double tradeParams[]) {
-        return brokerBuy.openTrade(instrumentName, tradeParams);
+        return tradeHandler.brokerBuy(instrumentName, tradeParams);
     }
 
     public int doBrokerTrade(final int orderID,
                              final double orderParams[]) {
-        return brokerTrade.fillTradeParams(orderID, orderParams);
+        return tradeHandler.brokerTrade(orderID, orderParams);
     }
 
     public int doBrokerStop(final int orderID,
                             final double newSLPrice) {
-        return brokerStop.setSL(orderID, newSLPrice);
+        return tradeHandler.brokerStop(orderID, newSLPrice);
     }
 
     public int doBrokerSell(final int nTradeID,
                             final int nAmount) {
-        return brokerSell.closeTrade(nTradeID, nAmount);
+        return tradeHandler.brokerSell(nTradeID, nAmount);
     }
 
     public int doBrokerHistory2(final String instrumentName,

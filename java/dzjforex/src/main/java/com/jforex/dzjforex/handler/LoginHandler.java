@@ -1,57 +1,37 @@
 package com.jforex.dzjforex.handler;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.Zorro;
-import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.brokerapi.BrokerLogin;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.programming.connection.Authentification;
-import com.jforex.programming.connection.LoginCredentials;
-
-import io.reactivex.Observable;
+import com.jforex.dzjforex.misc.PinProvider;
+import com.jforex.programming.client.ClientUtil;
 
 public class LoginHandler {
 
-    private final Authentification authentification;
-    private final CredentialsFactory credentialsFactory;
-    private final Zorro zorro;
+    private final BrokerLogin brokerLogin;
 
-    private final static Logger logger = LogManager.getLogger(LoginHandler.class);
+    public LoginHandler(final ClientUtil clientUtil,
+                        final Zorro zorro,
+                        final PluginConfig pluginConfig) {
+        final IClient client = clientUtil.client();
+        final PinProvider pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
+        final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
+        final LoginExecutor loginExecutor = new LoginExecutor(clientUtil.authentification(),
+                                                              credentialsFactory,
+                                                              zorro);
 
-    public LoginHandler(final Authentification authentification,
-                        final CredentialsFactory credentialsFactory,
-                        final Zorro zorro) {
-        this.authentification = authentification;
-        this.credentialsFactory = credentialsFactory;
-        this.zorro = zorro;
+        brokerLogin = new BrokerLogin(loginExecutor,
+                                      client,
+                                      pluginConfig);
     }
 
-    public int login(final String username,
-                     final String password,
-                     final String loginType) {
-        final LoginCredentials credentials = credentialsFactory.create(username,
-                                                                       password,
-                                                                       loginType);
-        return loginWithCredentials(credentials);
-    }
-
-    private int loginWithCredentials(final LoginCredentials credentials) {
-        final Observable<Integer> login = authentification
-            .login(credentials)
-            .andThen(Observable.just(ZorroReturnValues.LOGIN_OK.getValue()))
-            .onErrorResumeNext(err -> {
-                logger.error("Failed to login with exception " + err.getMessage());
-                return Observable.just(ZorroReturnValues.LOGIN_FAIL.getValue());
-            });
-
-        return zorro.progressWait(login);
-    }
-
-    public int logout() {
-        authentification
-            .logout()
-            .blockingAwait();
-        return ZorroReturnValues.LOGOUT_OK.getValue();
+    public int brokerLogin(final String userName,
+                           final String password,
+                           final String type) {
+        return brokerLogin.login(userName,
+                                 password,
+                                 type);
     }
 }

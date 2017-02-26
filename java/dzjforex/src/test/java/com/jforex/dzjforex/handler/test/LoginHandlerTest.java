@@ -10,7 +10,7 @@ import org.mockito.Mock;
 
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.handler.LoginExecutor;
 import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.connection.Authentification;
@@ -22,7 +22,7 @@ import io.reactivex.Completable;
 @RunWith(HierarchicalContextRunner.class)
 public class LoginHandlerTest extends CommonUtilForTest {
 
-    private LoginHandler loginHandler;
+    private LoginExecutor loginHandler;
 
     @Mock
     private Authentification authentificationMock;
@@ -39,7 +39,7 @@ public class LoginHandlerTest extends CommonUtilForTest {
                                            loginTypeDemo))
                                                .thenReturn(loginCredentials);
 
-        loginHandler = new LoginHandler(authentificationMock,
+        loginHandler = new LoginExecutor(authentificationMock,
                                         credentialsFactoryMock,
                                         zorroMock);
     }

@@ -8,20 +8,20 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.handler.LoginExecutor;
 
 import io.reactivex.Observable;
 
 public class BrokerLogin {
 
-    private final LoginHandler loginHandler;
+    private final LoginExecutor loginHandler;
     private final IClient client;
     private Observable<Long> retryDelayTimer;
     private boolean isLoginAvailable = true;
 
     private final static Logger logger = LogManager.getLogger(BrokerLogin.class);
 
-    public BrokerLogin(final LoginHandler loginHandler,
+    public BrokerLogin(final LoginExecutor loginHandler,
                        final IClient client,
                        final PluginConfig pluginConfigMock) {
         this.loginHandler = loginHandler;

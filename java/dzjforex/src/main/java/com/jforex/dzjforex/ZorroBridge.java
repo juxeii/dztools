@@ -13,7 +13,6 @@ import com.jforex.dzjforex.brokerapi.BrokerAccount;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
 import com.jforex.dzjforex.brokerapi.BrokerHistory2;
-import com.jforex.dzjforex.brokerapi.BrokerLogin;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
@@ -26,9 +25,7 @@ import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.AccountInfo;
-import com.jforex.dzjforex.misc.CredentialsFactory;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderLabelUtil;
@@ -46,14 +43,12 @@ public class ZorroBridge {
     private IClient client;
     private final ClientUtil clientUtil;
     private IContext context;
-    private final PinProvider pinProvider;
     private final InfoStrategy infoStrategy;
     private long strategyID;
     private final Zorro zorro;
-    private final CredentialsFactory credentialsFactory;
-    private AccountInfo accountInfo;
     private final LoginHandler loginHandler;
-    private final BrokerLogin brokerLogin;
+
+    private AccountInfo accountInfo;
     private HistoryProvider historyProvider;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
@@ -84,14 +79,9 @@ public class ZorroBridge {
 
         zorro = new Zorro(pluginConfig);
         clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
-        pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
-        credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        loginHandler = new LoginHandler(clientUtil.authentification(),
-                                        credentialsFactory,
-                                        zorro);
-        brokerLogin = new BrokerLogin(loginHandler,
-                                      client,
-                                      pluginConfig);
+        loginHandler = new LoginHandler(clientUtil,
+                                        zorro,
+                                        pluginConfig);
         infoStrategy = new InfoStrategy();
     }
 
@@ -162,9 +152,9 @@ public class ZorroBridge {
                        final String password,
                        final String type,
                        final String accountInfos[]) {
-        final int loginResult = brokerLogin.login(userName,
-                                                  password,
-                                                  type);
+        final int loginResult = loginHandler.brokerLogin(userName,
+                                                         password,
+                                                         type);
         if (loginResult == ZorroReturnValues.LOGIN_OK.getValue()) {
             strategyID = client.startStrategy(infoStrategy);
             initComponents();

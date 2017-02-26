@@ -14,7 +14,7 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerLogin;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.LoginHandler;
+import com.jforex.dzjforex.handler.LoginExecutor;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.test.util.RxTestUtil;
 
@@ -26,7 +26,7 @@ public class BrokerLoginTest extends CommonUtilForTest {
     private BrokerLogin brokerLogin;
 
     @Mock
-    private LoginHandler loginHandlerMock;
+    private LoginExecutor loginHandlerMock;
     @Mock
     private IClient clientMock;
     @Mock

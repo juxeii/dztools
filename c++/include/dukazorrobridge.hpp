@@ -29,4 +29,3 @@ jcallback_BrokerProgress(JNIEnv *env,
                          jint progress);
 
 #endif /* DUKAZORROBRIDGE_HPP */
-

@@ -1,10 +1,8 @@
 package com.jforex.dzjforex.handler;
 
-import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.InfoStrategy;
 
@@ -15,13 +13,13 @@ public class AccountHandler {
     private final BrokerAccount brokerAccount;
     private final BrokerSubscribe brokerSubscribe;
 
-    public AccountHandler(final IClient client,
-                          final InfoStrategy infoStrategy,
-                          final PluginConfig pluginConfig) {
+    public AccountHandler(final SystemHandler systemHandler) {
+        final InfoStrategy infoStrategy = systemHandler.infoStrategy();
+
         accountInfo = new AccountInfo(infoStrategy.getContext().getAccount(),
                                       infoStrategy.strategyUtil().calculationUtil(),
-                                      pluginConfig);
-        brokerSubscribe = new BrokerSubscribe(client, accountInfo);
+                                      systemHandler.pluginConfig());
+        brokerSubscribe = new BrokerSubscribe(systemHandler.client(), accountInfo);
         brokerAsset = new BrokerAsset(accountInfo, infoStrategy.strategyUtil());
         brokerAccount = new BrokerAccount(accountInfo);
     }
@@ -32,6 +30,10 @@ public class AccountHandler {
 
     public AccountInfo accountInfo() {
         return accountInfo;
+    }
+
+    public void fillAcountInfos(final String accountInfos[]) {
+        accountInfos[0] = accountInfo().id();
     }
 
     public int subscribeAsset(final String instrumentName) {

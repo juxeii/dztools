@@ -5,7 +5,6 @@ import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
@@ -24,13 +23,15 @@ public class TradeHandler {
     private final BrokerSell brokerSell;
     private final BrokerStop brokerStop;
 
-    public TradeHandler(final HistoryProvider historyProvider,
+    public TradeHandler(final SystemHandler systemHandler,
                         final AccountHandler accountHandler,
                         final TimeHandler timeHandler,
-                        final InfoStrategy infoStrategy,
-                        final PluginConfig pluginConfig) {
+                        final HistoryHandler historyHandler) {
+        final PluginConfig pluginConfig = systemHandler.pluginConfig();
+        final InfoStrategy infoStrategy = systemHandler.infoStrategy();
+
         final RunningOrders runningOrders = new RunningOrders(infoStrategy.getContext().getEngine());
-        final HistoryOrders historyOrders = new HistoryOrders(historyProvider,
+        final HistoryOrders historyOrders = new HistoryOrders(historyHandler.historyProvider(),
                                                               accountHandler.brokerSubscribe(),
                                                               pluginConfig,
                                                               timeHandler.serverTimeProvider());

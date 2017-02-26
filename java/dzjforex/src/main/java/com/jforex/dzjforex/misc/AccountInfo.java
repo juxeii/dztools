@@ -94,7 +94,7 @@ public class AccountInfo {
                                                                   currency(),
                                                                   OfferSide.ASK);
         logger.trace("Pipcost for lotSize " + lotSize()
-                + " and instrument " + instrument
+                + " and instrument " + instrument + " currency " + currency()
                 + " is " + pipCost);
         return pipCost;
     }

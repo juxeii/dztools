@@ -59,7 +59,8 @@ public class BrokerAsset {
         assetParams[8] = pRollShort;
 
         logger.trace("BrokerAsset instrument params for " + instrument + ": \n"
-                + " pPrice: " + pPrice + "\n"
+                + " pAskPrice: " + pPrice + "\n"
+                + " pBidPrice: " + instrumentUtil.bidQuote() + "\n"
                 + " pSpread: " + pSpread + "\n"
                 + " pVolume: " + pVolume + "\n"
                 + " pPip: " + pPip + "\n"

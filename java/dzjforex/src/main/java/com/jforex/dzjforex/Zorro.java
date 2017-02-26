@@ -31,7 +31,8 @@ public class Zorro {
     }
 
     public int progressWait(final Observable<Integer> task) {
-        Observable.merge(heartBeat, task)
+        Observable
+            .merge(heartBeat, task)
             .subscribeOn(Schedulers.io())
             .takeUntil(i -> i != running)
             .blockingSubscribe(i -> {

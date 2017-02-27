@@ -58,18 +58,10 @@ public class BarFetcher {
             .instrumentUtil(instrument)
             .tickQuote()
             .getTime();
-        endMillis = historyProvider.previousBarStart(period, latestTickTime);
-        logger.debug("Adapted endMillis for " + instrument + "are " + DateTimeUtil.formatMillis(endMillis));
-
-//        final long latestBarStart = historyProvider.latestFormedBarTime(instrument,
-//                                                                        period,
-//                                                                        OfferSide.ASK);
-//        if (endMillis > latestBarStart) {
-//            logger.warn("Latest bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
-//                    + " which is smaller than requested endDate " + DateTimeUtil.formatMillis(endMillis)
-//                    + " using the latest bar time now.");
-//            endMillis = latestBarStart;
-//        }
+        if (endMillis > latestTickTime - period.getInterval()) {
+            endMillis = historyProvider.previousBarStart(period, latestTickTime);
+            logger.debug("Adapted endMillis for " + instrument + "are " + DateTimeUtil.formatMillis(endMillis));
+        }
 
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
         fetchedBars = null;

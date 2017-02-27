@@ -6,6 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.programming.misc.DateTimeUtil;
+import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.quote.TickQuoteRepository;
 
 public class TickTimeProvider {
@@ -43,9 +45,11 @@ public class TickTimeProvider {
             .getAll()
             .values()
             .stream()
-            .mapToLong(quote -> {
-                logger.debug("Found latest tick time " + quote.instrument());
-                return quote.tick().getTime();
+            .map(TickQuote::tick)
+            .mapToLong(tick -> {
+                final long tickTime = tick.getTime();
+                logger.debug("Found latest tick time " + DateTimeUtil.formatMillis(tickTime));
+                return tickTime;
             })
             .max()
             .orElseGet(() -> ZorroReturnValues.INVALID_SERVER_TIME.getValue());

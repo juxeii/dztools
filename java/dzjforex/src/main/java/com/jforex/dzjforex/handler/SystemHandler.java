@@ -2,7 +2,9 @@ package com.jforex.dzjforex.handler;
 
 import java.time.Clock;
 
+import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
+import com.google.common.collect.Sets;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.ClientProvider;
@@ -54,6 +56,7 @@ public class SystemHandler {
     }
 
     public long startStrategy() {
+        client.setSubscribedInstruments(Sets.newHashSet(Instrument.EURUSD));
         return client.startStrategy(infoStrategy);
     }
 }

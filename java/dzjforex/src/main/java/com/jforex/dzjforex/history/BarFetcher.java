@@ -2,6 +2,7 @@ package com.jforex.dzjforex.history;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,13 +11,18 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
+import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.misc.DateTimeUtil;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+
 public class BarFetcher {
 
     private final HistoryProvider historyProvider;
+    private List<IBar> bars;
 
     private final static Logger logger = LogManager.getLogger(BarFetcher.class);
 
@@ -31,7 +37,7 @@ public class BarFetcher {
                      final int nTicks,
                      final double tickParams[]) {
         final long startMillis = TimeConvert.millisFromOLEDateRoundMinutes(startDate);
-        final long endMillis = TimeConvert.millisFromOLEDateRoundMinutes(endDate);
+        long endMillis = TimeConvert.millisFromOLEDateRoundMinutes(endDate);
 
         logger.debug("Requested bars for instrument " + instrument + ": \n "
                 + "startDateUTCRaw: " + startDate + ": \n "
@@ -45,14 +51,38 @@ public class BarFetcher {
 
         final Period period = TimeConvert.getPeriodFromMinutes(tickMinutes);
 
+        final long latestBarStart = historyProvider.latestFormedBarTime(instrument,
+                                                                        period,
+                                                                        OfferSide.ASK);
+        if (endMillis > latestBarStart) {
+            logger.warn("Lates bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
+                    + " which is smaller than requested endDate " + DateTimeUtil.formatMillis(endMillis)
+                    + " using the latest bar time now.");
+            endMillis = endMillis - period.getInterval();
+        }
+
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
-        final List<IBar> bars = historyProvider
+        bars = null;
+        historyProvider
             .fetchBars(instrument,
                        period,
                        OfferSide.ASK,
                        startMillisAdapted,
                        endMillis)
-            .blockingFirst();
+            .subscribeOn(Schedulers.io())
+            .subscribe(fbars -> bars = fbars);
+
+        while (bars == null) {
+            // Zorro.logError("Wating for bars for " + instrument);
+            Zorro.callProgress(1);
+            Observable
+                .interval(0L,
+                          250L,
+                          TimeUnit.MILLISECONDS,
+                          Schedulers.io())
+                .blockingFirst();
+        }
+
         logger.debug("Fetched " + bars.size() + " bars for " + instrument + " with nTicks " + nTicks);
 
         return bars.isEmpty()

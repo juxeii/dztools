@@ -42,6 +42,10 @@ public interface PluginConfig extends Config {
     @DefaultValue("1000")
     double lotSize();
 
+    @Key("order.automerge")
+    @DefaultValue("true")
+    boolean isAutoMerge();
+
     @Key("history.download.retries")
     @DefaultValue("3")
     int historyDownloadRetries();

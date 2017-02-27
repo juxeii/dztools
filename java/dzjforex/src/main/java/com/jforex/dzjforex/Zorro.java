@@ -45,7 +45,7 @@ public class Zorro {
         return taskResult;
     }
 
-    public int callProgress(final int progress) {
+    public static int callProgress(final int progress) {
         return jcallback_BrokerProgress(progress);
     }
 

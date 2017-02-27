@@ -51,6 +51,7 @@ public class HistoryProvider {
                     + "startTime: " + DateTimeUtil.formatMillis(startTime) + "\n"
                     + "endTime: " + DateTimeUtil.formatMillis(endTime)))
             .doOnComplete(() -> logger.debug("Fetching bars for " + instrument + " completed."))
+            .doOnError(err -> logger.error("Fetch bars failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()));
     }
@@ -67,6 +68,20 @@ public class HistoryProvider {
             });
     }
 
+    public long latestFormedBarTime(final Instrument instrument,
+                                    final Period period,
+                                    final OfferSide offerSide) {
+        return Observable
+            .fromCallable(() -> history.getBar(instrument, period, offerSide, 1))
+            .map(bar -> bar.getTime())
+            .doOnSubscribe(d -> logger.debug("Trying to get latest formed bar time for instrument "
+                    + instrument + " and period " + period))
+            .doOnError(err -> logger.error("Get latest formed bar time failed! " + err.getMessage()))
+            .retryWhen(this::historyRetryWhen)
+            .onErrorResumeNext(Observable.just(0L))
+            .blockingFirst();
+    }
+
     public Observable<List<ITick>> fetchTicks(final Instrument instrument,
                                               final long startTime,
                                               final long endTime) {
@@ -78,6 +93,7 @@ public class HistoryProvider {
                     + "startTime: " + DateTimeUtil.formatMillis(startTime)
                     + "endTime: " + DateTimeUtil.formatMillis(endTime)))
             .doOnComplete(() -> logger.debug("Fetching ticks for " + instrument + " completed."))
+            .doOnError(err -> logger.error("Fetch ticks failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()));
     }

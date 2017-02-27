@@ -19,6 +19,7 @@ public class BrokerSubscribe {
 
     private final IClient client;
     private final AccountInfo accountInfo;
+    private final Set<Instrument> instrumentsToSubscribe = new HashSet<Instrument>();
 
     private final static Logger logger = LogManager.getLogger(BrokerSubscribe.class);
 
@@ -40,7 +41,12 @@ public class BrokerSubscribe {
     }
 
     private int subscribeValidinstrumentName(final Instrument instrumentToSubscribe) {
-        final Set<Instrument> instrumentsToSubscribe = new HashSet<Instrument>();
+        if (client.getSubscribedInstruments().contains(instrumentToSubscribe)) {
+            logger.warn("Instrument " + instrumentToSubscribe + " already subscribed.");
+            return ZorroReturnValues.ASSET_AVAILABLE.getValue();
+        }
+
+        logger.debug("Trying to subscribe instrument " + instrumentToSubscribe);
         instrumentsToSubscribe.add(instrumentToSubscribe);
 
         final Set<ICurrency> crossCurrencies = CurrencyFactory.fromInstrument(instrumentToSubscribe);
@@ -49,7 +55,7 @@ public class BrokerSubscribe {
         instrumentsToSubscribe.addAll(crossInstruments);
 
         client.setSubscribedInstruments(instrumentsToSubscribe);
-        logger.debug("Subscribed instruments are:" + instrumentsToSubscribe);
+        logger.debug("Subscribed instruments of client are:" + client.getSubscribedInstruments());
         return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 }

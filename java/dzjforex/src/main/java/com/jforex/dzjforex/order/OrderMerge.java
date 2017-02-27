@@ -48,7 +48,7 @@ public class OrderMerge {
                     mergeInstrument + "!Exception: " + e.getMessage()))
             .build();
 
-        final Function<IOrder, TaskParamsBase> cancelSLParamsFactory = order -> CancelSLParams
+        final Function<IOrder, CancelSLParams> cancelSLParamsFactory = order -> CancelSLParams
             .withOrder(order)
             .doOnStart(() -> logger.info("Start to cancel SL from order " + order.getLabel()
                     + " of position " + mergeInstrument + " current SL " + order.getStopLossPrice()))
@@ -59,7 +59,7 @@ public class OrderMerge {
             .retryOnReject(tradeUtil.retryParams())
             .build();
 
-        final Function<IOrder, TaskParamsBase> cancelTPParamsFactory = order -> CancelTPParams
+        final Function<IOrder, CancelTPParams> cancelTPParamsFactory = order -> CancelTPParams
             .withOrder(order)
             .doOnStart(() -> logger.info("Start to cancel TP from order " + order.getLabel()
                     + " of position " + mergeInstrument + " current SL " + order.getTakeProfitPrice()))
@@ -71,7 +71,7 @@ public class OrderMerge {
             .build();
 
         final MergeParamsForPosition mergeParamsForPosition = MergeParamsForPosition
-            .withLabel(mergeOrderLabel)
+            .newBuilder()
             .doOnStart(() -> logger.info("Trying to merge position " + mergeInstrument
                     + " with mergeOrderLabel " + mergeOrderLabel))
             .doOnError(err -> logger.error("Failed to merge position " + mergeInstrument
@@ -81,7 +81,7 @@ public class OrderMerge {
             .build();
 
         final MergePositionParams mergePositionParams = MergePositionParams
-            .newBuilder(mergeInstrument, mergeParamsForPosition)
+            .newBuilder(mergeInstrument, mergeOrderLabel)
             .withMergeExecutionMode(CancelSLTPMode.MergeCancelSLAndTP)
             .withBatchCancelSLMode(BatchMode.MERGE)
             .withBatchCancelTPMode(BatchMode.MERGE)
@@ -90,6 +90,7 @@ public class OrderMerge {
             .withBatchCancelTPParams(batchCancelTPComposeParams)
             .withCancelSLParamsFactory(cancelSLParamsFactory)
             .withCancelTPParamsFactory(cancelTPParamsFactory)
+            .withMergeParamsForPosition(mergeParamsForPosition)
             .doOnStart(() -> logger.info("Starting to merge position " + mergeInstrument))
             .doOnComplete(() -> logger.info("Merging position " + mergeInstrument + " done."))
             .doOnError(e -> logger.error("Merging position " + mergeInstrument

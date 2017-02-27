@@ -2,19 +2,25 @@ package com.jforex.dzjforex.history;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+
 public class TickFetcher {
 
     private final HistoryProvider historyProvider;
+    private List<ITick> fetchedTicks;
 
     private final static Logger logger = LogManager.getLogger(TickFetcher.class);
 
@@ -34,16 +40,30 @@ public class TickFetcher {
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
-        final List<ITick> ticks = historyProvider
+        fetchedTicks = null;
+        historyProvider
             .fetchTicks(instrument,
                         TimeConvert.millisFromOLEDate(startDate),
                         TimeConvert.millisFromOLEDate(endDate))
-            .blockingFirst();
+            .subscribeOn(Schedulers.io())
+            .subscribe(ticks -> fetchedTicks = ticks);
 
-        return ticks.isEmpty()
+        while (fetchedTicks == null) {
+            Zorro.callProgress(1);
+            Observable
+                .interval(0L,
+                          250L,
+                          TimeUnit.MILLISECONDS,
+                          Schedulers.io())
+                .blockingFirst();
+        }
+
+        logger.debug("Fetched " + fetchedTicks.size() + " ticks for " + instrument + " with nTicks " + nTicks);
+
+        return fetchedTicks.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillTicks(instrument,
-                            ticks,
+                            fetchedTicks,
                             tickParams);
     }
 

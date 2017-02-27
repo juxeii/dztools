@@ -15,6 +15,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderMerge;
 import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
@@ -28,6 +29,8 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
     @Mock
     private OrderSubmit orderSubmitMock;
+    @Mock
+    private OrderMerge orderMergeMock;
     @Mock
     private IOrder orderMock;
     private int openTradeResult;
@@ -48,7 +51,9 @@ public class BrokerBuyTest extends CommonUtilForTest {
         tradeParams[0] = nAmount;
         tradeParams[1] = dStopDist;
 
-        brokerBuy = new BrokerBuy(orderSubmitMock, tradeUtilMock);
+        brokerBuy = new BrokerBuy(orderSubmitMock,
+                                  orderMergeMock,
+                                  tradeUtilMock);
     }
 
     private int callOpenTrade() {

@@ -9,6 +9,7 @@ import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderLabelUtil;
+import com.jforex.dzjforex.order.OrderMerge;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.OrderSetLabel;
 import com.jforex.dzjforex.order.OrderSetSL;
@@ -48,9 +49,12 @@ public class TradeHandler {
         final OrderSubmit orderSubmit = new OrderSubmit(tradeUtil);
         final OrderSetLabel setLabel = new OrderSetLabel(tradeUtil);
         final OrderClose orderClose = new OrderClose(tradeUtil);
+        final OrderMerge orderMerge = new OrderMerge(tradeUtil);
 
         brokerTrade = new BrokerTrade(tradeUtil);
-        brokerBuy = new BrokerBuy(orderSubmit, tradeUtil);
+        brokerBuy = new BrokerBuy(orderSubmit,
+                                  orderMerge,
+                                  tradeUtil);
         brokerSell = new BrokerSell(tradeUtil,
                                     orderClose,
                                     setLabel);

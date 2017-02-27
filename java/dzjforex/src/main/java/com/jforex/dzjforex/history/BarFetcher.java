@@ -22,7 +22,7 @@ import io.reactivex.schedulers.Schedulers;
 public class BarFetcher {
 
     private final HistoryProvider historyProvider;
-    private List<IBar> bars;
+    private List<IBar> fetchedBars;
 
     private final static Logger logger = LogManager.getLogger(BarFetcher.class);
 
@@ -62,7 +62,7 @@ public class BarFetcher {
         }
 
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
-        bars = null;
+        fetchedBars = null;
         historyProvider
             .fetchBars(instrument,
                        period,
@@ -70,10 +70,9 @@ public class BarFetcher {
                        startMillisAdapted,
                        endMillis)
             .subscribeOn(Schedulers.io())
-            .subscribe(fbars -> bars = fbars);
+            .subscribe(bars -> fetchedBars = bars);
 
-        while (bars == null) {
-            // Zorro.logError("Wating for bars for " + instrument);
+        while (fetchedBars == null) {
             Zorro.callProgress(1);
             Observable
                 .interval(0L,
@@ -83,11 +82,11 @@ public class BarFetcher {
                 .blockingFirst();
         }
 
-        logger.debug("Fetched " + bars.size() + " bars for " + instrument + " with nTicks " + nTicks);
+        logger.debug("Fetched " + fetchedBars.size() + " bars for " + instrument + " with nTicks " + nTicks);
 
-        return bars.isEmpty()
+        return fetchedBars.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
-                : fillBars(bars, tickParams);
+                : fillBars(fetchedBars, tickParams);
     }
 
     private int fillBars(final List<IBar> bars,

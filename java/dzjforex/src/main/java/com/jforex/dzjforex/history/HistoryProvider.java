@@ -82,6 +82,18 @@ public class HistoryProvider {
             .blockingFirst();
     }
 
+    public long previousBarStart(final Period period,
+                                 final long time) {
+        return Observable
+            .fromCallable(() -> history.getPreviousBarStart(period, time))
+            .doOnSubscribe(d -> logger.debug("Trying to get previous bar time "
+                    + " for period " + period + " and current time " + time))
+            .doOnError(err -> logger.error("Getting previous bar time failed! " + err.getMessage()))
+            .retryWhen(this::historyRetryWhen)
+            .onErrorResumeNext(Observable.just(0L))
+            .blockingFirst();
+    }
+
     public Observable<List<ITick>> fetchTicks(final Instrument instrument,
                                               final long startTime,
                                               final long endTime) {

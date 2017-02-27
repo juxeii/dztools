@@ -15,6 +15,7 @@ import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.misc.DateTimeUtil;
+import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -22,12 +23,15 @@ import io.reactivex.schedulers.Schedulers;
 public class BarFetcher {
 
     private final HistoryProvider historyProvider;
+    private final StrategyUtil strategyUtil;
     private List<IBar> fetchedBars;
 
     private final static Logger logger = LogManager.getLogger(BarFetcher.class);
 
-    public BarFetcher(final HistoryProvider historyProvider) {
+    public BarFetcher(final HistoryProvider historyProvider,
+                      final StrategyUtil strategyUtil) {
         this.historyProvider = historyProvider;
+        this.strategyUtil = strategyUtil;
     }
 
     public int fetch(final Instrument instrument,
@@ -50,16 +54,22 @@ public class BarFetcher {
                 + "nTicks: " + nTicks);
 
         final Period period = TimeConvert.getPeriodFromMinutes(tickMinutes);
+        final long latestTickTime = strategyUtil
+            .instrumentUtil(instrument)
+            .tickQuote()
+            .getTime();
+        endMillis = historyProvider.previousBarStart(period, latestTickTime);
+        logger.debug("Adapted endMillis for " + instrument + "are " + DateTimeUtil.formatMillis(endMillis));
 
-        final long latestBarStart = historyProvider.latestFormedBarTime(instrument,
-                                                                        period,
-                                                                        OfferSide.ASK);
-        if (endMillis > latestBarStart) {
-            logger.warn("Latest bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
-                    + " which is smaller than requested endDate " + DateTimeUtil.formatMillis(endMillis)
-                    + " using the latest bar time now.");
-            endMillis = latestBarStart;
-        }
+//        final long latestBarStart = historyProvider.latestFormedBarTime(instrument,
+//                                                                        period,
+//                                                                        OfferSide.ASK);
+//        if (endMillis > latestBarStart) {
+//            logger.warn("Latest bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
+//                    + " which is smaller than requested endDate " + DateTimeUtil.formatMillis(endMillis)
+//                    + " using the latest bar time now.");
+//            endMillis = latestBarStart;
+//        }
 
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
         fetchedBars = null;

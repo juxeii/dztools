@@ -84,7 +84,7 @@ public class BarFetcherTest extends CommonUtilForTest {
         barMockList.add(barBMock);
         tickParams = new double[barMockList.size() * 7];
 
-        barFetcher = new BarFetcher(historyProviderMock);
+        barFetcher = new BarFetcher(historyProviderMock, strategyUtilMock);
     }
 
     private void setBarExpectations(final IBar barMock,

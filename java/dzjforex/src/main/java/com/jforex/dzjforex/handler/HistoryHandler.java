@@ -17,7 +17,7 @@ public class HistoryHandler {
             .getContext()
             .getHistory();
         historyProvider = new HistoryProvider(history, systemHandler.pluginConfig());
-        final BarFetcher barFetcher = new BarFetcher(historyProvider);
+        final BarFetcher barFetcher = new BarFetcher(historyProvider, systemHandler.infoStrategy().strategyUtil());
         final TickFetcher tickFetcher = new TickFetcher(historyProvider);
 
         brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);

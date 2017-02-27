@@ -55,10 +55,10 @@ public class BarFetcher {
                                                                         period,
                                                                         OfferSide.ASK);
         if (endMillis > latestBarStart) {
-            logger.warn("Lates bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
+            logger.warn("Latest bar time for " + instrument + " is " + DateTimeUtil.formatMillis(latestBarStart)
                     + " which is smaller than requested endDate " + DateTimeUtil.formatMillis(endMillis)
                     + " using the latest bar time now.");
-            endMillis = endMillis - period.getInterval();
+            endMillis = latestBarStart;
         }
 
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();

@@ -61,36 +61,30 @@ public class ZorroBridge {
     }
 
     public int doLogout() {
-        logger.info("Logout called");
 //        client.stopStrategy(strategyID);
 //        return brokerLogin.logout();
         return ZorroReturnValues.LOGOUT_OK.getValue();
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {
-        logger.info("doBrokerTime called");
         return timeHandler.brokerTime(pTimeUTC);
     }
 
     public int doSubscribeAsset(final String Asset) {
-        logger.info("doSubscribeAsset called");
         return accountHandler.subscribeAsset(Asset);
     }
 
     public int doBrokerAsset(final String Asset,
                              final double assetParams[]) {
-        logger.info("doBrokerAsset called");
         return accountHandler.brokerAsset(Asset, assetParams);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
-        logger.info("doBrokerAccount called");
         return accountHandler.brokerAccount(accountInfoParams);
     }
 
     public int doBrokerTrade(final int nTradeID,
                              final double orderParams[]) {
-        logger.info("doSubscribeAsset called");
         return tradeHandler.brokerTrade(nTradeID, orderParams);
     }
 
@@ -115,7 +109,6 @@ public class ZorroBridge {
                                 final int nTickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
-        logger.info("doBrokerHistory2 called");
         return historyHandler.brokerHistory2(Asset,
                                              tStart,
                                              tEnd,

@@ -51,9 +51,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
         tradeParams[0] = nAmount;
         tradeParams[1] = dStopDist;
 
-        brokerBuy = new BrokerBuy(orderSubmitMock,
-                                  orderMergeMock,
-                                  tradeUtilMock);
+        brokerBuy = new BrokerBuy(orderSubmitMock, tradeUtilMock);
     }
 
     private int callOpenTrade() {

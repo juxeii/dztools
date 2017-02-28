@@ -63,7 +63,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
         public void setUp() {
             when(tradeUtilMock.orderByID(nTradeID))
                 .thenReturn(orderMock);
-            when(tradeUtilMock.scaleAmount(orderAmount))
+            when(tradeUtilMock.amountToContracts(orderAmount))
                 .thenReturn(noOfContracts);
 
             when(orderMock.getInstrument())

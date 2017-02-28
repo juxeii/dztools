@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IBar;
+import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
@@ -20,6 +21,7 @@ import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.TimeConvert;
+import com.jforex.programming.instrument.InstrumentUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Observable;
@@ -32,9 +34,13 @@ public class BarFetcherTest extends CommonUtilForTest {
     @Mock
     private HistoryProvider historyProviderMock;
     @Mock
+    private InstrumentUtil instrumentUtilMock;
+    @Mock
     private IBar barAMock;
     @Mock
     private IBar barBMock;
+    @Mock
+    private ITick tickMock;
     private final double barAOpen = 1.32123;
     private final double barBOpen = 1.32126;
 
@@ -61,6 +67,7 @@ public class BarFetcherTest extends CommonUtilForTest {
     private final int tickMinutes = 1;
     private final int nTicks = 270;
     private double tickParams[];
+    private final long quoteTime = 12L;
     private final List<IBar> barMockList = new ArrayList<>();
 
     @Before
@@ -83,6 +90,13 @@ public class BarFetcherTest extends CommonUtilForTest {
         barMockList.add(barAMock);
         barMockList.add(barBMock);
         tickParams = new double[barMockList.size() * 7];
+
+        when(strategyUtilMock.instrumentUtil(fetchInstrument))
+            .thenReturn(instrumentUtilMock);
+        when(instrumentUtilMock.tickQuote())
+            .thenReturn(tickMock);
+        when(tickMock.getTime())
+            .thenReturn(quoteTime);
 
         barFetcher = new BarFetcher(historyProviderMock, strategyUtilMock);
     }

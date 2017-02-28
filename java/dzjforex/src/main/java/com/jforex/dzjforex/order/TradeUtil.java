@@ -142,7 +142,7 @@ public class TradeUtil {
                 : OrderCommand.SELL;
     }
 
-    public int scaleAmount(final double amount) {
+    public int amountToContracts(final double amount) {
         return (int) (amount * pluginConfig.lotScale());
     }
 

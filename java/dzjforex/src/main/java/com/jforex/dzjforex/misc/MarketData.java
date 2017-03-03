@@ -22,10 +22,10 @@ public class MarketData {
     }
 
     public boolean isMarketOffline(final long currentServerTime) {
-        final long lookUpEnTime = currentServerTime + Period.ONE_MIN.getInterval();
+        final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
 
         return Observable
-            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEnTime))
+            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
             .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
             .onErrorResumeNext(err -> {
                 logger.error("Get market offline times  failed!" + err.getMessage());

@@ -15,7 +15,7 @@ public class ClientProvider {
     public static IClient get() {
         return Observable
             .fromCallable(() -> ClientFactory.getDefaultInstance())
-            .doOnError(err -> logger.error("Error while login! " + err.getMessage()))
+            .doOnError(err -> logger.error("Error retrieving IClient instance! " + err.getMessage()))
             .blockingFirst();
     }
 }

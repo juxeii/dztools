@@ -77,6 +77,8 @@ public class CommonUtilForTest extends BDDMockito {
         when(tradeUtilMock.labelUtil()).thenReturn(orderLabelUtilMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
+        when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
+        when(pluginConfigMock.minPipsForSL()).thenReturn(10.0);
 
         coverageOnEnumsCorrection();
     }

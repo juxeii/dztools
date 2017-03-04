@@ -8,9 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryProvider;
-import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.event.OrderEvent;
@@ -24,15 +22,11 @@ import io.reactivex.Observable;
 public class CommonOrderForTest extends CommonUtilForTest {
 
     @Mock
-    protected TradeUtil tradeUtilMock;
-    @Mock
     protected OrderUtil orderUtilMock;
     @Mock
     protected HistoryProvider historyProviderMock;
     @Mock
     protected ServerTimeProvider serverTimeProviderMock;
-    @Mock
-    protected PluginConfig pluginConfigMock;
     @Mock
     protected IOrder orderMock;
     protected static final int orderRetries = 3;
@@ -48,9 +42,6 @@ public class CommonOrderForTest extends CommonUtilForTest {
         when(tradeUtilMock.orderUtil()).thenReturn(orderUtilMock);
 
         when(orderMock.getLabel()).thenReturn("TestLabel");
-
-        when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
-        when(pluginConfigMock.minPipsForSL()).thenReturn(10.0);
     }
 
     protected void setOrderUtilObservable(final Observable<OrderEvent> observable) {

@@ -98,7 +98,9 @@ public class BarFetcherTest extends CommonUtilForTest {
         when(tickMock.getTime())
             .thenReturn(quoteTime);
 
-        barFetcher = new BarFetcher(historyProviderMock, strategyUtilMock);
+        barFetcher = new BarFetcher(historyProviderMock,
+                                    strategyUtilMock,
+                                    zorroMock);
     }
 
     private void setBarExpectations(final IBar barMock,
@@ -132,6 +134,7 @@ public class BarFetcherTest extends CommonUtilForTest {
                                            anyLong(),
                                            anyLong()))
                                                .thenReturn(Observable.just(barList));
+        when(zorroMock.progressWait(any())).thenReturn(barList);
     }
 
     @Test

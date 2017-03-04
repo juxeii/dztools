@@ -72,7 +72,7 @@ public class TickFetcherTest extends CommonUtilForTest {
 
         tickParams = new double[tickMockList.size() * 7];
 
-        tickFetcher = new TickFetcher(historyProviderMock);
+        tickFetcher = new TickFetcher(historyProviderMock, zorroMock);
     }
 
     private void setTickExpectations(final ITick tickMock,
@@ -100,6 +100,7 @@ public class TickFetcherTest extends CommonUtilForTest {
                                             TimeConvert.millisFromOLEDate(startDate),
                                             TimeConvert.millisFromOLEDate(endDate)))
                                                 .thenReturn(Observable.just(tickList));
+        when(zorroMock.progressWait(any())).thenReturn(tickList);
     }
 
     @Test

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.misc.HeartBeat;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
@@ -13,36 +14,41 @@ import io.reactivex.schedulers.Schedulers;
 public class Zorro {
 
     private final PluginConfig pluginConfig;
-    private int taskResult;
-    private final Observable<Integer> heartBeat;
+    private Object taskResult;
+    private final Observable<HeartBeat<Void>> heartBeatObs;
 
     private final static int running = 10;
+    private final static int done = 0;
     private final static int heartBeatIndication = 1;
     private final static Logger logger = LogManager.getLogger(Zorro.class);
 
     public Zorro(final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
 
-        heartBeat = Observable
+        final HeartBeat<Void> hBeat = new HeartBeat<Void>(running, null);
+        heartBeatObs = Observable
             .interval(0L,
                       pluginConfig.zorroProgressInterval(),
                       TimeUnit.MILLISECONDS)
-            .map(i -> running);
+            .map(i -> hBeat);
     }
 
-    public int progressWait(final Observable<Integer> task) {
+    @SuppressWarnings("unchecked")
+    public <T> T progressWait(final Observable<T> task) {
+        final Observable<HeartBeat<T>> taskObs = task.map(taskData -> new HeartBeat<>(done, taskData));
+
         Observable
-            .merge(heartBeat, task)
+            .merge(heartBeatObs, taskObs)
             .subscribeOn(Schedulers.io())
-            .takeUntil(i -> i != running)
-            .blockingSubscribe(i -> {
-                if (i != running)
-                    taskResult = i;
+            .takeUntil(hb -> hb.index() != running)
+            .blockingSubscribe(hb -> {
+                if (hb.index() != running)
+                    taskResult = hb.data();
                 else
                     callProgress(heartBeatIndication);
             });
 
-        return taskResult;
+        return (T) taskResult;
     }
 
     public static int callProgress(final int progress) {

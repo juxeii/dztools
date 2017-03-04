@@ -2,7 +2,6 @@ package com.jforex.dzjforex.history;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,21 +16,21 @@ import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
-import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
-
 public class BarFetcher {
 
     private final HistoryProvider historyProvider;
     private final StrategyUtil strategyUtil;
+    private final Zorro zorro;
     private List<IBar> fetchedBars;
 
     private final static Logger logger = LogManager.getLogger(BarFetcher.class);
 
     public BarFetcher(final HistoryProvider historyProvider,
-                      final StrategyUtil strategyUtil) {
+                      final StrategyUtil strategyUtil,
+                      final Zorro zorro) {
         this.historyProvider = historyProvider;
         this.strategyUtil = strategyUtil;
+        this.zorro = zorro;
     }
 
     public int fetch(final Instrument instrument,
@@ -64,25 +63,11 @@ public class BarFetcher {
         }
 
         final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
-        fetchedBars = null;
-        historyProvider
-            .fetchBars(instrument,
-                       period,
-                       OfferSide.ASK,
-                       startMillisAdapted,
-                       endMillis)
-            .subscribeOn(Schedulers.io())
-            .subscribe(bars -> fetchedBars = bars);
-
-        while (fetchedBars == null) {
-            Zorro.callProgress(1);
-            Observable
-                .interval(0L,
-                          250L,
-                          TimeUnit.MILLISECONDS,
-                          Schedulers.io())
-                .blockingFirst();
-        }
+        fetchedBars = zorro.progressWait(historyProvider.fetchBars(instrument,
+                                                                   period,
+                                                                   OfferSide.ASK,
+                                                                   startMillisAdapted,
+                                                                   endMillis));
 
         logger.debug("Fetched " + fetchedBars.size() + " bars for " + instrument + " with nTicks " + nTicks);
 

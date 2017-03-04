@@ -2,7 +2,6 @@ package com.jforex.dzjforex.history;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,18 +13,18 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
-import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
-
 public class TickFetcher {
 
     private final HistoryProvider historyProvider;
+    private final Zorro zorro;
     private List<ITick> fetchedTicks;
 
     private final static Logger logger = LogManager.getLogger(TickFetcher.class);
 
-    public TickFetcher(final HistoryProvider historyProvider) {
+    public TickFetcher(final HistoryProvider historyProvider,
+                       final Zorro zorro) {
         this.historyProvider = historyProvider;
+        this.zorro = zorro;
     }
 
     public int fetch(final Instrument instrument,
@@ -40,23 +39,9 @@ public class TickFetcher {
                 + "tickMinutes: " + tickMinutes + ": \n "
                 + "nTicks: " + nTicks);
 
-        fetchedTicks = null;
-        historyProvider
-            .fetchTicks(instrument,
-                        TimeConvert.millisFromOLEDate(startDate),
-                        TimeConvert.millisFromOLEDate(endDate))
-            .subscribeOn(Schedulers.io())
-            .subscribe(ticks -> fetchedTicks = ticks);
-
-        while (fetchedTicks == null) {
-            Zorro.callProgress(1);
-            Observable
-                .interval(0L,
-                          250L,
-                          TimeUnit.MILLISECONDS,
-                          Schedulers.io())
-                .blockingFirst();
-        }
+        fetchedTicks = zorro.progressWait(historyProvider.fetchTicks(instrument,
+                                                                     TimeConvert.millisFromOLEDate(startDate),
+                                                                     TimeConvert.millisFromOLEDate(endDate)));
 
         logger.debug("Fetched " + fetchedTicks.size() + " ticks for " + instrument + " with nTicks " + nTicks);
 

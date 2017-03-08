@@ -50,7 +50,7 @@ DllCallHandler::BrokerLogin(const char *User,
             BrokerError("Account number too big -> truncated");
             nPos = 1023;
         }
-        std::strncpy(Account, accountID, nPos);
+        strncpy_s(Account, 1023, accountID, nPos);
         Account[nPos] = 0;
         env->DeleteLocalRef(jAccount);
     }

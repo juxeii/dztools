@@ -3,6 +3,7 @@ package com.jforex.dzjforex.misc;
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IContext;
+import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IMessage;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
@@ -17,6 +18,14 @@ public class InfoStrategy extends JForexUtilsStrategy {
 
     public IContext getContext() {
         return context;
+    }
+
+    public IAccount getAccount() {
+        return context.getAccount();
+    }
+
+    public IHistory getHistory() {
+        return context.getHistory();
     }
 
     public StrategyUtil strategyUtil() {

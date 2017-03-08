@@ -15,8 +15,7 @@ public class LoginHandler {
         final ClientUtil clientUtil = systemHandler.clientUtil();
         final IClient client = clientUtil.client();
         final PluginConfig pluginConfig = systemHandler.pluginConfig();
-
-        final PinProvider pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
+        final PinProvider pinProvider = new PinProvider(systemHandler);
         final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         final LoginExecutor loginExecutor = new LoginExecutor(clientUtil.authentification(),
                                                               credentialsFactory,

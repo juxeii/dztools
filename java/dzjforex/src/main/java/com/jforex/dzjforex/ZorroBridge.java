@@ -118,7 +118,7 @@ public class ZorroBridge {
     }
 
     public int doSetOrderText(final String orderText) {
-        Zorro.logError("doSetOrderText for " + orderText + " called but not yet supported!");
+        Zorro.logDiagnose("doSetOrderText for " + orderText + " called but not yet supported!");
         return ZorroReturnValues.BROKER_COMMAND_OK.getValue();
     }
 }

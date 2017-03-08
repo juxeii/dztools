@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.Zorro;
+import com.jforex.dzjforex.handler.SystemHandler;
 
 // Code from http://www.dukascopy.com/wiki/#JForex_SDK_LIVE_mode
 public class PinProvider {
@@ -26,10 +27,11 @@ public class PinProvider {
 
     private final static Logger logger = LogManager.getLogger(PinDialog.class);
 
-    public PinProvider(final IClient client,
-                       final String liveURL) {
-        this.client = client;
-        this.liveURL = liveURL;
+    public PinProvider(final SystemHandler systemHandler) {
+        this.client = systemHandler.client();
+        this.liveURL = systemHandler
+            .pluginConfig()
+            .realConnectURL();
     }
 
     public String getPin() {

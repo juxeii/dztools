@@ -60,7 +60,7 @@ BrokerOpen(char *Name,
            FARPROC fpError,
            FARPROC fpProgress)
 {
-    strcpy(Name, "Dukascopy");
+	strcpy_s(Name, 9, "Dukascopy");
     (FARPROC&) BrokerError = fpError;
     (FARPROC&) BrokerProgress = fpProgress;
 
@@ -210,7 +210,7 @@ BrokerCommand(int nCommand,
     default:
         {
            char str[80];
-           sprintf(str, "Command %i not yet supported.", nCommand);
+           sprintf_s(str, "Command %i not yet supported.", nCommand);
            puts(str);
            BrokerError(str);
         }

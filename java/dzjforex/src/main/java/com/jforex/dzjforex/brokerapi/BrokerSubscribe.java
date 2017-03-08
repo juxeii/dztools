@@ -36,26 +36,39 @@ public class BrokerSubscribe {
     public int subscribe(final String instrumentName) {
         final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(instrumentName);
         return maybeInstrument.isPresent()
-                ? subscribeValidinstrumentName(maybeInstrument.get())
+                ? subscribeValidInstrumentName(maybeInstrument.get())
                 : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
     }
 
-    private int subscribeValidinstrumentName(final Instrument instrumentToSubscribe) {
-        if (client.getSubscribedInstruments().contains(instrumentToSubscribe)) {
+    private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {
+        if (isInstrumentSubscribed(instrumentToSubscribe)) {
             logger.warn("Instrument " + instrumentToSubscribe + " already subscribed.");
             return ZorroReturnValues.ASSET_AVAILABLE.getValue();
         }
 
-        logger.debug("Trying to subscribe instrument " + instrumentToSubscribe);
-        instrumentsToSubscribe.add(instrumentToSubscribe);
+        subscribeWithCrossInstruments(instrumentToSubscribe);
+        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
+    }
 
+    private boolean isInstrumentSubscribed(final Instrument instrument) {
+        return client
+            .getSubscribedInstruments()
+            .contains(instrument);
+    }
+
+    private Set<Instrument> crossInstruments(final Instrument instrumentToSubscribe) {
         final Set<ICurrency> crossCurrencies = CurrencyFactory.fromInstrument(instrumentToSubscribe);
-        final Set<Instrument> crossInstruments = InstrumentFactory.combineWithAnchorCurrency(accountInfo.currency(),
-                                                                                             crossCurrencies);
+        return InstrumentFactory.combineWithAnchorCurrency(accountInfo.currency(), crossCurrencies);
+    }
+
+    private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
+        final Set<Instrument> crossInstruments = crossInstruments(instrumentToSubscribe);
+        instrumentsToSubscribe.add(instrumentToSubscribe);
         instrumentsToSubscribe.addAll(crossInstruments);
 
+        logger.debug("Trying to subscribe instrument " + instrumentToSubscribe +
+                " with cross instruments " + crossInstruments);
         client.setSubscribedInstruments(instrumentsToSubscribe);
-        logger.debug("Subscribed instruments of client are:" + client.getSubscribedInstruments());
-        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
+        logger.debug("Subscribed instruments are:" + client.getSubscribedInstruments());
     }
 }

@@ -36,5 +36,5 @@ Please use [pastebin](http://pastebin.com/) for uploading the logs.
 
 - This a very early release so **don't expect it to be bug free!**
 - Currently **only Forex** is supported(no Stocks, CFDs etc.)
-- The history downloading from Dukascopy servers is sometimes not reliable; just repeat the in case of errors
+- The history downloading from Dukascopy servers is sometimes not reliable; just try again in case of errors
 - Follow discussions for this project on the [forum](http://www.opserver.de/ubb7/ubbthreads.php?ubb=showflat&Number=447697&#Post447697)

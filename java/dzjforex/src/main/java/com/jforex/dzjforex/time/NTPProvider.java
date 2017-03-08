@@ -9,6 +9,7 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.misc.DateTimeUtil;
 
 import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 
 public class NTPProvider {
 
@@ -30,7 +31,8 @@ public class NTPProvider {
         Observable
             .interval(0L,
                       pluginConfig.ntpSynchInterval(),
-                      TimeUnit.MILLISECONDS)
+                      TimeUnit.MILLISECONDS,
+                      Schedulers.io())
             .doOnSubscribe(d -> logger.debug("Starting NTP synch task..."))
             .flatMap(counter -> ntpFetch.observable())
             .subscribe(this::onNTPTime,

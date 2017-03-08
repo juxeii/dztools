@@ -72,7 +72,7 @@ public class TickFetcherTest extends CommonUtilForTest {
 
         tickParams = new double[tickMockList.size() * 7];
 
-        tickFetcher = new TickFetcher(historyProviderMock, zorroMock);
+        tickFetcher = new TickFetcher(systemHandlerMock, historyProviderMock);
     }
 
     private void setTickExpectations(final ITick tickMock,

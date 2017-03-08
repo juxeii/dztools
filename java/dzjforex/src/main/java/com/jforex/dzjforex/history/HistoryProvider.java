@@ -101,13 +101,25 @@ public class HistoryProvider {
             .fromCallable(() -> history.getTicks(instrument,
                                                  startTime,
                                                  endTime))
-            .doOnSubscribe(d -> logger.debug("Starting to fetch ticks for " + instrument
-                    + "startTime: " + DateTimeUtil.formatMillis(startTime)
+            .doOnSubscribe(d -> logger.debug("Starting to fetch ticks for " + instrument + "\n"
+                    + "startTime: " + DateTimeUtil.formatMillis(startTime) + "\n"
                     + "endTime: " + DateTimeUtil.formatMillis(endTime)))
             .doOnComplete(() -> logger.debug("Fetching ticks for " + instrument + " completed."))
             .doOnError(err -> logger.error("Fetch ticks failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(new ArrayList<>()));
+    }
+
+    public Observable<ITick> tickByShift(final Instrument instrument,
+                                         final int shift) {
+        return Observable
+            .fromCallable(() -> history.getTick(instrument, shift))
+            .doOnSubscribe(d -> logger.debug("Starting to fetch tick for " + instrument
+                    + " with shift " + shift))
+            .doOnComplete(() -> logger.debug("Fetching tick for " + instrument + " completed."))
+            .doOnError(err -> logger.error("Fetch tick failed! " + err.getMessage()))
+            .retryWhen(this::historyRetryWhen)
+            .onErrorResumeNext(Observable.just(null));
     }
 
     public Observable<List<IOrder>> ordersByInstrument(final Instrument instrument,

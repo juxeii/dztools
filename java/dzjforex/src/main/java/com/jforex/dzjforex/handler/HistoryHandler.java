@@ -7,6 +7,7 @@ import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.misc.InfoStrategy;
+import com.jforex.programming.strategy.StrategyUtil;
 
 public class HistoryHandler {
 
@@ -15,13 +16,14 @@ public class HistoryHandler {
 
     public HistoryHandler(final SystemHandler systemHandler) {
         final InfoStrategy infoStrategy = systemHandler.infoStrategy();
+        final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
         final IHistory history = infoStrategy.getHistory();
         final Zorro zorro = systemHandler.zorro();
         historyProvider = new HistoryProvider(history, systemHandler.pluginConfig());
         final BarFetcher barFetcher = new BarFetcher(historyProvider,
-                                                     infoStrategy.strategyUtil(),
+                                                     strategyUtil,
                                                      zorro);
-        final TickFetcher tickFetcher = new TickFetcher(historyProvider, zorro);
+        final TickFetcher tickFetcher = new TickFetcher(systemHandler, historyProvider);
         brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);
     }
 

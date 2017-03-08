@@ -15,6 +15,8 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.handler.SystemHandler;
+import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderCloseResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
@@ -29,11 +31,15 @@ import com.jforex.programming.strategy.StrategyUtil;
 public class CommonUtilForTest extends BDDMockito {
 
     @Mock
+    protected SystemHandler systemHandlerMock;
+    @Mock
     protected Zorro zorroMock;
     @Mock
     protected IEngine engineMock;
     @Mock
     protected TradeUtil tradeUtilMock;
+    @Mock
+    protected InfoStrategy infoStrategyMock;
     @Mock
     protected StrategyUtil strategyUtilMock;
     @Mock
@@ -72,6 +78,12 @@ public class CommonUtilForTest extends BDDMockito {
     public CommonUtilForTest() {
         initMocks(this);
 
+        when(systemHandlerMock.infoStrategy()).thenReturn(infoStrategyMock);
+        when(systemHandlerMock.zorro()).thenReturn(zorroMock);
+        when(systemHandlerMock.pluginConfig()).thenReturn(pluginConfigMock);
+
+        when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
+
         when(tradeUtilMock.strategyUtil()).thenReturn(strategyUtilMock);
         when(tradeUtilMock.orderRepository()).thenReturn(orderRepositoryMock);
         when(tradeUtilMock.labelUtil()).thenReturn(orderLabelUtilMock);
@@ -79,6 +91,7 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
         when(pluginConfigMock.minPipsForSL()).thenReturn(10.0);
+        when(pluginConfigMock.tickFetchMinutes()).thenReturn(30);
 
         coverageOnEnumsCorrection();
     }

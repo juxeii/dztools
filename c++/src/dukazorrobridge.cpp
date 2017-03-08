@@ -60,7 +60,7 @@ BrokerOpen(char *Name,
            FARPROC fpError,
            FARPROC fpProgress)
 {
-	strcpy_s(Name, 9, "Dukascopy");
+	strcpy_s(Name, 10, "Dukascopy");
     (FARPROC&) BrokerError = fpError;
     (FARPROC&) BrokerProgress = fpProgress;
 

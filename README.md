@@ -4,9 +4,9 @@ This a plugin for [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/
 
 ## General installation
 
-1.) Download and install the latest **32-bit** [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads). Make sure it is the 32-bit version(x86 suffix) since the plugin DLL is a 32-bit library. In case you already have a 32-bit JRE installation(check it with *java -version*) you might skip this step.
+1.) Download and install the latest **32-bit** [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). Make sure it is the 32-bit version(x86 suffix) since the plugin DLL is a 32-bit library. In case you already have a 32-bit JDK installation(check it with *java -version*) you might skip this step.
 
-2.) Add *${yourJREinstallPath}\jre\bin\* and *${yourJREinstallPath}\jre\bin\client* to the **front** of your *Path* environment variable([here](http://www.computerhope.com/issues/ch000549.htm) is a howto).
+2.) Add *${yourJDKinstallPath}\jre\bin\* and *${yourJDKinstallPath}\jre\bin\client* to the **front** of your *Path* environment variable([here](http://www.computerhope.com/issues/ch000549.htm) is a howto).
 
 3.) Install [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/download.php) if not already on your machine.
 

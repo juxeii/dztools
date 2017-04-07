@@ -13,8 +13,6 @@ import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderCloseResult;
-import com.jforex.dzjforex.order.OrderSetLabel;
-import com.jforex.dzjforex.order.OrderSetLabelResult;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -27,8 +25,6 @@ public class BrokerSellTest extends CommonUtilForTest {
     @Mock
     private OrderClose orderCloseMock;
     @Mock
-    private OrderSetLabel orderSetLabelMock;
-    @Mock
     private IOrder orderMock;
     private final String newLabel = "newLabel";
     private final int nTradeID = 1;
@@ -39,9 +35,7 @@ public class BrokerSellTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        brokerSell = new BrokerSell(tradeUtilMock,
-                                    orderCloseMock,
-                                    orderSetLabelMock);
+        brokerSell = new BrokerSell(tradeUtilMock, orderCloseMock);
     }
 
     private int callCloseTrade() {
@@ -55,7 +49,6 @@ public class BrokerSellTest extends CommonUtilForTest {
         assertThat(callCloseTrade(),
                    equalTo(ZorroReturnValues.BROKER_SELL_FAIL.getValue()));
         verifyZeroInteractions(orderCloseMock);
-        verifyZeroInteractions(orderSetLabelMock);
     }
 
     public class WhenTradingIsAllowed {
@@ -72,7 +65,6 @@ public class BrokerSellTest extends CommonUtilForTest {
             assertThat(callCloseTrade(),
                        equalTo(ZorroReturnValues.BROKER_SELL_FAIL.getValue()));
             verifyZeroInteractions(orderCloseMock);
-            verifyZeroInteractions(orderSetLabelMock);
         }
 
         public class WhenOrderIdIsKnown {
@@ -122,30 +114,12 @@ public class BrokerSellTest extends CommonUtilForTest {
                             .thenReturn(partialCloseAmount);
                     }
 
-                    public class OnPartialCloseFail {
-
-                        @Before
-                        public void setUp() {
-                            when(orderSetLabelMock.run(orderMock, newLabel))
-                                .thenReturn(OrderSetLabelResult.FAIL);
-                        }
-
-                        @Test
-                        public void returnValueIsBrokerSellFail() {
-                            assertThat(callCloseTrade(),
-                                       equalTo(ZorroReturnValues.BROKER_SELL_FAIL.getValue()));
-                        }
-                    }
-
                     public class OnPartialCloseOK {
 
                         private final int newTradeId = 2;
 
                         @Before
                         public void setUp() {
-                            when(orderSetLabelMock.run(orderMock, newLabel))
-                                .thenReturn(OrderSetLabelResult.OK);
-
                             when(orderLabelUtilMock.idFromOrder(orderMock))
                                 .thenReturn(newTradeId);
                         }

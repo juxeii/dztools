@@ -20,7 +20,6 @@ import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderCloseResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetLabelResult;
 import com.jforex.dzjforex.order.OrderSetSLResult;
 import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.order.TradeUtil;
@@ -103,8 +102,6 @@ public class CommonUtilForTest extends BDDMockito {
             .valueOf(OrderSetSLResult.OK.toString());
         OrderCloseResult
             .valueOf(OrderCloseResult.OK.toString());
-        OrderSetLabelResult
-            .valueOf(OrderSetLabelResult.OK.toString());
         ZorroReturnValues
             .valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
     }

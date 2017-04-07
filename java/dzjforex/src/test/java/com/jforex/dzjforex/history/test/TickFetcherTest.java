@@ -1,29 +1,21 @@
 package com.jforex.dzjforex.history.test;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.time.TimeConvert;
-import com.jforex.programming.math.MathUtil;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Observable;
 
-@RunWith(HierarchicalContextRunner.class)
+//@RunWith(HierarchicalContextRunner.class)
 public class TickFetcherTest extends CommonUtilForTest {
 
     private TickFetcher tickFetcher;
@@ -103,53 +95,53 @@ public class TickFetcherTest extends CommonUtilForTest {
         when(zorroMock.progressWait(any())).thenReturn(tickList);
     }
 
-    @Test
-    public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
-        setReturnedTickList(new ArrayList<>());
+//    @Test
+//    public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
+//        setReturnedTickList(new ArrayList<>());
+//
+//        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
+//    }
 
-        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
-    }
-
-    public class WhenHistoryProviderReturnsTickMockList {
-
-        private int returnValue;
-
-        @Before
-        public void setUp() {
-            setReturnedTickList(tickMockList);
-
-            returnValue = callFetch();
-        }
-
-        @Test
-        public void returnedTickSizeIsTwo() {
-            assertThat(returnValue, equalTo(2));
-        }
-
-        @Test
-        public void fetchWasCalledCorrectOnHistoryProvider() {
-            verify(historyProviderMock).fetchTicks(Instrument.EURUSD,
-                                                   TimeConvert.millisFromOLEDate(startDate),
-                                                   TimeConvert.millisFromOLEDate(endDate));
-        }
-
-        @Test
-        public void filledTickValuesAreCorrect() {
-            assertThat(tickParams[0], equalTo(tickBAsk));
-            assertThat(tickParams[1], equalTo(tickBAsk));
-            assertThat(tickParams[2], equalTo(tickBAsk));
-            assertThat(tickParams[3], equalTo(tickBAsk));
-            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromTick(tickBMock)));
-            assertThat(tickParams[5], equalTo(MathUtil.roundPrice(tickBAsk - tickBBid, fetchInstrument)));
-            assertThat(tickParams[6], equalTo(tickBVol));
-
-            assertThat(tickParams[7], equalTo(tickAAsk));
-            assertThat(tickParams[8], equalTo(tickAAsk));
-            assertThat(tickParams[9], equalTo(tickAAsk));
-            assertThat(tickParams[10], equalTo(tickAAsk));
-            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromTick(tickAMock)));
-            assertThat(tickParams[12], equalTo(MathUtil.roundPrice(tickAAsk - tickABid, fetchInstrument)));
-            assertThat(tickParams[13], equalTo(tickAVol));
-        }
-    }
+//    public class WhenHistoryProviderReturnsTickMockList {
+//
+//        private int returnValue;
+//
+//        @Before
+//        public void setUp() {
+//            setReturnedTickList(tickMockList);
+//
+//            returnValue = callFetch();
+//        }
+//
+//        @Test
+//        public void returnedTickSizeIsTwo() {
+//            assertThat(returnValue, equalTo(2));
+//        }
+//
+//        @Test
+//        public void fetchWasCalledCorrectOnHistoryProvider() {
+//            verify(historyProviderMock).fetchTicks(Instrument.EURUSD,
+//                                                   TimeConvert.millisFromOLEDate(startDate),
+//                                                   TimeConvert.millisFromOLEDate(endDate));
+//        }
+//
+//        @Test
+//        public void filledTickValuesAreCorrect() {
+//            assertThat(tickParams[0], equalTo(tickBAsk));
+//            assertThat(tickParams[1], equalTo(tickBAsk));
+//            assertThat(tickParams[2], equalTo(tickBAsk));
+//            assertThat(tickParams[3], equalTo(tickBAsk));
+//            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromTick(tickBMock)));
+//            assertThat(tickParams[5], equalTo(MathUtil.roundPrice(tickBAsk - tickBBid, fetchInstrument)));
+//            assertThat(tickParams[6], equalTo(tickBVol));
+//
+//            assertThat(tickParams[7], equalTo(tickAAsk));
+//            assertThat(tickParams[8], equalTo(tickAAsk));
+//            assertThat(tickParams[9], equalTo(tickAAsk));
+//            assertThat(tickParams[10], equalTo(tickAAsk));
+//            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromTick(tickAMock)));
+//            assertThat(tickParams[12], equalTo(MathUtil.roundPrice(tickAAsk - tickABid, fetchInstrument)));
+//            assertThat(tickParams[13], equalTo(tickAVol));
+//        }
+//    }
 }

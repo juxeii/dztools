@@ -10,7 +10,6 @@ import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetLabel;
 import com.jforex.dzjforex.order.OrderSetSL;
 import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.order.RunningOrders;
@@ -46,14 +45,11 @@ public class TradeHandler {
                                                   pluginConfig);
         final OrderSetSL setSLHandler = new OrderSetSL(tradeUtil);
         final OrderSubmit orderSubmit = new OrderSubmit(tradeUtil);
-        final OrderSetLabel setLabel = new OrderSetLabel(tradeUtil);
         final OrderClose orderClose = new OrderClose(tradeUtil);
 
         brokerTrade = new BrokerTrade(tradeUtil);
         brokerBuy = new BrokerBuy(orderSubmit, tradeUtil);
-        brokerSell = new BrokerSell(tradeUtil,
-                                    orderClose,
-                                    setLabel);
+        brokerSell = new BrokerSell(tradeUtil, orderClose);
         brokerStop = new BrokerStop(setSLHandler, tradeUtil);
     }
 

@@ -53,10 +53,10 @@ public class NTPProviderTest extends CommonUtilForTest {
 
     @Test
     public void ntpIsCorrectForIntervals() {
-        synchAndAssertTime(secondNTP);
-        synchAndAssertTime(thirdNTP);
-        synchAndAssertTime(thirdNTP);
+        synchAndAssertTime(firstNTP);
+        synchAndAssertTime(firstNTP);
+        synchAndAssertTime(firstNTP);
 
-        verify(ntpFetchMock, times(4)).observable();
+        verify(ntpFetchMock).observable();
     }
 }

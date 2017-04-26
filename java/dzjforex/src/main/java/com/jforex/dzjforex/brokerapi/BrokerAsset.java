@@ -17,7 +17,7 @@ public class BrokerAsset {
     private final AccountInfo accountInfo;
     private final StrategyUtil strategyUtil;
 
-    private static final double valueNotSupported = 0.0;
+    private final static double valueNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerAsset.class);
 
     public BrokerAsset(final AccountInfo accountInfo,

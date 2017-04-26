@@ -10,7 +10,7 @@ public class BrokerAccount {
 
     private final AccountInfo accountInfo;
 
-    private final static Logger logger = LogManager.getLogger(BrokerBuy.class);
+    private final static Logger logger = LogManager.getLogger(BrokerAccount.class);
 
     public BrokerAccount(final AccountInfo accountInfo) {
         this.accountInfo = accountInfo;

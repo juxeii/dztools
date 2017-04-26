@@ -46,7 +46,6 @@ public class OrderLabelUtil {
     }
 
     private String orderLabelPrefix() {
-        final String teString = pluginConfig.orderLabelPrefix();
         return pluginConfig.orderLabelPrefix();
     }
 

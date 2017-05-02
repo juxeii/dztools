@@ -12,7 +12,6 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.OrderSetSL;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
 
@@ -23,8 +22,6 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
     private BrokerTrade brokerTrade;
 
-    @Mock
-    private OrderSetSL orderSetSLMock;
     @Mock
     private InstrumentUtil instrumentUtilMock;
     @Mock
@@ -46,7 +43,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
     }
 
     private int callFillTradeParams() {
-        return brokerTrade.fillTradeParams(nTradeID, orderParams);
+        return brokerTrade.handle(nTradeID, orderParams);
     }
 
     @Test

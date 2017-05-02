@@ -19,7 +19,6 @@ public class BrokerSubscribe {
 
     private final IClient client;
     private final AccountInfo accountInfo;
-    private final Set<Instrument> instrumentsToSubscribe = new HashSet<Instrument>();
 
     private final static Logger logger = LogManager.getLogger(BrokerSubscribe.class);
 
@@ -63,11 +62,12 @@ public class BrokerSubscribe {
 
     private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
         final Set<Instrument> crossInstruments = crossInstruments(instrumentToSubscribe);
+
+        final Set<Instrument> instrumentsToSubscribe = new HashSet<>();
         instrumentsToSubscribe.add(instrumentToSubscribe);
         instrumentsToSubscribe.addAll(crossInstruments);
-
         logger.debug("Trying to subscribe instrument " + instrumentToSubscribe +
-                " with cross instruments " + crossInstruments);
+                " and cross instruments " + crossInstruments);
         client.setSubscribedInstruments(instrumentsToSubscribe);
         logger.debug("Subscribed instruments are:" + client.getSubscribedInstruments());
     }

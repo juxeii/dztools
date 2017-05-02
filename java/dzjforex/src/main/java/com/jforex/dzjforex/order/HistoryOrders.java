@@ -51,8 +51,8 @@ public class HistoryOrders {
                                                 to))
             .flatMap(List::stream)
             .collect(Collectors.toList());
-        logger.debug("Fetched " + orders.size() + " history orders for " + brokerSubscribe.subscribedInstruments());
 
+        logger.debug("Fetched " + orders.size() + " history orders for " + brokerSubscribe.subscribedInstruments());
         return orders;
     }
 
@@ -66,7 +66,6 @@ public class HistoryOrders {
             .blockingFirst();
 
         logger.debug("Fetched " + orders.size() + " history orders for " + instrument);
-
         return orders;
     }
 }

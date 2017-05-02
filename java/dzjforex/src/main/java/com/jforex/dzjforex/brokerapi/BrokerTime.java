@@ -20,15 +20,15 @@ public class BrokerTime {
         this.marketData = marketData;
     }
 
-    public int get(final double pTimeUTC[]) {
+    public int get(final BrokerTimeData brokerTimeData) {
         return client.isConnected()
-                ? fillServerTimeAndReturnStatus(pTimeUTC)
+                ? fillServerTimeAndReturnStatus(brokerTimeData)
                 : ZorroReturnValues.CONNECTION_LOST_NEW_LOGIN_REQUIRED.getValue();
     }
 
-    private int fillServerTimeAndReturnStatus(final double pTimeUTC[]) {
+    private int fillServerTimeAndReturnStatus(final BrokerTimeData brokerTimeData) {
         final long serverTime = serverTimeProvider.get();
-        pTimeUTC[0] = TimeConvert.getOLEDateFromMillis(serverTime);
+        brokerTimeData.fill(TimeConvert.getOLEDateFromMillis(serverTime));
 
         return marketData.isMarketOffline(serverTime)
                 ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()

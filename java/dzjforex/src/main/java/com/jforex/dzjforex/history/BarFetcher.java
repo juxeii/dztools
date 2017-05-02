@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.history;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +11,12 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.Zorro;
+import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.misc.DateTimeUtil;
+import com.jforex.programming.quote.BarParams;
+import com.jforex.programming.quote.BarQuote;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class BarFetcher {
@@ -34,25 +37,21 @@ public class BarFetcher {
     }
 
     public int fetch(final Instrument instrument,
-                     final double startDate,
-                     final double endDate,
-                     final int tickMinutes,
-                     final int nTicks,
-                     final double tickParams[]) {
-        final long startMillis = TimeConvert.millisFromOLEDateRoundMinutes(startDate);
-        long endMillis = TimeConvert.millisFromOLEDateRoundMinutes(endDate);
+                     final BrokerHistoryData brokerHistoryData) {
+        final long startMillis = TimeConvert.millisFromOLEDateRoundMinutes(brokerHistoryData.startTime());
+        long endMillis = TimeConvert.millisFromOLEDateRoundMinutes(brokerHistoryData.endTime());
 
         logger.debug("Requested bars for instrument " + instrument + ": \n "
-                + "startDateUTCRaw: " + startDate + ": \n "
-                + "endDateUTCRaw: " + endDate + ": \n "
+                + "startDateUTCRaw: " + brokerHistoryData.startTime() + ": \n "
+                + "endDateUTCRaw: " + brokerHistoryData.endTime() + ": \n "
                 + "startDate: " + DateTimeUtil.formatMillis(startMillis)
                 + ": \n "
                 + "endDate: " + DateTimeUtil.formatMillis(endMillis)
                 + ": \n "
-                + "tickMinutes: " + tickMinutes + ": \n "
-                + "nTicks: " + nTicks);
+                + "tickMinutes: " + brokerHistoryData.noOfTickMinutes() + ": \n "
+                + "nTicks: " + brokerHistoryData.noOfTicks());
 
-        final Period period = TimeConvert.getPeriodFromMinutes(tickMinutes);
+        final Period period = TimeConvert.getPeriodFromMinutes(brokerHistoryData.noOfTickMinutes());
         final long latestTickTime = strategyUtil
             .instrumentUtil(instrument)
             .tickQuote()
@@ -62,36 +61,52 @@ public class BarFetcher {
             logger.debug("Adapted endMillis for " + instrument + "are " + DateTimeUtil.formatMillis(endMillis));
         }
 
-        final long startMillisAdapted = endMillis - (nTicks - 1) * period.getInterval();
+        final long startMillisAdapted = endMillis - (brokerHistoryData.noOfTicks() - 1) * period.getInterval();
         fetchedBars = zorro.progressWait(historyProvider.fetchBars(instrument,
                                                                    period,
                                                                    OfferSide.ASK,
                                                                    startMillisAdapted,
                                                                    endMillis));
 
-        logger.debug("Fetched " + fetchedBars.size() + " bars for " + instrument + " with nTicks " + nTicks);
+        logger.debug("Fetched " + fetchedBars.size()
+                + " bars for " + instrument
+                + " with nTicks " + brokerHistoryData.noOfTicks());
 
         return fetchedBars.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
-                : fillBars(fetchedBars, tickParams);
+                : fillBars(fetchedBars,
+                           instrument,
+                           period,
+                           brokerHistoryData);
     }
 
     private int fillBars(final List<IBar> bars,
-                         final double tickParams[]) {
-        int tickParamsIndex = 0;
-        Collections.reverse(bars);
-        for (int i = 0; i < bars.size(); ++i) {
-            final IBar bar = bars.get(i);
-            tickParams[tickParamsIndex] = bar.getOpen();
-            tickParams[tickParamsIndex + 1] = bar.getClose();
-            tickParams[tickParamsIndex + 2] = bar.getHigh();
-            tickParams[tickParamsIndex + 3] = bar.getLow();
-            tickParams[tickParamsIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
-            // tickParams[tickParamsIndex + 5] = spread not available for bars
-            tickParams[tickParamsIndex + 6] = bar.getVolume();
-
-            tickParamsIndex += 7;
-        }
+                         final Instrument instrument,
+                         final Period period,
+                         final BrokerHistoryData brokerHistoryData) {
+        final List<BarQuote> barQuotes = barsToQuotes(bars,
+                                                      instrument,
+                                                      period);
+        brokerHistoryData.fillBars(barQuotes);
         return bars.size();
+    }
+
+    private List<BarQuote> barsToQuotes(final List<IBar> bars,
+                                        final Instrument instrument,
+                                        final Period period) {
+        return bars
+            .stream()
+            .map(bar -> barToQuote(bar, instrument, period))
+            .collect(Collectors.toList());
+    }
+
+    private BarQuote barToQuote(final IBar bar,
+                                final Instrument instrument,
+                                final Period period) {
+        final BarParams barParams = BarParams
+            .forInstrument(instrument)
+            .period(period)
+            .offerSide(OfferSide.ASK);
+        return new BarQuote(bar, barParams);
     }
 }

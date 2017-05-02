@@ -74,8 +74,8 @@ public class HistoryProvider {
         return Observable
             .fromCallable(() -> history.getBar(instrument, period, offerSide, 1))
             .map(bar -> bar.getTime())
-            .doOnSubscribe(d -> logger.debug("Trying to get latest formed bar time for instrument "
-                    + instrument + " and period " + period))
+            .doOnSubscribe(d -> logger.debug("Trying to get latest formed bar time for instrument " + instrument
+                    + " and period " + period))
             .doOnError(err -> logger.error("Get latest formed bar time failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(0L))
@@ -86,8 +86,8 @@ public class HistoryProvider {
                                  final long time) {
         return Observable
             .fromCallable(() -> history.getPreviousBarStart(period, time))
-            .doOnSubscribe(d -> logger.debug("Trying to get previous bar time for period "
-                    + period + " and current time " + DateTimeUtil.formatMillis(time)))
+            .doOnSubscribe(d -> logger.debug("Trying to get previous bar time for period " + period
+                    + " and current time " + DateTimeUtil.formatMillis(time)))
             .doOnError(err -> logger.error("Getting previous bar time failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
             .onErrorResumeNext(Observable.just(0L))
@@ -130,9 +130,9 @@ public class HistoryProvider {
                                                          from,
                                                          to))
             .doOnSubscribe(d -> logger.debug("Fetching history orders for " + instrument))
+            .doOnError(err -> logger.error("Seeking history orders for " + instrument
+                    + " failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
-            .doOnError(err -> logger.error("Seeking history orders for "
-                    + instrument + " failed! " + err.getMessage()))
             .onErrorResumeNext(Observable.just(new ArrayList<>()));
     }
 }

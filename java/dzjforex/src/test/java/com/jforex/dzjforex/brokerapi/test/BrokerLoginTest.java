@@ -11,10 +11,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.brokerapi.BrokerLogin;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.LoginExecutor;
+import com.jforex.dzjforex.handler.LoginHandler;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.dzjforex.test.util.RxTestUtil;
 
@@ -23,7 +23,7 @@ import de.bechte.junit.runners.context.HierarchicalContextRunner;
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerLoginTest extends CommonUtilForTest {
 
-    private BrokerLogin brokerLogin;
+    private LoginHandler brokerLogin;
 
     @Mock
     private LoginExecutor loginHandlerMock;
@@ -38,7 +38,7 @@ public class BrokerLoginTest extends CommonUtilForTest {
     public void setUp() {
         when(pluginConfigMock.loginRetryDelay()).thenReturn(loginRetryDelay);
 
-        brokerLogin = new BrokerLogin(loginHandlerMock,
+        brokerLogin = new LoginHandler(loginHandlerMock,
                                       clientMock,
                                       pluginConfigMock);
     }

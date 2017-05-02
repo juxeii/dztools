@@ -26,16 +26,15 @@ public class BrokerAsset {
         this.strategyUtil = strategyUtil;
     }
 
-    public int fillAssetParams(final String assetName,
-                               final double assetParams[]) {
-        final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(assetName);
+    public int fillAssetParams(final BrokerAssetData brokerAssetData) {
+        final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(brokerAssetData.instrumentName());
         return maybeInstrument.isPresent()
-                ? fillAssetParamsForValidInstrument(maybeInstrument.get(), assetParams)
+                ? fillAssetParamsForValidInstrument(maybeInstrument.get(), brokerAssetData)
                 : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
     }
 
     private int fillAssetParamsForValidInstrument(final Instrument instrument,
-                                                  final double assetParams[]) {
+                                                  final BrokerAssetData brokerAssetData) {
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
 
         final double pPrice = instrumentUtil.askQuote();
@@ -47,16 +46,15 @@ public class BrokerAsset {
         final double pMarginCost = accountInfo.marginPerLot(instrument);
         final double pRollLong = valueNotSupported;
         final double pRollShort = valueNotSupported;
-
-        assetParams[0] = pPrice;
-        assetParams[1] = pSpread;
-        assetParams[2] = pVolume;
-        assetParams[3] = pPip;
-        assetParams[4] = pPipCost;
-        assetParams[5] = pLotAmount;
-        assetParams[6] = pMarginCost;
-        assetParams[7] = pRollLong;
-        assetParams[8] = pRollShort;
+        brokerAssetData.fill(pPrice,
+                             pSpread,
+                             pVolume,
+                             pPip,
+                             pPipCost,
+                             pLotAmount,
+                             pMarginCost,
+                             pRollLong,
+                             pRollShort);
 
         logger.trace("BrokerAsset instrument params for " + instrument + ": \n"
                 + " pAskPrice: " + pPrice + "\n"

@@ -1,7 +1,6 @@
 package com.jforex.dzjforex.history;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -10,11 +9,12 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.Zorro;
+import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.SystemHandler;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.math.MathUtil;
+import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class TickFetcher {
@@ -39,41 +39,37 @@ public class TickFetcher {
     }
 
     public int fetch(final Instrument instrument,
-                     final double startDate,
-                     final double endDate,
-                     final int tickMinutes,
-                     final int nTicks,
-                     final double tickParams[]) {
+                     final BrokerHistoryData brokerHistoryData) {
         logger.debug("Trying to fetch ticks for instrument " + instrument + ": \n "
-                + "startDate: " + TimeConvert.formatOLETime(startDate) + ": \n "
-                + "endDate: " + TimeConvert.formatOLETime(endDate) + ": \n "
-                + "tickMinutes: " + tickMinutes + ": \n "
-                + "nTicks: " + nTicks);
+                + "startDate: " + TimeConvert.formatOLETime(brokerHistoryData.startTime()) + ": \n "
+                + "endDate: " + TimeConvert.formatOLETime(brokerHistoryData.endTime()) + ": \n "
+                + "tickMinutes: " + brokerHistoryData.noOfTickMinutes() + ": \n "
+                + "nTicks: " + brokerHistoryData.noOfTicks());
 
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
         final long latestTickTime = instrumentUtil
             .tickQuote()
             .getTime();
-        final long endDateMillis = TimeConvert.millisFromOLEDate(endDate);
+        final long endDateMillis = TimeConvert.millisFromOLEDate(brokerHistoryData.endTime());
         final long to = endDateMillis > latestTickTime
                 ? latestTickTime
                 : endDateMillis;
 
-        final long from = TimeConvert.millisFromOLEDate(startDate);
+        final long from = TimeConvert.millisFromOLEDate(brokerHistoryData.startTime());
         final List<ITick> fetchedTicks = fetchInLoop(instrument,
                                                      from,
                                                      to,
-                                                     nTicks);
+                                                     brokerHistoryData.noOfTicks());
 
-        logger.debug("Fetched " + fetchedTicks.size() + " ticks for " + instrument + " with nTicks " + nTicks);
+        logger.debug("Fetched " + fetchedTicks.size() + " ticks for " + instrument
+                + " with nTicks " + brokerHistoryData.noOfTicks());
 
         return fetchedTicks.isEmpty()
                 ? ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()
                 : fillTicks(instrument,
                             fetchedTicks,
-                            nTicks,
                             from,
-                            tickParams);
+                            brokerHistoryData);
     }
 
     private List<ITick> fetchInLoop(final Instrument instrument,
@@ -89,7 +85,6 @@ public class TickFetcher {
                                                                                        dynamicFrom,
                                                                                        dynamicTo));
             if (!tmpTicks.isEmpty()) {
-                Collections.reverse(tmpTicks);
                 loopTicks.addAll(tmpTicks);
             }
 
@@ -101,40 +96,22 @@ public class TickFetcher {
 
     private int fillTicks(final Instrument instrument,
                           final List<ITick> ticks,
-                          final int nTicks,
                           final long from,
-                          final double tickParams[]) {
-        int paramsIndex = 0;
-        final int toProgressSize = ticks.size() <= nTicks ? ticks.size() : nTicks;
+                          final BrokerHistoryData brokerHistoryData) {
+        int noOfTicksToFill = 0;
+        final int noOfTicks = brokerHistoryData.noOfTicks();
+        final int toProgressSize = ticks.size() <= noOfTicks ? ticks.size() : noOfTicks;
+        final List<TickQuote> tickQuotes = new ArrayList<>();
 
         for (int i = 0; i < toProgressSize; ++i) {
             final ITick tick = ticks.get(i);
-            if (tick.getTime() < from) {
-                return i + 1;
+            if (tick.getTime() >= from) {
+                ++noOfTicksToFill;
+                final TickQuote tickQuote = new TickQuote(instrument, tick);
+                tickQuotes.add(tickQuote);
             }
-
-            fillTick(tick,
-                     instrument,
-                     paramsIndex,
-                     tickParams);
-
-            paramsIndex += 7;
         }
-        return toProgressSize;
-    }
-
-    private void fillTick(final ITick tick,
-                          final Instrument instrument,
-                          final int paramsIndex,
-                          final double tickParams[]) {
-        final double ask = tick.getAsk();
-
-        tickParams[paramsIndex] = ask;
-        tickParams[paramsIndex + 1] = ask;
-        tickParams[paramsIndex + 2] = ask;
-        tickParams[paramsIndex + 3] = ask;
-        tickParams[paramsIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
-        tickParams[paramsIndex + 5] = MathUtil.roundPrice(ask - tick.getBid(), instrument);
-        tickParams[paramsIndex + 6] = tick.getAskVolume();
+        brokerHistoryData.fillTicks(tickQuotes);
+        return noOfTicksToFill;
     }
 }

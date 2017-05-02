@@ -6,6 +6,15 @@ import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jforex.dzjforex.brokerapi.BrokerAccountData;
+import com.jforex.dzjforex.brokerapi.BrokerAssetData;
+import com.jforex.dzjforex.brokerapi.BrokerBuyData;
+import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
+import com.jforex.dzjforex.brokerapi.BrokerLoginData;
+import com.jforex.dzjforex.brokerapi.BrokerSellData;
+import com.jforex.dzjforex.brokerapi.BrokerStopData;
+import com.jforex.dzjforex.brokerapi.BrokerTimeData;
+import com.jforex.dzjforex.brokerapi.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.AccountHandler;
@@ -49,12 +58,14 @@ public class ZorroBridge {
                        final String Pwd,
                        final String Type,
                        final String Accounts[]) {
-        final int loginResult = loginHandler.brokerLogin(User,
-                                                         Pwd,
-                                                         Type);
+        final BrokerLoginData brokerLoginData = new BrokerLoginData(User,
+                                                                    Pwd,
+                                                                    Type,
+                                                                    Accounts);
+        final int loginResult = loginHandler.login(brokerLoginData);
         if (loginResult == ZorroReturnValues.LOGIN_OK.getValue()) {
             initComponents();
-            accountHandler.fillAcountInfos(Accounts);
+            accountHandler.fillAcountInfos(brokerLoginData);
         }
 
         return loginResult;
@@ -67,7 +78,8 @@ public class ZorroBridge {
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {
-        return timeHandler.brokerTime(pTimeUTC);
+        final BrokerTimeData brokerTimeData = new BrokerTimeData(pTimeUTC);
+        return timeHandler.brokerTime(brokerTimeData);
     }
 
     public int doSubscribeAsset(final String Asset) {
@@ -76,31 +88,37 @@ public class ZorroBridge {
 
     public int doBrokerAsset(final String Asset,
                              final double assetParams[]) {
-        return accountHandler.brokerAsset(Asset, assetParams);
+        final BrokerAssetData brokerAssetData = new BrokerAssetData(Asset, assetParams);
+        return accountHandler.brokerAsset(brokerAssetData);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
-        return accountHandler.brokerAccount(accountInfoParams);
+        final BrokerAccountData brokerAccountData = new BrokerAccountData(accountInfoParams);
+        return accountHandler.brokerAccount(brokerAccountData);
     }
 
     public int doBrokerTrade(final int nTradeID,
-                             final double orderParams[]) {
-        return tradeHandler.brokerTrade(nTradeID, orderParams);
+                             final double tradeParams[]) {
+        final BrokerTradeData brokerTradeData = new BrokerTradeData(nTradeID, tradeParams);
+        return tradeHandler.brokerTrade(brokerTradeData);
     }
 
     public int doBrokerBuy(final String Asset,
                            final double tradeParams[]) {
-        return tradeHandler.brokerBuy(Asset, tradeParams);
+        final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset, tradeParams);
+        return tradeHandler.brokerBuy(brokerBuyData);
     }
 
     public int doBrokerSell(final int nTradeID,
                             final int nAmount) {
-        return tradeHandler.brokerSell(nTradeID, nAmount);
+        final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
+        return tradeHandler.brokerSell(brokerSellData);
     }
 
     public int doBrokerStop(final int nTradeID,
                             final double dStop) {
-        return tradeHandler.brokerStop(nTradeID, dStop);
+        final BrokerStopData brokerStopData = new BrokerStopData(nTradeID, dStop);
+        return tradeHandler.brokerStop(brokerStopData);
     }
 
     public int doBrokerHistory2(final String Asset,
@@ -109,12 +127,13 @@ public class ZorroBridge {
                                 final int nTickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
-        return historyHandler.brokerHistory2(Asset,
-                                             tStart,
-                                             tEnd,
-                                             nTickMinutes,
-                                             nTicks,
-                                             tickParams);
+        final BrokerHistoryData brokerHistoryData = new BrokerHistoryData(Asset,
+                                                                          tStart,
+                                                                          tEnd,
+                                                                          nTickMinutes,
+                                                                          nTicks,
+                                                                          tickParams);
+        return historyHandler.brokerHistory(brokerHistoryData);
     }
 
     public int doSetOrderText(final String orderText) {

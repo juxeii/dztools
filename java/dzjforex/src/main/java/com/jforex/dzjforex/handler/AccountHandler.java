@@ -1,7 +1,10 @@
 package com.jforex.dzjforex.handler;
 
 import com.jforex.dzjforex.brokerapi.BrokerAccount;
+import com.jforex.dzjforex.brokerapi.BrokerAccountData;
 import com.jforex.dzjforex.brokerapi.BrokerAsset;
+import com.jforex.dzjforex.brokerapi.BrokerAssetData;
+import com.jforex.dzjforex.brokerapi.BrokerLoginData;
 import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
 import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.InfoStrategy;
@@ -34,20 +37,19 @@ public class AccountHandler {
         return accountInfo;
     }
 
-    public void fillAcountInfos(final String accountInfos[]) {
-        accountInfos[0] = accountInfo().id();
+    public void fillAcountInfos(final BrokerLoginData brokerLoginData) {
+        brokerLoginData.fillAccounts(accountInfo().id());
     }
 
     public int subscribeAsset(final String instrumentName) {
         return brokerSubscribe.subscribe(instrumentName);
     }
 
-    public int brokerAsset(final String instrumentName,
-                           final double assetParams[]) {
-        return brokerAsset.fillAssetParams(instrumentName, assetParams);
+    public int brokerAsset(final BrokerAssetData brokerAssetData) {
+        return brokerAsset.fillAssetParams(brokerAssetData);
     }
 
-    public int brokerAccount(final double accountInfoParams[]) {
-        return brokerAccount.handle(accountInfoParams);
+    public int brokerAccount(final BrokerAccountData brokerAccountData) {
+        return brokerAccount.handle(brokerAccountData);
     }
 }

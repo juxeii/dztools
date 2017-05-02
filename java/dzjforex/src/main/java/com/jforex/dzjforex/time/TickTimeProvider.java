@@ -17,6 +17,7 @@ public class TickTimeProvider {
     private long latestTickTime;
     private long synchTime;
 
+    private final static int INVALID_SERVER_TIME = ZorroReturnValues.INVALID_SERVER_TIME.getValue();
     private final static Logger logger = LogManager.getLogger(TickTimeProvider.class);
 
     public TickTimeProvider(final TickQuoteRepository tickQuoteRepository,
@@ -28,8 +29,8 @@ public class TickTimeProvider {
     public long get() {
         final long latestTickTimeFromRepository = fromRepository();
 
-        return latestTickTimeFromRepository == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
-                ? ZorroReturnValues.INVALID_SERVER_TIME.getValue()
+        return latestTickTimeFromRepository == INVALID_SERVER_TIME
+                ? INVALID_SERVER_TIME
                 : getForValidTickTime(latestTickTimeFromRepository);
     }
 
@@ -52,7 +53,7 @@ public class TickTimeProvider {
                 return tickTime;
             })
             .max()
-            .orElseGet(() -> ZorroReturnValues.INVALID_SERVER_TIME.getValue());
+            .orElseGet(() -> INVALID_SERVER_TIME);
     }
 
     private long setNewAndSynch(final long latestTickTimeFromRepository) {

@@ -28,7 +28,7 @@ public class NTPFetch {
             .fromCallable(() -> fromURL(pluginConfig.ntpServerURL()))
             .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
             .doOnError(err -> logger.debug("NTP fetch task failed with error: " + err.getMessage()
-                    + ". Will retry in " + retryDelay + " milliseconds."))
+                    + "! Will retry in " + retryDelay + " milliseconds."))
             .retryWhen(errors -> errors.flatMap(error -> Observable.timer(retryDelay, TimeUnit.MILLISECONDS)));
     }
 

@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.brokerapi;
 
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,30 +24,25 @@ public class BrokerTrade {
         strategyUtil = tradeUtil.strategyUtil();
     }
 
-    public int fillTradeParams(final int nTradeID,
-                               final double orderParams[]) {
-        final IOrder order = tradeUtil.orderByID(nTradeID);
-        if (order == null)
-            return ZorroReturnValues.UNKNOWN_ORDER_ID.getValue();
+    public int handle(final BrokerTradeData brokerTradeData) {
+        final Optional<IOrder> maybeOrderById = tradeUtil.maybeOrderById(brokerTradeData.nTradeID());
+        return maybeOrderById.isPresent()
+                ? handleForOrder(brokerTradeData, maybeOrderById.get())
+                : ZorroReturnValues.UNKNOWN_ORDER_ID.getValue();
+    }
 
-        fillTradeParams(order, orderParams);
-        if (order.getState() == IOrder.State.CLOSED) {
-            logger.debug("Order with ID " + nTradeID + " was recently closed.");
+    private int handleForOrder(final BrokerTradeData brokerTradeData,
+                               final IOrder order) {
+        fillTradeParams(order, brokerTradeData);
+        if (order.getState() == IOrder.State.CLOSED)
             return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();
-        }
-        final int noOfContracts = tradeUtil.amountToContracts(order.getAmount());
 
-        logger.trace("Trade params for nTradeID " + nTradeID + "\n"
-                + "pOpen: " + orderParams[0] + "\n"
-                + "pClose: " + orderParams[1] + "\n"
-                + "pRoll: " + orderParams[2] + "\n"
-                + "pProfit: " + orderParams[3] + "\n"
-                + "noOfContracts: " + noOfContracts);
+        final int noOfContracts = tradeUtil.amountToContracts(order.getAmount());
         return noOfContracts;
     }
 
     private void fillTradeParams(final IOrder order,
-                                 final double orderParams[]) {
+                                 final BrokerTradeData brokerTradeData) {
         final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(order.getInstrument());
         final double pOpen = order.getOpenPrice();
         final double pClose = order.isLong()
@@ -53,10 +50,15 @@ public class BrokerTrade {
                 : instrumentUtil.bidQuote();
         final double pRoll = rollOverNotSupported;
         final double pProfit = order.getProfitLossInAccountCurrency();
+        brokerTradeData.fill(pOpen,
+                             pClose,
+                             pRoll,
+                             pProfit);
 
-        orderParams[0] = pOpen;
-        orderParams[1] = pClose;
-        orderParams[2] = pRoll;
-        orderParams[3] = pProfit;
+        logger.trace("Trade params for nTradeID " + brokerTradeData.nTradeID() + "\n"
+                + "pOpen: " + pOpen + "\n"
+                + "pClose: " + pClose + "\n"
+                + "pRoll: " + pRoll + "\n"
+                + "pProfit: " + pProfit + "\n");
     }
 }

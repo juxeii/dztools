@@ -3,6 +3,7 @@ package com.jforex.dzjforex.handler;
 import java.time.Clock;
 
 import com.jforex.dzjforex.brokerapi.BrokerTime;
+import com.jforex.dzjforex.brokerapi.BrokerTimeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketData;
@@ -48,7 +49,7 @@ public class TimeHandler {
         return serverTimeProvider;
     }
 
-    public int brokerTime(final double pTimeUTC[]) {
-        return brokerTime.get(pTimeUTC);
+    public int brokerTime(final BrokerTimeData brokerTimeData) {
+        return brokerTime.get(brokerTimeData);
     }
 }

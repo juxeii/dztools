@@ -2,7 +2,8 @@ package com.jforex.dzjforex.handler;
 
 import com.dukascopy.api.IHistory;
 import com.jforex.dzjforex.Zorro;
-import com.jforex.dzjforex.brokerapi.BrokerHistory2;
+import com.jforex.dzjforex.brokerapi.BrokerHistory;
+import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.TickFetcher;
@@ -11,7 +12,7 @@ import com.jforex.programming.strategy.StrategyUtil;
 
 public class HistoryHandler {
 
-    private final BrokerHistory2 brokerHistory2;
+    private final BrokerHistory brokerHistory;
     private final HistoryProvider historyProvider;
 
     public HistoryHandler(final SystemHandler systemHandler) {
@@ -24,24 +25,14 @@ public class HistoryHandler {
                                                      strategyUtil,
                                                      zorro);
         final TickFetcher tickFetcher = new TickFetcher(systemHandler, historyProvider);
-        brokerHistory2 = new BrokerHistory2(barFetcher, tickFetcher);
+        brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
     }
 
     public HistoryProvider historyProvider() {
         return historyProvider;
     }
 
-    public int brokerHistory2(final String instrumentName,
-                              final double startDate,
-                              final double endDate,
-                              final int tickMinutes,
-                              final int nTicks,
-                              final double tickParams[]) {
-        return brokerHistory2.get(instrumentName,
-                                  startDate,
-                                  endDate,
-                                  tickMinutes,
-                                  nTicks,
-                                  tickParams);
+    public int brokerHistory(final BrokerHistoryData brokerHistoryData) {
+        return brokerHistory.get(brokerHistoryData);
     }
 }

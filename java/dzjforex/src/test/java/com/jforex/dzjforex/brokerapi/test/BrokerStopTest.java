@@ -12,7 +12,6 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.OrderSetSL;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.math.MathUtil;
 
@@ -24,8 +23,6 @@ public class BrokerStopTest extends CommonUtilForTest {
     private BrokerStop brokerStop;
 
     @Mock
-    private OrderSetSL orderSetSLMock;
-    @Mock
     private IOrder orderMock;
     private final Instrument tradeInstrument = Instrument.EURUSD;
     private int setSLReturnValue;
@@ -34,7 +31,7 @@ public class BrokerStopTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        brokerStop = new BrokerStop(orderSetSLMock, tradeUtilMock);
+        brokerStop = new BrokerStop(tradeUtilMock);
     }
 
     private int callSetSL() {

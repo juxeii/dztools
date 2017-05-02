@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.brokerapi.BrokerHistory2;
+import com.jforex.dzjforex.brokerapi.BrokerHistory;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.BarFetcher;
 import com.jforex.dzjforex.history.TickFetcher;
@@ -20,7 +20,7 @@ import de.bechte.junit.runners.context.HierarchicalContextRunner;
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerHistory2Test extends CommonUtilForTest {
 
-    private BrokerHistory2 brokerHistory2;
+    private BrokerHistory brokerHistory2;
 
     @Mock
     private BarFetcher barFetcherMock;
@@ -35,7 +35,7 @@ public class BrokerHistory2Test extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        brokerHistory2 = new BrokerHistory2(barFetcherMock, tickFetcherMock);
+        brokerHistory2 = new BrokerHistory(barFetcherMock, tickFetcherMock);
     }
 
     private int callGet() {

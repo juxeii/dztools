@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
@@ -22,8 +21,6 @@ public class BrokerSellTest extends CommonUtilForTest {
 
     private BrokerSell brokerSell;
 
-    @Mock
-    private OrderClose orderCloseMock;
     @Mock
     private IOrder orderMock;
     private final String newLabel = "newLabel";

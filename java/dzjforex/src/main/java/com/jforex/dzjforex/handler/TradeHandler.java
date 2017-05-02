@@ -1,17 +1,18 @@
 package com.jforex.dzjforex.handler;
 
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
+import com.jforex.dzjforex.brokerapi.BrokerBuyData;
 import com.jforex.dzjforex.brokerapi.BrokerSell;
+import com.jforex.dzjforex.brokerapi.BrokerSellData;
 import com.jforex.dzjforex.brokerapi.BrokerStop;
+import com.jforex.dzjforex.brokerapi.BrokerStopData;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
+import com.jforex.dzjforex.brokerapi.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.HistoryOrders;
-import com.jforex.dzjforex.order.OrderClose;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetSL;
-import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.order.RunningOrders;
 import com.jforex.dzjforex.order.TradeUtil;
 
@@ -43,33 +44,25 @@ public class TradeHandler {
                                                   accountHandler.accountInfo(),
                                                   orderLabelUtil,
                                                   pluginConfig);
-        final OrderSetSL setSLHandler = new OrderSetSL(tradeUtil);
-        final OrderSubmit orderSubmit = new OrderSubmit(tradeUtil);
-        final OrderClose orderClose = new OrderClose(tradeUtil);
-
         brokerTrade = new BrokerTrade(tradeUtil);
-        brokerBuy = new BrokerBuy(orderSubmit, tradeUtil);
-        brokerSell = new BrokerSell(tradeUtil, orderClose);
-        brokerStop = new BrokerStop(setSLHandler, tradeUtil);
+        brokerBuy = new BrokerBuy(tradeUtil);
+        brokerSell = new BrokerSell(tradeUtil);
+        brokerStop = new BrokerStop(tradeUtil);
     }
 
-    public int brokerTrade(final int orderID,
-                           final double orderParams[]) {
-        return brokerTrade.fillTradeParams(orderID, orderParams);
+    public int brokerTrade(final BrokerTradeData brokerTradeData) {
+        return brokerTrade.handle(brokerTradeData);
     }
 
-    public int brokerBuy(final String instrumentName,
-                         final double tradeParams[]) {
-        return brokerBuy.openTrade(instrumentName, tradeParams);
+    public int brokerBuy(final BrokerBuyData brokerBuyData) {
+        return brokerBuy.openTrade(brokerBuyData);
     }
 
-    public int brokerSell(final int nTradeID,
-                          final int nAmount) {
-        return brokerSell.closeTrade(nTradeID, nAmount);
+    public int brokerSell(final BrokerSellData brokerSellData) {
+        return brokerSell.closeTrade(brokerSellData);
     }
 
-    public int brokerStop(final int orderID,
-                          final double newSLPrice) {
-        return brokerStop.setSL(orderID, newSLPrice);
+    public int brokerStop(final BrokerStopData brokerStopData) {
+        return brokerStop.setSL(brokerStopData);
     }
 }

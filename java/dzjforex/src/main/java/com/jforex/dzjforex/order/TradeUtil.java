@@ -26,6 +26,7 @@ public class TradeUtil {
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
     private final OrderLabelUtil labelUtil;
+    private final TaskParams taskParams;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
 
@@ -43,6 +44,7 @@ public class TradeUtil {
         this.pluginConfig = pluginConfig;
 
         orderUtil = strategyUtil.orderUtil();
+        taskParams = new TaskParams(retryParams());
     }
 
     public OrderRepository orderRepository() {
@@ -63,6 +65,10 @@ public class TradeUtil {
 
     public OrderLabelUtil labelUtil() {
         return labelUtil;
+    }
+
+    public TaskParams taskParams() {
+        return taskParams;
     }
 
     public PluginConfig pluginConfig() {
@@ -159,6 +165,10 @@ public class TradeUtil {
 
     public IOrder orderByID(final int orderID) {
         return orderRepository.orderByID(orderID);
+    }
+
+    public Optional<IOrder> maybeOrderById(final int nTradeID) {
+        return Optional.ofNullable(orderByID(nTradeID));
     }
 
     public OrderActionResult runTaskParams(final TaskParamsWithType taskParams) {

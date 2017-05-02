@@ -16,7 +16,6 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderActionResult;
-import com.jforex.dzjforex.order.OrderSubmit;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -26,8 +25,6 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
     private BrokerBuy brokerBuy;
 
-    @Mock
-    private OrderSubmit orderSubmitMock;
     @Mock
     private IOrder orderMock;
     private int openTradeResult;
@@ -48,7 +45,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
         tradeParams[0] = nAmount;
         tradeParams[1] = dStopDist;
 
-        brokerBuy = new BrokerBuy(orderSubmitMock, tradeUtilMock);
+        brokerBuy = new BrokerBuy(tradeUtilMock);
     }
 
     private int callOpenTrade() {
@@ -61,7 +58,6 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
         assertThat(callOpenTrade(),
                    equalTo(ZorroReturnValues.BROKER_BUY_FAIL.getValue()));
-        verifyZeroInteractions(orderSubmitMock);
     }
 
     public class WhenTradingIsAllowed {

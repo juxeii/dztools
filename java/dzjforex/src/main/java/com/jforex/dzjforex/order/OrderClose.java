@@ -16,8 +16,8 @@ public class OrderClose {
         this.tradeUtil = tradeUtil;
     }
 
-    public OrderCloseResult run(final IOrder order,
-                                final double closeAmount) {
+    public OrderActionResult run(final IOrder order,
+                                 final double closeAmount) {
         final CloseParams closeParams = CloseParams
             .withOrder(order)
             .closePartial(closeAmount)
@@ -29,22 +29,6 @@ public class OrderClose {
             .retryOnReject(tradeUtil.retryParams())
             .build();
 
-        return runOnOrderUtil(order, closeParams);
-    }
-
-    private OrderCloseResult runOnOrderUtil(final IOrder order,
-                                            final CloseParams closeParams) {
-        final Throwable resultError = tradeUtil
-            .orderUtil()
-            .paramsToObservable(closeParams)
-            .ignoreElements()
-            .blockingGet();
-
-        if (resultError != null)
-            return OrderCloseResult.FAIL;
-        else
-            return closeParams.partialCloseAmount() < order.getAmount()
-                    ? OrderCloseResult.PARTIAL_OK
-                    : OrderCloseResult.OK;
+        return tradeUtil.runTaskParams(closeParams);
     }
 }

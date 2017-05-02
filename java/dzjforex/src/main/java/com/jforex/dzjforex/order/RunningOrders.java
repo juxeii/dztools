@@ -22,7 +22,7 @@ public class RunningOrders {
     }
 
     public List<IOrder> get() {
-        final List<IOrder> orders = Observable
+        return Observable
             .fromCallable(() -> engine.getOrders())
             .doOnSubscribe(d -> logger.debug("Fetching running orders..."))
             .onErrorResumeNext(err -> {
@@ -31,9 +31,7 @@ public class RunningOrders {
             })
             .flatMap(Observable::fromIterable)
             .toList()
+            .doOnSuccess(list -> logger.debug("Fetched " + list.size() + " runnings orders."))
             .blockingGet();
-        logger.debug("Fetched " + orders.size() + " runnings orders.");
-
-        return orders;
     }
 }

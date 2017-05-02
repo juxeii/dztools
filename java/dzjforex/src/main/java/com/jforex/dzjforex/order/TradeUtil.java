@@ -16,6 +16,7 @@ import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
+import com.jforex.programming.order.task.params.TaskParamsWithType;
 import com.jforex.programming.rx.RetryDelay;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -84,6 +85,12 @@ public class TradeUtil {
                 : Optional.empty();
     }
 
+    public Optional<IOrder> maybeOrderForTrading(final int nTradeID) {
+        return isTradingAllowed()
+                ? Optional.ofNullable(orderByID(nTradeID))
+                : Optional.empty();
+    }
+
     public boolean isTradingAllowed() {
         if (!accountInfo.isTradingAllowed()) {
             logger.warn("Trading account is not available, since it is in state " + accountInfo.state());
@@ -113,9 +120,9 @@ public class TradeUtil {
                 + " spread " + spread + "\n"
                 + " slPrice " + slPrice);
 
-        if (!isSLPriceDistanceOK(instrument, slPrice))
-            return StrategyUtil.platformSettings.noSLPrice();
-        return slPrice;
+        return !isSLPriceDistanceOK(instrument, slPrice)
+                ? StrategyUtil.platformSettings.noSLPrice()
+                : slPrice;
     }
 
     public boolean isSLPriceDistanceOK(final Instrument instrument,
@@ -152,5 +159,16 @@ public class TradeUtil {
 
     public IOrder orderByID(final int orderID) {
         return orderRepository.orderByID(orderID);
+    }
+
+    public OrderActionResult runTaskParams(final TaskParamsWithType taskParams) {
+        final Throwable resultError = orderUtil
+            .paramsToObservable(taskParams)
+            .ignoreElements()
+            .blockingGet();
+
+        return resultError == null
+                ? OrderActionResult.OK
+                : OrderActionResult.FAIL;
     }
 }

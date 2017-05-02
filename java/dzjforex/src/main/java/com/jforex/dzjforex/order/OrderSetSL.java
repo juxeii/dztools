@@ -16,8 +16,8 @@ public class OrderSetSL {
         this.tradeUtil = tradeUtil;
     }
 
-    public OrderSetSLResult run(final IOrder order,
-                                final double newSLPrice) {
+    public OrderActionResult run(final IOrder order,
+                                 final double newSLPrice) {
         final SetSLParams setSLParams = SetSLParams
             .setSLAtPrice(order, newSLPrice)
             .doOnStart(() -> logger.info("Trying to set new stop loss " + newSLPrice
@@ -29,18 +29,6 @@ public class OrderSetSL {
             .retryOnReject(tradeUtil.retryParams())
             .build();
 
-        return runOnOrderUtil(setSLParams);
-    }
-
-    private OrderSetSLResult runOnOrderUtil(final SetSLParams setSLParams) {
-        final Throwable resultError = tradeUtil
-            .orderUtil()
-            .paramsToObservable(setSLParams)
-            .ignoreElements()
-            .blockingGet();
-
-        return resultError == null
-                ? OrderSetSLResult.OK
-                : OrderSetSLResult.FAIL;
+        return tradeUtil.runTaskParams(setSLParams);
     }
 }

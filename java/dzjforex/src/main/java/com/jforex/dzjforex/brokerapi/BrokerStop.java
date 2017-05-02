@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.brokerapi;
 
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,15 +26,13 @@ public class BrokerStop {
 
     public int setSL(final int nTradeID,
                      final double dStop) {
-        final IOrder order = tradeUtil.orderByID(nTradeID);
-        if (order == null)
-            return ZorroReturnValues.ADJUST_SL_FAIL.getValue();
-        if (!tradeUtil.isTradingAllowed())
+        final Optional<IOrder> maybeOrder = tradeUtil.maybeOrderForTrading(nTradeID);
+        if (!maybeOrder.isPresent())
             return ZorroReturnValues.ADJUST_SL_FAIL.getValue();
 
         logger.info("Trying to set stop loss for order ID " + nTradeID
                 + " and dStop " + dStop);
-        return setSLForValidOrderID(order, dStop);
+        return setSLForValidOrderID(maybeOrder.get(), dStop);
     }
 
     private int setSLForValidOrderID(final IOrder order,

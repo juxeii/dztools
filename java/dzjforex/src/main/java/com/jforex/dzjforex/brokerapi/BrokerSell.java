@@ -1,12 +1,14 @@
 package com.jforex.dzjforex.brokerapi;
 
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderClose;
-import com.jforex.dzjforex.order.OrderCloseResult;
 import com.jforex.dzjforex.order.TradeUtil;
 
 public class BrokerSell {
@@ -24,26 +26,21 @@ public class BrokerSell {
 
     public int closeTrade(final int nTradeID,
                           final int nAmount) {
-        if (!tradeUtil.isTradingAllowed())
-            return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
-        final IOrder order = tradeUtil.orderByID(nTradeID);
-        if (order == null)
+        final Optional<IOrder> maybeOrder = tradeUtil.maybeOrderForTrading(nTradeID);
+        if (!maybeOrder.isPresent())
             return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
 
         logger.info("Trying to close trade for nTradeID " + nTradeID
                 + " and nAmount " + nAmount);
-        return closeTradeForValidOrder(order, nAmount);
+        return closeTradeForValidOrder(maybeOrder.get(), nAmount);
     }
 
     private int closeTradeForValidOrder(final IOrder order,
                                         final double nAmount) {
         final double amountToClose = tradeUtil.contractsToAmount(nAmount);
+        final OrderActionResult closeResult = orderClose.run(order, amountToClose);
 
-        final OrderCloseResult closeResult = orderClose.run(order, amountToClose);
-        if (closeResult == OrderCloseResult.FAIL)
-            return ZorroReturnValues.BROKER_SELL_FAIL.getValue();
-
-        return closeResult == OrderCloseResult.FAIL
+        return closeResult == OrderActionResult.FAIL
                 ? ZorroReturnValues.BROKER_SELL_FAIL.getValue()
                 : tradeUtil
                     .labelUtil()

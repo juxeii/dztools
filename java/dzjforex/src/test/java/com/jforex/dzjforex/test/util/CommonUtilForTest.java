@@ -17,11 +17,9 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.SystemHandler;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.order.OrderCloseResult;
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetSLResult;
-import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.order.TradeUtil;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
@@ -96,12 +94,10 @@ public class CommonUtilForTest extends BDDMockito {
     }
 
     private final void coverageOnEnumsCorrection() {
-        OrderSubmitResult
-            .valueOf(OrderSubmitResult.OK.toString());
-        OrderSetSLResult
-            .valueOf(OrderSetSLResult.OK.toString());
-        OrderCloseResult
-            .valueOf(OrderCloseResult.OK.toString());
+        OrderActionResult
+            .valueOf(OrderActionResult.OK.toString());
+        OrderActionResult
+            .valueOf(OrderActionResult.OK.toString());
         ZorroReturnValues
             .valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
     }

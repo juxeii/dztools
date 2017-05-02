@@ -15,8 +15,8 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerapi.BrokerBuy;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderSubmit;
-import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -83,7 +83,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
         public class WhenInstrumentNameIsValid {
 
-            private void setSubmitResult(final OrderSubmitResult result) {
+            private void setSubmitResult(final OrderActionResult result) {
                 when(orderSubmitMock.run(tradeInstrument,
                                          command,
                                          orderAmount,
@@ -128,7 +128,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
                 @Before
                 public void setUp() {
-                    setSubmitResult(OrderSubmitResult.FAIL);
+                    setSubmitResult(OrderActionResult.FAIL);
 
                     openTradeResult = callOpenTrade();
                 }
@@ -149,7 +149,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
                 @Before
                 public void setUp() {
-                    setSubmitResult(OrderSubmitResult.OK);
+                    setSubmitResult(OrderActionResult.OK);
                 }
 
                 public class WhenOppositeClose {

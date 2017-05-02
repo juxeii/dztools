@@ -9,8 +9,8 @@ import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderSubmit;
-import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.order.TradeUtil;
 
 public class BrokerBuy {
@@ -28,8 +28,6 @@ public class BrokerBuy {
 
     public int openTrade(final String instrumentName,
                          final double tradeParams[]) {
-        if (!tradeUtil.isTradingAllowed())
-            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
         final Optional<Instrument> maybeInstrument = tradeUtil.maybeInstrumentForTrading(instrumentName);
         if (!maybeInstrument.isPresent())
             return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
@@ -45,15 +43,15 @@ public class BrokerBuy {
         final String label = tradeUtil
             .labelUtil()
             .create();
+        final OrderActionResult submitResult = getSubmitResult(instrument,
+                                                               label,
+                                                               tradeParams);
+        if (submitResult == OrderActionResult.FAIL)
+            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
+
         final int orderID = tradeUtil
             .labelUtil()
             .idFromLabel(label);
-        final OrderSubmitResult submitResult = getSubmitResult(instrument,
-                                                               label,
-                                                               tradeParams);
-        if (submitResult == OrderSubmitResult.FAIL)
-            return ZorroReturnValues.BROKER_BUY_FAIL.getValue();
-
         final IOrder order = tradeUtil.orderByID(orderID);
         tradeParams[2] = order.getOpenPrice();
         final double dStopDist = tradeParams[1];
@@ -63,7 +61,7 @@ public class BrokerBuy {
                 : orderID;
     }
 
-    private OrderSubmitResult getSubmitResult(final Instrument instrument,
+    private OrderActionResult getSubmitResult(final Instrument instrument,
                                               final String label,
                                               final double tradeParams[]) {
         final double contracts = tradeParams[0];
@@ -74,7 +72,7 @@ public class BrokerBuy {
         final double slPrice = tradeUtil.calculateSL(instrument,
                                                      orderCommand,
                                                      dStopDist);
-        final OrderSubmitResult submitResult = orderSubmit.run(instrument,
+        final OrderActionResult submitResult = orderSubmit.run(instrument,
                                                                orderCommand,
                                                                amount,
                                                                label,

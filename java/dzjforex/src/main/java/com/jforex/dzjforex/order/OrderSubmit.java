@@ -18,7 +18,7 @@ public class OrderSubmit {
         this.tradeUtil = tradeUtil;
     }
 
-    public OrderSubmitResult run(final Instrument instrument,
+    public OrderActionResult run(final Instrument instrument,
                                  final OrderCommand command,
                                  final double amount,
                                  final String label,
@@ -45,18 +45,6 @@ public class OrderSubmit {
             .retryOnReject(tradeUtil.retryParams())
             .build();
 
-        return runOnOrderUtil(submitParams);
-    }
-
-    private OrderSubmitResult runOnOrderUtil(final SubmitParams submitParams) {
-        final Throwable resultError = tradeUtil
-            .orderUtil()
-            .paramsToObservable(submitParams)
-            .ignoreElements()
-            .blockingGet();
-
-        return resultError == null
-                ? OrderSubmitResult.OK
-                : OrderSubmitResult.FAIL;
+        return tradeUtil.runTaskParams(submitParams);
     }
 }

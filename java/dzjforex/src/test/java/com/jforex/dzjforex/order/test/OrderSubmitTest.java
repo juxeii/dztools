@@ -11,8 +11,8 @@ import org.mockito.Captor;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderSubmit;
-import com.jforex.dzjforex.order.OrderSubmitResult;
 import com.jforex.dzjforex.test.util.CommonOrderForTest;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
@@ -27,7 +27,7 @@ public class OrderSubmitTest extends CommonOrderForTest {
 
     @Captor
     private ArgumentCaptor<SubmitParams> paramsCaptor;
-    private OrderSubmitResult result;
+    private OrderActionResult result;
     private final Instrument tradeInstrument = Instrument.EURUSD;
     private final OrderCommand command = OrderCommand.BUY;
     private final double amount = 0.12;
@@ -39,7 +39,7 @@ public class OrderSubmitTest extends CommonOrderForTest {
         orderSubmit = new OrderSubmit(tradeUtilMock);
     }
 
-    private OrderSubmitResult callRun() {
+    private OrderActionResult callRun() {
         return orderSubmit.run(tradeInstrument,
                                command,
                                amount,
@@ -51,9 +51,9 @@ public class OrderSubmitTest extends CommonOrderForTest {
     public void resultIsFAILWhenObservableFails() {
         setOrderUtilObservable(Observable.error(jfException));
 
-        final OrderSubmitResult result = callRun();
+        final OrderActionResult result = callRun();
 
-        assertThat(result, equalTo(OrderSubmitResult.FAIL));
+        assertThat(result, equalTo(OrderActionResult.FAIL));
     }
 
     public class WhenSubmitCompletes {
@@ -67,7 +67,7 @@ public class OrderSubmitTest extends CommonOrderForTest {
 
         @Test
         public void resultIsOK() {
-            assertThat(result, equalTo(OrderSubmitResult.OK));
+            assertThat(result, equalTo(OrderActionResult.OK));
         }
 
         @Test

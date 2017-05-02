@@ -104,29 +104,37 @@ public class TickFetcher {
                           final int nTicks,
                           final long from,
                           final double tickParams[]) {
-        int tickParamsIndex = 0;
+        int paramsIndex = 0;
         final int toProgressSize = ticks.size() <= nTicks ? ticks.size() : nTicks;
 
         for (int i = 0; i < toProgressSize; ++i) {
             final ITick tick = ticks.get(i);
-            final long tickTime = tick.getTime();
-            if (tickTime < from) {
+            if (tick.getTime() < from) {
                 return i + 1;
             }
 
-            final double ask = tick.getAsk();
-            final double spread = MathUtil.roundPrice(ask - tick.getBid(), instrument);
+            fillTick(tick,
+                     instrument,
+                     paramsIndex,
+                     tickParams);
 
-            tickParams[tickParamsIndex] = ask;
-            tickParams[tickParamsIndex + 1] = ask;
-            tickParams[tickParamsIndex + 2] = ask;
-            tickParams[tickParamsIndex + 3] = ask;
-            tickParams[tickParamsIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
-            tickParams[tickParamsIndex + 5] = spread;
-            tickParams[tickParamsIndex + 6] = tick.getAskVolume();
-
-            tickParamsIndex += 7;
+            paramsIndex += 7;
         }
         return toProgressSize;
+    }
+
+    private void fillTick(final ITick tick,
+                          final Instrument instrument,
+                          final int paramsIndex,
+                          final double tickParams[]) {
+        final double ask = tick.getAsk();
+
+        tickParams[paramsIndex] = ask;
+        tickParams[paramsIndex + 1] = ask;
+        tickParams[paramsIndex + 2] = ask;
+        tickParams[paramsIndex + 3] = ask;
+        tickParams[paramsIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
+        tickParams[paramsIndex + 5] = MathUtil.roundPrice(ask - tick.getBid(), instrument);
+        tickParams[paramsIndex + 6] = tick.getAskVolume();
     }
 }

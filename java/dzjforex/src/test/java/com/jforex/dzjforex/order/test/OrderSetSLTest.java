@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderSetSL;
-import com.jforex.dzjforex.order.OrderSetSLResult;
 import com.jforex.dzjforex.test.util.CommonOrderForTest;
 import com.jforex.programming.order.task.params.SetSLTPMode;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
@@ -25,7 +25,7 @@ public class OrderSetSLTest extends CommonOrderForTest {
 
     @Captor
     private ArgumentCaptor<SetSLParams> paramsCaptor;
-    private OrderSetSLResult result;
+    private OrderActionResult result;
     private final double newSL = 1.32456;
 
     @Before
@@ -37,9 +37,9 @@ public class OrderSetSLTest extends CommonOrderForTest {
     public void resultIsFAILWhenObservableFails() {
         setOrderUtilObservable(Observable.error(jfException));
 
-        final OrderSetSLResult result = orderSetSL.run(orderMock, newSL);
+        final OrderActionResult result = orderSetSL.run(orderMock, newSL);
 
-        assertThat(result, equalTo(OrderSetSLResult.FAIL));
+        assertThat(result, equalTo(OrderActionResult.FAIL));
     }
 
     public class WhenSetSLCompletes {
@@ -53,7 +53,7 @@ public class OrderSetSLTest extends CommonOrderForTest {
 
         @Test
         public void resultIsOK() {
-            assertThat(result, equalTo(OrderSetSLResult.OK));
+            assertThat(result, equalTo(OrderActionResult.OK));
         }
 
         @Test

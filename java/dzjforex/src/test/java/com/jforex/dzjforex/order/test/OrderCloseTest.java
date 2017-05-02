@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 
+import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderClose;
-import com.jforex.dzjforex.order.OrderCloseResult;
 import com.jforex.dzjforex.test.util.CommonOrderForTest;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
@@ -24,7 +24,7 @@ public class OrderCloseTest extends CommonOrderForTest {
 
     @Captor
     private ArgumentCaptor<CloseParams> paramsCaptor;
-    private OrderCloseResult result;
+    private OrderActionResult result;
     private final double orderAmount = 0.24;
     private final double closeAmount = 0.12;
 
@@ -39,9 +39,9 @@ public class OrderCloseTest extends CommonOrderForTest {
     public void resultIsFAILWhenObservableFails() {
         setOrderUtilObservable(Observable.error(jfException));
 
-        final OrderCloseResult result = orderClose.run(orderMock, closeAmount);
+        final OrderActionResult result = orderClose.run(orderMock, closeAmount);
 
-        assertThat(result, equalTo(OrderCloseResult.FAIL));
+        assertThat(result, equalTo(OrderActionResult.FAIL));
     }
 
     public class WhenCloseCompletes {
@@ -60,7 +60,7 @@ public class OrderCloseTest extends CommonOrderForTest {
 
             @Test
             public void resultIsOK() {
-                assertThat(result, equalTo(OrderCloseResult.OK));
+                assertThat(result, equalTo(OrderActionResult.OK));
             }
 
             @Test
@@ -70,29 +70,6 @@ public class OrderCloseTest extends CommonOrderForTest {
 
                 assertThat(closeParams.order(), equalTo(orderMock));
                 assertThat(closeParams.partialCloseAmount(), equalTo(orderAmount));
-                assertRetryParams(closeParams.composeData());
-            }
-        }
-
-        public class OnPartialClose {
-
-            @Before
-            public void setUp() {
-                result = orderClose.run(orderMock, closeAmount);
-            }
-
-            @Test
-            public void resultIsOK() {
-                assertThat(result, equalTo(OrderCloseResult.PARTIAL_OK));
-            }
-
-            @Test
-            public void closeParamsAreCorrect() throws Exception {
-                verify(orderUtilMock).paramsToObservable(paramsCaptor.capture());
-                final CloseParams closeParams = paramsCaptor.getValue();
-
-                assertThat(closeParams.order(), equalTo(orderMock));
-                assertThat(closeParams.partialCloseAmount(), equalTo(closeAmount));
                 assertRetryParams(closeParams.composeData());
             }
         }

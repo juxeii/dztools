@@ -119,7 +119,7 @@ public class HistoryProvider {
             .doOnComplete(() -> logger.debug("Fetching tick for " + instrument + " completed."))
             .doOnError(err -> logger.error("Fetch tick failed! " + err.getMessage()))
             .retryWhen(this::historyRetryWhen)
-            .onErrorResumeNext(Observable.just(null));
+            .onErrorResumeNext(Observable.empty());
     }
 
     public Observable<List<IOrder>> ordersByInstrument(final Instrument instrument,

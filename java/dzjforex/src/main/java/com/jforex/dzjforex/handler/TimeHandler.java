@@ -11,6 +11,7 @@ import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.dzjforex.time.TickTimeProvider;
+import com.jforex.programming.quote.TickQuoteRepository;
 
 public class TimeHandler {
 
@@ -19,8 +20,6 @@ public class TimeHandler {
     private final BrokerTime brokerTime;
 
     public TimeHandler(final SystemHandler systemHandler) {
-        clock = systemHandler.clock();
-
         final PluginConfig pluginConfig = systemHandler.pluginConfig();
         final InfoStrategy infoStrategy = systemHandler.infoStrategy();
         final NTPFetch ntpFetch = new NTPFetch(pluginConfig);
@@ -28,11 +27,12 @@ public class TimeHandler {
         final MarketData marketData = new MarketData(infoStrategy
             .getContext()
             .getDataService());
-        final TickTimeProvider tickTimeProvider = new TickTimeProvider(infoStrategy
+        final TickQuoteRepository tickQuoteRepository = infoStrategy
             .strategyUtil()
             .tickQuoteProvider()
-            .repository(), clock);
-
+            .repository();
+        clock = systemHandler.clock();
+        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, clock);
         serverTimeProvider = new ServerTimeProvider(ntpProvider,
                                                     tickTimeProvider,
                                                     clock);

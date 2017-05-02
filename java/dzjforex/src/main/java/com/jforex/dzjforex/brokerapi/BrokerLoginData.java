@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.brokerapi;
 
+import com.jforex.dzjforex.misc.AccountInfo;
+
 public class BrokerLoginData {
 
     private final String username;
@@ -29,7 +31,7 @@ public class BrokerLoginData {
         return loginType;
     }
 
-    public void fillAccounts(final String accountID) {
-        accounts[0] = accountID;
+    public void fillAccounts(final AccountInfo accountInfo) {
+        accounts[0] = accountInfo.id();
     }
 }

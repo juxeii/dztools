@@ -33,7 +33,7 @@ public class BrokerBuy {
 
     private int submit(final Instrument instrument,
                        final BrokerBuyData brokerBuyData) {
-        logger.info("Trying to open trade for " + instrument
+        logger.debug("Trying to open trade for " + instrument
                 + " with nAmount: " + brokerBuyData.contracts()
                 + " and dStopDist: " + brokerBuyData.stopDistance());
         final String label = tradeUtil

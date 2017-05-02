@@ -23,17 +23,16 @@ public class BrokerStop {
 
     public int setSL(final BrokerStopData brokerStopData) {
         final Optional<IOrder> maybeOrder = tradeUtil.maybeOrderForTrading(brokerStopData.nTradeID());
-        if (!maybeOrder.isPresent())
-            return ZorroReturnValues.ADJUST_SL_FAIL.getValue();
-
-        logger.info("Trying to set stop loss for order ID " + brokerStopData.nTradeID()
-                + " and dStop " + brokerStopData.stopDistance());
-        return setSLForValidOrderID(maybeOrder.get(), brokerStopData.stopDistance());
+        return maybeOrder.isPresent()
+                ? setSLForValidOrderID(maybeOrder.get(), brokerStopData)
+                : ZorroReturnValues.ADJUST_SL_FAIL.getValue();
     }
 
     private int setSLForValidOrderID(final IOrder order,
-                                     final double dStop) {
-        final double slPrice = MathUtil.roundPrice(dStop, order.getInstrument());
+                                     final BrokerStopData brokerStopData) {
+        logger.info("Trying to set stop loss for order ID " + brokerStopData.nTradeID()
+                + " and dStop " + brokerStopData.stopDistance());
+        final double slPrice = MathUtil.roundPrice(brokerStopData.stopDistance(), order.getInstrument());
         if (tradeUtil.isSLPriceDistanceOK(order.getInstrument(), slPrice)) {
             final SetSLParams setSLParams = tradeUtil
                 .taskParams()

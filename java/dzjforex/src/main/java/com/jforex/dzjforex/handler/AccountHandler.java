@@ -38,7 +38,7 @@ public class AccountHandler {
     }
 
     public void fillAcountInfos(final BrokerLoginData brokerLoginData) {
-        brokerLoginData.fillAccounts(accountInfo().id());
+        brokerLoginData.fillAccounts(accountInfo);
     }
 
     public int subscribeAsset(final String instrumentName) {

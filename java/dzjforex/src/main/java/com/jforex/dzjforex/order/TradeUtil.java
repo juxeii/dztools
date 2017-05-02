@@ -143,7 +143,7 @@ public class TradeUtil {
         if (pipDistance < pluginConfig.minPipsForSL()) {
             logger.error("Cannot set SL price to " + newSL
                     + " since the pip distance " + pipDistance
-                    + " is too small! Minimum pips: " + pluginConfig.minPipsForSL());
+                    + " is too small! Minimum pip distance is: " + pluginConfig.minPipsForSL());
             return false;
         }
         return true;

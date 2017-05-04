@@ -12,10 +12,10 @@ import org.mockito.Mock;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.JFException;
+import com.jforex.dzjforex.Components;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.Components;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
@@ -75,7 +75,6 @@ public class CommonUtilForTest extends BDDMockito {
     public CommonUtilForTest() {
         initMocks(this);
 
-        when(componentsMock.infoStrategy()).thenReturn(infoStrategyMock);
         when(componentsMock.zorro()).thenReturn(zorroMock);
         when(componentsMock.pluginConfig()).thenReturn(pluginConfigMock);
 
@@ -83,7 +82,7 @@ public class CommonUtilForTest extends BDDMockito {
 
         when(tradeUtilMock.strategyUtil()).thenReturn(strategyUtilMock);
         when(tradeUtilMock.orderRepository()).thenReturn(orderRepositoryMock);
-        when(tradeUtilMock.labelUtil()).thenReturn(orderLabelUtilMock);
+        when(tradeUtilMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);

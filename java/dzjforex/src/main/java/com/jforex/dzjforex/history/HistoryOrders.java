@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
+import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.programming.misc.DateTimeUtil;

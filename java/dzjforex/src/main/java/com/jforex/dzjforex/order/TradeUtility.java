@@ -8,8 +8,8 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
@@ -64,7 +64,7 @@ public class TradeUtility {
         return accountInfo;
     }
 
-    public OrderLabelUtil labelUtil() {
+    public OrderLabelUtil orderLabelUtil() {
         return labelUtil;
     }
 

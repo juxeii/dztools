@@ -16,9 +16,9 @@ import org.mockito.Mock;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
+import com.jforex.dzjforex.brokeraccount.AccountInfo;
+import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.AccountInfo;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
 

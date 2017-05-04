@@ -10,9 +10,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
+import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
+import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.dzjforex.misc.PinProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.connection.LoginCredentials;
 

@@ -38,15 +38,15 @@ public class TaskParams {
         return SubmitParams
             .withOrderParams(orderParams)
             .doOnStart(() -> logger.info("Trying to open trade for " + instrument + ":\n"
-                    + "command:  " + command + "\n"
-                    + "amount:  " + amount + "\n"
-                    + "label:  " + label + "\n"
+                    + "command: " + command + "\n"
+                    + "amount: " + amount + "\n"
+                    + "label: " + label + "\n"
                     + "slPrice: " + slPrice))
             .doOnError(err -> logger.error("Opening trade for " + instrument
-                    + " with label  " + label
+                    + " with label " + label
                     + " failed!" + err.getMessage()))
             .doOnComplete(() -> logger.info("Opening trade for " + instrument
-                    + " with label  " + label
+                    + " with label " + label
                     + " done."))
             .retryOnReject(retryParams)
             .build();

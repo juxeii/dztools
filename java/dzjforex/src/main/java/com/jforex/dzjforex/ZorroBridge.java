@@ -2,33 +2,32 @@ package com.jforex.dzjforex;
 
 import org.aeonbits.owner.ConfigFactory;
 
-import com.jforex.dzjforex.brokerapi.BrokerAccount;
-import com.jforex.dzjforex.brokerapi.BrokerAccountData;
-import com.jforex.dzjforex.brokerapi.BrokerAsset;
-import com.jforex.dzjforex.brokerapi.BrokerAssetData;
-import com.jforex.dzjforex.brokerapi.BrokerBuy;
-import com.jforex.dzjforex.brokerapi.BrokerBuyData;
-import com.jforex.dzjforex.brokerapi.BrokerHistory;
-import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
-import com.jforex.dzjforex.brokerapi.BrokerLoginData;
-import com.jforex.dzjforex.brokerapi.BrokerSell;
-import com.jforex.dzjforex.brokerapi.BrokerSellData;
-import com.jforex.dzjforex.brokerapi.BrokerStop;
-import com.jforex.dzjforex.brokerapi.BrokerStopData;
-import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
-import com.jforex.dzjforex.brokerapi.BrokerTime;
-import com.jforex.dzjforex.brokerapi.BrokerTimeData;
-import com.jforex.dzjforex.brokerapi.BrokerTrade;
-import com.jforex.dzjforex.brokerapi.BrokerTradeData;
+import com.jforex.dzjforex.brokeraccount.BrokerAccount;
+import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
+import com.jforex.dzjforex.brokerasset.BrokerAsset;
+import com.jforex.dzjforex.brokerasset.BrokerAssetData;
+import com.jforex.dzjforex.brokerbuy.BrokerBuy;
+import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.brokerhistory.BrokerHistory;
+import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
+import com.jforex.dzjforex.brokerlogin.BrokerLogin;
+import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
+import com.jforex.dzjforex.brokersell.BrokerSell;
+import com.jforex.dzjforex.brokersell.BrokerSellData;
+import com.jforex.dzjforex.brokerstop.BrokerStop;
+import com.jforex.dzjforex.brokerstop.BrokerStopData;
+import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
+import com.jforex.dzjforex.brokertime.BrokerTime;
+import com.jforex.dzjforex.brokertime.BrokerTimeData;
+import com.jforex.dzjforex.brokertrade.BrokerTrade;
+import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.login.LoginHandler;
-import com.jforex.dzjforex.misc.Components;
 
 public class ZorroBridge {
 
     private final Components components;
-    private final LoginHandler loginHandler;
+    private final BrokerLogin brokerLogin;
     private BrokerTime brokerTime;
     private BrokerSubscribe brokerSubscribe;
     private BrokerAsset brokerAsset;
@@ -43,7 +42,7 @@ public class ZorroBridge {
 
     public ZorroBridge() {
         components = new Components(pluginConfig);
-        loginHandler = components.loginHandler();
+        brokerLogin = components.brokerLogin();
     }
 
     private void initComponents(final BrokerLoginData brokerLoginData) {
@@ -68,7 +67,7 @@ public class ZorroBridge {
                                                                     Pwd,
                                                                     Type,
                                                                     Accounts);
-        final int loginResult = loginHandler.login(brokerLoginData);
+        final int loginResult = brokerLogin.login(brokerLoginData);
         if (loginResult == ZorroReturnValues.LOGIN_OK.getValue())
             initComponents(brokerLoginData);
 

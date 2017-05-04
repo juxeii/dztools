@@ -12,7 +12,6 @@ import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.SystemHandler;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.instrument.InstrumentUtil;
@@ -33,18 +32,15 @@ public class TickFetcher {
 
     private final static Logger logger = LogManager.getLogger(TickFetcher.class);
 
-    public TickFetcher(final SystemHandler systemHandler,
-                       final HistoryProvider historyProvider,
-                       final PluginConfig pluginConfig) {
+    public TickFetcher(final HistoryProvider historyProvider,
+                       final StrategyUtil strategyUtil,
+                       final PluginConfig pluginConfig,
+                       final Zorro zorro) {
         this.historyProvider = historyProvider;
+        this.strategyUtil = strategyUtil;
         this.pluginConfig = pluginConfig;
-        strategyUtil = systemHandler
-            .infoStrategy()
-            .strategyUtil();
-        zorro = systemHandler.zorro();
-        tickFetchMillis = 1000 * 60 * systemHandler
-            .pluginConfig()
-            .tickFetchMinutes();
+        this.zorro = zorro;
+        tickFetchMillis = 1000 * 60 * pluginConfig.tickFetchMinutes();
     }
 
     public int fetch(final Instrument instrument,

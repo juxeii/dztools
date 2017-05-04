@@ -15,7 +15,7 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.SystemHandler;
+import com.jforex.dzjforex.misc.Components;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
@@ -28,7 +28,7 @@ import com.jforex.programming.strategy.StrategyUtil;
 public class CommonUtilForTest extends BDDMockito {
 
     @Mock
-    protected SystemHandler systemHandlerMock;
+    protected Components componentsMock;
     @Mock
     protected Zorro zorroMock;
     @Mock
@@ -75,9 +75,9 @@ public class CommonUtilForTest extends BDDMockito {
     public CommonUtilForTest() {
         initMocks(this);
 
-        when(systemHandlerMock.infoStrategy()).thenReturn(infoStrategyMock);
-        when(systemHandlerMock.zorro()).thenReturn(zorroMock);
-        when(systemHandlerMock.pluginConfig()).thenReturn(pluginConfigMock);
+        when(componentsMock.infoStrategy()).thenReturn(infoStrategyMock);
+        when(componentsMock.zorro()).thenReturn(zorroMock);
+        when(componentsMock.pluginConfig()).thenReturn(pluginConfigMock);
 
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
 

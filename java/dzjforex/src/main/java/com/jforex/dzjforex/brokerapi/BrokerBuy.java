@@ -77,7 +77,6 @@ public class BrokerBuy {
                        amount,
                        label,
                        slPrice);
-        logger.debug("before taskparams run");
         return tradeUtil.runTaskParams(submitParams);
     }
 }

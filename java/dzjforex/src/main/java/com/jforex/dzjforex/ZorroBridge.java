@@ -1,57 +1,63 @@
 package com.jforex.dzjforex;
 
-import java.time.Clock;
-
 import org.aeonbits.owner.ConfigFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import com.jforex.dzjforex.brokerapi.BrokerAccount;
 import com.jforex.dzjforex.brokerapi.BrokerAccountData;
+import com.jforex.dzjforex.brokerapi.BrokerAsset;
 import com.jforex.dzjforex.brokerapi.BrokerAssetData;
+import com.jforex.dzjforex.brokerapi.BrokerBuy;
 import com.jforex.dzjforex.brokerapi.BrokerBuyData;
+import com.jforex.dzjforex.brokerapi.BrokerHistory;
 import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
 import com.jforex.dzjforex.brokerapi.BrokerLoginData;
+import com.jforex.dzjforex.brokerapi.BrokerSell;
 import com.jforex.dzjforex.brokerapi.BrokerSellData;
+import com.jforex.dzjforex.brokerapi.BrokerStop;
 import com.jforex.dzjforex.brokerapi.BrokerStopData;
+import com.jforex.dzjforex.brokerapi.BrokerSubscribe;
+import com.jforex.dzjforex.brokerapi.BrokerTime;
 import com.jforex.dzjforex.brokerapi.BrokerTimeData;
+import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.brokerapi.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.handler.AccountHandler;
-import com.jforex.dzjforex.handler.HistoryHandler;
-import com.jforex.dzjforex.handler.LoginHandler;
-import com.jforex.dzjforex.handler.SystemHandler;
-import com.jforex.dzjforex.handler.TimeHandler;
-import com.jforex.dzjforex.handler.TradeHandler;
+import com.jforex.dzjforex.login.LoginHandler;
+import com.jforex.dzjforex.misc.Components;
 
 public class ZorroBridge {
 
-    private final SystemHandler systemHandler;
-    private AccountHandler accountHandler;
+    private final Components components;
     private final LoginHandler loginHandler;
-    private HistoryHandler historyHandler;
-    private TradeHandler tradeHandler;
-    private TimeHandler timeHandler;
+    private BrokerTime brokerTime;
+    private BrokerSubscribe brokerSubscribe;
+    private BrokerAsset brokerAsset;
+    private BrokerAccount brokerAccount;
+    private BrokerTrade brokerTrade;
+    private BrokerBuy brokerBuy;
+    private BrokerSell brokerSell;
+    private BrokerStop brokerStop;
+    private BrokerHistory brokerHistory;
     private long strategyID;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
-    private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
-
     public ZorroBridge() {
-        systemHandler = new SystemHandler(pluginConfig, Clock.systemDefaultZone());
-        loginHandler = new LoginHandler(systemHandler);
+        components = new Components(pluginConfig);
+        loginHandler = components.loginHandler();
     }
 
-    private void initComponents() {
-        strategyID = systemHandler.startStrategy();
+    private void initComponents(final BrokerLoginData brokerLoginData) {
+        strategyID = components.startAndInitStrategyComponents(brokerLoginData);
 
-        accountHandler = new AccountHandler(systemHandler);
-        timeHandler = new TimeHandler(systemHandler);
-        historyHandler = new HistoryHandler(systemHandler);
-        tradeHandler = new TradeHandler(systemHandler,
-                                        accountHandler,
-                                        timeHandler,
-                                        historyHandler);
+        brokerTime = components.brokerTime();
+        brokerSubscribe = components.brokerSubscribe();
+        brokerAsset = components.brokerAsset();
+        brokerAccount = components.brokerAccount();
+        brokerTrade = components.brokerTrade();
+        brokerBuy = components.brokerBuy();
+        brokerSell = components.brokerSell();
+        brokerStop = components.brokerStop();
+        brokerHistory = components.brokerHistory();
     }
 
     public int doLogin(final String User,
@@ -63,10 +69,8 @@ public class ZorroBridge {
                                                                     Type,
                                                                     Accounts);
         final int loginResult = loginHandler.login(brokerLoginData);
-        if (loginResult == ZorroReturnValues.LOGIN_OK.getValue()) {
-            initComponents();
-            accountHandler.fillAcountInfos(brokerLoginData);
-        }
+        if (loginResult == ZorroReturnValues.LOGIN_OK.getValue())
+            initComponents(brokerLoginData);
 
         return loginResult;
     }
@@ -79,46 +83,46 @@ public class ZorroBridge {
 
     public int doBrokerTime(final double pTimeUTC[]) {
         final BrokerTimeData brokerTimeData = new BrokerTimeData(pTimeUTC);
-        return timeHandler.brokerTime(brokerTimeData);
+        return brokerTime.get(brokerTimeData);
     }
 
     public int doSubscribeAsset(final String Asset) {
-        return accountHandler.subscribeAsset(Asset);
+        return brokerSubscribe.subscribe(Asset);
     }
 
     public int doBrokerAsset(final String Asset,
                              final double assetParams[]) {
         final BrokerAssetData brokerAssetData = new BrokerAssetData(Asset, assetParams);
-        return accountHandler.brokerAsset(brokerAssetData);
+        return brokerAsset.fillAssetParams(brokerAssetData);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
         final BrokerAccountData brokerAccountData = new BrokerAccountData(accountInfoParams);
-        return accountHandler.brokerAccount(brokerAccountData);
+        return brokerAccount.handle(brokerAccountData);
     }
 
     public int doBrokerTrade(final int nTradeID,
                              final double tradeParams[]) {
         final BrokerTradeData brokerTradeData = new BrokerTradeData(nTradeID, tradeParams);
-        return tradeHandler.brokerTrade(brokerTradeData);
+        return brokerTrade.orderInfo(brokerTradeData);
     }
 
     public int doBrokerBuy(final String Asset,
                            final double tradeParams[]) {
         final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset, tradeParams);
-        return tradeHandler.brokerBuy(brokerBuyData);
+        return brokerBuy.openTrade(brokerBuyData);
     }
 
     public int doBrokerSell(final int nTradeID,
                             final int nAmount) {
         final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
-        return tradeHandler.brokerSell(brokerSellData);
+        return brokerSell.closeTrade(brokerSellData);
     }
 
     public int doBrokerStop(final int nTradeID,
                             final double dStop) {
         final BrokerStopData brokerStopData = new BrokerStopData(nTradeID, dStop);
-        return tradeHandler.brokerStop(brokerStopData);
+        return brokerStop.setSL(brokerStopData);
     }
 
     public int doBrokerHistory2(final String Asset,
@@ -133,7 +137,7 @@ public class ZorroBridge {
                                                                           nTickMinutes,
                                                                           nTicks,
                                                                           tickParams);
-        return historyHandler.brokerHistory(brokerHistoryData);
+        return brokerHistory.get(brokerHistoryData);
     }
 
     public int doSetOrderText(final String orderText) {

@@ -64,7 +64,7 @@ public class OrderRepository {
             .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in history."));
     }
 
-    public void importZorroOrders(final Single<List<IOrder>> orders) {
+    private void importZorroOrders(final Single<List<IOrder>> orders) {
         orders
             .blockingGet()
             .forEach(this::filterAndImportZorroOrder);

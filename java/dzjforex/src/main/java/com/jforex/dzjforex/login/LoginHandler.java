@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.handler;
+package com.jforex.dzjforex.login;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,30 +9,24 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokerapi.BrokerLoginData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.CredentialsFactory;
-import com.jforex.dzjforex.misc.PinProvider;
-import com.jforex.programming.client.ClientUtil;
 
 import io.reactivex.Observable;
+import io.reactivex.subjects.BehaviorSubject;
 
 public class LoginHandler {
 
-    private final LoginExecutor loginExecutor;
     private final IClient client;
+    private final LoginExecutor loginExecutor;
     private Observable<Long> retryDelayTimer;
-    private boolean isLoginAvailable = true;
+    private final BehaviorSubject<Boolean> isLoginAvailable = BehaviorSubject.createDefault(true);
 
     private final static Logger logger = LogManager.getLogger(LoginHandler.class);
 
-    public LoginHandler(final SystemHandler systemHandler) {
-        final ClientUtil clientUtil = systemHandler.clientUtil();
-        final PluginConfig pluginConfig = systemHandler.pluginConfig();
-        final PinProvider pinProvider = new PinProvider(systemHandler);
-        final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        client = clientUtil.client();
-        loginExecutor = new LoginExecutor(clientUtil.authentification(),
-                                          credentialsFactory,
-                                          systemHandler.zorro());
+    public LoginHandler(final IClient client,
+                        final LoginExecutor loginExecutor,
+                        final PluginConfig pluginConfig) {
+        this.client = client;
+        this.loginExecutor = loginExecutor;
 
         initRetryDelayTimer(pluginConfig.loginRetryDelay());
     }
@@ -41,11 +35,11 @@ public class LoginHandler {
         retryDelayTimer = Observable
             .timer(retryDelay, TimeUnit.MILLISECONDS)
             .doOnSubscribe(d -> {
-                isLoginAvailable = false;
+                isLoginAvailable.onNext(false);
                 logger.debug("Starting login retry delay timer. Login is not available until timer elapsed.");
             })
             .doOnComplete(() -> {
-                isLoginAvailable = true;
+                isLoginAvailable.onNext(true);
                 logger.debug("Login retry delay timer completed. Login is available again.");
             });
     }
@@ -53,7 +47,7 @@ public class LoginHandler {
     public int login(final BrokerLoginData brokerLoginData) {
         if (client.isConnected())
             return ZorroReturnValues.LOGIN_OK.getValue();
-        if (!isLoginAvailable)
+        if (!isLoginAvailable.getValue())
             return ZorroReturnValues.LOGIN_FAIL.getValue();
 
         return handleLoginResult(loginExecutor.login(brokerLoginData));

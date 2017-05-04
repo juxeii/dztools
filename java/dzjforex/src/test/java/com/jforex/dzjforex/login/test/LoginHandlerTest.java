@@ -1,3 +1,4 @@
+package com.jforex.dzjforex.login.test;
 //package com.jforex.dzjforex.handler.test;
 //
 //import static org.hamcrest.Matchers.equalTo;

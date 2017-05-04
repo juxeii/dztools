@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.handler;
+package com.jforex.dzjforex.login;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,7 +40,7 @@ public class LoginExecutor {
             .login(credentials)
             .andThen(Observable.just(ZorroReturnValues.LOGIN_OK.getValue()))
             .onErrorResumeNext(err -> {
-                logger.error("Failed to login with exception " + err.getMessage());
+                logger.error("Failed to login! " + err.getMessage());
                 return Observable.just(ZorroReturnValues.LOGIN_FAIL.getValue());
             });
 

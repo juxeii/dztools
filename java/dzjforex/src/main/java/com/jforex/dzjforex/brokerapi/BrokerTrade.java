@@ -22,7 +22,7 @@ public class BrokerTrade {
         strategyUtil = tradeUtil.strategyUtil();
     }
 
-    public int handle(final BrokerTradeData brokerTradeData) {
+    public int orderInfo(final BrokerTradeData brokerTradeData) {
         return tradeUtil
             .maybeOrderByID(brokerTradeData.nTradeID())
             .map(order -> handleForOrder(order, brokerTradeData))

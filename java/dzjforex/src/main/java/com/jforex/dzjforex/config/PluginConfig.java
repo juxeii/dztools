@@ -46,13 +46,13 @@ public interface PluginConfig extends Config {
     @DefaultValue("true")
     boolean isAutoMerge();
 
-    @Key("history.download.retries")
+    @Key("history.access.retries")
     @DefaultValue("3")
-    int historyDownloadRetries();
+    int historyAccessRetries();
 
-    @Key("history.download.retrydelay")
+    @Key("history.access.retrydelay")
     @DefaultValue("1000")
-    long historyRetryDelay();
+    long historyAccessRetryDelay();
 
     @Key("history.tickfetchminutes")
     @DefaultValue("30")

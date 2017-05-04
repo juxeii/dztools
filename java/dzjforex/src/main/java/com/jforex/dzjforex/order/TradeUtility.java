@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.order;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,28 +10,29 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.AccountInfo;
-import com.jforex.programming.instrument.InstrumentFactory;
-import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.math.MathUtil;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.TaskParamsWithType;
 import com.jforex.programming.rx.RetryDelay;
 import com.jforex.programming.strategy.StrategyUtil;
 
-public class TradeUtil {
+import io.reactivex.Maybe;
+
+public class TradeUtility {
 
     private final OrderRepository orderRepository;
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
     private final OrderLabelUtil labelUtil;
+    private final StopLoss stopLoss;
     private final TaskParams taskParams;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
 
-    private final static Logger logger = LogManager.getLogger(TradeUtil.class);
+    private final static Logger logger = LogManager.getLogger(TradeUtility.class);
 
-    public TradeUtil(final OrderRepository orderRepository,
+    public TradeUtility(final OrderRepository orderRepository,
                      final StrategyUtil strategyUtil,
                      final AccountInfo accountInfo,
                      final OrderLabelUtil orderLabel,
@@ -45,6 +45,7 @@ public class TradeUtil {
 
         orderUtil = strategyUtil.orderUtil();
         taskParams = new TaskParams(retryParams());
+        stopLoss = new StopLoss(strategyUtil, pluginConfig);
     }
 
     public OrderRepository orderRepository() {
@@ -67,6 +68,10 @@ public class TradeUtil {
         return labelUtil;
     }
 
+    public StopLoss stopLoss() {
+        return stopLoss;
+    }
+
     public TaskParams taskParams() {
         return taskParams;
     }
@@ -80,70 +85,21 @@ public class TradeUtil {
         return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
-    public void storeOrder(final int orderID,
-                           final IOrder order) {
-        orderRepository.storeOrder(orderID, order);
+    public Maybe<Instrument> maybeInstrumentForTrading(final String assetName) {
+        return isTradingAllowed()
+                ? RxUtility.maybeInstrumentFromName(assetName)
+                : Maybe.empty();
     }
 
-    public Optional<Instrument> maybeInstrumentForTrading(final String assetName) {
+    public Maybe<IOrder> maybeOrderForTrading(final int nTradeID) {
         return isTradingAllowed()
-                ? InstrumentFactory.maybeFromName(assetName)
-                : Optional.empty();
-    }
-
-    public Optional<IOrder> maybeOrderForTrading(final int nTradeID) {
-        return isTradingAllowed()
-                ? Optional.ofNullable(orderByID(nTradeID))
-                : Optional.empty();
+                ? maybeOrderByID(nTradeID)
+                : Maybe.empty();
     }
 
     public boolean isTradingAllowed() {
         if (!accountInfo.isTradingAllowed()) {
             logger.warn("Trading account is not available, since it is in state " + accountInfo.state());
-            return false;
-        }
-        return true;
-    }
-
-    public double calculateSL(final Instrument instrument,
-                              final OrderCommand orderCommand,
-                              final double dStopDist) {
-        if (dStopDist == 0.0 || dStopDist == -1)
-            return StrategyUtil.platformSettings.noSLPrice();
-
-        final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
-        final double currentAskPrice = instrumentUtil.askQuote();
-        final double spread = instrumentUtil.spread();
-
-        final double rawSLPrice = orderCommand == OrderCommand.BUY
-                ? currentAskPrice - dStopDist - spread
-                : currentAskPrice + dStopDist + spread;
-        final double slPrice = MathUtil.roundPrice(rawSLPrice, instrument);
-        logger.debug("Calculating SL price for " + instrument + "\n"
-                + " orderCommand " + orderCommand + "\n"
-                + " dStopDist " + dStopDist + "\n"
-                + " currentAskPrice " + currentAskPrice + "\n"
-                + " spread " + spread + "\n"
-                + " slPrice " + slPrice);
-
-        return !isSLPriceDistanceOK(instrument, slPrice)
-                ? StrategyUtil.platformSettings.noSLPrice()
-                : slPrice;
-    }
-
-    public boolean isSLPriceDistanceOK(final Instrument instrument,
-                                       final double newSL) {
-        final double currentAskPrice = strategyUtil
-            .instrumentUtil(instrument)
-            .askQuote();
-
-        final double pipDistance = Math.abs(InstrumentUtil.pipDistanceOfPrices(instrument,
-                                                                               currentAskPrice,
-                                                                               newSL));
-        if (pipDistance < pluginConfig.minPipsForSL()) {
-            logger.error("Cannot set SL price to " + newSL
-                    + " since the pip distance " + pipDistance
-                    + " is too small! Minimum pip distance is: " + pluginConfig.minPipsForSL());
             return false;
         }
         return true;
@@ -163,12 +119,8 @@ public class TradeUtil {
         return Math.abs(contracts) / pluginConfig.lotScale();
     }
 
-    public IOrder orderByID(final int orderID) {
-        return orderRepository.orderByID(orderID);
-    }
-
-    public Optional<IOrder> maybeOrderById(final int nTradeID) {
-        return Optional.ofNullable(orderByID(nTradeID));
+    public Maybe<IOrder> maybeOrderByID(final int nTradeID) {
+        return orderRepository.maybeOrderByID(nTradeID);
     }
 
     public OrderActionResult runTaskParams(final TaskParamsWithType taskParams) {

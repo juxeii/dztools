@@ -20,7 +20,7 @@ import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.TradeUtil;
+import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.strategy.StrategyUtil;
@@ -34,7 +34,7 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected IEngine engineMock;
     @Mock
-    protected TradeUtil tradeUtilMock;
+    protected TradeUtility tradeUtilMock;
     @Mock
     protected InfoStrategy infoStrategyMock;
     @Mock

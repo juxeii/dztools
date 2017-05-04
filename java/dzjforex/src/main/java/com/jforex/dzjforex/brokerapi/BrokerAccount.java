@@ -12,12 +12,9 @@ public class BrokerAccount {
     }
 
     public int handle(final BrokerAccountData brokerAccountData) {
-        return accountInfo.isConnected()
-                ? fillAccountInfo(brokerAccountData)
-                : ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue();
-    }
+        if (!accountInfo.isConnected())
+            return ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue();
 
-    private int fillAccountInfo(final BrokerAccountData brokerAccountData) {
         brokerAccountData.fill(accountInfo);
         return ZorroReturnValues.ACCOUNT_AVAILABLE.getValue();
     }

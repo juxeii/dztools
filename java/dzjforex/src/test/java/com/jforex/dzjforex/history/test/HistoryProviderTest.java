@@ -2,7 +2,6 @@ package com.jforex.dzjforex.history.test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +19,7 @@ import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.test.util.RxTestUtil;
+import com.jforex.programming.quote.BarParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.observers.TestObserver;
@@ -40,33 +39,23 @@ public class HistoryProviderTest extends CommonUtilForTest {
     private IOrder orderMock;
     private final Instrument fetchInstrument = Instrument.EURUSD;
     private final Period period = Period.ONE_HOUR;
+    private final OfferSide offerSide = OfferSide.ASK;
+    private final BarParams barParams = BarParams
+        .forInstrument(fetchInstrument)
+        .period(period)
+        .offerSide(offerSide);
     private final long startTime = 12L;
     private final long endTime = 42L;
-    private final int maxRetries = 1;
-    private final long retryDelay = 1500L;
 
     @Before
     public void setUp() {
-        when(pluginConfigMock.historyDownloadRetries()).thenReturn(maxRetries);
-        when(pluginConfigMock.historyRetryDelay()).thenReturn(retryDelay);
-
-        historyProvider = new HistoryProvider(historyMock, pluginConfigMock);
-    }
-
-    private void advanceRetryTime(final int times) {
-        RxTestUtil.advanceTimeBy(retryDelay * times, TimeUnit.MILLISECONDS);
+        historyProvider = new HistoryProvider(historyMock);
     }
 
     public class FetchBars {
 
-        private final OfferSide offerSide = OfferSide.ASK;
         private final List<IBar> barsFromHistory = new ArrayList<>();
-        private TestObserver<List<IBar>> testSubscriber;
-
-        @Before
-        public void setUp() {
-            barsFromHistory.add(barMock);
-        }
+        private TestObserver<List<IBar>> barsSubscriber;
 
         private OngoingStubbing<List<IBar>> getBarsStub() throws JFException {
             return when(historyMock.getBars(fetchInstrument,
@@ -85,58 +74,85 @@ public class HistoryProviderTest extends CommonUtilForTest {
         }
 
         private void subscribeFetch() {
-            testSubscriber = historyProvider
-                .fetchBars(fetchInstrument,
-                           period,
-                           offerSide,
+            barsSubscriber = historyProvider
+                .fetchBars(barParams,
                            startTime,
                            endTime)
                 .test();
         }
 
         @Test
-        public void whenFetchIsOK() throws JFException {
+        public void barsFromHistoryAreReturnedWhenHistoryDoesNotThrow() throws JFException {
             getBarsStub().thenReturn(barsFromHistory);
 
             subscribeFetch();
 
-            testSubscriber
-                .assertComplete()
-                .assertValue(barsFromHistory);
-        }
-
-        @Test
-        public void whenFetchFailsTwoTimesAnEmptyListIsReturned() throws JFException {
-            getBarsStub()
-                .thenThrow(jfException)
-                .thenThrow(jfException);
-
-            subscribeFetch();
-
-            advanceRetryTime(2);
-
-            testSubscriber
-                .assertComplete()
-                .assertValue(List::isEmpty);
-
-            verifyGetBarsCall(2);
-        }
-
-        @Test
-        public void whenFetchFailsOneTmeTheBarsFromHistoryAreReturned() throws JFException {
-            getBarsStub()
-                .thenThrow(jfException)
-                .thenReturn(barsFromHistory);
-
-            subscribeFetch();
-
-            advanceRetryTime(2);
-
-            testSubscriber
+            barsSubscriber
                 .assertComplete()
                 .assertValue(barsFromHistory);
 
-            verifyGetBarsCall(2);
+            verifyGetBarsCall(1);
+        }
+
+        @Test
+        public void errorIsPropagatedWhenHistoryThrows() throws JFException {
+            getBarsStub().thenThrow(jfException);
+
+            subscribeFetch();
+
+            barsSubscriber.assertError(jfException);
+
+            verifyGetBarsCall(1);
+        }
+    }
+
+    public class BarByShift {
+
+        private static final int shift = 1;
+        private TestObserver<IBar> barSubscriber;
+
+        private OngoingStubbing<IBar> getBarStub() throws JFException {
+            return when(historyMock.getBar(fetchInstrument,
+                                           period,
+                                           offerSide,
+                                           shift));
+        }
+
+        private void verifyGetBarCall() throws JFException {
+            verify(historyMock).getBar(fetchInstrument,
+                                       period,
+                                       offerSide,
+                                       shift);
+        }
+
+        private void subscribeFetch() {
+            barSubscriber = historyProvider
+                .barByShift(barParams, shift)
+                .test();
+        }
+
+        @Test
+        public void barFromHistoryIsReturnedWhenHistoryDoesNotThrow() throws JFException {
+            getBarStub().thenReturn(barMock);
+
+            subscribeFetch();
+
+            barSubscriber
+                .assertComplete()
+                .assertValue(barMock);
+
+            verifyGetBarCall();
+        }
+
+        @Test
+        public void errorIsPropagatedWhenHistoryThrows() throws JFException {
+            getBarStub().thenThrow(jfException);
+
+            subscribeFetch();
+
+            barSubscriber.assertError(jfException);
+
+            verifyGetBarCall();
         }
     }
 
@@ -145,12 +161,7 @@ public class HistoryProviderTest extends CommonUtilForTest {
         private final List<ITick> ticksFromHistory = new ArrayList<>();
         private TestObserver<List<ITick>> testSubscriber;
 
-        @Before
-        public void setUp() {
-            ticksFromHistory.add(tickMock);
-        }
-
-        private OngoingStubbing<List<ITick>> getOrdersStub() throws JFException {
+        private OngoingStubbing<List<ITick>> getTicksStub() throws JFException {
             return when(historyMock.getTicks(fetchInstrument,
                                              startTime,
                                              endTime));
@@ -171,48 +182,27 @@ public class HistoryProviderTest extends CommonUtilForTest {
         }
 
         @Test
-        public void whenFetchIsOK() throws JFException {
-            getOrdersStub().thenReturn(ticksFromHistory);
+        public void ticksFromHistoryAreReturnedWhenHistoryDoesNotThrow() throws JFException {
+            getTicksStub().thenReturn(ticksFromHistory);
 
             subscribeFetch();
 
             testSubscriber
                 .assertComplete()
                 .assertValue(ticksFromHistory);
+
+            verifyGetTicksCall(1);
         }
 
         @Test
-        public void whenFetchFailsTwoTimesAnEmptyListIsReturned() throws JFException {
-            getOrdersStub()
-                .thenThrow(jfException)
-                .thenThrow(jfException);
+        public void errorIsPropagatedWhenHistoryThrows() throws JFException {
+            getTicksStub().thenThrow(jfException);
 
             subscribeFetch();
 
-            advanceRetryTime(2);
+            testSubscriber.assertError(jfException);
 
-            testSubscriber
-                .assertComplete()
-                .assertValue(List::isEmpty);
-
-            verifyGetTicksCall(2);
-        }
-
-        @Test
-        public void whenFetchFailsOneTmeTheTicksFromHistoryAreReturned() throws JFException {
-            getOrdersStub()
-                .thenThrow(jfException)
-                .thenReturn(ticksFromHistory);
-
-            subscribeFetch();
-
-            advanceRetryTime(2);
-
-            testSubscriber
-                .assertComplete()
-                .assertValue(ticksFromHistory);
-
-            verifyGetTicksCall(2);
+            verifyGetTicksCall(1);
         }
     }
 
@@ -223,18 +213,13 @@ public class HistoryProviderTest extends CommonUtilForTest {
         private final List<IOrder> ordersFromHistory = new ArrayList<>();
         private TestObserver<List<IOrder>> testSubscriber;
 
-        @Before
-        public void setUp() {
-            ordersFromHistory.add(orderMock);
-        }
-
-        private OngoingStubbing<List<IOrder>> getOrdersStub() throws JFException {
+        private OngoingStubbing<List<IOrder>> getOrdersHistoryStub() throws JFException {
             return when(historyMock.getOrdersHistory(fetchInstrument,
                                                      from,
                                                      to));
         }
 
-        private void verifyOrdersByInstrumentCall(final int times) throws JFException {
+        private void verifyGetOrdersHistoryCall(final int times) throws JFException {
             verify(historyMock, times(times)).getOrdersHistory(fetchInstrument,
                                                                from,
                                                                to);
@@ -249,48 +234,27 @@ public class HistoryProviderTest extends CommonUtilForTest {
         }
 
         @Test
-        public void whenFetchIsOK() throws JFException {
-            getOrdersStub().thenReturn(ordersFromHistory);
+        public void ordersFromHistoryAreReturnedWhenHistoryDoesNotThrow() throws JFException {
+            getOrdersHistoryStub().thenReturn(ordersFromHistory);
 
             subscribeFetch();
 
             testSubscriber
                 .assertComplete()
                 .assertValue(ordersFromHistory);
+
+            verifyGetOrdersHistoryCall(1);
         }
 
         @Test
-        public void whenFetchFailsTwoTimesAnEmptyOrderListIsReturned() throws JFException {
-            getOrdersStub()
-                .thenThrow(jfException)
-                .thenThrow(jfException);
+        public void errorIsPropagatedWhenHistoryThrows() throws JFException {
+            getOrdersHistoryStub().thenThrow(jfException);
 
             subscribeFetch();
 
-            advanceRetryTime(2);
+            testSubscriber.assertError(jfException);
 
-            testSubscriber
-                .assertComplete()
-                .assertValue(List::isEmpty);
-
-            verifyOrdersByInstrumentCall(2);
-        }
-
-        @Test
-        public void whenFetchFailsOneTmeTheOrdersFromHistoryAreReturned() throws JFException {
-            getOrdersStub()
-                .thenThrow(jfException)
-                .thenReturn(ordersFromHistory);
-
-            subscribeFetch();
-
-            advanceRetryTime(2);
-
-            testSubscriber
-                .assertComplete()
-                .assertValue(ordersFromHistory);
-
-            verifyOrdersByInstrumentCall(2);
+            verifyGetOrdersHistoryCall(1);
         }
     }
 }

@@ -28,7 +28,7 @@ public class BrokerBuyData {
         return stopDistance;
     }
 
-    public void fill(final double openPrice) {
+    public void fillOpenPrice(final double openPrice) {
         tradeParams[2] = openPrice;
     }
 }

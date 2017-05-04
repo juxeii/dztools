@@ -9,12 +9,12 @@ import com.jforex.dzjforex.brokerapi.BrokerStopData;
 import com.jforex.dzjforex.brokerapi.BrokerTrade;
 import com.jforex.dzjforex.brokerapi.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.order.HistoryOrders;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.RunningOrders;
-import com.jforex.dzjforex.order.TradeUtil;
+import com.jforex.dzjforex.order.OpenOrders;
+import com.jforex.dzjforex.order.TradeUtility;
 
 public class TradeHandler {
 
@@ -30,7 +30,7 @@ public class TradeHandler {
         final PluginConfig pluginConfig = systemHandler.pluginConfig();
         final InfoStrategy infoStrategy = systemHandler.infoStrategy();
 
-        final RunningOrders runningOrders = new RunningOrders(infoStrategy.getContext().getEngine());
+        final OpenOrders runningOrders = new OpenOrders(infoStrategy.getContext().getEngine());
         final HistoryOrders historyOrders = new HistoryOrders(historyHandler.historyProvider(),
                                                               accountHandler.brokerSubscribe(),
                                                               pluginConfig,
@@ -39,7 +39,7 @@ public class TradeHandler {
         final OrderRepository orderRepository = new OrderRepository(runningOrders,
                                                                     historyOrders,
                                                                     orderLabelUtil);
-        final TradeUtil tradeUtil = new TradeUtil(orderRepository,
+        final TradeUtility tradeUtil = new TradeUtility(orderRepository,
                                                   infoStrategy.strategyUtil(),
                                                   accountHandler.accountInfo(),
                                                   orderLabelUtil,

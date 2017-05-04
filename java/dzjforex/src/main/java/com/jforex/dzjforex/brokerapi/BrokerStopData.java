@@ -3,19 +3,19 @@ package com.jforex.dzjforex.brokerapi;
 public class BrokerStopData {
 
     private final int nTradeID;
-    private final double stopDistance;
+    private final double slPrice;
 
     public BrokerStopData(final int nTradeID,
-                          final double stopDistance) {
+                          final double slPrice) {
         this.nTradeID = nTradeID;
-        this.stopDistance = stopDistance;
+        this.slPrice = slPrice;
     }
 
     public int nTradeID() {
         return nTradeID;
     }
 
-    public double stopDistance() {
-        return stopDistance;
+    public double slPrice() {
+        return slPrice;
     }
 }

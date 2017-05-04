@@ -1,38 +1,37 @@
 package com.jforex.dzjforex.brokerapi;
 
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.TradeUtil;
+import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerTrade {
 
-    private final TradeUtil tradeUtil;
+    private final TradeUtility tradeUtil;
     private final StrategyUtil strategyUtil;
 
     private final static double rollOverNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerTrade.class);
 
-    public BrokerTrade(final TradeUtil tradeUtil) {
+    public BrokerTrade(final TradeUtility tradeUtil) {
         this.tradeUtil = tradeUtil;
         strategyUtil = tradeUtil.strategyUtil();
     }
 
     public int handle(final BrokerTradeData brokerTradeData) {
-        final Optional<IOrder> maybeOrderById = tradeUtil.maybeOrderById(brokerTradeData.nTradeID());
-        return maybeOrderById.isPresent()
-                ? handleForOrder(brokerTradeData, maybeOrderById.get())
-                : ZorroReturnValues.UNKNOWN_ORDER_ID.getValue();
+        return tradeUtil
+            .maybeOrderByID(brokerTradeData.nTradeID())
+            .map(order -> handleForOrder(order, brokerTradeData))
+            .defaultIfEmpty(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue())
+            .blockingGet();
     }
 
-    private int handleForOrder(final BrokerTradeData brokerTradeData,
-                               final IOrder order) {
+    private int handleForOrder(final IOrder order,
+                               final BrokerTradeData brokerTradeData) {
         fillTradeParams(order, brokerTradeData);
         if (order.getState() == IOrder.State.CLOSED)
             return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();

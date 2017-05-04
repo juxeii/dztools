@@ -12,11 +12,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.PluginConfig;
 
-import io.reactivex.Observable;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 
 public class NTPFetch {
 
-    private final Observable<Long> observable;
+    private final Single<Long> observable;
     private final NTPUDPClient ntpUDPClient = new NTPUDPClient();
 
     private final static Logger logger = LogManager.getLogger(NTPFetch.class);
@@ -24,12 +25,12 @@ public class NTPFetch {
     public NTPFetch(final PluginConfig pluginConfig) {
         final long retryDelay = pluginConfig.ntpRetryDelay();
 
-        observable = Observable
+        observable = Single
             .fromCallable(() -> fromURL(pluginConfig.ntpServerURL()))
             .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
             .doOnError(err -> logger.debug("NTP fetch task failed with error: " + err.getMessage()
                     + "! Will retry in " + retryDelay + " milliseconds."))
-            .retryWhen(errors -> errors.flatMap(error -> Observable.timer(retryDelay, TimeUnit.MILLISECONDS)));
+            .retryWhen(errors -> errors.flatMap(error -> Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)));
     }
 
     private long fromURL(final String ntpServerURL) throws Exception {
@@ -40,7 +41,7 @@ public class NTPFetch {
         return timeStamp.getTime();
     }
 
-    public Observable<Long> observable() {
+    public Single<Long> observable() {
         return observable;
     }
 }

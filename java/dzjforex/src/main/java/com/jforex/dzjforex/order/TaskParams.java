@@ -37,15 +37,17 @@ public class TaskParams {
 
         return SubmitParams
             .withOrderParams(orderParams)
-            .doOnStart(() -> logger.info("Trying to open trade for " + instrument + "\n"
+            .doOnStart(() -> logger.info("Trying to open trade for " + instrument + ":\n"
                     + "command:  " + command + "\n"
                     + "amount:  " + amount + "\n"
                     + "label:  " + label + "\n"
                     + "slPrice: " + slPrice))
             .doOnError(err -> logger.error("Opening trade for " + instrument
-                    + " with label  " + label + " failed!" + err.getMessage()))
+                    + " with label  " + label
+                    + " failed!" + err.getMessage()))
             .doOnComplete(() -> logger.info("Opening trade for " + instrument
-                    + " with label  " + label + " done."))
+                    + " with label  " + label
+                    + " done."))
             .retryOnReject(retryParams)
             .build();
     }
@@ -57,9 +59,10 @@ public class TaskParams {
             .closePartial(closeAmount)
             .doOnStart(() -> logger.info("Trying to close order " + order.getLabel()
                     + " with amount " + closeAmount))
-            .doOnError(err -> logger.error("Failed to close order "
-                    + order.getLabel() + "! " + err.getMessage()))
-            .doOnComplete(() -> logger.info("Closing order " + order.getLabel() + " done."))
+            .doOnError(err -> logger.error("Failed to close order " + order.getLabel()
+                    + "! " + err.getMessage()))
+            .doOnComplete(() -> logger.info("Closing order " + order.getLabel()
+                    + " done."))
             .retryOnReject(retryParams)
             .build();
     }
@@ -71,9 +74,11 @@ public class TaskParams {
             .doOnStart(() -> logger.info("Trying to set new stop loss " + newSLPrice
                     + " on order " + order.getLabel()))
             .doOnError(err -> logger.error("Failed to set new stop loss " + newSLPrice
-                    + " on order " + order.getLabel() + "!" + err.getMessage()))
+                    + " on order " + order.getLabel()
+                    + "!" + err.getMessage()))
             .doOnComplete(() -> logger.info("Setting new Stop loss " + newSLPrice
-                    + " on order " + order.getLabel() + " done."))
+                    + " on order " + order.getLabel()
+                    + " done."))
             .retryOnReject(retryParams)
             .build();
     }

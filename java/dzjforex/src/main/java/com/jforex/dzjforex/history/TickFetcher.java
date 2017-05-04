@@ -10,16 +10,23 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.brokerapi.BrokerHistoryData;
+import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.handler.SystemHandler;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.instrument.InstrumentUtil;
+import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.strategy.StrategyUtil;
+
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class TickFetcher {
 
     private final HistoryProvider historyProvider;
+    private final PluginConfig pluginConfig;
     private final StrategyUtil strategyUtil;
     private final Zorro zorro;
     private final long tickFetchMillis;
@@ -27,8 +34,10 @@ public class TickFetcher {
     private final static Logger logger = LogManager.getLogger(TickFetcher.class);
 
     public TickFetcher(final SystemHandler systemHandler,
-                       final HistoryProvider historyProvider) {
+                       final HistoryProvider historyProvider,
+                       final PluginConfig pluginConfig) {
         this.historyProvider = historyProvider;
+        this.pluginConfig = pluginConfig;
         strategyUtil = systemHandler
             .infoStrategy()
             .strategyUtil();
@@ -81,9 +90,22 @@ public class TickFetcher {
         long dynamicFrom = to - tickFetchMillis;
 
         while (loopTicks.size() < nTicks && dynamicTo > from) {
-            final List<ITick> tmpTicks = zorro.progressWait(historyProvider.fetchTicks(instrument,
-                                                                                       dynamicFrom,
-                                                                                       dynamicTo));
+            final long fixDynmicFrom = dynamicFrom;
+            final long fixDynmicTo = dynamicTo;
+            final Observable<List<ITick>> historyticks = historyProvider
+                .fetchTicks(instrument,
+                            dynamicFrom,
+                            dynamicTo)
+                .doOnSubscribe(d -> logger.debug("Starting to fetch ticks for " + instrument + "\n"
+                        + "startTime: " + DateTimeUtil.formatMillis(fixDynmicFrom) + "\n"
+                        + "endTime: " + DateTimeUtil.formatMillis(fixDynmicTo)))
+                .doOnSuccess(ticks -> logger.debug("Fetching ticks for " + instrument + " completed."))
+                .doOnError(err -> logger.error("Fetch ticks failed! " + err.getMessage()))
+                .retryWhen(RxUtility.retryForHistory(pluginConfig))
+                .onErrorResumeNext(Single.just(new ArrayList<>()))
+                .toObservable();
+
+            final List<ITick> tmpTicks = zorro.progressWait(historyticks);
             if (!tmpTicks.isEmpty()) {
                 loopTicks.addAll(tmpTicks);
             }

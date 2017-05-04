@@ -29,7 +29,7 @@ public class ServerTimeProvider {
         final long ntpFromProvider = ntpProvider.get();
         return ntpFromProvider == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
                 ? serverTimeFromTick()
-                : serverTimeFromNTPProvider(ntpFromProvider);
+                : serverTimeFromValidNTP(ntpFromProvider);
     }
 
     private long serverTimeFromTick() {
@@ -37,20 +37,17 @@ public class ServerTimeProvider {
         return tickTimeProvider.get();
     }
 
-    private long serverTimeFromNTPProvider(final long ntpFromProvider) {
-        return ntpFromProvider > latestNTP
-                ? fromNewNTP(ntpFromProvider)
-                : fromOldNTP();
-    }
-
-    private long fromNewNTP(final long newNTP) {
-        latestNTP = newNTP;
-        synchTime = clock.millis();
-        return newNTP;
-    }
-
-    private long fromOldNTP() {
+    private long serverTimeFromValidNTP(final long ntpFromProvider) {
+        if (ntpFromProvider > latestNTP) {
+            storeLatestNTP(ntpFromProvider);
+            return ntpFromProvider;
+        }
         final long timeDiffToSynchTime = clock.millis() - synchTime;
         return latestNTP + timeDiffToSynchTime;
+    }
+
+    private void storeLatestNTP(final long newNTP) {
+        latestNTP = newNTP;
+        synchTime = clock.millis();
     }
 }

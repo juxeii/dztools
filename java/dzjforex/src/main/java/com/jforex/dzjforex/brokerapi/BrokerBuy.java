@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.brokerapi;
 
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,25 +8,25 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderActionResult;
-import com.jforex.dzjforex.order.TradeUtil;
+import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 
 public class BrokerBuy {
 
-    private final TradeUtil tradeUtil;
+    private final TradeUtility tradeUtil;
 
     private final static Logger logger = LogManager.getLogger(BrokerBuy.class);
 
-    public BrokerBuy(final TradeUtil tradeUtil) {
+    public BrokerBuy(final TradeUtility tradeUtil) {
         this.tradeUtil = tradeUtil;
     }
 
     public int openTrade(final BrokerBuyData brokerBuyData) {
-        final Optional<Instrument> maybeInstrument =
-                tradeUtil.maybeInstrumentForTrading(brokerBuyData.instrumentName());
-        return maybeInstrument.isPresent()
-                ? submit(maybeInstrument.get(), brokerBuyData)
-                : ZorroReturnValues.BROKER_BUY_FAIL.getValue();
+        return tradeUtil
+            .maybeInstrumentForTrading(brokerBuyData.instrumentName())
+            .map(instrument -> submit(instrument, brokerBuyData))
+            .defaultIfEmpty(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
+            .blockingGet();
     }
 
     private int submit(final Instrument instrument,
@@ -48,8 +46,10 @@ public class BrokerBuy {
         final int orderID = tradeUtil
             .labelUtil()
             .idFromLabel(label);
-        final IOrder order = tradeUtil.orderByID(orderID);
-        brokerBuyData.fill(order.getOpenPrice());
+        final IOrder order = tradeUtil
+            .maybeOrderByID(orderID)
+            .blockingGet();
+        brokerBuyData.fillOpenPrice(order.getOpenPrice());
         final double dStopDist = brokerBuyData.stopDistance();
 
         return dStopDist == -1
@@ -65,9 +65,11 @@ public class BrokerBuy {
 
         final double amount = tradeUtil.contractsToAmount(contracts);
         final OrderCommand orderCommand = tradeUtil.orderCommandForContracts(contracts);
-        final double slPrice = tradeUtil.calculateSL(instrument,
-                                                     orderCommand,
-                                                     dStopDist);
+        final double slPrice = tradeUtil
+            .stopLoss()
+            .calculate(instrument,
+                         orderCommand,
+                         dStopDist);
         final SubmitParams submitParams = tradeUtil
             .taskParams()
             .forSubmit(instrument,

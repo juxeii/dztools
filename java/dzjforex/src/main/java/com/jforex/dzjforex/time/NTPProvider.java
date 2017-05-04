@@ -34,7 +34,7 @@ public class NTPProvider {
                       TimeUnit.MILLISECONDS,
                       Schedulers.io())
             .doOnSubscribe(d -> logger.debug("Starting NTP synch task..."))
-            .flatMap(counter -> ntpFetch.observable())
+            .flatMapSingle(counter -> ntpFetch.observable())
             .subscribe(this::onNTPTime,
                        err -> logger.debug("NTP synchronization task failed with error: " + err.getMessage()));
     }

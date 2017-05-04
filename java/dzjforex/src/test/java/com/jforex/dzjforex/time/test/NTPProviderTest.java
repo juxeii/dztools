@@ -12,7 +12,7 @@ import com.jforex.dzjforex.test.util.RxTestUtil;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class NTPProviderTest extends CommonUtilForTest {
 
@@ -31,10 +31,10 @@ public class NTPProviderTest extends CommonUtilForTest {
     public void setUp() {
         when(pluginConfigMock.ntpSynchInterval()).thenReturn(ntpSynchInterval);
 
-        when(ntpFetchMock.observable()).thenReturn(Observable.just(firstNTP),
-                                                   Observable.just(secondNTP),
-                                                   Observable.just(thirdNTP),
-                                                   Observable.error(new Exception()));
+        when(ntpFetchMock.observable()).thenReturn(Single.just(firstNTP),
+                                                   Single.just(secondNTP),
+                                                   Single.just(thirdNTP),
+                                                   Single.error(new Exception()));
 
         ntpProvider = new NTPProvider(ntpFetchMock, pluginConfigMock);
     }

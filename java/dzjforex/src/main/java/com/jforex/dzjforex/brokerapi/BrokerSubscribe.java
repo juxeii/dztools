@@ -1,7 +1,6 @@
 package com.jforex.dzjforex.brokerapi;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +11,7 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.AccountInfo;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.instrument.InstrumentFactory;
 
@@ -33,10 +33,10 @@ public class BrokerSubscribe {
     }
 
     public int subscribe(final String instrumentName) {
-        final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(instrumentName);
-        return maybeInstrument.isPresent()
-                ? subscribeValidInstrumentName(maybeInstrument.get())
-                : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
+        return RxUtility.maybeInstrumentFromName(instrumentName)
+            .map(this::subscribeValidInstrumentName)
+            .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
+            .blockingGet();
     }
 
     private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {
@@ -62,10 +62,8 @@ public class BrokerSubscribe {
 
     private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
         final Set<Instrument> crossInstruments = crossInstruments(instrumentToSubscribe);
-
-        final Set<Instrument> instrumentsToSubscribe = new HashSet<>();
+        final Set<Instrument> instrumentsToSubscribe = new HashSet<>(crossInstruments);
         instrumentsToSubscribe.add(instrumentToSubscribe);
-        instrumentsToSubscribe.addAll(crossInstruments);
         logger.debug("Trying to subscribe instrument " + instrumentToSubscribe +
                 " and cross instruments " + crossInstruments);
         client.setSubscribedInstruments(instrumentsToSubscribe);

@@ -34,24 +34,34 @@ public class OrderRepository {
         return maybeOrderInCache(orderID)
             .doOnSubscribe(d -> logger.trace("Looking up orderID " + orderID + " in cache..."))
             .doAfterSuccess(order -> logger.trace("Found orderID " + orderID + " in cache."))
-            .switchIfEmpty(maybeOrderAfterImport(orderID, openOrders.get()))
-            .doOnSubscribe(d -> logger.trace("Looking up orderID " + orderID + " in open orders..."))
-            .doAfterSuccess(order -> logger.trace("Found orderID " + orderID + " in open orders."))
-            .switchIfEmpty(maybeOrderAfterImport(orderID, historyOrders.get()))
-            .doOnSubscribe(d -> logger.trace("Looking up orderID " + orderID + " in history..."))
-            .doAfterSuccess(order -> logger.trace("Found orderID " + orderID + " in history."));
+            .switchIfEmpty(maybeOrderInOpenOrders(orderID))
+            .switchIfEmpty(maybeOrderHistory(orderID));
     }
 
     private Maybe<IOrder> maybeOrderInCache(final int orderID) {
         return orderByTradeId.containsKey(orderID)
-                ? Maybe.empty()
-                : Maybe.just(orderByTradeId.get(orderID));
+                ? Maybe.just(orderByTradeId.get(orderID))
+                : Maybe.empty();
     }
 
-    private Maybe<IOrder> maybeOrderAfterImport(final int orderID,
-                                                final Single<List<IOrder>> ordersSupplier) {
-        importZorroOrders(ordersSupplier);
-        return maybeOrderInCache(orderID);
+    private Maybe<IOrder> maybeOrderInOpenOrders(final int orderID) {
+        return Maybe
+            .defer(() -> {
+                logger.debug("OrderID " + orderID + " not found in cache. Looking up in open orders...");
+                importZorroOrders(openOrders.get());
+                return maybeOrderInCache(orderID);
+            })
+            .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in open orders."));
+    }
+
+    private Maybe<IOrder> maybeOrderHistory(final int orderID) {
+        return Maybe
+            .defer(() -> {
+                logger.debug("OrderID " + orderID + " not found in open orders. Looking up in history...");
+                importZorroOrders(historyOrders.get());
+                return maybeOrderInCache(orderID);
+            })
+            .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in history."));
     }
 
     public void importZorroOrders(final Single<List<IOrder>> orders) {

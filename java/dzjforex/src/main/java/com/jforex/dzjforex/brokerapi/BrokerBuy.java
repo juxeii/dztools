@@ -68,8 +68,8 @@ public class BrokerBuy {
         final double slPrice = tradeUtil
             .stopLoss()
             .calculate(instrument,
-                         orderCommand,
-                         dStopDist);
+                       orderCommand,
+                       dStopDist);
         final SubmitParams submitParams = tradeUtil
             .taskParams()
             .forSubmit(instrument,
@@ -77,6 +77,7 @@ public class BrokerBuy {
                        amount,
                        label,
                        slPrice);
+        logger.debug("before taskparams run");
         return tradeUtil.runTaskParams(submitParams);
     }
 }

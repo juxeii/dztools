@@ -13,6 +13,7 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.currency.CurrencyFactory;
+import com.jforex.programming.currency.CurrencyUtil;
 import com.jforex.programming.instrument.InstrumentFactory;
 
 public class BrokerSubscribe {
@@ -61,9 +62,14 @@ public class BrokerSubscribe {
     }
 
     private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
-        final Set<Instrument> crossInstruments = crossInstruments(instrumentToSubscribe);
-        final Set<Instrument> instrumentsToSubscribe = new HashSet<>(crossInstruments);
+        final Set<Instrument> instrumentsToSubscribe = new HashSet<>();
         instrumentsToSubscribe.add(instrumentToSubscribe);
+        Set<Instrument> crossInstruments = new HashSet<>();
+        if (!CurrencyUtil.isInInstrument(accountInfo.currency(), instrumentToSubscribe)) {
+            crossInstruments = crossInstruments(instrumentToSubscribe);
+            instrumentsToSubscribe.addAll(crossInstruments);
+        }
+
         logger.debug("Trying to subscribe instrument " + instrumentToSubscribe +
                 " and cross instruments " + crossInstruments);
         client.setSubscribedInstruments(instrumentsToSubscribe);

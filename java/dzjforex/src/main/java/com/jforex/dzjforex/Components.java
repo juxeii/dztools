@@ -11,8 +11,10 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
+import com.jforex.dzjforex.brokerbuy.OrderSubmit;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
+import com.jforex.dzjforex.brokerhistory.HistoryFetchUtility;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
 import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
@@ -22,6 +24,7 @@ import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
 import com.jforex.dzjforex.brokersell.OrderClose;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
+import com.jforex.dzjforex.brokerstop.OrderSetSL;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
@@ -107,15 +110,12 @@ public class Components {
         brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         final IHistory history = infoStrategy.getHistory();
-        historyProvider = new HistoryProvider(history);
+        historyProvider = new HistoryProvider(history, pluginConfig);
+        final HistoryFetchUtility barFetchUtility = new HistoryFetchUtility(historyProvider, strategyUtil);
         final BarFetcher barFetcher = new BarFetcher(historyProvider,
-                                                     strategyUtil,
-                                                     pluginConfig,
-                                                     zorro);
-        final TickFetcher tickFetcher = new TickFetcher(historyProvider,
-                                                        strategyUtil,
-                                                        pluginConfig,
-                                                        zorro);
+                                                     zorro,
+                                                     barFetchUtility);
+        final TickFetcher tickFetcher = new TickFetcher(historyProvider, zorro);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
         final IEngine engine = infoStrategy
             .getContext()
@@ -135,10 +135,12 @@ public class Components {
                                                            orderLabelUtil,
                                                            pluginConfig);
         brokerTrade = new BrokerTrade(tradeUtility);
-        brokerBuy = new BrokerBuy(tradeUtility);
+        final OrderSubmit orderSubmit = new OrderSubmit(tradeUtility);
+        brokerBuy = new BrokerBuy(orderSubmit, tradeUtility);
         final OrderClose orderClose = new OrderClose(tradeUtility);
         brokerSell = new BrokerSell(orderClose, tradeUtility);
-        brokerStop = new BrokerStop(tradeUtility);
+        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility);
+        brokerStop = new BrokerStop(orderSetSL, tradeUtility);
     }
 
     public long startAndInitStrategyComponents(final BrokerLoginData brokerLoginData) {

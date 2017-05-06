@@ -49,7 +49,7 @@ public class HistoryProviderTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        historyProvider = new HistoryProvider(historyMock);
+        historyProvider = new HistoryProvider(historyMock, pluginConfigMock);
     }
 
     public class FetchBars {

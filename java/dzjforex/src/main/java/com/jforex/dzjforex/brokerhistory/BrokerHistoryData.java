@@ -2,7 +2,10 @@ package com.jforex.dzjforex.brokerhistory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.ITick;
@@ -18,20 +21,22 @@ public class BrokerHistoryData {
     private final double startTime;
     private final double endTime;
     private final int noOfTickMinutes;
-    private final int noOfTicks;
+    private final int noOfRequestedTicks;
     private final double tickParams[];
+
+    private final static Logger logger = LogManager.getLogger(BrokerHistoryData.class);
 
     public BrokerHistoryData(final String instrumentName,
                              final double startTime,
                              final double endTime,
                              final int noOfTickMinutes,
-                             final int noOfTicks,
+                             final int noOfRequestedTicks,
                              final double tickParams[]) {
         this.instrumentName = instrumentName;
         this.startTime = startTime;
         this.endTime = endTime;
         this.noOfTickMinutes = noOfTickMinutes;
-        this.noOfTicks = noOfTicks;
+        this.noOfRequestedTicks = noOfRequestedTicks;
         this.tickParams = tickParams;
     }
 
@@ -51,34 +56,46 @@ public class BrokerHistoryData {
         return noOfTickMinutes;
     }
 
-    public int noOfTicks() {
-        return noOfTicks;
+    public int noOfRequestedTicks() {
+        return noOfRequestedTicks;
     }
 
-    public void fillBars(final List<BarQuote> bars) {
-        final BiConsumer<BarQuote, Integer> barFiller = (bar, startIndex) -> fillBar(bar, startIndex);
-        genericFill(bars, barFiller);
+    public void fillBarQuotes(final List<BarQuote> barQuotes) {
+        Collections.reverse(barQuotes);
+        IntStream
+            .range(0, barQuotes.size())
+            .forEach(index -> {
+                final BarQuote bar = barQuotes.get(index);
+                fillBar(bar, index * 7);
+            });
     }
 
     private void fillBar(final BarQuote barQuote,
                          final int startIndex) {
         final IBar bar = barQuote.bar();
+        final double noSpreadAvailable = 0.0;
+
         tickParams[startIndex] = bar.getOpen();
         tickParams[startIndex + 1] = bar.getClose();
         tickParams[startIndex + 2] = bar.getHigh();
         tickParams[startIndex + 3] = bar.getLow();
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
-        // tickParams[tickParamsIndex + 5] = spread not available for bars
+        tickParams[startIndex + 5] = noSpreadAvailable;
         tickParams[startIndex + 6] = bar.getVolume();
     }
 
-    public void fillTicks(final List<TickQuote> ticks) {
-        final BiConsumer<TickQuote, Integer> tickFiller = (tick, startIndex) -> fillTick(tick, startIndex);
-        genericFill(ticks, tickFiller);
+    public void fillTickQuotes(final List<TickQuote> tickQuotes) {
+        Collections.reverse(tickQuotes);
+        IntStream
+            .range(0, tickQuotes.size())
+            .forEach(index -> {
+                final TickQuote quote = tickQuotes.get(index);
+                fillQuote(quote, index * 7);
+            });
     }
 
-    private void fillTick(final TickQuote tickQuote,
-                          final int startIndex) {
+    private void fillQuote(final TickQuote tickQuote,
+                           final int startIndex) {
         final ITick tick = tickQuote.tick();
         final double ask = tick.getAsk();
         final double bid = tick.getBid();
@@ -89,18 +106,9 @@ public class BrokerHistoryData {
         tickParams[startIndex + 2] = ask;
         tickParams[startIndex + 3] = ask;
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
+        // logger.info("Stored tick with time " +
+        // DateTimeUtil.formatMillis(tick.getTime()));
         tickParams[startIndex + 5] = MathUtil.roundPrice(ask - bid, instrument);
         tickParams[startIndex + 6] = tick.getAskVolume();
-    }
-
-    private <T> void genericFill(final List<T> ticks,
-                                 final BiConsumer<T, Integer> tickFiller) {
-        int startIndex = 0;
-        Collections.reverse(ticks);
-        for (int i = 0; i < ticks.size(); ++i) {
-            final T tick = ticks.get(i);
-            tickFiller.accept(tick, startIndex);
-            startIndex += 7;
-        }
     }
 }

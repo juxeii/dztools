@@ -28,7 +28,7 @@ public class BrokerHistory {
     private int getForValidInstrument(final Instrument instrument,
                                       final BrokerHistoryData brokerHistoryData) {
         return brokerHistoryData.noOfTickMinutes() != 0
-                ? barFetcher.fetch(instrument, brokerHistoryData)
-                : tickFetcher.fetch(instrument, brokerHistoryData);
+                ? barFetcher.run(instrument, brokerHistoryData)
+                : tickFetcher.run(instrument, brokerHistoryData);
     }
 }

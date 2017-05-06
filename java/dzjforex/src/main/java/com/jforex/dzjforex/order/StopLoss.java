@@ -39,7 +39,7 @@ public class StopLoss {
                                      final Instrument instrument) {
         if (dStopDist == noStopLossDistance
                 || dStopDist == oppositeClose
-                || !isSLPriceDistanceOK(instrument, dStopDist))
+                || !isDistanceOK(instrument, dStopDist))
             return false;
         return true;
     }
@@ -65,22 +65,22 @@ public class StopLoss {
         return slPrice;
     }
 
-    public boolean isSLPriceDistanceOK(final Instrument instrument,
-                                       final double stopDistance) {
+    public boolean isDistanceOK(final Instrument instrument,
+                                final double stopDistance) {
+        if (stopDistance == 0.0 || stopDistance == -1)
+            return true;
+
         final double stopDistanceInPips = InstrumentUtil.scalePriceToPips(instrument, stopDistance);
         return stopDistanceInPips >= pluginConfig.minPipsForSL();
     }
 
-    public boolean isSLPriceOK(final Instrument instrument,
-                               final double newSL) {
+    public boolean isPriceOK(final Instrument instrument,
+                             final double newSL) {
         final double currentAskPrice = currentAsk(instrument);
         final double pipDistance = Math.abs(InstrumentUtil.pipDistanceOfPrices(instrument,
                                                                                currentAskPrice,
                                                                                newSL));
-        if (pipDistance < pluginConfig.minPipsForSL()) {
-            return false;
-        }
-        return true;
+        return pipDistance >= pluginConfig.minPipsForSL();
     }
 
     private double currentAsk(final Instrument instrument) {

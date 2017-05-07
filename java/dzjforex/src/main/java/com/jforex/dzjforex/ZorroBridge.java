@@ -1,6 +1,8 @@
 package com.jforex.dzjforex;
 
 import org.aeonbits.owner.ConfigFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
@@ -39,6 +41,8 @@ public class ZorroBridge {
     private BrokerHistory brokerHistory;
     private long strategyID;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
+
+    private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
         components = new Components(pluginConfig);

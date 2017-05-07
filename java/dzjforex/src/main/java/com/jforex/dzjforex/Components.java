@@ -14,7 +14,6 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuy;
 import com.jforex.dzjforex.brokerbuy.OrderSubmit;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
-import com.jforex.dzjforex.brokerhistory.HistoryFetchUtility;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
 import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
@@ -111,10 +110,7 @@ public class Components {
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         final IHistory history = infoStrategy.getHistory();
         historyProvider = new HistoryProvider(history, pluginConfig);
-        final HistoryFetchUtility barFetchUtility = new HistoryFetchUtility(historyProvider, strategyUtil);
-        final BarFetcher barFetcher = new BarFetcher(historyProvider,
-                                                     zorro,
-                                                     barFetchUtility);
+        final BarFetcher barFetcher = new BarFetcher(historyProvider, zorro);
         final TickFetcher tickFetcher = new TickFetcher(historyProvider, zorro);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
         final IEngine engine = infoStrategy

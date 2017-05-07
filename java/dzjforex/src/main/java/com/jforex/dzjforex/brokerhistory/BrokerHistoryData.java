@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.brokerhistory;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +24,7 @@ public class BrokerHistoryData {
     private final int noOfRequestedTicks;
     private final double tickParams[];
 
+    private final static int quoteSize = 7;
     private final static Logger logger = LogManager.getLogger(BrokerHistoryData.class);
 
     public BrokerHistoryData(final String instrumentName,
@@ -61,17 +62,25 @@ public class BrokerHistoryData {
     }
 
     public void fillBarQuotes(final List<BarQuote> barQuotes) {
-        Collections.reverse(barQuotes);
+        genericFill(barQuotes, this::fillBarQuote);
+    }
+
+    public void fillTickQuotes(final List<TickQuote> tickQuotes) {
+        genericFill(tickQuotes, this::fillTickQuote);
+    }
+
+    private <T> void genericFill(final List<T> quotes,
+                                 final BiConsumer<T, Integer> filler) {
         IntStream
-            .range(0, barQuotes.size())
+            .range(0, quotes.size())
             .forEach(index -> {
-                final BarQuote bar = barQuotes.get(index);
-                fillBar(bar, index * 7);
+                final T quote = quotes.get(index);
+                filler.accept(quote, index * quoteSize);
             });
     }
 
-    private void fillBar(final BarQuote barQuote,
-                         final int startIndex) {
+    private void fillBarQuote(final BarQuote barQuote,
+                              final int startIndex) {
         final IBar bar = barQuote.bar();
         final double noSpreadAvailable = 0.0;
 
@@ -80,22 +89,14 @@ public class BrokerHistoryData {
         tickParams[startIndex + 2] = bar.getHigh();
         tickParams[startIndex + 3] = bar.getLow();
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
+        // logger.info("Stored bar time time " +
+        // DateTimeUtil.formatMillis(bar.getTime()));
         tickParams[startIndex + 5] = noSpreadAvailable;
         tickParams[startIndex + 6] = bar.getVolume();
     }
 
-    public void fillTickQuotes(final List<TickQuote> tickQuotes) {
-        Collections.reverse(tickQuotes);
-        IntStream
-            .range(0, tickQuotes.size())
-            .forEach(index -> {
-                final TickQuote quote = tickQuotes.get(index);
-                fillQuote(quote, index * 7);
-            });
-    }
-
-    private void fillQuote(final TickQuote tickQuote,
-                           final int startIndex) {
+    private void fillTickQuote(final TickQuote tickQuote,
+                               final int startIndex) {
         final ITick tick = tickQuote.tick();
         final double ask = tick.getAsk();
         final double bid = tick.getBid();

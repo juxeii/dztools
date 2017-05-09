@@ -8,7 +8,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.programming.connection.Authentification;
 import com.jforex.programming.connection.LoginCredentials;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class LoginExecutor {
 
@@ -34,13 +34,11 @@ public class LoginExecutor {
     }
 
     private int loginWithCredentials(final LoginCredentials credentials) {
-        final Observable<Integer> login = authentification
+        final Single<Integer> login = authentification
             .login(credentials)
-            .andThen(Observable.just(ZorroReturnValues.LOGIN_OK.getValue()))
-            .onErrorResumeNext(err -> {
-                logger.error("Failed to login! " + err.getMessage());
-                return Observable.just(ZorroReturnValues.LOGIN_FAIL.getValue());
-            });
+            .andThen(Single.just(ZorroReturnValues.LOGIN_OK.getValue()))
+            .doOnError(e -> logger.error("Failed to login! " + e.getMessage()))
+            .onErrorReturnItem(ZorroReturnValues.LOGIN_FAIL.getValue());
 
         return zorro.progressWait(login);
     }

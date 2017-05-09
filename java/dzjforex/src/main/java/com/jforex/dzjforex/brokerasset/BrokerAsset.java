@@ -1,13 +1,12 @@
 package com.jforex.dzjforex.brokerasset;
 
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.instrument.InstrumentFactory;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.strategy.StrategyUtil;
@@ -27,10 +26,11 @@ public class BrokerAsset {
     }
 
     public int fillAssetParams(final BrokerAssetData brokerAssetData) {
-        final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(brokerAssetData.instrumentName());
-        return maybeInstrument.isPresent()
-                ? fillAssetParamsForValidInstrument(maybeInstrument.get(), brokerAssetData)
-                : ZorroReturnValues.ASSET_UNAVAILABLE.getValue();
+        return RxUtility
+            .optionalToMaybe(InstrumentFactory.maybeFromName(brokerAssetData.instrumentName()))
+            .map(instrument -> fillAssetParamsForValidInstrument(instrument, brokerAssetData))
+            .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
+            .blockingGet();
     }
 
     private int fillAssetParamsForValidInstrument(final Instrument instrument,
@@ -55,8 +55,7 @@ public class BrokerAsset {
                              pMarginCost,
                              pRollLong,
                              pRollShort);
-
-        logger.trace("BrokerAsset instrument params for " + instrument + ": \n"
+        logger.trace("BrokerAsset values for " + instrument + ": \n"
                 + " pAskPrice: " + pPrice + "\n"
                 + " pBidPrice: " + instrumentUtil.bidQuote() + "\n"
                 + " pSpread: " + pSpread + "\n"

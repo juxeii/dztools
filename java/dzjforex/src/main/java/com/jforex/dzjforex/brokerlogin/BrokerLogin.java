@@ -55,6 +55,7 @@ public class BrokerLogin {
     private int handleLoginResult(final int loginResult) {
         if (loginResult == ZorroReturnValues.LOGIN_FAIL.getValue())
             startRetryDelayTimer();
+        
         return loginResult;
     }
 

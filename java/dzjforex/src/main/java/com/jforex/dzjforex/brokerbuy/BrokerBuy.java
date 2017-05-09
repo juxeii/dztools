@@ -17,8 +17,8 @@ public class BrokerBuy {
     public int openTrade(final BrokerBuyData brokerBuyData) {
         return tradeUtility
             .maybeInstrumentForTrading(brokerBuyData.instrumentName())
-            .map(instrument -> orderSubmit.run(instrument, brokerBuyData))
-            .defaultIfEmpty(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
+            .flatMapSingle(instrument -> orderSubmit.run(instrument, brokerBuyData))
+            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
             .blockingGet();
     }
 }

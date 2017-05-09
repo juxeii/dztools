@@ -12,7 +12,6 @@ import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public class BarFetcher {
@@ -28,21 +27,17 @@ public class BarFetcher {
 
     public int run(final Instrument instrument,
                    final BrokerHistoryData brokerHistoryData) {
-        final long startDate = TimeConvert.millisFromOLEDateRoundMinutes(brokerHistoryData.startTime());
-        final long endDate = TimeConvert.millisFromOLEDateRoundMinutes(brokerHistoryData.endTime());
         final BarParams barParams = createParams(instrument, brokerHistoryData);
-
-        final Observable<Integer> fetchResult = historyProvider
+        final Single<Integer> fetchResult = historyProvider
             .barsByShift(barParams,
-                         endDate,
+                         brokerHistoryData.endTimeForBar(),
                          brokerHistoryData.noOfRequestedTicks() - 1)
             .flattenAsObservable(bars -> bars)
-            .filter(barQuote -> isQuoteAfterStartDate(barQuote, startDate))
+            .filter(barQuote -> isQuoteAfterStartDate(barQuote, brokerHistoryData.startTimeForBar()))
             .toList()
             .doOnSuccess(brokerHistoryData::fillBarQuotes)
             .map(List::size)
-            .onErrorResumeNext(Single.just(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()))
-            .toObservable();
+            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue());
 
         return zorro.progressWait(fetchResult);
     }
@@ -50,6 +45,7 @@ public class BarFetcher {
     private BarParams createParams(final Instrument instrument,
                                    final BrokerHistoryData brokerHistoryData) {
         final Period period = TimeConvert.getPeriodFromMinutes(brokerHistoryData.noOfTickMinutes());
+
         return BarParams
             .forInstrument(instrument)
             .period(period)

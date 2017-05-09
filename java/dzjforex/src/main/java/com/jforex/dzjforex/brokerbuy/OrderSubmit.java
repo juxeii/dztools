@@ -6,7 +6,6 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.programming.order.task.params.basic.SubmitParams;
 
 import io.reactivex.Single;
 
@@ -24,27 +23,26 @@ public class OrderSubmit {
         orderLabelUtil = tradeUtility.orderLabelUtil();
     }
 
-    public int run(final Instrument instrument,
-                   final BrokerBuyData brokerBuyData) {
+    public Single<Integer> run(final Instrument instrument,
+                               final BrokerBuyData brokerBuyData) {
         final String label = orderLabelUtil.create();
-        final Single<SubmitParams> submitParams = orderSubmitParams.get(instrument,
-                                                                        brokerBuyData,
-                                                                        label);
 
-        return submitParams
+        return orderSubmitParams
+            .get(instrument,
+                 brokerBuyData,
+                 label)
             .map(tradeUtility::runTaskParams)
-            .map(submitResult -> brokerBuyData.stopDistance() != -1
-                    ? evalSubmitResult(submitResult,
-                                       brokerBuyData,
-                                       label)
-                    : ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue())
-            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
-            .blockingGet();
+            .map(submitResult -> evalSubmitResult(submitResult,
+                                                  brokerBuyData,
+                                                  label));
     }
 
     private int evalSubmitResult(final OrderActionResult submitResult,
                                  final BrokerBuyData brokerBuyData,
                                  final String label) {
+        if (brokerBuyData.stopDistance() == -1)
+            return ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue();
+
         return submitResult == OrderActionResult.FAIL
                 ? ZorroReturnValues.BROKER_BUY_FAIL.getValue()
                 : fillOpenPriceAndReturnOrderID(brokerBuyData, label);

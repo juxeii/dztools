@@ -17,8 +17,8 @@ public class BrokerSell {
     public int closeTrade(final BrokerSellData brokerSellData) {
         return tradeUtility
             .maybeOrderForTrading(brokerSellData.nTradeID())
-            .map(order -> orderClose.run(order, brokerSellData))
-            .defaultIfEmpty(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
+            .flatMapSingle(order -> orderClose.run(order, brokerSellData))
+            .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
             .blockingGet();
     }
 }

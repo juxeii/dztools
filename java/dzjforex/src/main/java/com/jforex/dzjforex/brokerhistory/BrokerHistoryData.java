@@ -24,7 +24,7 @@ public class BrokerHistoryData {
     private final int noOfRequestedTicks;
     private final double tickParams[];
 
-    private final static int quoteSize = 7;
+    private final static int zorroTickSize = 7;
     private final static Logger logger = LogManager.getLogger(BrokerHistoryData.class);
 
     public BrokerHistoryData(final String instrumentName,
@@ -45,12 +45,20 @@ public class BrokerHistoryData {
         return instrumentName;
     }
 
-    public double startTime() {
-        return startTime;
+    public long startTimeForBar() {
+        return TimeConvert.millisFromOLEDateRoundMinutes(startTime);
     }
 
-    public double endTime() {
-        return endTime;
+    public long endTimeForBar() {
+        return TimeConvert.millisFromOLEDateRoundMinutes(endTime);
+    }
+
+    public long startTimeForTick() {
+        return TimeConvert.millisFromOLEDate(startTime);
+    }
+
+    public long endTimeForTick() {
+        return TimeConvert.millisFromOLEDate(endTime) - 2;
     }
 
     public int noOfTickMinutes() {
@@ -75,7 +83,7 @@ public class BrokerHistoryData {
             .range(0, quotes.size())
             .forEach(index -> {
                 final T quote = quotes.get(index);
-                filler.accept(quote, index * quoteSize);
+                filler.accept(quote, index * zorroTickSize);
             });
     }
 

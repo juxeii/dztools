@@ -31,7 +31,6 @@ public class OrderSubmitParams {
             final double contracts = brokerBuyData.contracts();
             final OrderCommand orderCommand = orderCommandForContracts(contracts);
             final double amount = tradeUtility.contractsToAmount(contracts);
-            final double dStopDist = brokerBuyData.stopDistance();
 
             return stopLoss
                 .forDistance(instrument,

@@ -9,6 +9,7 @@ import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.HeartBeat;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 
 public class Zorro {
@@ -34,8 +35,9 @@ public class Zorro {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T progressWait(final Observable<T> task) {
-        final Observable<HeartBeat<T>> taskObs = task.map(taskData -> new HeartBeat<>(done, taskData));
+    public <T> T progressWait(final Single<T> task) {
+        final Observable<HeartBeat<T>> taskObs =
+                task.flatMapObservable(taskData -> Observable.just(new HeartBeat<>(done, taskData)));
 
         Observable
             .merge(heartBeatObs, taskObs)

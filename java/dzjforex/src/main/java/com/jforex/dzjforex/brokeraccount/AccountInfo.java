@@ -84,8 +84,8 @@ public class AccountInfo {
     }
 
     public boolean isTradingAllowed() {
-        return state() == IAccount.AccountState.OK
-                || state() == IAccount.AccountState.OK_NO_MARGIN_CALL;
+        return state() == IAccount.AccountState.OK ||
+                state() == IAccount.AccountState.OK_NO_MARGIN_CALL;
     }
 
     public double pipCost(final Instrument instrument) {
@@ -94,25 +94,32 @@ public class AccountInfo {
                                                                   currency(),
                                                                   OfferSide.ASK);
         logger.trace("Pipcost for lotSize " + lotSize()
-                + " and instrument " + instrument + " currency " + currency()
+                + " and instrument " + instrument
+                + " currency " + currency()
                 + " is " + pipCost);
+
         return pipCost;
     }
 
     public double marginPerLot(final Instrument instrument) {
-        final ICurrency accountCurrency = currency();
-        if (accountCurrency == instrument.getPrimaryJFCurrency())
-            return lotMargin();
+        final ICurrency primaryCurrency = instrument.getPrimaryJFCurrency();
 
+        return currency() == primaryCurrency
+                ? lotMargin()
+                : marginForCrossCurrency(primaryCurrency);
+    }
+
+    private double marginForCrossCurrency(final ICurrency crossCurrency) {
         final double conversionLot = calculationUtil.convertAmount(lotSize(),
-                                                                   instrument.getPrimaryJFCurrency(),
-                                                                   accountCurrency,
+                                                                   crossCurrency,
+                                                                   currency(),
                                                                    OfferSide.ASK);
         final double marginPerLot = conversionLot / leverage();
-        logger.trace("marginPerLot for conversion instrument " + instrument.getPrimaryJFCurrency()
+        logger.trace("marginPerLot for conversion instrument " + crossCurrency
                 + " and  conversionLot " + conversionLot
                 + " and leverage " + leverage()
                 + " is " + marginPerLot);
+
         return marginPerLot;
     }
 }

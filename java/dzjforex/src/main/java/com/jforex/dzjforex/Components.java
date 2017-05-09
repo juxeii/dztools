@@ -139,8 +139,10 @@ public class Components {
         brokerBuy = new BrokerBuy(orderSubmit, tradeUtility);
         final OrderClose orderClose = new OrderClose(tradeUtility);
         brokerSell = new BrokerSell(orderClose, tradeUtility);
-        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility, stopLoss);
-        brokerStop = new BrokerStop(orderSetSL, tradeUtility);
+        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility);
+        brokerStop = new BrokerStop(orderSetSL,
+                                    stopLoss,
+                                    tradeUtility);
     }
 
     public long startAndInitStrategyComponents(final BrokerLoginData brokerLoginData) {

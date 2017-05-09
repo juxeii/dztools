@@ -19,16 +19,12 @@ public class OrderClose {
         taskParams = tradeUtility.taskParams();
     }
 
-    public int run(final IOrder order,
-                   final BrokerSellData brokerSellData) {
-        final int orderID = brokerSellData.nTradeID();
-        final double amountToClose = tradeUtility.contractsToAmount(brokerSellData.nAmount());
-
+    public Single<Integer> run(final IOrder order,
+                               final BrokerSellData brokerSellData) {
         return Single
-            .just(taskParams.forClose(order, amountToClose))
+            .just(taskParams.forClose(order, tradeUtility.contractsToAmount(brokerSellData.nAmount())))
             .map(tradeUtility::runTaskParams)
-            .map(closeResult -> evalCloseResult(closeResult, orderID))
-            .blockingGet();
+            .map(closeResult -> evalCloseResult(closeResult, brokerSellData.nTradeID()));
     }
 
     private int evalCloseResult(final OrderActionResult closeResult,

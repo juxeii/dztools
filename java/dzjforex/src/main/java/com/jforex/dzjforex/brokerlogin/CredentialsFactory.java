@@ -8,14 +8,14 @@ public class CredentialsFactory {
     private final PinProvider pinProvider;
     private final PluginConfig pluginConfig;
 
-    private final String demoName;
+    private final String demoTypeName;
 
     public CredentialsFactory(final PinProvider pinProvider,
                               final PluginConfig pluginConfig) {
         this.pinProvider = pinProvider;
         this.pluginConfig = pluginConfig;
 
-        demoName = pluginConfig.demoLoginType();
+        demoTypeName = pluginConfig.demoLoginType();
     }
 
     public LoginCredentials create(final String username,
@@ -28,13 +28,13 @@ public class CredentialsFactory {
     }
 
     private String createJnlpAdress(final String loginType) {
-        return loginType.equals(demoName)
+        return loginType.equals(demoTypeName)
                 ? pluginConfig.demoConnectURL()
                 : pluginConfig.realConnectURL();
     }
 
     private String createPin(final String loginType) {
-        return loginType.equals(demoName)
+        return loginType.equals(demoTypeName)
                 ? null
                 : pinProvider.getPin();
     }

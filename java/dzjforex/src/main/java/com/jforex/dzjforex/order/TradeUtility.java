@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
@@ -25,7 +24,6 @@ public class TradeUtility {
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
     private final OrderLabelUtil labelUtil;
-    private final StopLoss stopLoss;
     private final TaskParams taskParams;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
@@ -33,10 +31,10 @@ public class TradeUtility {
     private final static Logger logger = LogManager.getLogger(TradeUtility.class);
 
     public TradeUtility(final OrderRepository orderRepository,
-                     final StrategyUtil strategyUtil,
-                     final AccountInfo accountInfo,
-                     final OrderLabelUtil orderLabel,
-                     final PluginConfig pluginConfig) {
+                        final StrategyUtil strategyUtil,
+                        final AccountInfo accountInfo,
+                        final OrderLabelUtil orderLabel,
+                        final PluginConfig pluginConfig) {
         this.orderRepository = orderRepository;
         this.strategyUtil = strategyUtil;
         this.accountInfo = accountInfo;
@@ -45,7 +43,6 @@ public class TradeUtility {
 
         orderUtil = strategyUtil.orderUtil();
         taskParams = new TaskParams(retryParams());
-        stopLoss = new StopLoss(strategyUtil, pluginConfig);
     }
 
     public OrderRepository orderRepository() {
@@ -66,10 +63,6 @@ public class TradeUtility {
 
     public OrderLabelUtil orderLabelUtil() {
         return labelUtil;
-    }
-
-    public StopLoss stopLoss() {
-        return stopLoss;
     }
 
     public TaskParams taskParams() {
@@ -105,12 +98,6 @@ public class TradeUtility {
         return true;
     }
 
-    public OrderCommand orderCommandForContracts(final double contracts) {
-        return contracts > 0
-                ? OrderCommand.BUY
-                : OrderCommand.SELL;
-    }
-
     public int amountToContracts(final double amount) {
         return (int) (amount * pluginConfig.lotScale());
     }
@@ -132,5 +119,17 @@ public class TradeUtility {
         return resultError == null
                 ? OrderActionResult.OK
                 : OrderActionResult.FAIL;
+    }
+
+    public double spread(final Instrument instrument) {
+        return strategyUtil
+            .instrumentUtil(instrument)
+            .spread();
+    }
+
+    public double currentAsk(final Instrument instrument) {
+        return strategyUtil
+            .instrumentUtil(instrument)
+            .askQuote();
     }
 }

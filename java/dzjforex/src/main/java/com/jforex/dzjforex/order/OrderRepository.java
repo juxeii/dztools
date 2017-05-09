@@ -72,11 +72,8 @@ public class OrderRepository {
 
     private void filterAndImportZorroOrder(final IOrder order) {
         if (labelUtil.hasZorroPrefix(order)) {
-            final String orderLabel = order.getLabel();
-            if (orderLabel != null) {
-                final int orderId = labelUtil.idFromLabel(orderLabel);
-                orderByTradeId.put(orderId, order);
-            }
+            final int orderId = labelUtil.idFromOrder(order);
+            orderByTradeId.put(orderId, order);
         }
     }
 }

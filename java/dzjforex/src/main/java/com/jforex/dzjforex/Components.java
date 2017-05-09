@@ -12,6 +12,7 @@ import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
 import com.jforex.dzjforex.brokerbuy.OrderSubmit;
+import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
@@ -36,6 +37,7 @@ import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
+import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
@@ -130,12 +132,14 @@ public class Components {
                                                            accountInfo,
                                                            orderLabelUtil,
                                                            pluginConfig);
+        final StopLoss stopLoss = new StopLoss(tradeUtility);
+        final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility, stopLoss);
+        final OrderSubmit orderSubmit = new OrderSubmit(tradeUtility, orderSubmitParams);
         brokerTrade = new BrokerTrade(tradeUtility);
-        final OrderSubmit orderSubmit = new OrderSubmit(tradeUtility);
         brokerBuy = new BrokerBuy(orderSubmit, tradeUtility);
         final OrderClose orderClose = new OrderClose(tradeUtility);
         brokerSell = new BrokerSell(orderClose, tradeUtility);
-        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility);
+        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility, stopLoss);
         brokerStop = new BrokerStop(orderSetSL, tradeUtility);
     }
 

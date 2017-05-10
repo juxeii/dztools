@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.order;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,9 +9,7 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.order.OrderUtil;
-import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.TaskParamsWithType;
-import com.jforex.programming.rx.RetryDelay;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Maybe;
@@ -24,7 +20,6 @@ public class TradeUtility {
     private final StrategyUtil strategyUtil;
     private final OrderUtil orderUtil;
     private final OrderLabelUtil labelUtil;
-    private final TaskParams taskParams;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
 
@@ -42,7 +37,6 @@ public class TradeUtility {
         this.pluginConfig = pluginConfig;
 
         orderUtil = strategyUtil.orderUtil();
-        taskParams = new TaskParams(retryParams());
     }
 
     public OrderRepository orderRepository() {
@@ -65,17 +59,8 @@ public class TradeUtility {
         return labelUtil;
     }
 
-    public TaskParams taskParams() {
-        return taskParams;
-    }
-
     public PluginConfig pluginConfig() {
         return pluginConfig;
-    }
-
-    public RetryParams retryParams() {
-        final RetryDelay delay = new RetryDelay(pluginConfig.orderSubmitRetryDelay(), TimeUnit.MILLISECONDS);
-        return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
     public Maybe<Instrument> maybeInstrumentForTrading(final String assetName) {

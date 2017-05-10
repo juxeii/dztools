@@ -5,10 +5,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.misc.DateTimeUtil;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 
@@ -45,7 +47,9 @@ public class NTPProvider {
         latestNTPTime.onNext(ntpTime);
     }
 
-    public long get() {
-        return latestNTPTime.getValue();
+    public Single<Long> get() {
+        return Single.defer(() -> latestNTPTime.hasValue()
+                ? Single.just(latestNTPTime.getValue())
+                : Single.error(new JFException("No NTP currently available.")));
     }
 }

@@ -16,23 +16,19 @@ public class BrokerLogin {
 
     private final IClient client;
     private final LoginExecutor loginExecutor;
-    private Observable<Long> retryDelayTimer;
+    private final Observable<Long> retryDelayTimer;
     private final BehaviorSubject<Boolean> isLoginAvailable = BehaviorSubject.createDefault(true);
 
     private final static Logger logger = LogManager.getLogger(BrokerLogin.class);
 
     public BrokerLogin(final IClient client,
-                        final LoginExecutor loginExecutor,
-                        final PluginConfig pluginConfig) {
+                       final LoginExecutor loginExecutor,
+                       final PluginConfig pluginConfig) {
         this.client = client;
         this.loginExecutor = loginExecutor;
 
-        initRetryDelayTimer(pluginConfig.loginRetryDelay());
-    }
-
-    private void initRetryDelayTimer(final long retryDelay) {
         retryDelayTimer = Observable
-            .timer(retryDelay, TimeUnit.MILLISECONDS)
+            .timer(pluginConfig.loginRetryDelay(), TimeUnit.MILLISECONDS)
             .doOnSubscribe(d -> {
                 isLoginAvailable.onNext(false);
                 logger.debug("Starting login retry delay timer. Login is not available until timer elapsed.");
@@ -55,7 +51,6 @@ public class BrokerLogin {
     private int handleLoginResult(final int loginResult) {
         if (loginResult == ZorroReturnValues.LOGIN_FAIL.getValue())
             startRetryDelayTimer();
-        
         return loginResult;
     }
 

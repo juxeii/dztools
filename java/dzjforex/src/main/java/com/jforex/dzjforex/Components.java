@@ -1,6 +1,7 @@
 package com.jforex.dzjforex;
 
 import java.time.Clock;
+import java.util.concurrent.TimeUnit;
 
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IHistory;
@@ -11,8 +12,6 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
-import com.jforex.dzjforex.brokerbuy.OrderSubmit;
-import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
@@ -22,9 +21,7 @@ import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.LoginExecutor;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
-import com.jforex.dzjforex.brokersell.OrderClose;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
-import com.jforex.dzjforex.brokerstop.OrderSetSL;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
@@ -35,16 +32,23 @@ import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.order.OpenOrders;
+import com.jforex.dzjforex.order.OrderCloseParams;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
+import com.jforex.dzjforex.order.OrderSetSLParams;
+import com.jforex.dzjforex.order.OrderSubmitParams;
 import com.jforex.dzjforex.order.StopLoss;
+import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.dzjforex.time.TickTimeProvider;
 import com.jforex.programming.client.ClientUtil;
+import com.jforex.programming.order.OrderUtil;
+import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.quote.TickQuoteRepository;
+import com.jforex.programming.rx.RetryDelay;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class Components {
@@ -56,6 +60,7 @@ public class Components {
     private final Clock clock;
     private final LoginExecutor loginExecutor;
     private final BrokerLogin brokerLogin;
+    private OrderUtil orderUtil;
     private ServerTimeProvider serverTimeProvider;
     private BrokerTime brokerTime;
     private AccountInfo accountInfo;
@@ -65,9 +70,11 @@ public class Components {
     private BrokerHistory brokerHistory;
     private HistoryProvider historyProvider;
     private BrokerTrade brokerTrade;
+    private TaskParamsRunner taskParamsRunner;
     private BrokerBuy brokerBuy;
     private BrokerSell brokerSell;
     private BrokerStop brokerStop;
+    private final RetryParams retryParamsForTrading;
 
     public Components(final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
@@ -85,6 +92,12 @@ public class Components {
         brokerLogin = new BrokerLogin(client,
                                       loginExecutor,
                                       pluginConfig);
+        retryParamsForTrading = retryParamsForTrading();
+    }
+
+    private RetryParams retryParamsForTrading() {
+        final RetryDelay delay = new RetryDelay(pluginConfig.orderSubmitRetryDelay(), TimeUnit.MILLISECONDS);
+        return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
     private void initAfterStrategyStart() {
@@ -133,16 +146,20 @@ public class Components {
                                                            orderLabelUtil,
                                                            pluginConfig);
         final StopLoss stopLoss = new StopLoss(tradeUtility);
-        final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility, stopLoss);
-        final OrderSubmit orderSubmit = new OrderSubmit(tradeUtility, orderSubmitParams);
+        final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
+                                                                          stopLoss,
+                                                                          retryParamsForTrading);
+        final OrderCloseParams orderCloseParams = new OrderCloseParams(tradeUtility, retryParamsForTrading);
+        final OrderSetSLParams orderSetSLParams = new OrderSetSLParams(stopLoss, retryParamsForTrading);
+        orderUtil = strategyUtil.orderUtil();
+        taskParamsRunner = new TaskParamsRunner(orderUtil,
+                                                orderSubmitParams,
+                                                orderCloseParams,
+                                                orderSetSLParams);
         brokerTrade = new BrokerTrade(tradeUtility);
-        brokerBuy = new BrokerBuy(orderSubmit, tradeUtility);
-        final OrderClose orderClose = new OrderClose(tradeUtility);
-        brokerSell = new BrokerSell(orderClose, tradeUtility);
-        final OrderSetSL orderSetSL = new OrderSetSL(tradeUtility);
-        brokerStop = new BrokerStop(orderSetSL,
-                                    stopLoss,
-                                    tradeUtility);
+        brokerBuy = new BrokerBuy(taskParamsRunner, tradeUtility);
+        brokerSell = new BrokerSell(taskParamsRunner, tradeUtility);
+        brokerStop = new BrokerStop(taskParamsRunner, tradeUtility);
     }
 
     public long startAndInitStrategyComponents(final BrokerLoginData brokerLoginData) {

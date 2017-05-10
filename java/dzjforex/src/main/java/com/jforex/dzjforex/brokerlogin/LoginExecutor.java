@@ -27,9 +27,7 @@ public class LoginExecutor {
     }
 
     public int login(final BrokerLoginData brokerLoginData) {
-        final LoginCredentials credentials = credentialsFactory.create(brokerLoginData.username(),
-                                                                       brokerLoginData.password(),
-                                                                       brokerLoginData.loginType());
+        final LoginCredentials credentials = credentialsFactory.create(brokerLoginData);
         return loginWithCredentials(credentials);
     }
 

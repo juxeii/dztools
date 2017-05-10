@@ -18,12 +18,11 @@ public class CredentialsFactory {
         demoTypeName = pluginConfig.demoLoginType();
     }
 
-    public LoginCredentials create(final String username,
-                                   final String password,
-                                   final String loginType) {
+    public LoginCredentials create(final BrokerLoginData brokerLoginData) {
+        final String loginType = brokerLoginData.loginType();
         return new LoginCredentials(createJnlpAdress(loginType),
-                                    username,
-                                    password,
+                                    brokerLoginData.username(),
+                                    brokerLoginData.password(),
                                     createPin(loginType));
     }
 

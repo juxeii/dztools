@@ -1,24 +1,35 @@
 package com.jforex.dzjforex.brokersell;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.OrderActionResult;
+import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 
 public class BrokerSell {
 
-    private final OrderClose orderClose;
+    private final TaskParamsRunner taskParamsRunner;
     private final TradeUtility tradeUtility;
 
-    public BrokerSell(final OrderClose orderClose,
+    public BrokerSell(final TaskParamsRunner taskParamsRunner,
                       final TradeUtility tradeUtility) {
-        this.orderClose = orderClose;
+        this.taskParamsRunner = taskParamsRunner;
         this.tradeUtility = tradeUtility;
     }
 
     public int closeTrade(final BrokerSellData brokerSellData) {
+        final int orderID = brokerSellData.nTradeID();
         return tradeUtility
-            .maybeOrderForTrading(brokerSellData.nTradeID())
-            .flatMapSingle(order -> orderClose.run(order, brokerSellData))
-            .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
+            .maybeOrderForTrading(orderID)
+            .map(order -> taskParamsRunner.startClose(order, brokerSellData))
+            .map(closeResult -> evalCloseResult(closeResult, orderID))
+            .defaultIfEmpty(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
             .blockingGet();
+    }
+
+    private int evalCloseResult(final OrderActionResult closeResult,
+                                final int orderID) {
+        return closeResult == OrderActionResult.FAIL
+                ? ZorroReturnValues.BROKER_SELL_FAIL.getValue()
+                : orderID;
     }
 }

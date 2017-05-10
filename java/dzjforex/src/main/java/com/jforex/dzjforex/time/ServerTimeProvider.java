@@ -5,17 +5,16 @@ import java.time.Clock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.jforex.dzjforex.config.ZorroReturnValues;
-
 import io.reactivex.Single;
+import io.reactivex.subjects.BehaviorSubject;
 
 public class ServerTimeProvider {
 
     private final NTPProvider ntpProvider;
     private final TickTimeProvider tickTimeProvider;
     private final Clock clock;
-    private long latestNTP;
-    private long synchTime;
+    private final BehaviorSubject<Long> latestNTP = BehaviorSubject.create();
+    private final BehaviorSubject<Long> synchTime = BehaviorSubject.create();
 
     private final static Logger logger = LogManager.getLogger(ServerTimeProvider.class);
 
@@ -28,28 +27,30 @@ public class ServerTimeProvider {
     }
 
     public Single<Long> get() {
-        final long ntpFromProvider = ntpProvider.get();
-        return ntpFromProvider == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
-                ? serverTimeFromTick()
-                : serverTimeFromValidNTP(ntpFromProvider);
+        return ntpProvider
+            .get()
+            .flatMap(this::serverTimeFromValidNTP)
+            .onErrorResumeNext(serverTimeFromTick());
     }
 
     private Single<Long> serverTimeFromTick() {
-        logger.warn("Currently no NTP available, estimating with latest tick time...");
-        return tickTimeProvider.get();
+        return Single.defer(() -> {
+            logger.warn("Currently no NTP available, estimating with latest tick time...");
+            return tickTimeProvider.get();
+        });
     }
 
     private Single<Long> serverTimeFromValidNTP(final long ntpFromProvider) {
-        if (ntpFromProvider > latestNTP) {
+        if (ntpFromProvider > latestNTP.getValue()) {
             storeLatestNTP(ntpFromProvider);
             return Single.just(ntpFromProvider);
         }
-        final long timeDiffToSynchTime = clock.millis() - synchTime;
-        return Single.just(latestNTP + timeDiffToSynchTime);
+        final long timeDiffToSynchTime = clock.millis() - synchTime.getValue();
+        return Single.just(latestNTP.getValue() + timeDiffToSynchTime);
     }
 
     private void storeLatestNTP(final long newNTP) {
-        latestNTP = newNTP;
-        synchTime = clock.millis();
+        latestNTP.onNext(newNTP);
+        synchTime.onNext(clock.millis());
     }
 }

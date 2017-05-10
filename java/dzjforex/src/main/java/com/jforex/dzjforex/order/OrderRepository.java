@@ -69,6 +69,6 @@ public class OrderRepository {
             .blockingGet()
             .forEach(order -> labelUtil
                 .idFromOrder(order)
-                .subscribe(orderId -> orderByTradeId.put(orderId, order)));
+                .subscribe(orderID -> orderByTradeId.put(orderID, order)));
     }
 }

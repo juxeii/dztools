@@ -80,8 +80,6 @@ public class CommonUtilForTest extends BDDMockito {
 
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
 
-        when(tradeUtilMock.strategyUtil()).thenReturn(strategyUtilMock);
-        when(tradeUtilMock.orderRepository()).thenReturn(orderRepositoryMock);
         when(tradeUtilMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);

@@ -3,8 +3,11 @@ package com.jforex.dzjforex.order;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
+import com.jforex.dzjforex.brokersell.OrderCloseParams;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
+import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.TaskParamsWithType;
 import com.jforex.programming.order.task.params.basic.CloseParams;
@@ -30,15 +33,6 @@ public class TaskParamsRunner {
         this.orderSetSLParams = orderSetSLParams;
     }
 
-    private OrderActionResult start(final Single<? extends TaskParamsWithType> taskParams) {
-        return taskParams
-            .flatMapObservable(orderUtil::paramsToObservable)
-            .ignoreElements()
-            .andThen(Single.just(OrderActionResult.OK))
-            .onErrorReturnItem(OrderActionResult.FAIL)
-            .blockingGet();
-    }
-
     public OrderActionResult startSubmit(final Instrument instrument,
                                          final BrokerBuyData brokerBuyData,
                                          final String orderLabel) {
@@ -58,5 +52,14 @@ public class TaskParamsRunner {
                                         final BrokerStopData brokerStopData) {
         final Single<SetSLParams> setSLParams = orderSetSLParams.get(order, brokerStopData);
         return start(setSLParams);
+    }
+
+    private OrderActionResult start(final Single<? extends TaskParamsWithType> taskParams) {
+        return taskParams
+            .flatMapObservable(orderUtil::paramsToObservable)
+            .ignoreElements()
+            .andThen(Single.just(OrderActionResult.OK))
+            .onErrorReturnItem(OrderActionResult.FAIL)
+            .blockingGet();
     }
 }

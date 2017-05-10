@@ -8,8 +8,6 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
-import com.jforex.programming.order.OrderUtil;
-import com.jforex.programming.order.task.params.TaskParamsWithType;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Maybe;
@@ -18,7 +16,6 @@ public class TradeUtility {
 
     private final OrderRepository orderRepository;
     private final StrategyUtil strategyUtil;
-    private final OrderUtil orderUtil;
     private final OrderLabelUtil labelUtil;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
@@ -35,32 +32,10 @@ public class TradeUtility {
         this.accountInfo = accountInfo;
         this.labelUtil = orderLabel;
         this.pluginConfig = pluginConfig;
-
-        orderUtil = strategyUtil.orderUtil();
-    }
-
-    public OrderRepository orderRepository() {
-        return orderRepository;
-    }
-
-    public StrategyUtil strategyUtil() {
-        return strategyUtil;
-    }
-
-    public OrderUtil orderUtil() {
-        return orderUtil;
-    }
-
-    public AccountInfo accountInfo() {
-        return accountInfo;
     }
 
     public OrderLabelUtil orderLabelUtil() {
         return labelUtil;
-    }
-
-    public PluginConfig pluginConfig() {
-        return pluginConfig;
     }
 
     public Maybe<Instrument> maybeInstrumentForTrading(final String assetName) {
@@ -75,7 +50,7 @@ public class TradeUtility {
                 : Maybe.empty();
     }
 
-    public boolean isTradingAllowed() {
+    private boolean isTradingAllowed() {
         if (!accountInfo.isTradingAllowed()) {
             logger.warn("Trading account is not available, since it is in state " + accountInfo.state());
             return false;
@@ -93,17 +68,6 @@ public class TradeUtility {
 
     public Maybe<IOrder> maybeOrderByID(final int nTradeID) {
         return orderRepository.maybeOrderByID(nTradeID);
-    }
-
-    public OrderActionResult runTaskParams(final TaskParamsWithType taskParams) {
-        final Throwable resultError = orderUtil
-            .paramsToObservable(taskParams)
-            .ignoreElements()
-            .blockingGet();
-
-        return resultError == null
-                ? OrderActionResult.OK
-                : OrderActionResult.FAIL;
     }
 
     public double spread(final Instrument instrument) {

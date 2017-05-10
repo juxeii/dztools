@@ -25,6 +25,6 @@ public class OpenOrders {
             .fromCallable(() -> engine.getOrders())
             .doOnSubscribe(d -> logger.debug("Fetching open orders..."))
             .doOnSuccess(list -> logger.debug("Fetched " + list.size() + " open orders."))
-            .doOnError(err -> logger.error("Error while fetching open orders!" + err.getMessage()));
+            .doOnError(e -> logger.error("Error while fetching open orders! " + e.getMessage()));
     }
 }

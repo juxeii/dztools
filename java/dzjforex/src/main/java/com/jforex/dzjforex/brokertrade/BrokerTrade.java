@@ -17,9 +17,10 @@ public class BrokerTrade {
     private final static double rollOverNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerTrade.class);
 
-    public BrokerTrade(final TradeUtility tradeUtil) {
+    public BrokerTrade(final TradeUtility tradeUtil,
+                       final StrategyUtil strategyUtil) {
         this.tradeUtil = tradeUtil;
-        strategyUtil = tradeUtil.strategyUtil();
+        this.strategyUtil = strategyUtil;
     }
 
     public int orderInfo(final BrokerTradeData brokerTradeData) {

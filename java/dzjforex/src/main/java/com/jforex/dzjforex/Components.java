@@ -12,6 +12,7 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
+import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
@@ -21,7 +22,9 @@ import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.LoginExecutor;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
+import com.jforex.dzjforex.brokersell.OrderCloseParams;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
+import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
@@ -32,11 +35,8 @@ import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.order.OpenOrders;
-import com.jforex.dzjforex.order.OrderCloseParams;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.OrderSetSLParams;
-import com.jforex.dzjforex.order.OrderSubmitParams;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
@@ -145,7 +145,7 @@ public class Components {
                                                            accountInfo,
                                                            orderLabelUtil,
                                                            pluginConfig);
-        final StopLoss stopLoss = new StopLoss(tradeUtility);
+        final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
         final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
                                                                           stopLoss,
                                                                           retryParamsForTrading);
@@ -156,7 +156,7 @@ public class Components {
                                                 orderSubmitParams,
                                                 orderCloseParams,
                                                 orderSetSLParams);
-        brokerTrade = new BrokerTrade(tradeUtility);
+        brokerTrade = new BrokerTrade(tradeUtility, strategyUtil);
         brokerBuy = new BrokerBuy(taskParamsRunner, tradeUtility);
         brokerSell = new BrokerSell(taskParamsRunner, tradeUtility);
         brokerStop = new BrokerStop(taskParamsRunner, tradeUtility);

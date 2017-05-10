@@ -1,11 +1,12 @@
-package com.jforex.dzjforex.order;
+package com.jforex.dzjforex.brokerbuy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.order.StopLoss;
+import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.basic.SubmitParams;

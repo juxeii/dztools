@@ -29,19 +29,20 @@ public class OrderLabelUtil {
     }
 
     public Maybe<Integer> idFromLabel(final String label) {
-        if (label == null || !label.startsWith(pluginConfig.orderLabelPrefix()))
+        final String orderLabelPrefix = orderLabelPrefix();
+        if (label == null || !label.startsWith(orderLabelPrefix))
             return Maybe.empty();
 
-        final String idName = label.substring(orderLabelPrefix().length());
+        final String idName = label.substring(orderLabelPrefix.length());
         return Maybe.just(Integer.parseInt(idName));
-    }
-
-    public String labelFromId(final int orderId) {
-        return pluginConfig.orderLabelPrefix() + String.valueOf(orderId);
     }
 
     private String orderLabelPrefix() {
         return pluginConfig.orderLabelPrefix();
+    }
+
+    public String labelFromId(final int orderId) {
+        return orderLabelPrefix() + String.valueOf(orderId);
     }
 
     private int nowAsInteger() {

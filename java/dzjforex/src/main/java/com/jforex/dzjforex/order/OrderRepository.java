@@ -67,13 +67,8 @@ public class OrderRepository {
     private void importZorroOrders(final Single<List<IOrder>> orders) {
         orders
             .blockingGet()
-            .forEach(this::filterAndImportZorroOrder);
-    }
-
-    private void filterAndImportZorroOrder(final IOrder order) {
-        if (labelUtil.hasZorroPrefix(order)) {
-            final int orderId = labelUtil.idFromOrder(order);
-            orderByTradeId.put(orderId, order);
-        }
+            .forEach(order -> labelUtil
+                .idFromOrder(order)
+                .subscribe(orderId -> orderByTradeId.put(orderId, order)));
     }
 }

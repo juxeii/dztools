@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
 
+import io.reactivex.Single;
+
 public class ServerTimeProvider {
 
     private final NTPProvider ntpProvider;
@@ -25,25 +27,25 @@ public class ServerTimeProvider {
         this.clock = clock;
     }
 
-    public long get() {
+    public Single<Long> get() {
         final long ntpFromProvider = ntpProvider.get();
         return ntpFromProvider == ZorroReturnValues.INVALID_SERVER_TIME.getValue()
                 ? serverTimeFromTick()
                 : serverTimeFromValidNTP(ntpFromProvider);
     }
 
-    private long serverTimeFromTick() {
-        logger.warn("Currently no NTP available, estimating with latest tick time.");
+    private Single<Long> serverTimeFromTick() {
+        logger.warn("Currently no NTP available, estimating with latest tick time...");
         return tickTimeProvider.get();
     }
 
-    private long serverTimeFromValidNTP(final long ntpFromProvider) {
+    private Single<Long> serverTimeFromValidNTP(final long ntpFromProvider) {
         if (ntpFromProvider > latestNTP) {
             storeLatestNTP(ntpFromProvider);
-            return ntpFromProvider;
+            return Single.just(ntpFromProvider);
         }
         final long timeDiffToSynchTime = clock.millis() - synchTime;
-        return latestNTP + timeDiffToSynchTime;
+        return Single.just(latestNTP + timeDiffToSynchTime);
     }
 
     private void storeLatestNTP(final long newNTP) {

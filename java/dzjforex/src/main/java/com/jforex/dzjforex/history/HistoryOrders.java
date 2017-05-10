@@ -2,11 +2,13 @@ package com.jforex.dzjforex.history;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
+import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.time.ServerTimeProvider;
@@ -35,22 +37,28 @@ public class HistoryOrders {
     }
 
     public Single<List<IOrder>> get() {
-        final LocalDateTime toDate = DateTimeUtil.dateTimeFromMillis(serverTimeProvider.get());
-        final LocalDateTime fromDate = toDate.minusDays(pluginConfig.historyOrderInDays());
-        final long to = DateTimeUtil.millisFromDateTime(toDate);
-        final long from = DateTimeUtil.millisFromDateTime(fromDate);
+        return Single
+            .defer(() -> serverTimeProvider.get())
+            .flatMap(serverTime -> {
+                final LocalDateTime toDate = DateTimeUtil.dateTimeFromMillis(serverTime);
+                final LocalDateTime fromDate = toDate.minusDays(pluginConfig.historyOrderInDays());
+                final long to = DateTimeUtil.millisFromDateTime(toDate);
+                final long from = DateTimeUtil.millisFromDateTime(fromDate);
+                final Set<Instrument> subscribedInstruments = brokerSubscribe.subscribedInstruments();
 
-        return Observable
-            .fromIterable(brokerSubscribe.subscribedInstruments())
-            .doOnSubscribe(d -> logger.debug("Fetching history orders for " + brokerSubscribe.subscribedInstruments()
-                    + " from " + DateTimeUtil.formatMillis(from)
-                    + " to " + DateTimeUtil.formatMillis(to)))
-            .flatMapSingle(instrument -> historyProvider.ordersByInstrument(instrument,
-                                                                            from,
-                                                                            to))
-            .flatMapIterable(orders -> orders)
-            .toList()
-            .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()
-                    + " history orders for " + brokerSubscribe.subscribedInstruments()));
+                return Observable
+                    .fromIterable(subscribedInstruments)
+                    .doOnSubscribe(d -> logger
+                        .debug("Fetching history orders for " + brokerSubscribe.subscribedInstruments()
+                                + " from " + DateTimeUtil.formatMillis(from)
+                                + " to " + DateTimeUtil.formatMillis(to)))
+                    .flatMapSingle(instrument -> historyProvider.ordersByInstrument(instrument,
+                                                                                    from,
+                                                                                    to))
+                    .flatMapIterable(orders -> orders)
+                    .toList()
+                    .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()
+                            + " history orders for " + subscribedInstruments));
+            });
     }
 }

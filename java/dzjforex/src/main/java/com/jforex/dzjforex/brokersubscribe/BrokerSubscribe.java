@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.brokersubscribe;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -9,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.system.IClient;
+import com.google.common.collect.Sets;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
@@ -34,19 +34,16 @@ public class BrokerSubscribe {
     }
 
     public int subscribe(final String instrumentName) {
-        return RxUtility.maybeInstrumentFromName(instrumentName)
+        return RxUtility
+            .maybeInstrumentFromName(instrumentName)
             .map(this::subscribeValidInstrumentName)
             .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
             .blockingGet();
     }
 
     private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {
-        if (isInstrumentSubscribed(instrumentToSubscribe)) {
-            logger.warn("Instrument " + instrumentToSubscribe + " already subscribed.");
-            return ZorroReturnValues.ASSET_AVAILABLE.getValue();
-        }
-
-        subscribeWithCrossInstruments(instrumentToSubscribe);
+        if (!isInstrumentSubscribed(instrumentToSubscribe))
+            subscribeWithCrossInstruments(instrumentToSubscribe);
         return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 
@@ -62,17 +59,12 @@ public class BrokerSubscribe {
     }
 
     private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
-        final Set<Instrument> instrumentsToSubscribe = new HashSet<>();
-        instrumentsToSubscribe.add(instrumentToSubscribe);
-        Set<Instrument> crossInstruments = new HashSet<>();
-        if (!CurrencyUtil.isInInstrument(accountInfo.currency(), instrumentToSubscribe)) {
-            crossInstruments = crossInstruments(instrumentToSubscribe);
-            instrumentsToSubscribe.addAll(crossInstruments);
-        }
+        final Set<Instrument> instrumentsToSubscribe = Sets.newHashSet(instrumentToSubscribe);
+        if (!CurrencyUtil.isInInstrument(accountInfo.currency(), instrumentToSubscribe))
+            instrumentsToSubscribe.addAll(crossInstruments(instrumentToSubscribe));
 
-        logger.debug("Trying to subscribe instrument " + instrumentToSubscribe +
-                " and cross instruments " + crossInstruments);
+        logger.debug("Trying to subscribe instruments " + instrumentsToSubscribe);
         client.setSubscribedInstruments(instrumentsToSubscribe);
-        logger.debug("Subscribed instruments are:" + client.getSubscribedInstruments());
+        logger.debug("Subscribed instruments:" + client.getSubscribedInstruments());
     }
 }

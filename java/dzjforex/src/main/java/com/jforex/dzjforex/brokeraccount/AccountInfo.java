@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.brokeraccount;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IAccount.AccountState;
 import com.dukascopy.api.ICurrency;
@@ -16,8 +13,6 @@ public class AccountInfo {
     private final IAccount account;
     private final CalculationUtil calculationUtil;
     private final PluginConfig pluginConfig;
-
-    private final static Logger logger = LogManager.getLogger(AccountInfo.class);
 
     public AccountInfo(final IAccount account,
                        final CalculationUtil calculationUtil,
@@ -89,16 +84,10 @@ public class AccountInfo {
     }
 
     public double pipCost(final Instrument instrument) {
-        final double pipCost = calculationUtil.pipValueInCurrency(lotSize(),
-                                                                  instrument,
-                                                                  currency(),
-                                                                  OfferSide.ASK);
-        logger.trace("Pipcost for lotSize " + lotSize()
-                + " and instrument " + instrument
-                + " currency " + currency()
-                + " is " + pipCost);
-
-        return pipCost;
+        return calculationUtil.pipValueInCurrency(lotSize(),
+                                                  instrument,
+                                                  currency(),
+                                                  OfferSide.ASK);
     }
 
     public double marginPerLot(final Instrument instrument) {
@@ -114,12 +103,6 @@ public class AccountInfo {
                                                                    crossCurrency,
                                                                    currency(),
                                                                    OfferSide.ASK);
-        final double marginPerLot = conversionLot / leverage();
-        logger.trace("marginPerLot for conversion instrument " + crossCurrency
-                + " and  conversionLot " + conversionLot
-                + " and leverage " + leverage()
-                + " is " + marginPerLot);
-
-        return marginPerLot;
+        return conversionLot / leverage();
     }
 }

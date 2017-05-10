@@ -10,12 +10,13 @@ import com.jforex.programming.misc.DateTimeUtil;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.BehaviorSubject;
 
 public class NTPProvider {
 
     private final NTPFetch ntpFetch;
     private final PluginConfig pluginConfig;
-    private long latestNTPTime;
+    private final BehaviorSubject<Long> latestNTPTime = BehaviorSubject.create();
 
     private final static Logger logger = LogManager.getLogger(NTPProvider.class);
 
@@ -34,17 +35,17 @@ public class NTPProvider {
                       TimeUnit.MILLISECONDS,
                       Schedulers.io())
             .doOnSubscribe(d -> logger.debug("Starting NTP synch task..."))
-            .flatMapSingle(counter -> ntpFetch.observable())
+            .flatMapSingle(counter -> ntpFetch.get())
             .subscribe(this::onNTPTime,
-                       err -> logger.debug("NTP synchronization task failed with error: " + err.getMessage()));
+                       e -> logger.debug("NTP synchronization task failed! " + e.getMessage()));
     }
 
     private void onNTPTime(final long ntpTime) {
         logger.debug("New NTP received " + DateTimeUtil.formatMillis(ntpTime));
-        latestNTPTime = ntpTime;
+        latestNTPTime.onNext(ntpTime);
     }
 
     public long get() {
-        return latestNTPTime;
+        return latestNTPTime.getValue();
     }
 }

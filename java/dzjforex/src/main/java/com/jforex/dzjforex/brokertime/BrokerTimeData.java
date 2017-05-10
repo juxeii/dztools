@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.brokertime;
 
+import com.jforex.dzjforex.time.TimeConvert;
+
 public class BrokerTimeData {
 
     private final double pTimeUTC[];
@@ -8,7 +10,7 @@ public class BrokerTimeData {
         this.pTimeUTC = pTimeUTC;
     }
 
-    public void fill(final double oleTime) {
-        pTimeUTC[0] = oleTime;
+    public void fill(final long serverTime) {
+        pTimeUTC[0] = TimeConvert.getOLEDateFromMillis(serverTime);
     }
 }

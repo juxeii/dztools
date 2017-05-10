@@ -5,6 +5,8 @@ import java.time.Clock;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.PluginConfig;
 
+import io.reactivex.Maybe;
+
 public class OrderLabelUtil {
 
     private final PluginConfig pluginConfig;
@@ -22,27 +24,20 @@ public class OrderLabelUtil {
         return orderLabelPrefix() + nowAsInteger();
     }
 
-    public int idFromOrder(final IOrder order) {
-        final String label = order.getLabel();
-        return label == null
-                ? 0
-                : idFromLabel(order.getLabel());
+    public Maybe<Integer> idFromOrder(final IOrder order) {
+        return idFromLabel(order.getLabel());
     }
 
-    public int idFromLabel(final String orderLabel) {
-        final String idName = orderLabel.substring(orderLabelPrefix().length());
-        return Integer.parseInt(idName);
+    public Maybe<Integer> idFromLabel(final String label) {
+        if (label == null || !label.startsWith(pluginConfig.orderLabelPrefix()))
+            return Maybe.empty();
+
+        final String idName = label.substring(orderLabelPrefix().length());
+        return Maybe.just(Integer.parseInt(idName));
     }
 
     public String labelFromId(final int orderId) {
         return pluginConfig.orderLabelPrefix() + String.valueOf(orderId);
-    }
-
-    public boolean hasZorroPrefix(final IOrder order) {
-        final String label = order.getLabel();
-        return label == null
-                ? false
-                : label.startsWith(pluginConfig.orderLabelPrefix());
     }
 
     private String orderLabelPrefix() {

@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.brokerbuy;
 
-import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderActionResult;
@@ -50,12 +49,13 @@ public class OrderSubmit {
 
     private int fillOpenPriceAndReturnOrderID(final BrokerBuyData brokerBuyData,
                                               final String label) {
-        final int orderID = orderLabelUtil.idFromLabel(label);
-        final IOrder order = tradeUtility
-            .maybeOrderByID(orderID)
+        return orderLabelUtil
+            .idFromLabel(label)
+            .flatMap(orderId -> tradeUtility
+                .maybeOrderByID(orderId)
+                .doOnSuccess(order -> brokerBuyData.fillOpenPrice(order.getOpenPrice()))
+                .map(order -> orderId)
+                .defaultIfEmpty(ZorroReturnValues.BROKER_BUY_FAIL.getValue()))
             .blockingGet();
-        brokerBuyData.fillOpenPrice(order.getOpenPrice());
-
-        return orderID;
     }
 }

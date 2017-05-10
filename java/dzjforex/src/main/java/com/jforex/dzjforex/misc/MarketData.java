@@ -9,7 +9,7 @@ import com.dukascopy.api.IDataService;
 import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.Period;
 
-import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class MarketData {
 
@@ -24,22 +24,18 @@ public class MarketData {
     public boolean isMarketOffline(final long currentServerTime) {
         final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
 
-        return Observable
+        return Single
             .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
             .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
-            .onErrorResumeNext(err -> {
-                logger.error("Get market offline times  failed!" + err.getMessage());
-                return Observable.just(true);
-            })
-            .blockingFirst();
+            .doOnError(e -> logger.error("Get market offline times  failed!" + e.getMessage()))
+            .onErrorReturnItem(true)
+            .blockingGet();
     }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,
                                                  final Set<ITimeDomain> offlineDomains) {
         return offlineDomains
             .stream()
-            .anyMatch(timeDomain -> {
-                return serverTime >= timeDomain.getStart() && serverTime <= timeDomain.getEnd();
-            });
+            .anyMatch(timeDomain -> serverTime >= timeDomain.getStart() && serverTime <= timeDomain.getEnd());
     }
 }

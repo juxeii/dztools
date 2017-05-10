@@ -25,23 +25,24 @@ public class NTPFetch {
     public NTPFetch(final PluginConfig pluginConfig) {
         final long retryDelay = pluginConfig.ntpRetryDelay();
 
-        observable = Single
-            .fromCallable(() -> fromURL(pluginConfig.ntpServerURL()))
+        observable = fromURL(pluginConfig.ntpServerURL())
             .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
-            .doOnError(err -> logger.debug("NTP fetch task failed with error: " + err.getMessage()
-                    + "! Will retry in " + retryDelay + " milliseconds."))
+            .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()
+                    + "! Will retry in " + retryDelay
+                    + " milliseconds."))
             .retryWhen(errors -> errors.flatMap(error -> Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)));
     }
 
-    private long fromURL(final String ntpServerURL) throws Exception {
-        final InetAddress inetAddress = InetAddress.getByName(ntpServerURL);
-        final TimeInfo timeInfo = ntpUDPClient.getTime(inetAddress);
-        final NtpV3Packet ntpV3Packet = timeInfo.getMessage();
-        final TimeStamp timeStamp = ntpV3Packet.getTransmitTimeStamp();
-        return timeStamp.getTime();
+    private Single<Long> fromURL(final String ntpServerURL) {
+        return Single
+            .fromCallable(() -> InetAddress.getByName(ntpServerURL))
+            .map(ntpUDPClient::getTime)
+            .map(TimeInfo::getMessage)
+            .map(NtpV3Packet::getTransmitTimeStamp)
+            .map(TimeStamp::getTime);
     }
 
-    public Single<Long> observable() {
+    public Single<Long> get() {
         return observable;
     }
 }

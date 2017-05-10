@@ -59,8 +59,8 @@ public class HistoryProvider {
             .doOnSuccess(bars -> logger.debug("Fetched " + bars.size() + " bars for " + instrument));
     }
 
-    public Single<IBar> barByShift(final BarParams barParams,
-                                   final int shift) {
+    private Single<IBar> barByShift(final BarParams barParams,
+                                    final int shift) {
         return Single.fromCallable(() -> history.getBar(barParams.instrument(),
                                                         barParams.period(),
                                                         barParams.offerSide(),
@@ -157,12 +157,8 @@ public class HistoryProvider {
         return Observable.fromIterable(counter::iterator);
     }
 
-    public Single<Long> latestTickTime(final Instrument instrument) {
+    private Single<Long> latestTickTime(final Instrument instrument) {
         return Single.fromCallable(() -> history.getTimeOfLastTick(instrument));
-    }
-
-    public Single<Long> latestBarTime(final BarParams barParams) {
-        return barByShift(barParams, 1).map(IBar::getTime);
     }
 
     private <T> List<T> reverseQuotes(final List<T> quotes) {

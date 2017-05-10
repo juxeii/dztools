@@ -4,7 +4,6 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.time.ServerTimeProvider;
-import com.jforex.dzjforex.time.TimeConvert;
 
 public class BrokerTime {
 
@@ -27,11 +26,13 @@ public class BrokerTime {
     }
 
     private int fillServerTimeAndReturnStatus(final BrokerTimeData brokerTimeData) {
-        final long serverTime = serverTimeProvider.get();
-        brokerTimeData.fill(TimeConvert.getOLEDateFromMillis(serverTime));
-
-        return marketData.isMarketOffline(serverTime)
-                ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
-                : ZorroReturnValues.CONNECTION_OK.getValue();
+        return serverTimeProvider
+            .get()
+            .doOnSuccess(brokerTimeData::fill)
+            .map(serverTime -> marketData.isMarketOffline(serverTime)
+                    ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
+                    : ZorroReturnValues.CONNECTION_OK.getValue())
+            .onErrorReturnItem(ZorroReturnValues.INVALID_SERVER_TIME.getValue())
+            .blockingGet();
     }
 }

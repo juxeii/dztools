@@ -6,15 +6,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.reactivex.Single;
-import io.reactivex.subjects.BehaviorSubject;
 
 public class ServerTimeProvider {
 
     private final NTPProvider ntpProvider;
     private final TickTimeProvider tickTimeProvider;
     private final Clock clock;
-    private final BehaviorSubject<Long> latestNTP = BehaviorSubject.create();
-    private final BehaviorSubject<Long> synchTime = BehaviorSubject.create();
+    private long latestNTP;
+    private long synchTime;
 
     private final static Logger logger = LogManager.getLogger(ServerTimeProvider.class);
 
@@ -41,16 +40,16 @@ public class ServerTimeProvider {
     }
 
     private Single<Long> serverTimeFromValidNTP(final long ntpFromProvider) {
-        if (ntpFromProvider > latestNTP.getValue()) {
+        if (ntpFromProvider > latestNTP) {
             storeLatestNTP(ntpFromProvider);
             return Single.just(ntpFromProvider);
         }
-        final long timeDiffToSynchTime = clock.millis() - synchTime.getValue();
-        return Single.just(latestNTP.getValue() + timeDiffToSynchTime);
+        final long timeDiffToSynchTime = clock.millis() - synchTime;
+        return Single.just(latestNTP + timeDiffToSynchTime);
     }
 
     private void storeLatestNTP(final long newNTP) {
-        latestNTP.onNext(newNTP);
-        synchTime.onNext(clock.millis());
+        latestNTP = newNTP;
+        synchTime = clock.millis();
     }
 }

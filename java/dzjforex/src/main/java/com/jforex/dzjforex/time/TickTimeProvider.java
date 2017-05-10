@@ -12,14 +12,13 @@ import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.quote.TickQuoteRepository;
 
 import io.reactivex.Single;
-import io.reactivex.subjects.BehaviorSubject;
 
 public class TickTimeProvider {
 
     private final TickQuoteRepository tickQuoteRepository;
     private final Clock clock;
-    private final BehaviorSubject<Long> latestTickTime = BehaviorSubject.create();
-    private final BehaviorSubject<Long> synchTime = BehaviorSubject.create();
+    private long latestTickTime;
+    private long synchTime;
 
     private final static int INVALID_SERVER_TIME = ZorroReturnValues.INVALID_SERVER_TIME.getValue();
     private final static Logger logger = LogManager.getLogger(TickTimeProvider.class);
@@ -38,7 +37,7 @@ public class TickTimeProvider {
     }
 
     private long getForValidTickTime(final long latestTickTimeFromRepository) {
-        return latestTickTimeFromRepository > latestTickTime.getValue()
+        return latestTickTimeFromRepository > latestTickTime
                 ? setNewAndSynch(latestTickTimeFromRepository)
                 : estimateWithSynchTime();
     }
@@ -56,13 +55,13 @@ public class TickTimeProvider {
     }
 
     private long setNewAndSynch(final long latestTickTimeFromRepository) {
-        latestTickTime.onNext(latestTickTimeFromRepository);
-        synchTime.onNext(clock.millis());
-        return latestTickTime.getValue();
+        latestTickTime = latestTickTimeFromRepository;
+        synchTime = clock.millis();
+        return latestTickTime;
     }
 
     private long estimateWithSynchTime() {
-        final long timeDiffToSynchTime = clock.millis() - synchTime.getValue();
-        return latestTickTime.getValue() + timeDiffToSynchTime;
+        final long timeDiffToSynchTime = clock.millis() - synchTime;
+        return latestTickTime + timeDiffToSynchTime;
     }
 }

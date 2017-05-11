@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.quote.TickQuoteRepository;
 
@@ -30,16 +31,22 @@ public class TickTimeProvider {
     }
 
     public Single<Long> get() {
-        final long latestTickTimeFromRepository = fromRepository();
-        return latestTickTimeFromRepository == INVALID_SERVER_TIME
-                ? Single.error(new JFException("Fetching tick time failed!"))
-                : Single.just(getForValidTickTime(latestTickTimeFromRepository));
+        return Single.defer(() -> {
+            final long latestTickTimeFromRepository = fromRepository();
+            return latestTickTimeFromRepository == INVALID_SERVER_TIME
+                    ? Single.error(new JFException("Fetching tick time failed!"))
+                    : Single.just(getForValidTickTime(latestTickTimeFromRepository));
+        });
     }
 
     private long getForValidTickTime(final long latestTickTimeFromRepository) {
-        return latestTickTimeFromRepository > latestTickTime
+        final long serverTimeFromTickTime = latestTickTimeFromRepository > latestTickTime
                 ? setNewAndSynch(latestTickTimeFromRepository)
                 : estimateWithSynchTime();
+        logger.trace("serverTimeFromTickTime " + DateTimeUtil.formatMillis(serverTimeFromTickTime)
+                + " latestTickTimeFromRepository " + DateTimeUtil.formatMillis(latestTickTimeFromRepository)
+                + " synchTime " + DateTimeUtil.formatMillis(synchTime));
+        return serverTimeFromTickTime;
     }
 
     private long fromRepository() {

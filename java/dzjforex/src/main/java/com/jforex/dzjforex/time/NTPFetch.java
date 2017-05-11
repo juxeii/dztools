@@ -17,20 +17,22 @@ import io.reactivex.Single;
 
 public class NTPFetch {
 
-    private final Single<Long> observable;
-    private final NTPUDPClient ntpUDPClient = new NTPUDPClient();
+    private final Single<Long> fetch;
+    private final NTPUDPClient ntpUDPClient;
 
     private final static Logger logger = LogManager.getLogger(NTPFetch.class);
 
-    public NTPFetch(final PluginConfig pluginConfig) {
-        final long retryDelay = pluginConfig.ntpRetryDelay();
+    public NTPFetch(final NTPUDPClient ntpUDPClient,
+                    final PluginConfig pluginConfig) {
+        this.ntpUDPClient = ntpUDPClient;
 
-        observable = fromURL(pluginConfig.ntpServerURL())
+        final long retryDelay = pluginConfig.ntpRetryDelay();
+        fetch = fromURL(pluginConfig.ntpServerURL())
             .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
             .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()
                     + "! Will retry in " + retryDelay
                     + " milliseconds."))
-            .retryWhen(errors -> errors.flatMap(error -> Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)));
+            .retryWhen(errors -> errors.flatMap(e -> Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)));
     }
 
     private Single<Long> fromURL(final String ntpServerURL) {
@@ -43,6 +45,6 @@ public class NTPFetch {
     }
 
     public Single<Long> get() {
-        return observable;
+        return fetch;
     }
 }

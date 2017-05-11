@@ -15,7 +15,7 @@ public class ClientProvider {
     public static IClient get() {
         return Single
             .fromCallable(() -> ClientFactory.getDefaultInstance())
-            .doOnError(err -> logger.error("Error retrieving IClient instance! " + err.getMessage()))
+            .doOnError(e -> logger.error("Error retrieving IClient instance! " + e.getMessage()))
             .blockingGet();
     }
 }

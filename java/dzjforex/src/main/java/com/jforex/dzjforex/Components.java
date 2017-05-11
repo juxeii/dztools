@@ -3,6 +3,8 @@ package com.jforex.dzjforex;
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.net.ntp.NTPUDPClient;
+
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.Instrument;
@@ -31,6 +33,8 @@ import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.history.HistoryUtility;
+import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketData;
@@ -101,7 +105,8 @@ public class Components {
     }
 
     private void initAfterStrategyStart() {
-        final NTPFetch ntpFetch = new NTPFetch(pluginConfig);
+        final NTPUDPClient ntpUDPClient = new NTPUDPClient();
+        final NTPFetch ntpFetch = new NTPFetch(ntpUDPClient, pluginConfig);
         final NTPProvider ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
         final MarketData marketData = new MarketData(infoStrategy
             .getContext()
@@ -121,10 +126,12 @@ public class Components {
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
         brokerAccount = new BrokerAccount(accountInfo);
-        brokerAsset = new BrokerAsset(accountInfo, strategyUtil);
+
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         final IHistory history = infoStrategy.getHistory();
-        historyProvider = new HistoryProvider(history, pluginConfig);
+        final HistoryWrapper historyWrapper = new HistoryWrapper(history);
+        final HistoryUtility historyUtility = new HistoryUtility(historyWrapper, pluginConfig);
+        historyProvider = new HistoryProvider(historyUtility, pluginConfig);
         final BarFetcher barFetcher = new BarFetcher(historyProvider, zorro);
         final TickFetcher tickFetcher = new TickFetcher(historyProvider, zorro);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
@@ -132,7 +139,7 @@ public class Components {
             .getContext()
             .getEngine();
         final OpenOrders runningOrders = new OpenOrders(engine);
-        final HistoryOrders historyOrders = new HistoryOrders(historyProvider,
+        final HistoryOrders historyOrders = new HistoryOrders(historyWrapper,
                                                               brokerSubscribe,
                                                               pluginConfig,
                                                               serverTimeProvider);
@@ -145,6 +152,7 @@ public class Components {
                                                            accountInfo,
                                                            orderLabelUtil,
                                                            pluginConfig);
+        brokerAsset = new BrokerAsset(accountInfo, tradeUtility);
         final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
         final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
                                                                           stopLoss,
@@ -156,7 +164,7 @@ public class Components {
                                                 orderSubmitParams,
                                                 orderCloseParams,
                                                 orderSetSLParams);
-        brokerTrade = new BrokerTrade(tradeUtility, strategyUtil);
+        brokerTrade = new BrokerTrade(tradeUtility);
         brokerBuy = new BrokerBuy(taskParamsRunner, tradeUtility);
         brokerSell = new BrokerSell(taskParamsRunner, tradeUtility);
         brokerStop = new BrokerStop(taskParamsRunner, tradeUtility);

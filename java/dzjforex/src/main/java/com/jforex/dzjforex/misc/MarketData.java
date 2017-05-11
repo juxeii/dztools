@@ -27,7 +27,7 @@ public class MarketData {
         return Single
             .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
             .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
-            .doOnError(e -> logger.error("Get market offline times  failed!" + e.getMessage()))
+            .doOnError(e -> logger.error("Get market offline times failed! " + e.getMessage()))
             .onErrorReturnItem(true)
             .blockingGet();
     }

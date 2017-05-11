@@ -7,38 +7,35 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.instrument.InstrumentFactory;
-import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerAsset {
 
     private final AccountInfo accountInfo;
-    private final StrategyUtil strategyUtil;
+    private final TradeUtility tradeUtility;
 
     private final static double valueNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerAsset.class);
 
     public BrokerAsset(final AccountInfo accountInfo,
-                       final StrategyUtil strategyUtil) {
+                       final TradeUtility tradeUtility) {
         this.accountInfo = accountInfo;
-        this.strategyUtil = strategyUtil;
+        this.tradeUtility = tradeUtility;
     }
 
     public int fillAssetParams(final BrokerAssetData brokerAssetData) {
         return RxUtility
             .optionalToMaybe(InstrumentFactory.maybeFromName(brokerAssetData.instrumentName()))
-            .map(instrument -> fillAssetParamsForValidInstrument(instrument, brokerAssetData))
+            .map(instrument -> fillAssetParams(instrument, brokerAssetData))
             .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
             .blockingGet();
     }
 
-    private int fillAssetParamsForValidInstrument(final Instrument instrument,
-                                                  final BrokerAssetData brokerAssetData) {
-        final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(instrument);
-
-        final double pPrice = instrumentUtil.askQuote();
-        final double pSpread = instrumentUtil.spread();
+    private int fillAssetParams(final Instrument instrument,
+                                final BrokerAssetData brokerAssetData) {
+        final double pPrice = tradeUtility.currentAsk(instrument);
+        final double pSpread = tradeUtility.spread(instrument);
         final double pVolume = valueNotSupported;
         final double pPip = instrument.getPipValue();
         final double pPipCost = accountInfo.pipCost(instrument);
@@ -46,6 +43,7 @@ public class BrokerAsset {
         final double pMarginCost = accountInfo.marginPerLot(instrument);
         final double pRollLong = valueNotSupported;
         final double pRollShort = valueNotSupported;
+
         brokerAssetData.fill(pPrice,
                              pSpread,
                              pVolume,
@@ -55,9 +53,8 @@ public class BrokerAsset {
                              pMarginCost,
                              pRollLong,
                              pRollShort);
-        logger.trace("BrokerAsset values for " + instrument + ": \n"
+        logger.trace("BrokerAsset values for " + instrument + ":\n"
                 + " pAskPrice: " + pPrice + "\n"
-                + " pBidPrice: " + instrumentUtil.bidQuote() + "\n"
                 + " pSpread: " + pSpread + "\n"
                 + " pVolume: " + pVolume + "\n"
                 + " pPip: " + pPip + "\n"

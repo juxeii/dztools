@@ -40,12 +40,14 @@ public class ServerTimeProvider {
     }
 
     private Single<Long> serverTimeFromValidNTP(final long ntpFromProvider) {
-        if (ntpFromProvider > latestNTP) {
-            storeLatestNTP(ntpFromProvider);
-            return Single.just(ntpFromProvider);
-        }
-        final long timeDiffToSynchTime = clock.millis() - synchTime;
-        return Single.just(latestNTP + timeDiffToSynchTime);
+        return Single.fromCallable(() -> {
+            if (ntpFromProvider > latestNTP) {
+                storeLatestNTP(ntpFromProvider);
+                return ntpFromProvider;
+            }
+            final long timeDiffToSynchTime = clock.millis() - synchTime;
+            return latestNTP + timeDiffToSynchTime;
+        });
     }
 
     private void storeLatestNTP(final long newNTP) {

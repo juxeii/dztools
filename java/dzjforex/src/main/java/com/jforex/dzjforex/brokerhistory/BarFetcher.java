@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.brokerhistory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
@@ -32,9 +33,7 @@ public class BarFetcher {
             .barsByShift(barParams,
                          brokerHistoryData.endTimeForBar(),
                          brokerHistoryData.noOfRequestedTicks() - 1)
-            .flattenAsObservable(bars -> bars)
-            .filter(barQuote -> isQuoteAfterStartDate(barQuote, brokerHistoryData.startTimeForBar()))
-            .toList()
+            .map(barQuotes -> filterTime(barQuotes, brokerHistoryData.startTimeForBar()))
             .doOnSuccess(brokerHistoryData::fillBarQuotes)
             .map(List::size)
             .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue());
@@ -52,10 +51,13 @@ public class BarFetcher {
             .offerSide(OfferSide.ASK);
     }
 
-    private boolean isQuoteAfterStartDate(final BarQuote barQuote,
-                                          final long startDate) {
-        return barQuote
-            .bar()
-            .getTime() >= startDate;
+    public List<BarQuote> filterTime(final List<BarQuote> barQuotes,
+                                     final long startDate) {
+        return barQuotes
+            .stream()
+            .filter(barQuote -> barQuote
+                .bar()
+                .getTime() >= startDate)
+            .collect(Collectors.toList());
     }
 }

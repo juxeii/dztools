@@ -4,27 +4,23 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
+import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.strategy.StrategyUtil;
 
 public class BrokerTrade {
 
-    private final TradeUtility tradeUtil;
-    private final StrategyUtil strategyUtil;
+    private final TradeUtility tradeUtility;
 
     private final static double rollOverNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerTrade.class);
 
-    public BrokerTrade(final TradeUtility tradeUtil,
-                       final StrategyUtil strategyUtil) {
-        this.tradeUtil = tradeUtil;
-        this.strategyUtil = strategyUtil;
+    public BrokerTrade(final TradeUtility tradeUtility) {
+        this.tradeUtility = tradeUtility;
     }
 
     public int orderInfo(final BrokerTradeData brokerTradeData) {
-        return tradeUtil
+        return tradeUtility
             .maybeOrderByID(brokerTradeData.nTradeID())
             .map(order -> handleForOrder(order, brokerTradeData))
             .defaultIfEmpty(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue())
@@ -37,17 +33,17 @@ public class BrokerTrade {
         if (order.getState() == IOrder.State.CLOSED)
             return ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue();
 
-        final int noOfContracts = tradeUtil.amountToContracts(order.getAmount());
+        final int noOfContracts = tradeUtility.amountToContracts(order.getAmount());
         return noOfContracts;
     }
 
     private void fillTradeParams(final IOrder order,
                                  final BrokerTradeData brokerTradeData) {
-        final InstrumentUtil instrumentUtil = strategyUtil.instrumentUtil(order.getInstrument());
+        final Instrument instrument = order.getInstrument();
         final double pOpen = order.getOpenPrice();
         final double pClose = order.isLong()
-                ? instrumentUtil.askQuote()
-                : instrumentUtil.bidQuote();
+                ? tradeUtility.currentAsk(instrument)
+                : tradeUtility.currentBid(instrument);
         final double pRoll = rollOverNotSupported;
         final double pProfit = order.getProfitLossInAccountCurrency();
         brokerTradeData.fill(pOpen,

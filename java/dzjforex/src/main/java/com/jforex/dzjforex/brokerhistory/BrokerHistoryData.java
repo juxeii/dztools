@@ -12,6 +12,7 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
+import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.BarQuote;
 import com.jforex.programming.quote.TickQuote;
 
@@ -97,8 +98,7 @@ public class BrokerHistoryData {
         tickParams[startIndex + 2] = bar.getHigh();
         tickParams[startIndex + 3] = bar.getLow();
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
-        // logger.info("Stored bar time time " +
-        // DateTimeUtil.formatMillis(bar.getTime()));
+        logger.info("Stored bar time time " + DateTimeUtil.formatMillis(bar.getTime()));
         tickParams[startIndex + 5] = noSpreadAvailable;
         tickParams[startIndex + 6] = bar.getVolume();
     }
@@ -115,8 +115,7 @@ public class BrokerHistoryData {
         tickParams[startIndex + 2] = ask;
         tickParams[startIndex + 3] = ask;
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
-        // logger.info("Stored tick with time " +
-        // DateTimeUtil.formatMillis(tick.getTime()));
+        logger.info("Stored tick with time " + DateTimeUtil.formatMillis(tick.getTime()));
         tickParams[startIndex + 5] = MathUtil.roundPrice(ask - bid, instrument);
         tickParams[startIndex + 6] = tick.getAskVolume();
     }

@@ -81,4 +81,10 @@ public class TradeUtility {
             .instrumentUtil(instrument)
             .askQuote();
     }
+
+    public double currentBid(final Instrument instrument) {
+        return strategyUtil
+            .instrumentUtil(instrument)
+            .bidQuote();
+    }
 }

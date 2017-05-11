@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.misc.DateTimeUtil;
 
@@ -46,6 +47,8 @@ public class NTPProvider {
     }
 
     public Single<Long> get() {
-        return Single.just(latestNTPTime);
+        return latestNTPTime == 0L
+                ? Single.error(new JFException("No NTP available yet."))
+                : Single.just(latestNTPTime);
     }
 }

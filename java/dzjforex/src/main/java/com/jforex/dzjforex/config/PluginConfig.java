@@ -54,9 +54,9 @@ public interface PluginConfig extends Config {
     @DefaultValue("1000")
     long historyAccessRetryDelay();
 
-    @Key("history.tickfetchminutes")
-    @DefaultValue("30")
-    int tickFetchMinutes();
+    @Key("history.tickfetchmillis")
+    @DefaultValue("60000")
+    long tickFetchMillis();
 
     @Key("history.orderdays")
     @DefaultValue("7")
@@ -85,6 +85,10 @@ public interface PluginConfig extends Config {
     @Key("ntp.syncinterval")
     @DefaultValue("300000")
     long ntpSynchInterval();
+
+    @Key("ntp.timeout")
+    @DefaultValue("2000")
+    int ntpTimeOut();
 
     @Key("ntp.retrydelay")
     @DefaultValue("5000")

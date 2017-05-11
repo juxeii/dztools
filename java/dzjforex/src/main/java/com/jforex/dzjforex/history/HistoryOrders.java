@@ -19,18 +19,18 @@ import io.reactivex.Single;
 
 public class HistoryOrders {
 
-    private final HistoryProvider historyProvider;
+    private final HistoryWrapper historyWrapper;
     private final BrokerSubscribe brokerSubscribe;
     private final PluginConfig pluginConfig;
     private final ServerTimeProvider serverTimeProvider;
 
     private final static Logger logger = LogManager.getLogger(HistoryOrders.class);
 
-    public HistoryOrders(final HistoryProvider historyProvider,
+    public HistoryOrders(final HistoryWrapper historyWrapper,
                          final BrokerSubscribe brokerSubscribe,
                          final PluginConfig pluginConfig,
                          final ServerTimeProvider serverTimeProvider) {
-        this.historyProvider = historyProvider;
+        this.historyWrapper = historyWrapper;
         this.brokerSubscribe = brokerSubscribe;
         this.pluginConfig = pluginConfig;
         this.serverTimeProvider = serverTimeProvider;
@@ -52,9 +52,9 @@ public class HistoryOrders {
                         .debug("Fetching history orders for " + brokerSubscribe.subscribedInstruments()
                                 + " from " + DateTimeUtil.formatMillis(from)
                                 + " to " + DateTimeUtil.formatMillis(to)))
-                    .flatMapSingle(instrument -> historyProvider.ordersByInstrument(instrument,
-                                                                                    from,
-                                                                                    to))
+                    .flatMapSingle(instrument -> historyWrapper.getOrdersHistory(instrument,
+                                                                                   from,
+                                                                                   to))
                     .flatMapIterable(orders -> orders)
                     .toList()
                     .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()

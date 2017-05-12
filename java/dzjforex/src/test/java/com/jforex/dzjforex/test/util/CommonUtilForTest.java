@@ -24,7 +24,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
-import com.jforex.dzjforex.order.OrderRepository;
+import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
@@ -52,7 +52,7 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected StrategyUtil strategyUtilMock;
     @Mock
-    protected OrderRepository orderRepositoryMock;
+    protected OrderLookup orderRepositoryMock;
     @Mock
     protected OrderLabelUtil orderLabelUtilMock;
     @Mock

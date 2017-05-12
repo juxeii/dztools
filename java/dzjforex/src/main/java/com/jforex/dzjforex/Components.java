@@ -40,6 +40,7 @@ import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketData;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLabelUtil;
+import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TaskParamsRunner;
@@ -138,16 +139,17 @@ public class Components {
         final IEngine engine = infoStrategy
             .getContext()
             .getEngine();
-        final OpenOrders runningOrders = new OpenOrders(engine);
+        final OpenOrders openOrders = new OpenOrders(engine);
         final HistoryOrders historyOrders = new HistoryOrders(historyWrapper,
                                                               brokerSubscribe,
                                                               pluginConfig,
                                                               serverTimeProvider);
         final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(pluginConfig, clock);
-        final OrderRepository orderRepository = new OrderRepository(runningOrders,
-                                                                    historyOrders,
-                                                                    orderLabelUtil);
-        final TradeUtility tradeUtility = new TradeUtility(orderRepository,
+        final OrderRepository orderRepository = new OrderRepository(orderLabelUtil);
+        final OrderLookup orderLookup = new OrderLookup(orderRepository,
+                                                        openOrders,
+                                                        historyOrders);
+        final TradeUtility tradeUtility = new TradeUtility(orderLookup,
                                                            strategyUtil,
                                                            accountInfo,
                                                            orderLabelUtil,

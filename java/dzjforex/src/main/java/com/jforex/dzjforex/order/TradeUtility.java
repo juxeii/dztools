@@ -15,7 +15,7 @@ import io.reactivex.Single;
 
 public class TradeUtility {
 
-    private final OrderRepository orderRepository;
+    private final OrderLookup orderRepository;
     private final StrategyUtil strategyUtil;
     private final OrderLabelUtil labelUtil;
     private final AccountInfo accountInfo;
@@ -23,7 +23,7 @@ public class TradeUtility {
 
     private final static Logger logger = LogManager.getLogger(TradeUtility.class);
 
-    public TradeUtility(final OrderRepository orderRepository,
+    public TradeUtility(final OrderLookup orderRepository,
                         final StrategyUtil strategyUtil,
                         final AccountInfo accountInfo,
                         final OrderLabelUtil orderLabel,
@@ -68,9 +68,7 @@ public class TradeUtility {
     }
 
     public Single<IOrder> orderByID(final int nTradeID) {
-        return orderRepository
-            .maybeOrderByID(nTradeID)
-            .toSingle();
+        return orderRepository.getByID(nTradeID);
     }
 
     public double spread(final Instrument instrument) {

@@ -8,7 +8,6 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.programming.instrument.InstrumentFactory;
 
 public class BrokerAsset {
 
@@ -26,9 +25,9 @@ public class BrokerAsset {
 
     public int fillAssetParams(final BrokerAssetData brokerAssetData) {
         return RxUtility
-            .optionalToMaybe(InstrumentFactory.maybeFromName(brokerAssetData.instrumentName()))
+            .instrumentFromName(brokerAssetData.instrumentName())
             .map(instrument -> fillAssetParams(instrument, brokerAssetData))
-            .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
             .blockingGet();
     }
 

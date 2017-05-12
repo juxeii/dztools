@@ -12,7 +12,6 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.ITick;
-import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
@@ -29,22 +28,20 @@ public class HistoryWrapperTest extends CommonUtilForTest {
 
     private HistoryWrapper historyWrapper;
 
-    private BarParams barParams;
-
     @Mock
     private IHistory historyMock;
     @Mock
     private IBar barMock;
-    private final Instrument testInstrument = Instrument.EURUSD;
     private final Period testPeriod = Period.ONE_MIN;
     private final OfferSide testOfferSide = OfferSide.ASK;
     private final long startDate = 12;
     private final long endDate = 42;
+    private BarParams barParams;
 
     @Before
     public void setUp() {
         barParams = BarParams
-            .forInstrument(testInstrument)
+            .forInstrument(instrumentForTest)
             .period(testPeriod)
             .offerSide(testOfferSide);
 
@@ -56,7 +53,7 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         private final int shift = 1;
 
         private OngoingStubbing<IBar> getStub() throws JFException {
-            return when(historyMock.getBar(testInstrument,
+            return when(historyMock.getBar(instrumentForTest,
                                            testPeriod,
                                            testOfferSide,
                                            shift));
@@ -90,7 +87,7 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         private final List<IBar> bars = Lists.newArrayList();
 
         private OngoingStubbing<List<IBar>> getStub() throws JFException {
-            return when(historyMock.getBars(testInstrument,
+            return when(historyMock.getBars(instrumentForTest,
                                             testPeriod,
                                             testOfferSide,
                                             startDate,
@@ -127,14 +124,14 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         private final List<ITick> ticks = Lists.newArrayList();
 
         private OngoingStubbing<List<ITick>> getStub() throws JFException {
-            return when(historyMock.getTicks(testInstrument,
+            return when(historyMock.getTicks(instrumentForTest,
                                              startDate,
                                              endDate));
         }
 
         private TestObserver<List<ITick>> test() {
             return historyWrapper
-                .getTicks(testInstrument,
+                .getTicks(instrumentForTest,
                           startDate,
                           endDate)
                 .test();
@@ -162,12 +159,12 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         private final long lastTickTime = 42L;
 
         private OngoingStubbing<Long> getStub() throws JFException {
-            return when(historyMock.getTimeOfLastTick(testInstrument));
+            return when(historyMock.getTimeOfLastTick(instrumentForTest));
         }
 
         private TestObserver<Long> test() {
             return historyWrapper
-                .getTimeOfLastTick(testInstrument)
+                .getTimeOfLastTick(instrumentForTest)
                 .test();
         }
 
@@ -193,14 +190,14 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         private final List<IOrder> orders = Lists.newArrayList();
 
         private OngoingStubbing<List<IOrder>> getStub() throws JFException {
-            return when(historyMock.getOrdersHistory(testInstrument,
+            return when(historyMock.getOrdersHistory(instrumentForTest,
                                                      startDate,
                                                      endDate));
         }
 
         private TestObserver<List<IOrder>> test() {
             return historyWrapper
-                .getOrdersHistory(testInstrument,
+                .getOrdersHistory(instrumentForTest,
                                   startDate,
                                   endDate)
                 .test();

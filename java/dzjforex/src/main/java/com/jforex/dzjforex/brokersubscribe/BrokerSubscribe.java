@@ -35,9 +35,9 @@ public class BrokerSubscribe {
 
     public int subscribe(final String instrumentName) {
         return RxUtility
-            .maybeInstrumentFromName(instrumentName)
+            .instrumentFromName(instrumentName)
             .map(this::subscribeValidInstrumentName)
-            .defaultIfEmpty(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
             .blockingGet();
     }
 

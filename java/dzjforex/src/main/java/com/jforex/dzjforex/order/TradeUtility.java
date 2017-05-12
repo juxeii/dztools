@@ -5,12 +5,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
+import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.strategy.StrategyUtil;
 
-import io.reactivex.Maybe;
+import io.reactivex.Single;
 
 public class TradeUtility {
 
@@ -38,21 +39,21 @@ public class TradeUtility {
         return labelUtil;
     }
 
-    public Maybe<Instrument> maybeInstrumentForTrading(final String assetName) {
+    public Single<Instrument> instrumentForTrading(final String assetName) {
         return isTradingAllowed()
-                ? RxUtility.maybeInstrumentFromName(assetName)
-                : Maybe.empty();
+                ? RxUtility.instrumentFromName(assetName)
+                : Single.error(new JFException("Trading not allowed for asset " + assetName));
     }
 
-    public Maybe<IOrder> maybeOrderForTrading(final int nTradeID) {
+    public Single<IOrder> orderForTrading(final int nTradeID) {
         return isTradingAllowed()
-                ? maybeOrderByID(nTradeID)
-                : Maybe.empty();
+                ? orderByID(nTradeID)
+                : Single.error(new JFException("Trading not allowed for nTradeID " + nTradeID));
     }
 
     private boolean isTradingAllowed() {
         if (!accountInfo.isTradingAllowed()) {
-            logger.warn("Trading account is not available, since it is in state " + accountInfo.state());
+            logger.warn("Trading not allowed since account is in state " + accountInfo.state());
             return false;
         }
         return true;
@@ -66,8 +67,10 @@ public class TradeUtility {
         return Math.abs(contracts) / pluginConfig.lotScale();
     }
 
-    public Maybe<IOrder> maybeOrderByID(final int nTradeID) {
-        return orderRepository.maybeOrderByID(nTradeID);
+    public Single<IOrder> orderByID(final int nTradeID) {
+        return orderRepository
+            .maybeOrderByID(nTradeID)
+            .toSingle();
     }
 
     public double spread(final Instrument instrument) {

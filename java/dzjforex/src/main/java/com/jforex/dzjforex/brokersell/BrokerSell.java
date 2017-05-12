@@ -19,10 +19,10 @@ public class BrokerSell {
     public int closeTrade(final BrokerSellData brokerSellData) {
         final int orderID = brokerSellData.nTradeID();
         return tradeUtility
-            .maybeOrderForTrading(orderID)
+            .orderForTrading(orderID)
             .map(order -> taskParamsRunner.startClose(order, brokerSellData))
             .map(closeResult -> evalCloseResult(closeResult, orderID))
-            .defaultIfEmpty(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
+            .onErrorReturnItem(ZorroReturnValues.ADJUST_SL_FAIL.getValue())
             .blockingGet();
     }
 

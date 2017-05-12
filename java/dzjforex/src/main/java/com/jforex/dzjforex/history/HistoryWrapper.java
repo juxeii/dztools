@@ -37,7 +37,7 @@ public class HistoryWrapper {
             .doOnError(e -> logger.error("Fetching bar by " + shift
                     + " shift for " + instrument
                     + " failed! " + e.getMessage()))
-            .doOnSuccess(orders -> logger.debug("Fetched bar by " + shift
+            .doOnSuccess(bar -> logger.debug("Fetched bar by " + shift
                     + " for " + instrument));
     }
 

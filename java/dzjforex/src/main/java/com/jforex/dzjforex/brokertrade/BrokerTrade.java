@@ -21,9 +21,9 @@ public class BrokerTrade {
 
     public int orderInfo(final BrokerTradeData brokerTradeData) {
         return tradeUtility
-            .maybeOrderByID(brokerTradeData.nTradeID())
+            .orderByID(brokerTradeData.nTradeID())
             .map(order -> handleForOrder(order, brokerTradeData))
-            .defaultIfEmpty(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue())
+            .onErrorReturnItem(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue())
             .blockingGet();
     }
 

@@ -18,10 +18,10 @@ public class BrokerStop {
 
     public int setSL(final BrokerStopData brokerStopData) {
         return tradeUtility
-            .maybeOrderForTrading(brokerStopData.nTradeID())
+            .orderForTrading(brokerStopData.nTradeID())
             .map(order -> taskParamsRunner.startSetSL(order, brokerStopData))
             .map(this::evalSLResult)
-            .defaultIfEmpty(ZorroReturnValues.ADJUST_SL_FAIL.getValue())
+            .onErrorReturnItem(ZorroReturnValues.ADJUST_SL_FAIL.getValue())
             .blockingGet();
     }
 

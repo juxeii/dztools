@@ -22,38 +22,40 @@ public class BrokerBuy {
 
     public int openTrade(final BrokerBuyData brokerBuyData) {
         final String orderLabel = orderLabelUtil.create();
+        final int orderID = orderLabelUtil
+            .idFromLabel(orderLabel)
+            .blockingGet();
+
         return tradeUtility
-            .maybeInstrumentForTrading(brokerBuyData.instrumentName())
+            .instrumentForTrading(brokerBuyData.instrumentName())
             .map(instrument -> taskParamsRunner.startSubmit(instrument,
                                                             brokerBuyData,
                                                             orderLabel))
             .map(submitResult -> processSubmitResult(submitResult,
                                                      brokerBuyData,
-                                                     orderLabel))
-            .defaultIfEmpty(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
+                                                     orderID))
+            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
             .blockingGet();
     }
 
     private int processSubmitResult(final OrderActionResult submitResult,
                                     final BrokerBuyData brokerBuyData,
-                                    final String orderLabel) {
+                                    final int orderID) {
         if (brokerBuyData.stopDistance() == -1)
             return ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue();
 
         return submitResult == OrderActionResult.FAIL
                 ? ZorroReturnValues.BROKER_BUY_FAIL.getValue()
-                : fillOpenPriceAndReturnOrderID(brokerBuyData, orderLabel);
+                : fillOpenPriceAndReturnOrderID(brokerBuyData, orderID);
     }
 
     private int fillOpenPriceAndReturnOrderID(final BrokerBuyData brokerBuyData,
-                                              final String orderLabel) {
-        return orderLabelUtil
-            .idFromLabel(orderLabel)
-            .flatMap(orderId -> tradeUtility
-                .maybeOrderByID(orderId)
-                .doOnSuccess(order -> brokerBuyData.fillOpenPrice(order.getOpenPrice()))
-                .map(order -> orderId)
-                .defaultIfEmpty(ZorroReturnValues.BROKER_BUY_FAIL.getValue()))
+                                              final int orderID) {
+        return tradeUtility
+            .orderByID(orderID)
+            .doOnSuccess(order -> brokerBuyData.fillOpenPrice(order.getOpenPrice()))
+            .map(order -> orderID)
+            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
             .blockingGet();
     }
 }

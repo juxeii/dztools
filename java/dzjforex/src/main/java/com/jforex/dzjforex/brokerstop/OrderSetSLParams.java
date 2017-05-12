@@ -30,10 +30,10 @@ public class OrderSetSLParams {
             .map(slPrice -> create(order, slPrice));
     }
 
-    public SetSLParams create(final IOrder order,
-                              final double newSLPrice) {
+    private SetSLParams create(final IOrder order,
+                               final double newSLPrice) {
         final String orderLabel = order.getLabel();
-        final SetSLParams setSLParams = SetSLParams
+        return SetSLParams
             .setSLAtPrice(order, newSLPrice)
             .doOnStart(() -> logger.info("Trying to set new stop loss " + newSLPrice
                     + " on order " + orderLabel))
@@ -45,7 +45,5 @@ public class OrderSetSLParams {
                     + " done."))
             .retryOnReject(retryParams)
             .build();
-
-        return setSLParams;
     }
 }

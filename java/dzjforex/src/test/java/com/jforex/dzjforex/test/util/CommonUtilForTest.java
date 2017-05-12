@@ -11,9 +11,14 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
+import com.dukascopy.api.IOrder;
+import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.Components;
 import com.jforex.dzjforex.Zorro;
+import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.brokersell.BrokerSellData;
+import com.jforex.dzjforex.brokerstop.BrokerStopData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
@@ -23,6 +28,9 @@ import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
+import com.jforex.programming.order.OrderUtil;
+import com.jforex.programming.order.event.OrderEvent;
+import com.jforex.programming.order.event.OrderEventType;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class CommonUtilForTest extends BDDMockito {
@@ -34,7 +42,11 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected IEngine engineMock;
     @Mock
-    protected TradeUtility tradeUtilMock;
+    protected TradeUtility tradeUtilityMock;
+    @Mock
+    protected IOrder orderMock;
+    @Mock
+    protected OrderUtil orderUtilMock;
     @Mock
     protected InfoStrategy infoStrategyMock;
     @Mock
@@ -57,6 +69,7 @@ public class CommonUtilForTest extends BDDMockito {
     protected static final String loginTypeReal = "Real";
     protected static final ICurrency accountCurrency = CurrencyFactory.EUR;
     protected static final String orderLabelPrefix = "Zorro";
+    protected static final String orderLabel = orderLabelPrefix + "12345";
 
     protected static final LoginCredentials loginCredentials =
             new LoginCredentials(jnlpDEMO,
@@ -67,6 +80,20 @@ public class CommonUtilForTest extends BDDMockito {
                                  username,
                                  password,
                                  pin);
+    protected final OrderEvent orderEvent = new OrderEvent(orderMock,
+                                                           OrderEventType.CHANGED_GTT,
+                                                           true);
+    private final int nTradeID = 42;
+    private final int nAmount = 7;
+    protected BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
+
+    private final double slPrice = 1.09875;
+    protected BrokerStopData brokerStopData = new BrokerStopData(nTradeID, slPrice);
+
+    private final double tradeParams[] = new double[3];
+    protected String instrumentNameForTest = "EUR/USD";
+    protected Instrument instrumentForTest = Instrument.EURUSD;
+    protected BrokerBuyData brokerBuyData = new BrokerBuyData(instrumentNameForTest, tradeParams);
 
     protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final JFException jfException = new JFException("");
@@ -80,7 +107,7 @@ public class CommonUtilForTest extends BDDMockito {
 
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
 
-        when(tradeUtilMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
+        when(tradeUtilityMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);

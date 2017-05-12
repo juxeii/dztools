@@ -2,6 +2,7 @@ package com.jforex.dzjforex.history;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import com.dukascopy.api.IBar;
@@ -66,20 +67,18 @@ public class HistoryUtility {
 
     public List<BarQuote> barsToQuotes(final List<IBar> bars,
                                        final BarParams barParams) {
-        return Observable
-            .fromIterable(bars)
+        return bars
+            .stream()
             .map(bar -> new BarQuote(bar, barParams))
-            .toList()
-            .blockingGet();
+            .collect(Collectors.toList());
     }
 
     public List<TickQuote> ticksToQuotes(final List<ITick> ticks,
                                          final Instrument instrument) {
-        return Observable
-            .fromIterable(ticks)
+        return ticks
+            .stream()
             .map(tick -> new TickQuote(instrument, tick))
-            .toList()
-            .blockingGet();
+            .collect(Collectors.toList());
     }
 
     private <T> List<T> reverseQuotes(final List<T> quotes) {
@@ -90,13 +89,11 @@ public class HistoryUtility {
     public Single<Long> adaptBarFetchEndTime(final BarParams barParams,
                                              final long periodInterval,
                                              final long endTime) {
-        final long latestBarTime = historyWrapper
-            .getBar(barParams, 1)
-            .blockingGet()
-            .getTime();
-        return Single.just(endTime > latestBarTime + periodInterval
-                ? latestBarTime
-                : endTime - periodInterval);
+        return historyWrapper.getBar(barParams, 1)
+            .map(IBar::getTime)
+            .map(latestBarTime -> endTime > latestBarTime + periodInterval
+                    ? latestBarTime
+                    : endTime - periodInterval);
     }
 
     public Single<Long> adaptTickFetchEndTime(final Instrument instrument,

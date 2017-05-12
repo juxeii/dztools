@@ -34,8 +34,7 @@ public class OrderCloseParams {
                     + " with amount " + closeAmount))
             .doOnError(e -> logger.error("Failed to close order " + orderLabel
                     + "! " + e.getMessage()))
-            .doOnComplete(() -> logger.info("Closing order " + orderLabel
-                    + " done."))
+            .doOnComplete(() -> logger.info("Closing order " + orderLabel + " done."))
             .retryOnReject(retryParams)
             .build();
 

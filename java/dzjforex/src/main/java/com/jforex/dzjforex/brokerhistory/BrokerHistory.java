@@ -3,7 +3,6 @@ package com.jforex.dzjforex.brokerhistory;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
-import com.jforex.programming.instrument.InstrumentFactory;
 
 public class BrokerHistory {
 
@@ -18,9 +17,9 @@ public class BrokerHistory {
 
     public int get(final BrokerHistoryData brokerHistoryData) {
         return RxUtility
-            .optionalToMaybe(InstrumentFactory.maybeFromName(brokerHistoryData.instrumentName()))
+            .instrumentFromName(brokerHistoryData.instrumentName())
             .map(instrument -> getForValidInstrument(instrument, brokerHistoryData))
-            .defaultIfEmpty(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue())
+            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue())
             .blockingGet();
     }
 

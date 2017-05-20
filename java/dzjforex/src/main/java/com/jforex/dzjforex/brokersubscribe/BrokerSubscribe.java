@@ -63,7 +63,7 @@ public class BrokerSubscribe {
         if (!CurrencyUtil.isInInstrument(accountInfo.currency(), instrumentToSubscribe))
             instrumentsToSubscribe.addAll(crossInstruments(instrumentToSubscribe));
 
-        logger.debug("Trying to subscribe instruments " + instrumentsToSubscribe);
+        logger.debug("Trying to subscribe instruments: " + instrumentsToSubscribe);
         client.setSubscribedInstruments(instrumentsToSubscribe);
         logger.debug("Subscribed instruments:" + client.getSubscribedInstruments());
     }

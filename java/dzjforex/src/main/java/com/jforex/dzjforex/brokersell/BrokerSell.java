@@ -4,8 +4,6 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 
-import io.reactivex.Single;
-
 public class BrokerSell {
 
     private final TaskParamsRunner taskParamsRunner;
@@ -22,7 +20,7 @@ public class BrokerSell {
         return tradeUtility
             .orderForTrading(orderID)
             .flatMapCompletable(order -> taskParamsRunner.startClose(order, brokerSellData))
-            .andThen(Single.just(orderID))
+            .toSingleDefault(orderID)
             .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
             .blockingGet();
     }

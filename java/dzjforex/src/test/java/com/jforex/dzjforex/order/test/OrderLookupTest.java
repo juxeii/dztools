@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.order.test;
 
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,7 +7,6 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.JFException;
-import com.google.common.collect.Lists;
 import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLookup;
@@ -37,22 +34,13 @@ public class OrderLookupTest extends CommonUtilForTest {
     private IOrder runningOrderMock;
     @Mock
     private IOrder historyOrderMock;
-    @Mock
-    private IOrder noZorroOrderMock;
     private final int orderID = 1;
-    private final List<IOrder> openOrders = Lists.newArrayList();
-    private final List<IOrder> historyOrders = Lists.newArrayList();
 
     @Before
     public void setUp() {
         orderLookup = new OrderLookup(orderRepositoryMock,
                                       openOrdersMock,
                                       historyOrdersMock);
-
-        doAnswer(invocation -> {
-            makeRepositoryPass();
-            return null;
-        }).when(orderRepositoryMock).importZorroOrders(openOrders);
     }
 
     private void makeRepositoryPass() {
@@ -64,31 +52,19 @@ public class OrderLookupTest extends CommonUtilForTest {
     }
 
     private void makeOpenOrdersPass() {
-        openOrders.add(orderMock);
-        doAnswer(invocation -> {
-            makeRepositoryPass();
-            return null;
-        })
-            .when(orderRepositoryMock).importZorroOrders(openOrders);
-        when(openOrdersMock.get()).thenReturn(Single.just(openOrders));
+        when(openOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMock));
     }
 
     private void makeOpenOrdersFail() {
-        when(openOrdersMock.get()).thenReturn(Single.error(jfException));
+        when(openOrdersMock.getByID(orderID)).thenReturn(Single.error(jfException));
     }
 
     private void makeHistoryOrdersPass() {
-        historyOrders.add(orderMock);
-        doAnswer(invocation -> {
-            makeRepositoryPass();
-            return null;
-        })
-            .when(orderRepositoryMock).importZorroOrders(historyOrders);
-        when(historyOrdersMock.get()).thenReturn(Single.just(historyOrders));
+        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMock));
     }
 
     private void makeHistoryOrdersFail() {
-        when(historyOrdersMock.get()).thenReturn(Single.error(jfException));
+        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.error(jfException));
     }
 
     private TestObserver<IOrder> testObserver() {
@@ -119,39 +95,17 @@ public class OrderLookupTest extends CommonUtilForTest {
             }
 
             @Test
-            public void onHistoryOrdersFailErrorIsPropagated() {
+            public void onHistoryLookupFailErrorIsPropagated() {
                 makeHistoryOrdersFail();
 
                 testObserver().assertError(JFException.class);
             }
 
-            public class OnHistoryOrdersOK {
+            @Test
+            public void onHistoryLookupOKOrderIsReturned() {
+                makeHistoryOrdersPass();
 
-                @Before
-                public void setUp() {
-                    makeHistoryOrdersPass();
-                }
-
-                @Test
-                public void historyOrdersAreReturned() {
-                    testObserver().assertValue(orderMock);
-                }
-
-                @Test
-                public void importToRepositoryCalled() {
-                    testObserver();
-
-                    verify(orderRepositoryMock).importZorroOrders(historyOrders);
-                }
-
-                @Test
-                public void onSecondLookUpOrderIsFromCache() {
-                    testObserver();
-                    testObserver().assertValue(orderMock);
-
-                    verify(openOrdersMock).get();
-                    verify(historyOrdersMock).get();
-                }
+                testObserver().assertValue(orderMock);
             }
         }
 
@@ -163,15 +117,8 @@ public class OrderLookupTest extends CommonUtilForTest {
             }
 
             @Test
-            public void openOrdersAreReturned() {
+            public void orderFromOpenOrdersIsReturned() {
                 testObserver().assertValue(orderMock);
-            }
-
-            @Test
-            public void importToRepositoryCalled() {
-                testObserver();
-
-                verify(orderRepositoryMock).importZorroOrders(openOrders);
             }
 
             @Test
@@ -179,14 +126,6 @@ public class OrderLookupTest extends CommonUtilForTest {
                 testObserver();
 
                 verifyZeroInteractions(historyOrderMock);
-            }
-
-            @Test
-            public void onSecondLookUpOrderIsFromCache() {
-                testObserver();
-                testObserver().assertValue(orderMock);
-
-                verify(openOrdersMock).get();
             }
         }
     }

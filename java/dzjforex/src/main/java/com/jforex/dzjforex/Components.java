@@ -32,6 +32,7 @@ import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
+import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.dzjforex.history.HistoryUtility;
 import com.jforex.dzjforex.history.HistoryWrapper;
@@ -139,13 +140,15 @@ public class Components {
         final IEngine engine = infoStrategy
             .getContext()
             .getEngine();
-        final OpenOrders openOrders = new OpenOrders(engine);
-        final HistoryOrders historyOrders = new HistoryOrders(historyWrapper,
-                                                              brokerSubscribe,
-                                                              pluginConfig,
-                                                              serverTimeProvider);
         final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(pluginConfig, clock);
         final OrderRepository orderRepository = new OrderRepository(orderLabelUtil);
+        final OpenOrders openOrders = new OpenOrders(engine, orderRepository);
+        final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
+                                                                                      brokerSubscribe,
+                                                                                      pluginConfig,
+                                                                                      serverTimeProvider);
+        final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
+
         final OrderLookup orderLookup = new OrderLookup(orderRepository,
                                                         openOrders,
                                                         historyOrders);
@@ -167,7 +170,9 @@ public class Components {
                                                 orderCloseParams,
                                                 orderSetSLParams);
         brokerTrade = new BrokerTrade(tradeUtility);
-        brokerBuy = new BrokerBuy(taskParamsRunner, tradeUtility);
+        brokerBuy = new BrokerBuy(taskParamsRunner,
+                                  orderRepository,
+                                  tradeUtility);
         brokerSell = new BrokerSell(taskParamsRunner, tradeUtility);
         brokerStop = new BrokerStop(taskParamsRunner, tradeUtility);
     }

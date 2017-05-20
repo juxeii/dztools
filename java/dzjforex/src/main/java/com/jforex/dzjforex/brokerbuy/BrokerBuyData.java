@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.brokerbuy;
 
+import com.dukascopy.api.IOrder;
+
 public class BrokerBuyData {
 
     private final String instrumentName;
@@ -28,7 +30,7 @@ public class BrokerBuyData {
         return stopDistance;
     }
 
-    public void fillOpenPrice(final double openPrice) {
-        tradeParams[2] = openPrice;
+    public void fillOpenPrice(final IOrder order) {
+        tradeParams[2] = order.getOpenPrice();
     }
 }

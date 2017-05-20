@@ -22,7 +22,6 @@ import com.jforex.dzjforex.brokerstop.BrokerStopData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.TradeUtility;
@@ -118,10 +117,6 @@ public class CommonUtilForTest extends BDDMockito {
     }
 
     private final void coverageOnEnumsCorrection() {
-        OrderActionResult
-            .valueOf(OrderActionResult.OK.toString());
-        OrderActionResult
-            .valueOf(OrderActionResult.OK.toString());
         ZorroReturnValues
             .valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
     }

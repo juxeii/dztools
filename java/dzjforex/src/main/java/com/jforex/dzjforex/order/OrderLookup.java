@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.order;
 
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,7 +40,7 @@ public class OrderLookup {
 
     private Single<IOrder> orderInOpenOrders(final int orderID) {
         return Single
-            .defer(() -> importAndFetch(orderID, openOrders.get()))
+            .defer(() -> openOrders.getByID(orderID))
             .doOnSubscribe(d -> logger.debug("Looking up orderID " + orderID + " in open orders..."))
             .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in open orders."))
             .doOnError(e -> logger.debug("OrderID " + orderID + " not found in open orders."));
@@ -50,20 +48,9 @@ public class OrderLookup {
 
     private Single<IOrder> orderInHistory(final int orderID) {
         return Single
-            .defer(() -> importAndFetch(orderID, historyOrders.get()))
+            .defer(() -> historyOrders.getByID(orderID))
             .doOnSubscribe(d -> logger.debug("Looking up orderID " + orderID + " in history..."))
             .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in history."))
             .doOnError(e -> logger.error("OrderID " + orderID + " not found in history!"));
-    }
-
-    private Single<IOrder> importAndFetch(final int orderID,
-                                          final Single<List<IOrder>> ordersSingle) {
-        return ordersSingle
-            .doOnSuccess(this::importZorroOrders)
-            .flatMap(orders -> orderRepository.getByID(orderID));
-    }
-
-    private void importZorroOrders(final List<IOrder> orders) {
-        orderRepository.importZorroOrders(orders);
     }
 }

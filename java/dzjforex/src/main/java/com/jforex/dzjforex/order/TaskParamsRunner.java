@@ -9,11 +9,13 @@ import com.jforex.dzjforex.brokersell.OrderCloseParams;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
 import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
 import com.jforex.programming.order.OrderUtil;
+import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.task.params.TaskParamsWithType;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 public class TaskParamsRunner {
@@ -33,33 +35,33 @@ public class TaskParamsRunner {
         this.orderSetSLParams = orderSetSLParams;
     }
 
-    public OrderActionResult startSubmit(final Instrument instrument,
-                                         final BrokerBuyData brokerBuyData,
-                                         final String orderLabel) {
+    public Single<IOrder> startSubmit(final Instrument instrument,
+                                      final BrokerBuyData brokerBuyData,
+                                      final String orderLabel) {
         final Single<SubmitParams> submitParams = orderSubmitParams.get(instrument,
                                                                         brokerBuyData,
                                                                         orderLabel);
-        return start(submitParams);
+        return submitParams
+            .flatMapObservable(orderUtil::paramsToObservable)
+            .map(OrderEvent::order)
+            .lastOrError();
     }
 
-    public OrderActionResult startClose(final IOrder order,
-                                        final BrokerSellData brokerSellData) {
+    public Completable startClose(final IOrder order,
+                                  final BrokerSellData brokerSellData) {
         final Single<CloseParams> closeParams = orderCloseParams.get(order, brokerSellData);
         return start(closeParams);
     }
 
-    public OrderActionResult startSetSL(final IOrder order,
-                                        final BrokerStopData brokerStopData) {
+    public Completable startSetSL(final IOrder order,
+                                  final BrokerStopData brokerStopData) {
         final Single<SetSLParams> setSLParams = orderSetSLParams.get(order, brokerStopData);
         return start(setSLParams);
     }
 
-    private OrderActionResult start(final Single<? extends TaskParamsWithType> taskParams) {
+    private Completable start(final Single<? extends TaskParamsWithType> taskParams) {
         return taskParams
             .flatMapObservable(orderUtil::paramsToObservable)
-            .ignoreElements()
-            .andThen(Single.just(OrderActionResult.OK))
-            .onErrorReturnItem(OrderActionResult.FAIL)
-            .blockingGet();
+            .ignoreElements();
     }
 }

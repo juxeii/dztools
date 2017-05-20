@@ -10,6 +10,8 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.JFException;
 import com.google.common.collect.Maps;
 
+import io.reactivex.Completable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public class OrderRepository {
@@ -26,18 +28,19 @@ public class OrderRepository {
     public Single<IOrder> getByID(final int orderID) {
         return orderByTradeId.containsKey(orderID)
                 ? Single.just(orderByTradeId.get(orderID))
-                : Single.error(new JFException("OrderID " + orderID + " not in repository!"));
+                : Single.error(new JFException("No Zorro order with ID " + orderID + " in repository!"));
     }
 
-    public void importZorroOrders(final List<IOrder> orders) {
-        orders.forEach(this::storeOrder);
+    public Completable store(final List<IOrder> orders) {
+        return Observable
+            .fromIterable(orders)
+            .flatMapCompletable(this::store, true);
     }
 
-    private void storeOrder(final IOrder order) {
-        orderLabelUtil
+    public Completable store(final IOrder order) {
+        return orderLabelUtil
             .idFromOrder(order)
-            .onErrorComplete()
-            .doOnSuccess(orderID -> logger.debug("Storing order with ID " + orderID + " to repository."))
-            .subscribe(orderID -> orderByTradeId.put(orderID, order));
+            .doOnSuccess(orderID -> logger.debug("Storing Zorro order with ID " + orderID + " to repository."))
+            .flatMapCompletable(orderID -> Completable.fromAction(() -> orderByTradeId.put(orderID, order)));
     }
 }

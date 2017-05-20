@@ -1,9 +1,10 @@
 package com.jforex.dzjforex.brokerstop;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.OrderActionResult;
 import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
+
+import io.reactivex.Single;
 
 public class BrokerStop {
 
@@ -19,15 +20,9 @@ public class BrokerStop {
     public int setSL(final BrokerStopData brokerStopData) {
         return tradeUtility
             .orderForTrading(brokerStopData.nTradeID())
-            .map(order -> taskParamsRunner.startSetSL(order, brokerStopData))
-            .map(this::evalSLResult)
+            .flatMapCompletable(order -> taskParamsRunner.startSetSL(order, brokerStopData))
+            .andThen(Single.just(ZorroReturnValues.ADJUST_SL_OK.getValue()))
             .onErrorReturnItem(ZorroReturnValues.ADJUST_SL_FAIL.getValue())
             .blockingGet();
-    }
-
-    private int evalSLResult(final OrderActionResult setSLResult) {
-        return setSLResult == OrderActionResult.FAIL
-                ? ZorroReturnValues.ADJUST_SL_FAIL.getValue()
-                : ZorroReturnValues.ADJUST_SL_OK.getValue();
     }
 }

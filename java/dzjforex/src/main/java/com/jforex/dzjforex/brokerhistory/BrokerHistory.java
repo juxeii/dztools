@@ -4,6 +4,8 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
 
+import io.reactivex.Single;
+
 public class BrokerHistory {
 
     private final BarFetcher barFetcher;
@@ -15,16 +17,15 @@ public class BrokerHistory {
         this.tickFetcher = tickFetcher;
     }
 
-    public int get(final BrokerHistoryData brokerHistoryData) {
-        return RxUtility
+    public Single<Integer> get(final BrokerHistoryData brokerHistoryData) {
+        return Single.defer(() -> RxUtility
             .instrumentFromName(brokerHistoryData.instrumentName())
-            .map(instrument -> getForValidInstrument(instrument, brokerHistoryData))
-            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue())
-            .blockingGet();
+            .flatMap(instrument -> fetchForValidInstrument(instrument, brokerHistoryData))
+            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
     }
 
-    private int getForValidInstrument(final Instrument instrument,
-                                      final BrokerHistoryData brokerHistoryData) {
+    private Single<Integer> fetchForValidInstrument(final Instrument instrument,
+                                                    final BrokerHistoryData brokerHistoryData) {
         return brokerHistoryData.noOfTickMinutes() != 0
                 ? barFetcher.run(instrument, brokerHistoryData)
                 : tickFetcher.run(instrument, brokerHistoryData);

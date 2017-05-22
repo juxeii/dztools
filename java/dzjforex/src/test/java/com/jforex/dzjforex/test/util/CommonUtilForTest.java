@@ -112,6 +112,10 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
         when(pluginConfigMock.minPipsForSL()).thenReturn(10.0);
         when(pluginConfigMock.tickFetchMillis()).thenReturn(30L);
+        when(pluginConfigMock.demoConnectURL()).thenReturn(jnlpDEMO);
+        when(pluginConfigMock.realConnectURL()).thenReturn(jnlpReal);
+        when(pluginConfigMock.demoLoginType()).thenReturn(loginTypeDemo);
+        when(pluginConfigMock.realLoginType()).thenReturn(loginTypeReal);
 
         coverageOnEnumsCorrection();
     }

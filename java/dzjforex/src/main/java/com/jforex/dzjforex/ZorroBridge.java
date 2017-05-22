@@ -26,9 +26,12 @@ import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 
+import io.reactivex.Single;
+
 public class ZorroBridge {
 
     private final Components components;
+    private final Zorro zorro;
     private final BrokerLogin brokerLogin;
     private BrokerTime brokerTime;
     private BrokerSubscribe brokerSubscribe;
@@ -46,6 +49,7 @@ public class ZorroBridge {
 
     public ZorroBridge() {
         components = new Components(pluginConfig);
+        zorro = components.zorro();
         brokerLogin = components.brokerLogin();
     }
 
@@ -71,11 +75,13 @@ public class ZorroBridge {
                                                                     Pwd,
                                                                     Type,
                                                                     Accounts);
-        final int loginResult = brokerLogin.login(brokerLoginData);
-        if (loginResult == ZorroReturnValues.LOGIN_OK.getValue())
-            initComponents(brokerLoginData);
+        final Single<Integer> loginTask = brokerLogin
+            .login(brokerLoginData)
+            .toSingleDefault(ZorroReturnValues.LOGIN_OK.getValue())
+            .doOnSuccess(loginOK -> initComponents(brokerLoginData))
+            .onErrorReturnItem(ZorroReturnValues.LOGIN_FAIL.getValue());
 
-        return loginResult;
+        return zorro.progressWait(loginTask);
     }
 
     public int doLogout() {
@@ -90,13 +96,13 @@ public class ZorroBridge {
     }
 
     public int doSubscribeAsset(final String Asset) {
-        return brokerSubscribe.subscribe(Asset);
+        return brokerSubscribe.forName(Asset);
     }
 
     public int doBrokerAsset(final String Asset,
                              final double assetParams[]) {
         final BrokerAssetData brokerAssetData = new BrokerAssetData(Asset, assetParams);
-        return brokerAsset.fillAssetParams(brokerAssetData);
+        return brokerAsset.fillParams(brokerAssetData);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
@@ -140,7 +146,7 @@ public class ZorroBridge {
                                                                           nTickMinutes,
                                                                           nTicks,
                                                                           tickParams);
-        return brokerHistory.get(brokerHistoryData);
+        return zorro.progressWait(brokerHistory.get(brokerHistoryData));
     }
 
     public int doSetOrderText(final String orderText) {

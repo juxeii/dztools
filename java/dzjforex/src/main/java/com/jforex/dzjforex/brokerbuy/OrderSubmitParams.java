@@ -5,10 +5,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.order.OrderParams;
-import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 import com.jforex.programming.strategy.StrategyUtil;
 
@@ -18,22 +18,24 @@ public class OrderSubmitParams {
 
     private final TradeUtility tradeUtility;
     private final StopLoss stopLoss;
-    private final RetryParams retryParams;
+    private final OrderLabelUtil orderLabelUtil;
 
     private final static Logger logger = LogManager.getLogger(OrderSubmitParams.class);
 
     public OrderSubmitParams(final TradeUtility tradeUtility,
                              final StopLoss stopLoss,
-                             final RetryParams retryParams) {
+                             final OrderLabelUtil orderLabelUtil) {
         this.tradeUtility = tradeUtility;
         this.stopLoss = stopLoss;
-        this.retryParams = retryParams;
+        this.orderLabelUtil = orderLabelUtil;
     }
 
-    public Single<SubmitParams> get(final Instrument instrument,
-                                    final BrokerBuyData brokerBuyData,
-                                    final String orderLabel) {
+    public Single<SubmitParams> get(final BrokerBuyData brokerBuyData) {
         return Single.defer(() -> {
+            final Instrument instrument = tradeUtility
+                .instrumentForTrading(brokerBuyData.instrumentName())
+                .blockingGet();
+            final String orderLabel = orderLabelUtil.create();
             final double contracts = brokerBuyData.contracts();
             final OrderCommand orderCommand = orderCommandForContracts(contracts);
             final double amount = tradeUtility.contractsToAmount(contracts);
@@ -57,7 +59,6 @@ public class OrderSubmitParams {
                                 final double amount,
                                 final String orderLabel,
                                 final double slPrice) {
-
         final OrderParams orderParams = OrderParams
             .forInstrument(instrument)
             .withOrderCommand(orderCommand)
@@ -79,7 +80,7 @@ public class OrderSubmitParams {
             .doOnComplete(() -> logger.info("Opening trade for " + instrument
                     + " with label " + orderLabel
                     + " done."))
-            .retryOnReject(retryParams)
+            .retryOnReject(tradeUtility.retryParams())
             .build();
     }
 

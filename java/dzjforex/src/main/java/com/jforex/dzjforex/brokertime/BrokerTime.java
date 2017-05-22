@@ -2,18 +2,18 @@ package com.jforex.dzjforex.brokertime;
 
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.MarketData;
+import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 
 public class BrokerTime {
 
     private final IClient client;
     private final ServerTimeProvider serverTimeProvider;
-    private final MarketData marketData;
+    private final MarketState marketData;
 
     public BrokerTime(final IClient client,
                       final ServerTimeProvider serverTimeProvider,
-                      final MarketData marketData) {
+                      final MarketState marketData) {
         this.client = client;
         this.serverTimeProvider = serverTimeProvider;
         this.marketData = marketData;
@@ -29,7 +29,7 @@ public class BrokerTime {
         return serverTimeProvider
             .get()
             .doOnSuccess(brokerTimeData::fill)
-            .map(serverTime -> marketData.isMarketOffline(serverTime)
+            .map(serverTime -> marketData.isClosed(serverTime)
                     ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
                     : ZorroReturnValues.CONNECTION_OK.getValue())
             .onErrorReturnItem(ZorroReturnValues.INVALID_SERVER_TIME.getValue())

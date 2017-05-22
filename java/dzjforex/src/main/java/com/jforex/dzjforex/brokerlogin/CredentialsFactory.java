@@ -7,7 +7,6 @@ public class CredentialsFactory {
 
     private final PinProvider pinProvider;
     private final PluginConfig pluginConfig;
-
     private final String demoTypeName;
 
     public CredentialsFactory(final PinProvider pinProvider,
@@ -20,19 +19,20 @@ public class CredentialsFactory {
 
     public LoginCredentials create(final BrokerLoginData brokerLoginData) {
         final String loginType = brokerLoginData.loginType();
-        return new LoginCredentials(createJnlpAdress(loginType),
+
+        return new LoginCredentials(jnlpAddressForType(loginType),
                                     brokerLoginData.username(),
                                     brokerLoginData.password(),
-                                    createPin(loginType));
+                                    pinForType(loginType));
     }
 
-    private String createJnlpAdress(final String loginType) {
+    private String jnlpAddressForType(final String loginType) {
         return loginType.equals(demoTypeName)
                 ? pluginConfig.demoConnectURL()
                 : pluginConfig.realConnectURL();
     }
 
-    private String createPin(final String loginType) {
+    private String pinForType(final String loginType) {
         return loginType.equals(demoTypeName)
                 ? null
                 : pinProvider.getPin();

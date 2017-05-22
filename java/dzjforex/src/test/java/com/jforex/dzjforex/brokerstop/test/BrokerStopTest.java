@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokerstop.BrokerStop;
+import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -23,14 +23,14 @@ public class BrokerStopTest extends CommonUtilForTest {
     private BrokerStop brokerStop;
 
     @Mock
-    private TaskParamsRunner taskParamsRunnerMock;
+    private SetSLParamsRunner setSLParamsRunnerMock;
     private int nTradeID;
 
     @Before
     public void setUp() {
         nTradeID = brokerSellData.nTradeID();
 
-        brokerStop = new BrokerStop(taskParamsRunnerMock, tradeUtilityMock);
+        brokerStop = new BrokerStop(setSLParamsRunnerMock, tradeUtilityMock);
     }
 
     private void assertBrokerStopResult(final ZorroReturnValues returnValue) {
@@ -54,7 +54,7 @@ public class BrokerStopTest extends CommonUtilForTest {
         }
 
         private void setParamsRunnerResult(final Completable result) {
-            when(taskParamsRunnerMock.startSetSL(orderMock, brokerStopData))
+            when(setSLParamsRunnerMock.get(orderMock, brokerStopData))
                 .thenReturn(result);
         }
 

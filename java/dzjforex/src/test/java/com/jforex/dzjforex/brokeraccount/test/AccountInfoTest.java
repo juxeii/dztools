@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc.test;
+package com.jforex.dzjforex.brokeraccount.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;

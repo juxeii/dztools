@@ -4,22 +4,21 @@ import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 
 import io.reactivex.Single;
 
 public class BrokerBuy {
 
-    private final TaskParamsRunner taskParamsRunner;
+    private final SubmitParamsRunner submitParamsRunner;
     private final OrderRepository orderRepository;
     private final TradeUtility tradeUtility;
     private final OrderLabelUtil orderLabelUtil;
 
-    public BrokerBuy(final TaskParamsRunner taskParamsRunner,
+    public BrokerBuy(final SubmitParamsRunner submitParamsRunner,
                      final OrderRepository orderRepository,
                      final TradeUtility tradeUtility) {
-        this.taskParamsRunner = taskParamsRunner;
+        this.submitParamsRunner = submitParamsRunner;
         this.orderRepository = orderRepository;
         this.tradeUtility = tradeUtility;
 
@@ -29,9 +28,7 @@ public class BrokerBuy {
     public int openTrade(final BrokerBuyData brokerBuyData) {
         return tradeUtility
             .instrumentForTrading(brokerBuyData.instrumentName())
-            .flatMap(instrument -> taskParamsRunner.startSubmit(instrument,
-                                                                brokerBuyData,
-                                                                orderLabelUtil.create()))
+            .flatMap(instrument -> submitParamsRunner.get(brokerBuyData))
             .flatMap(order -> processOrderAndGetResult(order, brokerBuyData))
             .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
             .blockingGet();

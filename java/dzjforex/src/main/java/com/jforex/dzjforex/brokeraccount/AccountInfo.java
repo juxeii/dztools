@@ -92,7 +92,6 @@ public class AccountInfo {
 
     public double marginPerLot(final Instrument instrument) {
         final ICurrency primaryCurrency = instrument.getPrimaryJFCurrency();
-
         return currency() == primaryCurrency
                 ? lotMargin()
                 : marginForCrossCurrency(primaryCurrency);

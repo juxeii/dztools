@@ -1,13 +1,10 @@
 package com.jforex.dzjforex.brokerhistory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.Zorro;
-import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.history.HistoryProvider;
 import com.jforex.programming.quote.TickQuote;
 
@@ -16,27 +13,21 @@ import io.reactivex.Single;
 public class TickFetcher {
 
     private final HistoryProvider historyProvider;
-    private final Zorro zorro;
 
-    public TickFetcher(final HistoryProvider historyProvider,
-                       final Zorro zorro) {
+    public TickFetcher(final HistoryProvider historyProvider) {
         this.historyProvider = historyProvider;
-        this.zorro = zorro;
     }
 
-    public int run(final Instrument instrument,
-                   final BrokerHistoryData brokerHistoryData) {
-        final Single<Integer> fetchResult = historyProvider
+    public Single<Integer> run(final Instrument instrument,
+                               final BrokerHistoryData brokerHistoryData) {
+        return historyProvider
             .ticksByShift(instrument,
                           brokerHistoryData.endTimeForTick(),
                           brokerHistoryData.noOfRequestedTicks() - 1)
             .map(ticks -> filterTime(ticks, brokerHistoryData.startTimeForTick()))
-            .map(ticks -> alignToTickQuotes(ticks, instrument))
+            .map(ticks -> ticksToQuotes(ticks, instrument))
             .doOnSuccess(brokerHistoryData::fillTickQuotes)
-            .map(List::size)
-            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue());
-
-        return zorro.progressWait(fetchResult);
+            .map(List::size);
     }
 
     private List<ITick> filterTime(final List<ITick> ticks,
@@ -47,21 +38,11 @@ public class TickFetcher {
             .collect(Collectors.toList());
     }
 
-    public List<TickQuote> alignToTickQuotes(final List<ITick> ticks,
-                                             final Instrument instrument) {
-        return reverseQuotes(ticksToQuotes(ticks, instrument));
-    }
-
-    public List<TickQuote> ticksToQuotes(final List<ITick> ticks,
-                                         final Instrument instrument) {
+    private List<TickQuote> ticksToQuotes(final List<ITick> ticks,
+                                          final Instrument instrument) {
         return ticks
             .stream()
             .map(tick -> new TickQuote(instrument, tick))
             .collect(Collectors.toList());
-    }
-
-    private <T> List<T> reverseQuotes(final List<T> quotes) {
-        Collections.reverse(quotes);
-        return quotes;
     }
 }

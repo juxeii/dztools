@@ -5,10 +5,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.JFException;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
 
@@ -39,26 +41,24 @@ public class BrokerLogin {
             });
     }
 
-    public int login(final BrokerLoginData brokerLoginData) {
+    public Completable login(final BrokerLoginData brokerLoginData) {
         if (client.isConnected())
-            return ZorroReturnValues.LOGIN_OK.getValue();
+            return Completable.complete();
         if (!isLoginAvailable.getValue())
-            return ZorroReturnValues.LOGIN_FAIL.getValue();
+            return Completable.error(new JFException("No login while retry timer running!"));
 
-        return handleLoginResult(loginExecutor.login(brokerLoginData));
-    }
-
-    private int handleLoginResult(final int loginResult) {
-        if (loginResult == ZorroReturnValues.LOGIN_FAIL.getValue())
-            startRetryDelayTimer();
-        return loginResult;
-    }
-
-    private void startRetryDelayTimer() {
-        retryDelayTimer.subscribe();
+        return loginExecutor
+            .login(brokerLoginData)
+            .doOnError(e -> {
+                logger.error("Failed to login! " + e.getMessage());
+                retryDelayTimer.subscribe();
+            });
     }
 
     public int logout() {
-        return loginExecutor.logout();
+        return loginExecutor
+            .logout()
+            .toSingleDefault(ZorroReturnValues.LOGOUT_OK.getValue())
+            .blockingGet();
     }
 }

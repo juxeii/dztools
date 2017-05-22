@@ -55,7 +55,7 @@ public interface PluginConfig extends Config {
     long historyAccessRetryDelay();
 
     @Key("history.tickfetchmillis")
-    @DefaultValue("60000")
+    @DefaultValue("900000")
     long tickFetchMillis();
 
     @Key("history.orderdays")

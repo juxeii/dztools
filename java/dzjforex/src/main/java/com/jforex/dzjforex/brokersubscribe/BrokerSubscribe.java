@@ -33,7 +33,7 @@ public class BrokerSubscribe {
         return client.getSubscribedInstruments();
     }
 
-    public int subscribe(final String instrumentName) {
+    public int forName(final String instrumentName) {
         return RxUtility
             .instrumentFromName(instrumentName)
             .map(this::subscribeValidInstrumentName)

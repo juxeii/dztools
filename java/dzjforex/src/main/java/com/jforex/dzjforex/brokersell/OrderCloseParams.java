@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
 import io.reactivex.Single;
@@ -13,14 +12,11 @@ import io.reactivex.Single;
 public class OrderCloseParams {
 
     private final TradeUtility tradeUtility;
-    private final RetryParams retryParams;
 
     private final static Logger logger = LogManager.getLogger(OrderCloseParams.class);
 
-    public OrderCloseParams(final TradeUtility tradeUtility,
-                            final RetryParams retryParams) {
+    public OrderCloseParams(final TradeUtility tradeUtility) {
         this.tradeUtility = tradeUtility;
-        this.retryParams = retryParams;
     }
 
     public Single<CloseParams> get(final IOrder order,
@@ -35,7 +31,7 @@ public class OrderCloseParams {
             .doOnError(e -> logger.error("Failed to close order " + orderLabel
                     + "! " + e.getMessage()))
             .doOnComplete(() -> logger.info("Closing order " + orderLabel + " done."))
-            .retryOnReject(retryParams)
+            .retryOnReject(tradeUtility.retryParams())
             .build();
 
         return Single.just(closeParams);

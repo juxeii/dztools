@@ -9,6 +9,8 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.programming.instrument.InstrumentUtil;
+import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Single;
@@ -20,6 +22,7 @@ public class TradeUtility {
     private final OrderLabelUtil labelUtil;
     private final AccountInfo accountInfo;
     private final PluginConfig pluginConfig;
+    private final RetryParams retryParams;
 
     private final static Logger logger = LogManager.getLogger(TradeUtility.class);
 
@@ -27,16 +30,22 @@ public class TradeUtility {
                         final StrategyUtil strategyUtil,
                         final AccountInfo accountInfo,
                         final OrderLabelUtil orderLabel,
+                        final RetryParams retryParams,
                         final PluginConfig pluginConfig) {
         this.orderRepository = orderRepository;
         this.strategyUtil = strategyUtil;
         this.accountInfo = accountInfo;
         this.labelUtil = orderLabel;
+        this.retryParams = retryParams;
         this.pluginConfig = pluginConfig;
     }
 
     public OrderLabelUtil orderLabelUtil() {
         return labelUtil;
+    }
+
+    public RetryParams retryParams() {
+        return retryParams;
     }
 
     public Single<Instrument> instrumentForTrading(final String assetName) {
@@ -72,20 +81,18 @@ public class TradeUtility {
     }
 
     public double spread(final Instrument instrument) {
-        return strategyUtil
-            .instrumentUtil(instrument)
-            .spread();
+        return instrumentUtil(instrument).spread();
     }
 
     public double currentAsk(final Instrument instrument) {
-        return strategyUtil
-            .instrumentUtil(instrument)
-            .askQuote();
+        return instrumentUtil(instrument).askQuote();
     }
 
     public double currentBid(final Instrument instrument) {
-        return strategyUtil
-            .instrumentUtil(instrument)
-            .bidQuote();
+        return instrumentUtil(instrument).bidQuote();
+    }
+
+    private InstrumentUtil instrumentUtil(final Instrument instrument) {
+        return strategyUtil.instrumentUtil(instrument);
     }
 }

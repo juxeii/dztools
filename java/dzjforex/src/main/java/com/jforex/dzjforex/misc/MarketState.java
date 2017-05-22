@@ -11,17 +11,17 @@ import com.dukascopy.api.Period;
 
 import io.reactivex.Single;
 
-public class MarketData {
+public class MarketState {
 
     private final IDataService dataService;
 
-    private final static Logger logger = LogManager.getLogger(MarketData.class);
+    private final static Logger logger = LogManager.getLogger(MarketState.class);
 
-    public MarketData(final IDataService dataService) {
+    public MarketState(final IDataService dataService) {
         this.dataService = dataService;
     }
 
-    public boolean isMarketOffline(final long currentServerTime) {
+    public boolean isClosed(final long currentServerTime) {
         final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
 
         return Single

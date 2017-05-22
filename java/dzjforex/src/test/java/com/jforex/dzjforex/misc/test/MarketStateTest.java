@@ -1,9 +1,8 @@
 package com.jforex.dzjforex.misc.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
@@ -15,15 +14,16 @@ import com.dukascopy.api.IDataService;
 import com.dukascopy.api.ITimeDomain;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.misc.MarketData;
+import com.google.common.collect.Sets;
+import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
-public class MarketDataTest extends CommonUtilForTest {
+public class MarketStateTest extends CommonUtilForTest {
 
-    private MarketData marketData;
+    private MarketState marketState;
 
     @Mock
     private IDataService dataServiceMock;
@@ -35,7 +35,11 @@ public class MarketDataTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        marketData = new MarketData(dataServiceMock);
+        marketState = new MarketState(dataServiceMock);
+    }
+
+    private void assertIsClosed(final boolean expectedState) {
+        assertThat(marketState.isClosed(currentServerTime), equalTo(expectedState));
     }
 
     @Test
@@ -43,12 +47,12 @@ public class MarketDataTest extends CommonUtilForTest {
         when(dataServiceMock.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
             .thenThrow(jfException);
 
-        assertTrue(marketData.isMarketOffline(currentServerTime));
+        assertIsClosed(true);
     }
 
     public class WhenOfflineTimeDomainsAreAvailable {
 
-        private final Set<ITimeDomain> offlineDomains = new HashSet<>();
+        private final Set<ITimeDomain> offlineDomains = Sets.newHashSet();
 
         private void setOfflineDomain(final long domainStartTime,
                                       final long domainEndTime) {
@@ -64,30 +68,18 @@ public class MarketDataTest extends CommonUtilForTest {
                 .thenReturn(offlineDomains);
         }
 
-        public class ServerTimeIsInOfflineDomain {
+        @Test
+        public void whenServerTimeIsInOfflineDomainMarketIsClosed() {
+            setOfflineDomain(9L, 14L);
 
-            @Before
-            public void setUp() {
-                setOfflineDomain(9L, 14L);
-            }
-
-            @Test
-            public void marketIsOffline() {
-                assertTrue(marketData.isMarketOffline(currentServerTime));
-            }
+            assertIsClosed(true);
         }
 
-        public class ServerTimeIsNotInOfflineDomain {
+        @Test
+        public void whenServerTimeIsNotInOfflineDomainMarketIsOpen() {
+            setOfflineDomain(13L, 14L);
 
-            @Before
-            public void setUp() {
-                setOfflineDomain(13L, 14L);
-            }
-
-            @Test
-            public void marketIsOnline() {
-                assertFalse(marketData.isMarketOffline(currentServerTime));
-            }
+            assertIsClosed(false);
         }
     }
 }

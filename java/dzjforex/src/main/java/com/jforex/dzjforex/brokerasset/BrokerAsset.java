@@ -23,16 +23,17 @@ public class BrokerAsset {
         this.tradeUtility = tradeUtility;
     }
 
-    public int fillAssetParams(final BrokerAssetData brokerAssetData) {
+    public int fillParams(final BrokerAssetData brokerAssetData) {
         return RxUtility
             .instrumentFromName(brokerAssetData.instrumentName())
-            .map(instrument -> fillAssetParams(instrument, brokerAssetData))
+            .doOnSuccess(instrument -> fillAssetParams(instrument, brokerAssetData))
+            .map(instrument -> ZorroReturnValues.ASSET_AVAILABLE.getValue())
             .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
             .blockingGet();
     }
 
-    private int fillAssetParams(final Instrument instrument,
-                                final BrokerAssetData brokerAssetData) {
+    private void fillAssetParams(final Instrument instrument,
+                                 final BrokerAssetData brokerAssetData) {
         final double pPrice = tradeUtility.currentAsk(instrument);
         final double pSpread = tradeUtility.spread(instrument);
         final double pVolume = valueNotSupported;
@@ -62,7 +63,5 @@ public class BrokerAsset {
                 + " pMarginCost: " + pMarginCost + "\n"
                 + " pRollLong: " + pRollLong + "\n"
                 + " pRollShort: " + pRollShort);
-
-        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
     }
 }

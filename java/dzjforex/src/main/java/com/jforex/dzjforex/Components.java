@@ -15,6 +15,7 @@ import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
 import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
+import com.jforex.dzjforex.brokerbuy.SubmitParamsRunner;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
@@ -24,9 +25,11 @@ import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.LoginExecutor;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
+import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.brokersell.OrderCloseParams;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
 import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
+import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
@@ -38,13 +41,12 @@ import com.jforex.dzjforex.history.HistoryUtility;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.misc.MarketData;
+import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.StopLoss;
-import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
@@ -76,7 +78,6 @@ public class Components {
     private BrokerHistory brokerHistory;
     private HistoryProvider historyProvider;
     private BrokerTrade brokerTrade;
-    private TaskParamsRunner taskParamsRunner;
     private BrokerBuy brokerBuy;
     private BrokerSell brokerSell;
     private BrokerStop brokerStop;
@@ -92,9 +93,7 @@ public class Components {
         clock = Clock.systemDefaultZone();
         final PinProvider pinProvider = new PinProvider(client, pluginConfig().realConnectURL());
         final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        loginExecutor = new LoginExecutor(clientUtil.authentification(),
-                                          credentialsFactory,
-                                          zorro);
+        loginExecutor = new LoginExecutor(clientUtil.authentification(), credentialsFactory);
         brokerLogin = new BrokerLogin(client,
                                       loginExecutor,
                                       pluginConfig);
@@ -110,7 +109,7 @@ public class Components {
         final NTPUDPClient ntpUDPClient = new NTPUDPClient();
         final NTPFetch ntpFetch = new NTPFetch(ntpUDPClient, pluginConfig);
         final NTPProvider ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
-        final MarketData marketData = new MarketData(infoStrategy
+        final MarketState marketData = new MarketState(infoStrategy
             .getContext()
             .getDataService());
         final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
@@ -134,8 +133,8 @@ public class Components {
         final HistoryWrapper historyWrapper = new HistoryWrapper(history);
         final HistoryUtility historyUtility = new HistoryUtility(historyWrapper, pluginConfig);
         historyProvider = new HistoryProvider(historyUtility, pluginConfig);
-        final BarFetcher barFetcher = new BarFetcher(historyProvider, zorro);
-        final TickFetcher tickFetcher = new TickFetcher(historyProvider, zorro);
+        final BarFetcher barFetcher = new BarFetcher(historyProvider);
+        final TickFetcher tickFetcher = new TickFetcher(historyProvider);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
         final IEngine engine = infoStrategy
             .getContext()
@@ -156,25 +155,25 @@ public class Components {
                                                            strategyUtil,
                                                            accountInfo,
                                                            orderLabelUtil,
+                                                           retryParamsForTrading,
                                                            pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, tradeUtility);
         final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
         final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
                                                                           stopLoss,
-                                                                          retryParamsForTrading);
-        final OrderCloseParams orderCloseParams = new OrderCloseParams(tradeUtility, retryParamsForTrading);
+                                                                          orderLabelUtil);
+        final OrderCloseParams orderCloseParams = new OrderCloseParams(tradeUtility);
         final OrderSetSLParams orderSetSLParams = new OrderSetSLParams(stopLoss, retryParamsForTrading);
         orderUtil = strategyUtil.orderUtil();
-        taskParamsRunner = new TaskParamsRunner(orderUtil,
-                                                orderSubmitParams,
-                                                orderCloseParams,
-                                                orderSetSLParams);
+        final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
+        final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
+        final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
         brokerTrade = new BrokerTrade(tradeUtility);
-        brokerBuy = new BrokerBuy(taskParamsRunner,
+        brokerBuy = new BrokerBuy(submitParamsRunner,
                                   orderRepository,
                                   tradeUtility);
-        brokerSell = new BrokerSell(taskParamsRunner, tradeUtility);
-        brokerStop = new BrokerStop(taskParamsRunner, tradeUtility);
+        brokerSell = new BrokerSell(closeParamsRunner, tradeUtility);
+        brokerStop = new BrokerStop(setSLParamsRunner, tradeUtility);
     }
 
     public long startAndInitStrategyComponents(final BrokerLoginData brokerLoginData) {

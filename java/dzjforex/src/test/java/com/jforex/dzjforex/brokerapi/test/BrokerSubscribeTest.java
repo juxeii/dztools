@@ -45,12 +45,12 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
 
     @Test
     public void returnCodeIsAssetUnAvailableWhenAssetNameIsInvalid() {
-        assertThat(brokerSubscribe.subscribe("Invalid"), equalTo(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
+        assertThat(brokerSubscribe.forName("Invalid"), equalTo(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
     }
 
     @Test
     public void returnCodeIsAssetAvailableWhenAssetNameIsValid() {
-        assertThat(brokerSubscribe.subscribe(assetName), equalTo(ZorroReturnValues.ASSET_AVAILABLE.getValue()));
+        assertThat(brokerSubscribe.forName(assetName), equalTo(ZorroReturnValues.ASSET_AVAILABLE.getValue()));
     }
 
     @Test
@@ -73,7 +73,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         public void instrumentSubscriberCallContainsOnlyEURUSD() {
             assetName = "EUR/USD";
 
-            brokerSubscribe.subscribe(assetName);
+            brokerSubscribe.forName(assetName);
 
             assertInstrumentSubscriberCall(Instrument.EURUSD);
         }
@@ -82,7 +82,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         public void instrumentSubscriberCallContainsGBPAUDAndEURGBPAndEURAUD() {
             assetName = "GBP/AUD";
 
-            brokerSubscribe.subscribe(assetName);
+            brokerSubscribe.forName(assetName);
 
             assertInstrumentSubscriberCall(Instrument.GBPAUD,
                                            Instrument.EURGBP,
@@ -101,7 +101,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         public void instrumentSubscriberCallContainsOnlyUSDJPY() {
             assetName = "USD/JPY";
 
-            brokerSubscribe.subscribe(assetName);
+            brokerSubscribe.forName(assetName);
 
             assertInstrumentSubscriberCall(Instrument.USDJPY);
         }
@@ -110,7 +110,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         public void instrumentSubscriberCallContainsEURUSDAndEURJPYAndUSDJPY() {
             assetName = "EUR/USD";
 
-            brokerSubscribe.subscribe(assetName);
+            brokerSubscribe.forName(assetName);
 
             assertInstrumentSubscriberCall(Instrument.EURUSD,
                                            Instrument.EURJPY,

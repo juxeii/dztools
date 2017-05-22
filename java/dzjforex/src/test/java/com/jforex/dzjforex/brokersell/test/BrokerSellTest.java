@@ -9,8 +9,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokersell.BrokerSell;
+import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -23,14 +23,14 @@ public class BrokerSellTest extends CommonUtilForTest {
     private BrokerSell brokerSell;
 
     @Mock
-    private TaskParamsRunner taskParamsRunnerMock;
+    private CloseParamsRunner closeParamsRunnerMock;
     private int nTradeID;
 
     @Before
     public void setUp() {
         nTradeID = brokerSellData.nTradeID();
 
-        brokerSell = new BrokerSell(taskParamsRunnerMock, tradeUtilityMock);
+        brokerSell = new BrokerSell(closeParamsRunnerMock, tradeUtilityMock);
     }
 
     private void assertBrokerSellResult(final int expectedReturnValue) {
@@ -54,7 +54,7 @@ public class BrokerSellTest extends CommonUtilForTest {
         }
 
         private void setParamsRunnerResult(final Completable result) {
-            when(taskParamsRunnerMock.startClose(orderMock, brokerSellData))
+            when(closeParamsRunnerMock.get(orderMock, brokerSellData))
                 .thenReturn(result);
         }
 

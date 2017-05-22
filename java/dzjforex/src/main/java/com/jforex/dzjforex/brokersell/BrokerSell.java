@@ -1,17 +1,16 @@
 package com.jforex.dzjforex.brokersell;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.TaskParamsRunner;
 import com.jforex.dzjforex.order.TradeUtility;
 
 public class BrokerSell {
 
-    private final TaskParamsRunner taskParamsRunner;
+    private final CloseParamsRunner closeParamsRunner;
     private final TradeUtility tradeUtility;
 
-    public BrokerSell(final TaskParamsRunner taskParamsRunner,
+    public BrokerSell(final CloseParamsRunner closeParamsRunner,
                       final TradeUtility tradeUtility) {
-        this.taskParamsRunner = taskParamsRunner;
+        this.closeParamsRunner = closeParamsRunner;
         this.tradeUtility = tradeUtility;
     }
 
@@ -19,7 +18,7 @@ public class BrokerSell {
         final int orderID = brokerSellData.nTradeID();
         return tradeUtility
             .orderForTrading(orderID)
-            .flatMapCompletable(order -> taskParamsRunner.startClose(order, brokerSellData))
+            .flatMapCompletable(order -> closeParamsRunner.get(order, brokerSellData))
             .toSingleDefault(orderID)
             .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
             .blockingGet();

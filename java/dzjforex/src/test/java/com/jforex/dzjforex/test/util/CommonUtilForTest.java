@@ -91,16 +91,20 @@ public class CommonUtilForTest extends BDDMockito {
                                                            true);
     private final int nTradeID = 42;
     private final int nAmount = 7;
+    private final double dStopDist = 0.0035;
     protected BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
 
     private final double slPrice = 1.09875;
     protected BrokerStopData brokerStopData = new BrokerStopData(nTradeID, slPrice);
 
-    private final double tradeParams[] = new double[3];
+    private final double tradeParams[] = new double[1];
     protected String instrumentNameForTest = "EUR/USD";
     protected Instrument instrumentForTest = Instrument.EURUSD;
     protected ICurrency baseCurrencyForTest = instrumentForTest.getPrimaryJFCurrency();
-    protected BrokerBuyData brokerBuyData = new BrokerBuyData(instrumentNameForTest, tradeParams);
+    protected BrokerBuyData brokerBuyData = new BrokerBuyData(instrumentNameForTest,
+                                                              nAmount,
+                                                              dStopDist,
+                                                              tradeParams);
 
     private final String accounts[] = new String[1];
     protected BrokerLoginData brokerLoginData = new BrokerLoginData(username,

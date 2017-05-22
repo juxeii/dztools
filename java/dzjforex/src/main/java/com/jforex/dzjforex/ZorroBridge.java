@@ -125,8 +125,13 @@ public class ZorroBridge {
     }
 
     public int doBrokerBuy(final String Asset,
+                           final int nAmount,
+                           final double dStopDist,
                            final double tradeParams[]) {
-        final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset, tradeParams);
+        final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset,
+                                                              nAmount,
+                                                              dStopDist,
+                                                              tradeParams);
         return brokerBuy
             .openTrade(brokerBuyData)
             .blockingGet();

@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
 import com.jforex.dzjforex.config.ZorroReturnValues;
@@ -19,8 +18,6 @@ public class BrokerAccountTest extends CommonUtilForTest {
 
     private BrokerAccount brokerAccount;
 
-    @Mock
-    private AccountInfo accountInfoMock;
     @Mock
     private BrokerAccountData brokerAccountDataMock;
 

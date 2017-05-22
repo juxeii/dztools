@@ -36,14 +36,14 @@ public class OrderSubmitParams {
                 .instrumentForTrading(brokerBuyData.instrumentName())
                 .blockingGet();
             final String orderLabel = orderLabelUtil.create();
-            final double contracts = brokerBuyData.contracts();
+            final double contracts = brokerBuyData.nAmount();
             final OrderCommand orderCommand = orderCommandForContracts(contracts);
             final double amount = tradeUtility.contractsToAmount(contracts);
 
             return stopLoss
                 .forDistance(instrument,
                              orderCommand,
-                             brokerBuyData.stopDistance())
+                             brokerBuyData.dStopDist())
                 .defaultIfEmpty(StrategyUtil.platformSettings.noSLPrice())
                 .toSingle()
                 .map(slPrice -> create(instrument,

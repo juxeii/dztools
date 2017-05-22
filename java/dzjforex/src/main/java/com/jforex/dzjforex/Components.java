@@ -14,7 +14,7 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
 import com.jforex.dzjforex.brokerbuy.BrokerBuy;
-import com.jforex.dzjforex.brokerbuy.OrderSubmitParams;
+import com.jforex.dzjforex.brokerbuy.SubmitParamsFactory;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsRunner;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
@@ -160,9 +160,9 @@ public class Components {
                                                            pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, priceProvider);
         final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
-        final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
-                                                                          stopLoss,
-                                                                          orderLabelUtil);
+        final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
+                                                                              stopLoss,
+                                                                              orderLabelUtil);
         final OrderCloseParams orderCloseParams = new OrderCloseParams(tradeUtility);
         final OrderSetSLParams orderSetSLParams = new OrderSetSLParams(stopLoss, retryParamsForTrading);
         orderUtil = strategyUtil.orderUtil();

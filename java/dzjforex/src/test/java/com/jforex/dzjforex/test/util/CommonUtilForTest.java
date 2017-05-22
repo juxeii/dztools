@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.test.util;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.time.Clock;
@@ -33,6 +35,9 @@ import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.event.OrderEventType;
+import com.jforex.programming.order.task.params.ComposeData;
+import com.jforex.programming.order.task.params.RetryParams;
+import com.jforex.programming.order.task.params.TaskParams;
 import com.jforex.programming.strategy.StrategyUtil;
 
 public class CommonUtilForTest extends BDDMockito {
@@ -50,7 +55,11 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected TradeUtility tradeUtilityMock;
     @Mock
-    protected IOrder orderMock;
+    protected RetryParams retryParamsMock;
+    @Mock
+    protected IOrder orderMockA;
+    @Mock
+    protected IOrder orderMockB;
     @Mock
     protected OrderUtil orderUtilMock;
     @Mock
@@ -86,9 +95,8 @@ public class CommonUtilForTest extends BDDMockito {
                                  username,
                                  password,
                                  pin);
-    protected final OrderEvent orderEvent = new OrderEvent(orderMock,
-                                                           OrderEventType.CHANGED_GTT,
-                                                           true);
+    protected final OrderEvent orderEventA;
+    protected final OrderEvent orderEventB;
     private final int nTradeID = 42;
     private final int nAmount = 7;
     private final double dStopDist = 0.0035;
@@ -101,10 +109,7 @@ public class CommonUtilForTest extends BDDMockito {
     protected String instrumentNameForTest = "EUR/USD";
     protected Instrument instrumentForTest = Instrument.EURUSD;
     protected ICurrency baseCurrencyForTest = instrumentForTest.getPrimaryJFCurrency();
-    protected BrokerBuyData brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                                              nAmount,
-                                                              dStopDist,
-                                                              tradeParams);
+    protected BrokerBuyData brokerBuyData;
 
     private final String accounts[] = new String[1];
     protected BrokerLoginData brokerLoginData = new BrokerLoginData(username,
@@ -125,6 +130,7 @@ public class CommonUtilForTest extends BDDMockito {
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
 
         when(tradeUtilityMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
+        when(tradeUtilityMock.retryParams()).thenReturn(retryParamsMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
@@ -135,11 +141,34 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.demoLoginType()).thenReturn(loginTypeDemo);
         when(pluginConfigMock.realLoginType()).thenReturn(loginTypeReal);
 
+        orderEventA = new OrderEvent(orderMockA,
+                                     OrderEventType.SUBMIT_OK,
+                                     true);
+        orderEventB = new OrderEvent(orderMockB,
+                                     OrderEventType.FULLY_FILLED,
+                                     true);
+
+        brokerBuyData = new BrokerBuyData(instrumentNameForTest,
+                                          nAmount,
+                                          dStopDist,
+                                          tradeParams,
+                                          pluginConfigMock);
+
         coverageOnEnumsCorrection();
     }
 
     private final void coverageOnEnumsCorrection() {
         ZorroReturnValues
             .valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
+    }
+
+    public void assertComposeParamsForTask(final TaskParams taskParams) throws Exception {
+        final ComposeData composeData = taskParams.composeData();
+
+        assertThat(composeData.retryParams(), equalTo(retryParamsMock));
+
+        composeData.completeAction().run();
+        composeData.startAction().run();
+        composeData.errorConsumer().accept(jfException);
     }
 }

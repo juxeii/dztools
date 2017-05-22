@@ -45,10 +45,10 @@ public class BrokerTradeTest extends CommonUtilForTest {
         when(tradeUtilityMock.bid(instrumentForTest)).thenReturn(bid);
         when(tradeUtilityMock.amountToContracts(orderAmount)).thenReturn(orderContracts);
 
-        when(orderMock.getInstrument()).thenReturn(instrumentForTest);
-        when(orderMock.getOpenPrice()).thenReturn(pOpen);
-        when(orderMock.getAmount()).thenReturn(orderAmount);
-        when(orderMock.getProfitLossInAccountCurrency()).thenReturn(pProfit);
+        when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
+        when(orderMockA.getOpenPrice()).thenReturn(pOpen);
+        when(orderMockA.getAmount()).thenReturn(orderAmount);
+        when(orderMockA.getProfitLossInAccountCurrency()).thenReturn(pProfit);
     }
 
     private TestObserver<Integer> subscribe() {
@@ -68,7 +68,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Single.just(orderMock));
+            when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Single.just(orderMockA));
         }
 
         private void verifyFillCallWithCorrectCloseValue(final double pClose) {
@@ -80,7 +80,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Test
         public void fillCallCorrectWhenOrderisLong() {
-            when(orderMock.isLong()).thenReturn(true);
+            when(orderMockA.isLong()).thenReturn(true);
 
             subscribe();
 
@@ -89,7 +89,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Test
         public void fillCallCorrectWhenOrderisShort() {
-            when(orderMock.isLong()).thenReturn(false);
+            when(orderMockA.isLong()).thenReturn(false);
 
             subscribe();
 
@@ -98,14 +98,14 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Test
         public void returnValueIsOrderRecentlyClosedWhenOrderIsInStateClosed() {
-            when(orderMock.getState()).thenReturn(IOrder.State.CLOSED);
+            when(orderMockA.getState()).thenReturn(IOrder.State.CLOSED);
 
             subscribe().assertValue(ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue());
         }
 
         @Test
         public void returnValueIsOrderContractsWhenOrderIsOpen() {
-            when(orderMock.getState()).thenReturn(IOrder.State.OPENED);
+            when(orderMockA.getState()).thenReturn(IOrder.State.OPENED);
 
             subscribe().assertValue(orderContracts);
         }

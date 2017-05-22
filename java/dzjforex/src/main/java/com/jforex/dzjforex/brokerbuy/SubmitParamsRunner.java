@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.brokerbuy;
 
 import com.dukascopy.api.IOrder;
+import com.dukascopy.api.Instrument;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.event.OrderEvent;
 
@@ -9,17 +10,18 @@ import io.reactivex.Single;
 public class SubmitParamsRunner {
 
     private final OrderUtil orderUtil;
-    private final OrderSubmitParams orderSubmitParams;
+    private final SubmitParamsFactory submitParamsFactory;
 
     public SubmitParamsRunner(final OrderUtil orderUtil,
-                              final OrderSubmitParams orderSubmitParams) {
+                              final SubmitParamsFactory submitParamsFactory) {
         this.orderUtil = orderUtil;
-        this.orderSubmitParams = orderSubmitParams;
+        this.submitParamsFactory = submitParamsFactory;
     }
 
-    public Single<IOrder> get(final BrokerBuyData brokerBuyData) {
-        return orderSubmitParams
-            .get(brokerBuyData)
+    public Single<IOrder> get(final Instrument instrument,
+                              final BrokerBuyData brokerBuyData) {
+        return submitParamsFactory
+            .get(instrument, brokerBuyData)
             .flatMapObservable(orderUtil::paramsToObservable)
             .map(OrderEvent::order)
             .lastOrError();

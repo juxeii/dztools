@@ -131,7 +131,8 @@ public class ZorroBridge {
         final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset,
                                                               nAmount,
                                                               dStopDist,
-                                                              tradeParams);
+                                                              tradeParams,
+                                                              pluginConfig);
         return brokerBuy
             .openTrade(brokerBuyData)
             .blockingGet();

@@ -50,11 +50,11 @@ public class BrokerSellTest extends CommonUtilForTest {
         @Before
         public void setUp() {
             when(tradeUtilityMock.orderForTrading(nTradeID))
-                .thenReturn(Single.just(orderMock));
+                .thenReturn(Single.just(orderMockA));
         }
 
         private void setParamsRunnerResult(final Completable result) {
-            when(closeParamsRunnerMock.get(orderMock, brokerSellData))
+            when(closeParamsRunnerMock.get(orderMockA, brokerSellData))
                 .thenReturn(result);
         }
 

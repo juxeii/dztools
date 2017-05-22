@@ -32,7 +32,7 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
 
     private void makeOrderUtilPass() {
         when(orderUtilMock.paramsToObservable(setSLParamsMock))
-            .thenReturn(Observable.just(orderEvent));
+            .thenReturn(Observable.just(orderEventA));
     }
 
     private void makeOrderUtilFail() {
@@ -41,18 +41,18 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
     }
 
     private void makeSetSLParamsPass() {
-        when(orderSetSLParamsMock.get(orderMock, brokerStopData))
+        when(orderSetSLParamsMock.get(orderMockA, brokerStopData))
             .thenReturn(Single.just(setSLParamsMock));
     }
 
     private void makeSetSLParamsFail() {
-        when(orderSetSLParamsMock.get(orderMock, brokerStopData))
+        when(orderSetSLParamsMock.get(orderMockA, brokerStopData))
             .thenReturn(Single.error(jfException));
     }
 
     private TestObserver<Void> subscribe() {
         return setSLParamsRunner
-            .get(orderMock, brokerStopData)
+            .get(orderMockA, brokerStopData)
             .test();
     }
 

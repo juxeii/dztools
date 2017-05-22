@@ -32,7 +32,7 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
 
     private void makeOrderUtilPass() {
         when(orderUtilMock.paramsToObservable(closeParamsMock))
-            .thenReturn(Observable.just(orderEvent));
+            .thenReturn(Observable.just(orderEventA));
     }
 
     private void makeOrderUtilFail() {
@@ -41,18 +41,18 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
     }
 
     private void makeCloseParamsPass() {
-        when(orderCloseParamsMock.get(orderMock, brokerSellData))
+        when(orderCloseParamsMock.get(orderMockA, brokerSellData))
             .thenReturn(Single.just(closeParamsMock));
     }
 
     private void makeCloseParamsFail() {
-        when(orderCloseParamsMock.get(orderMock, brokerSellData))
+        when(orderCloseParamsMock.get(orderMockA, brokerSellData))
             .thenReturn(Single.error(jfException));
     }
 
     private TestObserver<Void> subscribe() {
         return closeParamsRunner
-            .get(orderMock, brokerSellData)
+            .get(orderMockA, brokerSellData)
             .test();
     }
 

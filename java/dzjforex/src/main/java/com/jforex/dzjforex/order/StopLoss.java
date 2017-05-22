@@ -6,10 +6,11 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
+import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.MathUtil;
+import com.jforex.programming.strategy.StrategyUtil;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class StopLoss {
@@ -27,20 +28,21 @@ public class StopLoss {
         this.minPipsForSL = minPipsForSL;
     }
 
-    public Maybe<Double> forDistance(final Instrument instrument,
-                                     final OrderCommand orderCommand,
-                                     final double dStopDist) {
-        return Maybe.defer(() -> {
+    public Single<Double> forSubmit(final Instrument instrument,
+                                    final BrokerBuyData brokerBuyData) {
+        return Single.defer(() -> {
+            final double dStopDist = brokerBuyData.dStopDist();
+
             if (!isDistanceOK(instrument, dStopDist))
-                return Maybe.error(new JFException("The stop loss distance " + dStopDist
+                return Single.error(new JFException("The stop loss distance " + dStopDist
                         + " is too small for " + instrument
                         + "! Minimum pip distance is " + minPipsForSL));
             if (isDistanceForNoSL(dStopDist))
-                return Maybe.empty();
+                return Single.just(StrategyUtil.platformSettings.noSLPrice());
 
-            return Maybe.just(calculate(instrument,
-                                        orderCommand,
-                                        dStopDist));
+            return Single.just(calculate(instrument,
+                                         brokerBuyData.orderCommand(),
+                                         dStopDist));
         });
     }
 

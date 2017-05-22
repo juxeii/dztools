@@ -44,7 +44,7 @@ public class OrderLookupTest extends CommonUtilForTest {
     }
 
     private void makeRepositoryPass() {
-        when(orderRepositoryMock.getByID(orderID)).thenReturn(Single.just(orderMock));
+        when(orderRepositoryMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
     }
 
     private void makeRepositoryFail() {
@@ -52,7 +52,7 @@ public class OrderLookupTest extends CommonUtilForTest {
     }
 
     private void makeOpenOrdersPass() {
-        when(openOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMock));
+        when(openOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
     }
 
     private void makeOpenOrdersFail() {
@@ -60,7 +60,7 @@ public class OrderLookupTest extends CommonUtilForTest {
     }
 
     private void makeHistoryOrdersPass() {
-        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMock));
+        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
     }
 
     private void makeHistoryOrdersFail() {
@@ -77,7 +77,7 @@ public class OrderLookupTest extends CommonUtilForTest {
     public void orderFromRepositoryIsReturned() {
         makeRepositoryPass();
 
-        testObserver().assertValue(orderMock);
+        testObserver().assertValue(orderMockA);
     }
 
     public class OnRepositoryFail {
@@ -105,7 +105,7 @@ public class OrderLookupTest extends CommonUtilForTest {
             public void onHistoryLookupOKOrderIsReturned() {
                 makeHistoryOrdersPass();
 
-                testObserver().assertValue(orderMock);
+                testObserver().assertValue(orderMockA);
             }
         }
 
@@ -118,7 +118,7 @@ public class OrderLookupTest extends CommonUtilForTest {
 
             @Test
             public void orderFromOpenOrdersIsReturned() {
-                testObserver().assertValue(orderMock);
+                testObserver().assertValue(orderMockA);
             }
 
             @Test

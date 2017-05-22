@@ -28,7 +28,7 @@ public class BrokerBuy {
     public Single<Integer> openTrade(final BrokerBuyData brokerBuyData) {
         return Single.defer(() -> tradeUtility
             .instrumentForTrading(brokerBuyData.instrumentName())
-            .flatMap(instrument -> submitParamsRunner.get(brokerBuyData))
+            .flatMap(instrument -> submitParamsRunner.get(instrument, brokerBuyData))
             .flatMap(order -> processOrderAndGetResult(order, brokerBuyData))
             .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue()));
     }
@@ -40,7 +40,7 @@ public class BrokerBuy {
             .doOnComplete(() -> brokerBuyData.fillOpenPrice(order))
             .andThen(orderLabelUtil.idFromOrder(order))
             .toSingle()
-            .map(orderID -> brokerBuyData.dStopDist() == -1
+            .map(orderID -> brokerBuyData.dStopDist() == -1.0
                     ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()
                     : orderID);
     }

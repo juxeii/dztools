@@ -77,16 +77,16 @@ public class ZorroBridge {
                                                                     Accounts);
         final Single<Integer> loginTask = brokerLogin
             .login(brokerLoginData)
-            .toSingleDefault(ZorroReturnValues.LOGIN_OK.getValue())
-            .doOnSuccess(loginOK -> initComponents(brokerLoginData))
-            .onErrorReturnItem(ZorroReturnValues.LOGIN_FAIL.getValue());
+            .doOnSuccess(loginOK -> initComponents(brokerLoginData));
 
         return zorro.progressWait(loginTask);
     }
 
     public int doLogout() {
 //        client.stopStrategy(strategyID);
-//        return brokerLogin.logout();
+//        return brokerLogin
+//            .logout()
+//            .blockingGet();
         return ZorroReturnValues.LOGOUT_OK.getValue();
     }
 
@@ -96,42 +96,56 @@ public class ZorroBridge {
     }
 
     public int doSubscribeAsset(final String Asset) {
-        return brokerSubscribe.forName(Asset);
+        return brokerSubscribe
+            .forName(Asset)
+            .blockingGet();
     }
 
     public int doBrokerAsset(final String Asset,
                              final double assetParams[]) {
         final BrokerAssetData brokerAssetData = new BrokerAssetData(Asset, assetParams);
-        return brokerAsset.fillParams(brokerAssetData);
+        return brokerAsset
+            .fillParams(brokerAssetData)
+            .blockingGet();
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
         final BrokerAccountData brokerAccountData = new BrokerAccountData(accountInfoParams);
-        return brokerAccount.handle(brokerAccountData);
+        return brokerAccount
+            .handle(brokerAccountData)
+            .blockingGet();
     }
 
     public int doBrokerTrade(final int nTradeID,
                              final double tradeParams[]) {
         final BrokerTradeData brokerTradeData = new BrokerTradeData(nTradeID, tradeParams);
-        return brokerTrade.orderInfo(brokerTradeData);
+        return brokerTrade
+            .fillParams(brokerTradeData)
+            .blockingGet();
     }
 
     public int doBrokerBuy(final String Asset,
                            final double tradeParams[]) {
         final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset, tradeParams);
-        return brokerBuy.openTrade(brokerBuyData);
+        return brokerBuy
+            .openTrade(brokerBuyData)
+            .blockingGet();
     }
 
     public int doBrokerSell(final int nTradeID,
                             final int nAmount) {
         final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
-        return brokerSell.closeTrade(brokerSellData);
+        return brokerSell
+            .closeTrade(brokerSellData)
+            .blockingGet();
     }
 
     public int doBrokerStop(final int nTradeID,
                             final double dStop) {
         final BrokerStopData brokerStopData = new BrokerStopData(nTradeID, dStop);
-        return brokerStop.setSL(brokerStopData);
+        return brokerStop
+            .setSL(brokerStopData)
+            .blockingGet();
     }
 
     public int doBrokerHistory2(final String Asset,

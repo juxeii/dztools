@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.brokersell.test;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +13,7 @@ import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Completable;
 import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerSellTest extends CommonUtilForTest {
@@ -33,8 +31,10 @@ public class BrokerSellTest extends CommonUtilForTest {
         brokerSell = new BrokerSell(closeParamsRunnerMock, tradeUtilityMock);
     }
 
-    private void assertBrokerSellResult(final int expectedReturnValue) {
-        assertThat(brokerSell.closeTrade(brokerSellData), equalTo(expectedReturnValue));
+    private TestObserver<Integer> subscribe() {
+        return brokerSell
+            .closeTrade(brokerSellData)
+            .test();
     }
 
     @Test
@@ -42,7 +42,7 @@ public class BrokerSellTest extends CommonUtilForTest {
         when(tradeUtilityMock.orderForTrading(nTradeID))
             .thenReturn(Single.error(jfException));
 
-        assertBrokerSellResult(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
+        subscribe().assertValue(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
     }
 
     public class OnValidOrderForSell {
@@ -62,14 +62,14 @@ public class BrokerSellTest extends CommonUtilForTest {
         public void sellFailsWhenParamsRunnerFails() {
             setParamsRunnerResult(Completable.error(jfException));
 
-            assertBrokerSellResult(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
+            subscribe().assertValue(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
         }
 
         @Test
         public void whenParamsRunnerSucceedsTheTradeIDIsReturned() {
             setParamsRunnerResult(Completable.complete());
 
-            assertBrokerSellResult(nTradeID);
+            subscribe().assertValue(nTradeID);
         }
     }
 }

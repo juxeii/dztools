@@ -1,64 +1,51 @@
 package com.jforex.dzjforex.brokerlogin;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.JFException;
-import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.programming.connection.Authentification;
 
 import io.reactivex.Completable;
-import io.reactivex.Observable;
-import io.reactivex.subjects.BehaviorSubject;
+import io.reactivex.Single;
 
 public class BrokerLogin {
 
-    private final IClient client;
-    private final LoginExecutor loginExecutor;
-    private final Observable<Long> retryDelayTimer;
-    private final BehaviorSubject<Boolean> isLoginAvailable = BehaviorSubject.createDefault(true);
+    private final Authentification authentification;
+    private final CredentialsFactory credentialsFactory;
+    private final LoginRetryTimer loginRetryTimer;
 
     private final static Logger logger = LogManager.getLogger(BrokerLogin.class);
 
-    public BrokerLogin(final IClient client,
-                       final LoginExecutor loginExecutor,
-                       final PluginConfig pluginConfig) {
-        this.client = client;
-        this.loginExecutor = loginExecutor;
-
-        retryDelayTimer = Observable
-            .timer(pluginConfig.loginRetryDelay(), TimeUnit.MILLISECONDS)
-            .doOnSubscribe(d -> {
-                isLoginAvailable.onNext(false);
-                logger.debug("Starting login retry delay timer. Login is not available until timer elapsed.");
-            })
-            .doOnComplete(() -> {
-                isLoginAvailable.onNext(true);
-                logger.debug("Login retry delay timer completed. Login is available again.");
-            });
+    public BrokerLogin(final Authentification authentification,
+                       final CredentialsFactory credentialsFactory,
+                       final LoginRetryTimer loginRetryTimer) {
+        this.authentification = authentification;
+        this.credentialsFactory = credentialsFactory;
+        this.loginRetryTimer = loginRetryTimer;
     }
 
-    public Completable login(final BrokerLoginData brokerLoginData) {
-        if (client.isConnected())
-            return Completable.complete();
-        if (!isLoginAvailable.getValue())
-            return Completable.error(new JFException("No login while retry timer running!"));
+    public Single<Integer> login(final BrokerLoginData brokerLoginData) {
+        return Single.defer(() -> !loginRetryTimer.isLoginPermitted()
+                ? Single.just(ZorroReturnValues.LOGIN_FAIL.getValue())
+                : loginTask(brokerLoginData));
+    }
 
-        return loginExecutor
-            .login(brokerLoginData)
+    private Single<Integer> loginTask(final BrokerLoginData brokerLoginData) {
+        return Single
+            .just(credentialsFactory.create(brokerLoginData))
+            .flatMapCompletable(authentification::login)
+            .toSingleDefault(ZorroReturnValues.LOGIN_OK.getValue())
             .doOnError(e -> {
                 logger.error("Failed to login! " + e.getMessage());
-                retryDelayTimer.subscribe();
-            });
+                loginRetryTimer.start();
+            })
+            .onErrorReturnItem(ZorroReturnValues.LOGIN_FAIL.getValue());
     }
 
-    public int logout() {
-        return loginExecutor
-            .logout()
-            .toSingleDefault(ZorroReturnValues.LOGOUT_OK.getValue())
-            .blockingGet();
+    public Single<Integer> logout() {
+        return Completable
+            .defer(() -> authentification.logout())
+            .toSingleDefault(ZorroReturnValues.LOGOUT_OK.getValue());
     }
 }

@@ -22,7 +22,7 @@ import com.jforex.dzjforex.brokerhistory.TickFetcher;
 import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
-import com.jforex.dzjforex.brokerlogin.LoginExecutor;
+import com.jforex.dzjforex.brokerlogin.LoginRetryTimer;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
@@ -42,6 +42,7 @@ import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
+import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
@@ -66,7 +67,6 @@ public class Components {
     private final Zorro zorro;
     private final InfoStrategy infoStrategy;
     private final Clock clock;
-    private final LoginExecutor loginExecutor;
     private final BrokerLogin brokerLogin;
     private OrderUtil orderUtil;
     private ServerTimeProvider serverTimeProvider;
@@ -93,10 +93,10 @@ public class Components {
         clock = Clock.systemDefaultZone();
         final PinProvider pinProvider = new PinProvider(client, pluginConfig().realConnectURL());
         final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
-        loginExecutor = new LoginExecutor(clientUtil.authentification(), credentialsFactory);
-        brokerLogin = new BrokerLogin(client,
-                                      loginExecutor,
-                                      pluginConfig);
+        final LoginRetryTimer loginRetryTimer = new LoginRetryTimer(pluginConfig);
+        brokerLogin = new BrokerLogin(clientUtil.authentification(),
+                                      credentialsFactory,
+                                      loginRetryTimer);
         retryParamsForTrading = retryParamsForTrading();
     }
 
@@ -151,13 +151,14 @@ public class Components {
         final OrderLookup orderLookup = new OrderLookup(orderRepository,
                                                         openOrders,
                                                         historyOrders);
+        final PriceProvider priceProvider = new PriceProvider(strategyUtil);
         final TradeUtility tradeUtility = new TradeUtility(orderLookup,
-                                                           strategyUtil,
+                                                           priceProvider,
                                                            accountInfo,
                                                            orderLabelUtil,
                                                            retryParamsForTrading,
                                                            pluginConfig);
-        brokerAsset = new BrokerAsset(accountInfo, tradeUtility);
+        brokerAsset = new BrokerAsset(accountInfo, priceProvider);
         final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
         final OrderSubmitParams orderSubmitParams = new OrderSubmitParams(tradeUtility,
                                                                           stopLoss,

@@ -2,6 +2,8 @@ package com.jforex.dzjforex.brokeraccount;
 
 import com.jforex.dzjforex.config.ZorroReturnValues;
 
+import io.reactivex.Single;
+
 public class BrokerAccount {
 
     private final AccountInfo accountInfo;
@@ -10,11 +12,13 @@ public class BrokerAccount {
         this.accountInfo = accountInfo;
     }
 
-    public int handle(final BrokerAccountData brokerAccountData) {
-        if (!accountInfo.isConnected())
-            return ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue();
+    public Single<Integer> handle(final BrokerAccountData brokerAccountData) {
+        return Single.fromCallable(() -> {
+            if (!accountInfo.isConnected())
+                return ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue();
 
-        brokerAccountData.fill(accountInfo);
-        return ZorroReturnValues.ACCOUNT_AVAILABLE.getValue();
+            brokerAccountData.fill(accountInfo);
+            return ZorroReturnValues.ACCOUNT_AVAILABLE.getValue();
+        });
     }
 }

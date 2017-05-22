@@ -29,11 +29,11 @@ public class HistoryProvider {
     }
 
     public Single<List<IBar>> barsByShift(final BarParams barParams,
-                                          final long endTime,
+                                          final long endDate,
                                           final int shift) {
         return Single
             .defer(() -> historyUtility.barsByShiftAdapted(barParams,
-                                                           endTime,
+                                                           endDate,
                                                            shift))
             .retryWhen(RxUtility.retryForHistory(pluginConfig))
             .doOnSuccess(bars -> logger.debug("Fetched " + bars.size()

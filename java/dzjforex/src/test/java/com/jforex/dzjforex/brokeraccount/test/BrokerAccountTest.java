@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.brokeraccount.test;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +12,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerAccountTest extends CommonUtilForTest {
@@ -25,7 +23,6 @@ public class BrokerAccountTest extends CommonUtilForTest {
     private AccountInfo accountInfoMock;
     @Mock
     private BrokerAccountData brokerAccountDataMock;
-    private int handleResult;
 
     @Before
     public void setUp() {
@@ -36,17 +33,17 @@ public class BrokerAccountTest extends CommonUtilForTest {
         when(accountInfoMock.isConnected()).thenReturn(isConnected);
     }
 
-    private void callHandle() {
-        handleResult = brokerAccount.handle(brokerAccountDataMock);
+    private TestObserver<Integer> subscribe() {
+        return brokerAccount
+            .handle(brokerAccountDataMock)
+            .test();
     }
 
     @Test
     public void accountIsNotAvailableWhenNotConnected() {
         setConnectedState(false);
 
-        callHandle();
-
-        assertThat(handleResult, equalTo(ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue()));
+        subscribe().assertValue(ZorroReturnValues.ACCOUNT_UNAVAILABLE.getValue());
     }
 
     public class OnAccountConnected {
@@ -54,16 +51,17 @@ public class BrokerAccountTest extends CommonUtilForTest {
         @Before
         public void setUp() {
             setConnectedState(true);
-            callHandle();
         }
 
         @Test
         public void accountIsAvailable() {
-            assertThat(handleResult, equalTo(ZorroReturnValues.ACCOUNT_AVAILABLE.getValue()));
+            subscribe().assertValue(ZorroReturnValues.ACCOUNT_AVAILABLE.getValue());
         }
 
         @Test
         public void brokerAccountDataIsFilledWithAccountInfo() {
+            subscribe();
+
             verify(brokerAccountDataMock).fill(accountInfoMock);
         }
     }

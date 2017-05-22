@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.history;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +51,6 @@ public class HistoryWrapper {
                                                 barParams.offerSide(),
                                                 startDate,
                                                 endDate))
-            .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching bars for " + instrument + ":\n"
                     + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
                     + "endDate: " + DateTimeUtil.formatMillis(endDate)))
@@ -68,7 +66,6 @@ public class HistoryWrapper {
         return Single.fromCallable(() -> history.getTicks(instrument,
                                                           startDate,
                                                           endDate))
-            .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching ticks for " + instrument + ":\n"
                     + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
                     + "endDate: " + DateTimeUtil.formatMillis(endDate)))
@@ -100,10 +97,5 @@ public class HistoryWrapper {
                     + " failed! " + e.getMessage()))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()
                     + " orders from history for " + instrument));
-    }
-
-    private <T> List<T> reverseQuotes(final List<T> quotes) {
-        Collections.reverse(quotes);
-        return quotes;
     }
 }

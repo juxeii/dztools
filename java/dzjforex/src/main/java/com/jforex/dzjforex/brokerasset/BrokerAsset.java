@@ -6,36 +6,37 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.misc.RxUtility;
-import com.jforex.dzjforex.order.TradeUtility;
+
+import io.reactivex.Single;
 
 public class BrokerAsset {
 
     private final AccountInfo accountInfo;
-    private final TradeUtility tradeUtility;
+    private final PriceProvider priceProvider;
 
     private final static double valueNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerAsset.class);
 
     public BrokerAsset(final AccountInfo accountInfo,
-                       final TradeUtility tradeUtility) {
+                       final PriceProvider priceProvider) {
         this.accountInfo = accountInfo;
-        this.tradeUtility = tradeUtility;
+        this.priceProvider = priceProvider;
     }
 
-    public int fillParams(final BrokerAssetData brokerAssetData) {
-        return RxUtility
+    public Single<Integer> fillParams(final BrokerAssetData brokerAssetData) {
+        return Single.defer(() -> RxUtility
             .instrumentFromName(brokerAssetData.instrumentName())
             .doOnSuccess(instrument -> fillAssetParams(instrument, brokerAssetData))
             .map(instrument -> ZorroReturnValues.ASSET_AVAILABLE.getValue())
-            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
-            .blockingGet();
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
     }
 
     private void fillAssetParams(final Instrument instrument,
                                  final BrokerAssetData brokerAssetData) {
-        final double pPrice = tradeUtility.currentAsk(instrument);
-        final double pSpread = tradeUtility.spread(instrument);
+        final double pPrice = priceProvider.ask(instrument);
+        final double pSpread = priceProvider.spread(instrument);
         final double pVolume = valueNotSupported;
         final double pPip = instrument.getPipValue();
         final double pPipCost = accountInfo.pipCost(instrument);

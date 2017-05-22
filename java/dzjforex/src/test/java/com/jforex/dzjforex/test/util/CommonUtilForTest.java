@@ -14,9 +14,12 @@ import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
+import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.Components;
 import com.jforex.dzjforex.Zorro;
+import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
 import com.jforex.dzjforex.config.PluginConfig;
@@ -35,6 +38,10 @@ import com.jforex.programming.strategy.StrategyUtil;
 public class CommonUtilForTest extends BDDMockito {
 
     @Mock
+    protected IClient clientMock;
+    @Mock
+    protected AccountInfo accountInfoMock;
+    @Mock
     protected Components componentsMock;
     @Mock
     protected Zorro zorroMock;
@@ -51,7 +58,7 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected StrategyUtil strategyUtilMock;
     @Mock
-    protected OrderLookup orderRepositoryMock;
+    protected OrderLookup orderLookupMock;
     @Mock
     protected OrderLabelUtil orderLabelUtilMock;
     @Mock
@@ -92,7 +99,14 @@ public class CommonUtilForTest extends BDDMockito {
     private final double tradeParams[] = new double[3];
     protected String instrumentNameForTest = "EUR/USD";
     protected Instrument instrumentForTest = Instrument.EURUSD;
+    protected ICurrency baseCurrencyForTest = instrumentForTest.getPrimaryJFCurrency();
     protected BrokerBuyData brokerBuyData = new BrokerBuyData(instrumentNameForTest, tradeParams);
+
+    private final String accounts[] = new String[1];
+    protected BrokerLoginData brokerLoginData = new BrokerLoginData(username,
+                                                                    password,
+                                                                    loginTypeDemo,
+                                                                    accounts);
 
     protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final JFException jfException = new JFException("");

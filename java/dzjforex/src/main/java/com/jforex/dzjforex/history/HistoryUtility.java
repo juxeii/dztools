@@ -1,5 +1,6 @@
 package com.jforex.dzjforex.history;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.LongStream;
 
@@ -32,7 +33,8 @@ public class HistoryUtility {
             .flatMapObservable(this::countStreamForTickFetch)
             .flatMapSingle(startDate -> historyWrapper.getTicks(instrument,
                                                                 startDate,
-                                                                startDate + tickFetchMillis - 1));
+                                                                startDate + tickFetchMillis - 1))
+            .map(this::reverseQuotes);
     }
 
     public Single<List<IBar>> barsByShiftAdapted(final BarParams barParams,
@@ -48,13 +50,20 @@ public class HistoryUtility {
                                               endTime))
             .flatMap(endDate -> historyWrapper.getBars(barParams,
                                                        endDate - shift * periodInterval,
-                                                       endDate));
+                                                       endDate))
+            .map(this::reverseQuotes);
+    }
+
+    private <T> List<T> reverseQuotes(final List<T> quotes) {
+        Collections.reverse(quotes);
+        return quotes;
     }
 
     private Single<Long> adaptBarFetchEndTime(final BarParams barParams,
                                               final long periodInterval,
                                               final long endTime) {
-        return historyWrapper.getBar(barParams, 1)
+        return historyWrapper
+            .getBar(barParams, 1)
             .map(IBar::getTime)
             .map(latestBarTime -> endTime > latestBarTime + periodInterval
                     ? latestBarTime

@@ -25,13 +25,12 @@ public class BrokerBuy {
         orderLabelUtil = tradeUtility.orderLabelUtil();
     }
 
-    public int openTrade(final BrokerBuyData brokerBuyData) {
+    public Single<Integer> openTrade(final BrokerBuyData brokerBuyData) {
         return tradeUtility
             .instrumentForTrading(brokerBuyData.instrumentName())
             .flatMap(instrument -> submitParamsRunner.get(brokerBuyData))
             .flatMap(order -> processOrderAndGetResult(order, brokerBuyData))
-            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue())
-            .blockingGet();
+            .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue());
     }
 
     private Single<Integer> processOrderAndGetResult(final IOrder order,

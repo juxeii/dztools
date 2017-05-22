@@ -32,11 +32,11 @@ public class StopLoss {
                                      final double dStopDist) {
         return Maybe.defer(() -> {
             if (!isDistanceOK(instrument, dStopDist))
-                Maybe.error(new JFException("The stop loss distance " + dStopDist
+                return Maybe.error(new JFException("The stop loss distance " + dStopDist
                         + " is too small for " + instrument
                         + "! Minimum pip distance is " + minPipsForSL));
             if (isDistanceForNoSL(dStopDist))
-                Maybe.empty();
+                return Maybe.empty();
 
             return Maybe.just(calculate(instrument,
                                         orderCommand,
@@ -47,7 +47,7 @@ public class StopLoss {
     private double calculate(final Instrument instrument,
                              final OrderCommand orderCommand,
                              final double dStopDist) {
-        final double currentAskPrice = tradeUtility.currentAsk(instrument);
+        final double currentAskPrice = tradeUtility.ask(instrument);
         final double spread = tradeUtility.spread(instrument);
         final double rawSLPrice = orderCommand == OrderCommand.BUY
                 ? currentAskPrice - dStopDist - spread
@@ -78,14 +78,13 @@ public class StopLoss {
 
     public Single<Double> forPrice(final Instrument instrument,
                                    final double slPrice) {
-        final double roundedSL = MathUtil.roundPrice(slPrice, instrument);
-        final double currentAskPrice = tradeUtility.currentAsk(instrument);
+        final double currentAskPrice = tradeUtility.ask(instrument);
         final double pipDistance = InstrumentUtil.pipDistanceOfPrices(instrument,
                                                                       currentAskPrice,
-                                                                      roundedSL);
+                                                                      slPrice);
         return Math.abs(pipDistance) >= minPipsForSL
-                ? Single.just(roundedSL)
-                : Single.error(new JFException("The stop loss price " + roundedSL
+                ? Single.just(slPrice)
+                : Single.error(new JFException("The stop loss price " + slPrice
                         + " is too close to current ask " + currentAskPrice
                         + " for " + instrument
                         + "! Minimum pip distance is " + minPipsForSL));

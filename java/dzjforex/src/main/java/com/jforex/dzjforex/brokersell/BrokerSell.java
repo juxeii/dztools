@@ -3,6 +3,8 @@ package com.jforex.dzjforex.brokersell;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TradeUtility;
 
+import io.reactivex.Single;
+
 public class BrokerSell {
 
     private final CloseParamsRunner closeParamsRunner;
@@ -14,13 +16,12 @@ public class BrokerSell {
         this.tradeUtility = tradeUtility;
     }
 
-    public int closeTrade(final BrokerSellData brokerSellData) {
+    public Single<Integer> closeTrade(final BrokerSellData brokerSellData) {
         final int orderID = brokerSellData.nTradeID();
         return tradeUtility
             .orderForTrading(orderID)
             .flatMapCompletable(order -> closeParamsRunner.get(order, brokerSellData))
             .toSingleDefault(orderID)
-            .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue())
-            .blockingGet();
+            .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
     }
 }

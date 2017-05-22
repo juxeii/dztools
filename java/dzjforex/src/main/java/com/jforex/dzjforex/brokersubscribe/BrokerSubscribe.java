@@ -16,6 +16,8 @@ import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.currency.CurrencyUtil;
 import com.jforex.programming.instrument.InstrumentFactory;
 
+import io.reactivex.Single;
+
 public class BrokerSubscribe {
 
     private final IClient client;
@@ -33,12 +35,11 @@ public class BrokerSubscribe {
         return client.getSubscribedInstruments();
     }
 
-    public int forName(final String instrumentName) {
-        return RxUtility
+    public Single<Integer> forName(final String instrumentName) {
+        return Single.defer(() -> RxUtility
             .instrumentFromName(instrumentName)
             .map(this::subscribeValidInstrumentName)
-            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
-            .blockingGet();
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
     }
 
     private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {

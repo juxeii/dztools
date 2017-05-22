@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.brokerstop.test;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +13,7 @@ import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Completable;
 import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
 public class BrokerStopTest extends CommonUtilForTest {
@@ -33,8 +31,10 @@ public class BrokerStopTest extends CommonUtilForTest {
         brokerStop = new BrokerStop(setSLParamsRunnerMock, tradeUtilityMock);
     }
 
-    private void assertBrokerStopResult(final ZorroReturnValues returnValue) {
-        assertThat(brokerStop.setSL(brokerStopData), equalTo(returnValue.getValue()));
+    private TestObserver<Integer> subscribe() {
+        return brokerStop
+            .setSL(brokerStopData)
+            .test();
     }
 
     @Test
@@ -42,7 +42,7 @@ public class BrokerStopTest extends CommonUtilForTest {
         when(tradeUtilityMock.orderForTrading(nTradeID))
             .thenReturn(Single.error(jfException));
 
-        assertBrokerStopResult(ZorroReturnValues.ADJUST_SL_FAIL);
+        subscribe().assertValue(ZorroReturnValues.ADJUST_SL_FAIL.getValue());
     }
 
     public class OnValidOrderForSetSL {
@@ -62,14 +62,14 @@ public class BrokerStopTest extends CommonUtilForTest {
         public void setSLFailsWhenParamsRunnerFails() {
             setParamsRunnerResult(Completable.error(jfException));
 
-            assertBrokerStopResult(ZorroReturnValues.ADJUST_SL_FAIL);
+            subscribe().assertValue(ZorroReturnValues.ADJUST_SL_FAIL.getValue());
         }
 
         @Test
         public void setSLIsOKWhenParamsRunnerReturnsSucceeds() {
             setParamsRunnerResult(Completable.complete());
 
-            assertBrokerStopResult(ZorroReturnValues.ADJUST_SL_OK);
+            subscribe().assertValue(ZorroReturnValues.ADJUST_SL_OK.getValue());
         }
     }
 }

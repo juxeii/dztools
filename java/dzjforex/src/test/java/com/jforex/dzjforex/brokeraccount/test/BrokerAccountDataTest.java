@@ -5,9 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
-import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
@@ -15,8 +13,6 @@ public class BrokerAccountDataTest extends CommonUtilForTest {
 
     private BrokerAccountData brokerAccountData;
 
-    @Mock
-    private AccountInfo accountInfoMock;
     private final double accountInfoParams[] = new double[3];
     private final double baseEquity = 123.45;
     private final double tradeValue = 321.98;
@@ -37,18 +33,23 @@ public class BrokerAccountDataTest extends CommonUtilForTest {
         when(accountInfoMock.usedMargin()).thenReturn(usedMargin);
     }
 
+    private void assertFillValueAtIndex(final double value,
+                                        final int index) {
+        assertThat(accountInfoParams[index], equalTo(value));
+    }
+
     @Test
     public void baseEquityIsCorrectFilled() {
-        assertThat(accountInfoParams[0], equalTo(baseEquity));
+        assertFillValueAtIndex(baseEquity, 0);
     }
 
     @Test
     public void tradeValueIsCorrectFilled() {
-        assertThat(accountInfoParams[1], equalTo(tradeValue));
+        assertFillValueAtIndex(tradeValue, 1);
     }
 
     @Test
     public void usedMarginIsCorrectFilled() {
-        assertThat(accountInfoParams[2], equalTo(usedMargin));
+        assertFillValueAtIndex(usedMargin, 2);
     }
 }

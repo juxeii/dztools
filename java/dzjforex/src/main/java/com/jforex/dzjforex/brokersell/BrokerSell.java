@@ -17,11 +17,13 @@ public class BrokerSell {
     }
 
     public Single<Integer> closeTrade(final BrokerSellData brokerSellData) {
-        final int orderID = brokerSellData.orderID();
-        return tradeUtility
-            .orderForTrading(orderID)
-            .flatMapCompletable(order -> closeParamsRunner.get(order, brokerSellData))
-            .toSingleDefault(orderID)
-            .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
+        return Single.defer(() -> {
+            final int orderID = brokerSellData.orderID();
+            return tradeUtility
+                .orderForTrading(orderID)
+                .flatMapCompletable(order -> closeParamsRunner.get(order, brokerSellData))
+                .toSingleDefault(orderID)
+                .onErrorReturnItem(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
+        });
     }
 }

@@ -38,6 +38,14 @@ public class BrokerStopTest extends CommonUtilForTest {
     }
 
     @Test
+    public void setSLCallIsDeferred() {
+        brokerStop.setSL(brokerStopData);
+
+        verifyZeroInteractions(setSLParamsRunnerMock);
+        verifyZeroInteractions(tradeUtilityMock);
+    }
+
+    @Test
     public void setSLFailsWhenOrderForTradingThrows() {
         when(tradeUtilityMock.orderForTrading(nTradeID))
             .thenReturn(Single.error(jfException));

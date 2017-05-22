@@ -17,10 +17,10 @@ public class BrokerStop {
     }
 
     public Single<Integer> setSL(final BrokerStopData brokerStopData) {
-        return tradeUtility
+        return Single.defer(() -> tradeUtility
             .orderForTrading(brokerStopData.nTradeID())
             .flatMapCompletable(order -> setSLParamsRunner.get(order, brokerStopData))
             .toSingleDefault(ZorroReturnValues.ADJUST_SL_OK.getValue())
-            .onErrorReturnItem(ZorroReturnValues.ADJUST_SL_FAIL.getValue());
+            .onErrorReturnItem(ZorroReturnValues.ADJUST_SL_FAIL.getValue()));
     }
 }

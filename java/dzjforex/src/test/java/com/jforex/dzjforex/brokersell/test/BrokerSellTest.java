@@ -38,6 +38,14 @@ public class BrokerSellTest extends CommonUtilForTest {
     }
 
     @Test
+    public void closeCallIsDeferred() {
+        brokerSell.closeTrade(brokerSellData);
+
+        verifyZeroInteractions(closeParamsRunnerMock);
+        verifyZeroInteractions(tradeUtilityMock);
+    }
+
+    @Test
     public void sellFailsWhenOrderForTradingThrows() {
         when(tradeUtilityMock.orderForTrading(nTradeID))
             .thenReturn(Single.error(jfException));

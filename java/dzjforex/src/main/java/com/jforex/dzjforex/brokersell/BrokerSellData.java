@@ -2,20 +2,20 @@ package com.jforex.dzjforex.brokersell;
 
 public class BrokerSellData {
 
-    private final int nTradeID;
-    private final int nAmount;
+    private final int orderID;
+    private final double amount;
 
-    public BrokerSellData(final int nTradeID,
-                          final int nAmount) {
-        this.nTradeID = nTradeID;
-        this.nAmount = nAmount;
+    public BrokerSellData(final int orderID,
+                          final double amount) {
+        this.orderID = orderID;
+        this.amount = amount;
     }
 
-    public int nTradeID() {
-        return nTradeID;
+    public int orderID() {
+        return orderID;
     }
 
-    public int nAmount() {
-        return nAmount;
+    public double amount() {
+        return amount;
     }
 }

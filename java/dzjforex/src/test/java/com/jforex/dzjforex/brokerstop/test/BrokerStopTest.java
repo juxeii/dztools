@@ -26,7 +26,7 @@ public class BrokerStopTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        nTradeID = brokerSellData.nTradeID();
+        nTradeID = brokerSellData.orderID();
 
         brokerStop = new BrokerStop(setSLParamsRunnerMock, tradeUtilityMock);
     }

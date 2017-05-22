@@ -3,6 +3,7 @@ package com.jforex.dzjforex.order;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
@@ -69,6 +70,12 @@ public class TradeUtility {
 
     public int amountToContracts(final double amount) {
         return (int) (amount * pluginConfig.lotScale());
+    }
+
+    public OrderCommand orderCommandForContracts(final int contracts) {
+        return contracts > 0
+                ? OrderCommand.BUY
+                : OrderCommand.SELL;
     }
 
     public double contractsToAmount(final double contracts) {

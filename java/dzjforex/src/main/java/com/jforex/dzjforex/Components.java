@@ -81,6 +81,7 @@ public class Components {
     private BrokerBuy brokerBuy;
     private BrokerSell brokerSell;
     private BrokerStop brokerStop;
+    private TradeUtility tradeUtility;
     private final RetryParams retryParamsForTrading;
 
     public Components(final PluginConfig pluginConfig) {
@@ -152,12 +153,12 @@ public class Components {
                                                         openOrders,
                                                         historyOrders);
         final PriceProvider priceProvider = new PriceProvider(strategyUtil);
-        final TradeUtility tradeUtility = new TradeUtility(orderLookup,
-                                                           priceProvider,
-                                                           accountInfo,
-                                                           orderLabelUtil,
-                                                           retryParamsForTrading,
-                                                           pluginConfig);
+        tradeUtility = new TradeUtility(orderLookup,
+                                        priceProvider,
+                                        accountInfo,
+                                        orderLabelUtil,
+                                        retryParamsForTrading,
+                                        pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, priceProvider);
         final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
@@ -239,5 +240,9 @@ public class Components {
 
     public BrokerStop brokerStop() {
         return brokerStop;
+    }
+
+    public TradeUtility tradeUtility() {
+        return tradeUtility;
     }
 }

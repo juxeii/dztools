@@ -21,7 +21,7 @@ public class OrderCloseParams {
 
     public Single<CloseParams> get(final IOrder order,
                                    final BrokerSellData brokerSellData) {
-        final double closeAmount = tradeUtility.contractsToAmount(brokerSellData.nAmount());
+        final double closeAmount = brokerSellData.amount();
         final String orderLabel = order.getLabel();
         final CloseParams closeParams = CloseParams
             .withOrder(order)

@@ -2,7 +2,6 @@ package com.jforex.dzjforex.brokerbuy;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.config.PluginConfig;
 
 public class BrokerBuyData {
 
@@ -13,18 +12,15 @@ public class BrokerBuyData {
     private final double amount;
 
     public BrokerBuyData(final String instrumentName,
-                         final int contracts,
+                         final double amount,
+                         final OrderCommand orderCommand,
                          final double dStopDist,
-                         final double tradeParams[],
-                         final PluginConfig pluginConfig) {
+                         final double tradeParams[]) {
         this.instrumentName = instrumentName;
+        this.amount = amount;
+        this.orderCommand = orderCommand;
         this.dStopDist = dStopDist;
         this.tradeParams = tradeParams;
-
-        orderCommand = contracts > 0
-                ? OrderCommand.BUY
-                : OrderCommand.SELL;
-        amount = Math.abs(contracts) / pluginConfig.lotScale();
     }
 
     public String instrumentName() {

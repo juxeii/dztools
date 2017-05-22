@@ -15,20 +15,20 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
     private BrokerBuyData brokerBuyData;
 
     private final double tradeParams[] = new double[1];
-    private final int contracts = 12500;
     private final double amount = 0.0125;
     private final double dStopDist = 0.0034;
     private final double openPrice = 1.12345;
+    private final OrderCommand orderCommand = OrderCommand.BUY;
 
     @Before
     public void setUp() {
         when(orderMockA.getOpenPrice()).thenReturn(openPrice);
 
         brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                          contracts,
+                                          amount,
+                                          orderCommand,
                                           dStopDist,
-                                          tradeParams,
-                                          pluginConfigMock);
+                                          tradeParams);
 
         brokerBuyData.fillOpenPrice(orderMockA);
     }
@@ -54,18 +54,7 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
     }
 
     @Test
-    public void orderCommandIsBuyForPositiveContracts() {
-        assertThat(brokerBuyData.orderCommand(), equalTo(OrderCommand.BUY));
-    }
-
-    @Test
-    public void orderCommandIsSellForNegativeContracts() {
-        brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                          -contracts,
-                                          dStopDist,
-                                          tradeParams,
-                                          pluginConfigMock);
-
-        assertThat(brokerBuyData.orderCommand(), equalTo(OrderCommand.SELL));
+    public void assertOrderCommand() {
+        assertThat(brokerBuyData.orderCommand(), equalTo(orderCommand));
     }
 }

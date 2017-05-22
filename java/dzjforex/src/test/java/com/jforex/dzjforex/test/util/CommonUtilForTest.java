@@ -13,6 +13,7 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
@@ -98,9 +99,9 @@ public class CommonUtilForTest extends BDDMockito {
     protected final OrderEvent orderEventA;
     protected final OrderEvent orderEventB;
     private final int nTradeID = 42;
-    private final int nAmount = 7;
+    private final double orderAmount = 0.123;
     private final double dStopDist = 0.0035;
-    protected BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
+    protected BrokerSellData brokerSellData;
 
     private final double slPrice = 1.09875;
     protected BrokerStopData brokerStopData = new BrokerStopData(nTradeID, slPrice);
@@ -148,11 +149,12 @@ public class CommonUtilForTest extends BDDMockito {
                                      OrderEventType.FULLY_FILLED,
                                      true);
 
+        brokerSellData = new BrokerSellData(nTradeID, orderAmount);
         brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                          nAmount,
+                                          orderAmount,
+                                          OrderCommand.BUY,
                                           dStopDist,
-                                          tradeParams,
-                                          pluginConfigMock);
+                                          tradeParams);
 
         coverageOnEnumsCorrection();
     }

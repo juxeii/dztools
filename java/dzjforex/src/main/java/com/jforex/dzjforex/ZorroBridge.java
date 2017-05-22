@@ -4,6 +4,7 @@ import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
@@ -25,6 +26,7 @@ import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.order.TradeUtility;
 
 import io.reactivex.Single;
 
@@ -42,6 +44,7 @@ public class ZorroBridge {
     private BrokerSell brokerSell;
     private BrokerStop brokerStop;
     private BrokerHistory brokerHistory;
+    private TradeUtility tradeUtility;
     private long strategyID;
     private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
@@ -65,6 +68,7 @@ public class ZorroBridge {
         brokerSell = components.brokerSell();
         brokerStop = components.brokerStop();
         brokerHistory = components.brokerHistory();
+        tradeUtility = components.tradeUtility();
     }
 
     public int doLogin(final String User,
@@ -128,11 +132,13 @@ public class ZorroBridge {
                            final int nAmount,
                            final double dStopDist,
                            final double tradeParams[]) {
+        final double amount = tradeUtility.contractsToAmount(nAmount);
+        final OrderCommand orderCommand = tradeUtility.orderCommandForContracts(nAmount);
         final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset,
-                                                              nAmount,
+                                                              amount,
+                                                              orderCommand,
                                                               dStopDist,
-                                                              tradeParams,
-                                                              pluginConfig);
+                                                              tradeParams);
         return brokerBuy
             .openTrade(brokerBuyData)
             .blockingGet();
@@ -140,7 +146,9 @@ public class ZorroBridge {
 
     public int doBrokerSell(final int nTradeID,
                             final int nAmount) {
-        final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, nAmount);
+        final double amount = tradeUtility.contractsToAmount(nAmount);
+        final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, amount);
+
         return brokerSell
             .closeTrade(brokerSellData)
             .blockingGet();

@@ -17,7 +17,7 @@ public class BrokerSell {
     }
 
     public Single<Integer> closeTrade(final BrokerSellData brokerSellData) {
-        final int orderID = brokerSellData.nTradeID();
+        final int orderID = brokerSellData.orderID();
         return tradeUtility
             .orderForTrading(orderID)
             .flatMapCompletable(order -> closeParamsRunner.get(order, brokerSellData))

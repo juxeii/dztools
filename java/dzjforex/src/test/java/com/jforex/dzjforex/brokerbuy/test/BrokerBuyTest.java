@@ -62,6 +62,14 @@ public class BrokerBuyTest extends CommonUtilForTest {
     }
 
     @Test
+    public void submitCallIsDeferred() {
+        brokerBuy.openTrade(brokerBuyDataMock);
+
+        verifyZeroInteractions(submitParamsRunnerMock);
+        verifyZeroInteractions(orderRepositoryMock);
+    }
+
+    @Test
     public void submitFailsWhenInstrumentIsNotAvailable() {
         setTradeUtilityResult(Single.error(jfException));
 

@@ -59,5 +59,4 @@ public class BarFetcher {
             .map(bar -> new BarQuote(bar, barParams))
             .collect(Collectors.toList());
     }
-
 }

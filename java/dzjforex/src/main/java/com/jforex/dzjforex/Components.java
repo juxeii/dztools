@@ -34,11 +34,12 @@ import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.history.BarHistoryByShift;
+import com.jforex.dzjforex.history.HistoryFetchDate;
 import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
-import com.jforex.dzjforex.history.HistoryProvider;
-import com.jforex.dzjforex.history.HistoryUtility;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.history.TickHistoryByShift;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
@@ -76,7 +77,6 @@ public class Components {
     private BrokerAccount brokerAccount;
     private BrokerSubscribe brokerSubscribe;
     private BrokerHistory brokerHistory;
-    private HistoryProvider historyProvider;
     private BrokerTrade brokerTrade;
     private BrokerBuy brokerBuy;
     private BrokerSell brokerSell;
@@ -132,10 +132,16 @@ public class Components {
         brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         final IHistory history = infoStrategy.getHistory();
         final HistoryWrapper historyWrapper = new HistoryWrapper(history);
-        final HistoryUtility historyUtility = new HistoryUtility(historyWrapper, pluginConfig);
-        historyProvider = new HistoryProvider(historyUtility, pluginConfig);
-        final BarFetcher barFetcher = new BarFetcher(historyProvider);
-        final TickFetcher tickFetcher = new TickFetcher(historyProvider);
+
+        final HistoryFetchDate historyFetchDate = new HistoryFetchDate(historyWrapper, pluginConfig);
+        final BarHistoryByShift barHistoryByShift = new BarHistoryByShift(historyWrapper,
+                                                                          historyFetchDate,
+                                                                          pluginConfig);
+        final TickHistoryByShift tickHistoryByShift = new TickHistoryByShift(historyWrapper,
+                                                                             historyFetchDate,
+                                                                             pluginConfig);
+        final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
+        final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
         final IEngine engine = infoStrategy
             .getContext()

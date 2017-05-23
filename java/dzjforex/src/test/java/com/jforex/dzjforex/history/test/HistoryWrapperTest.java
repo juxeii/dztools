@@ -1,5 +1,8 @@
 package com.jforex.dzjforex.history.test;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+
 import java.util.List;
 
 import org.junit.Before;
@@ -13,38 +16,25 @@ import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.JFException;
-import com.dukascopy.api.OfferSide;
-import com.dukascopy.api.Period;
 import com.google.common.collect.Lists;
 import com.jforex.dzjforex.history.HistoryWrapper;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.programming.quote.BarParams;
+import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
-public class HistoryWrapperTest extends CommonUtilForTest {
+public class HistoryWrapperTest extends BarsAndTicksForTest {
 
     private HistoryWrapper historyWrapper;
 
     @Mock
     private IHistory historyMock;
-    @Mock
-    private IBar barMock;
-    private final Period testPeriod = Period.ONE_MIN;
-    private final OfferSide testOfferSide = OfferSide.ASK;
     private final long startDate = 12;
     private final long endDate = 42;
-    private BarParams barParams;
 
     @Before
     public void setUp() {
-        barParams = BarParams
-            .forInstrument(instrumentForTest)
-            .period(testPeriod)
-            .offerSide(testOfferSide);
-
         historyWrapper = new HistoryWrapper(historyMock);
     }
 
@@ -54,8 +44,8 @@ public class HistoryWrapperTest extends CommonUtilForTest {
 
         private OngoingStubbing<IBar> getStub() throws JFException {
             return when(historyMock.getBar(instrumentForTest,
-                                           testPeriod,
-                                           testOfferSide,
+                                           period,
+                                           offerSide,
                                            shift));
         }
 
@@ -66,16 +56,16 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         }
 
         @Test
-        public void BarFromHistoryIsReturned() throws JFException {
-            getStub().thenReturn(barMock);
+        public void barFromHistoryIsReturned() throws JFException {
+            getStub().thenReturn(barAMock);
 
             test()
                 .assertComplete()
-                .assertValue(barMock);
+                .assertValue(barAMock);
         }
 
         @Test
-        public void ExecpetionOfHistoryIsPropagated() throws JFException {
+        public void execpetionOfHistoryIsPropagated() throws JFException {
             getStub().thenThrow(jfException);
 
             test().assertError(jfException);
@@ -84,44 +74,44 @@ public class HistoryWrapperTest extends CommonUtilForTest {
 
     public class GetBarsCall {
 
-        private final List<IBar> bars = Lists.newArrayList();
-
         private OngoingStubbing<List<IBar>> getStub() throws JFException {
             return when(historyMock.getBars(instrumentForTest,
-                                            testPeriod,
-                                            testOfferSide,
+                                            period,
+                                            offerSide,
                                             startDate,
                                             endDate));
         }
 
-        private TestObserver<List<IBar>> test() {
+        private TestObserver<List<IBar>> subscribe() {
             return historyWrapper
-                .getBars(barParams,
-                         startDate,
-                         endDate)
+                .getBarsReversed(barParams,
+                                 startDate,
+                                 endDate)
                 .test();
         }
 
         @Test
-        public void BarsFromHistoryAreReturned() throws JFException {
-            getStub().thenReturn(bars);
+        public void barsFromHistoryAreReturnedAndReversed() throws JFException {
+            getStub().thenReturn(barMockList);
 
-            test()
-                .assertComplete()
-                .assertValue(bars);
+            final List<IBar> returnedBars = subscribe()
+                .values()
+                .get(0);
+
+            assertThat(returnedBars.get(0), equalTo(barCMock));
+            assertThat(returnedBars.get(1), equalTo(barBMock));
+            assertThat(returnedBars.get(2), equalTo(barAMock));
         }
 
         @Test
-        public void ExecpetionOfHistoryIsPropagated() throws JFException {
+        public void execpetionOfHistoryIsPropagated() throws JFException {
             getStub().thenThrow(jfException);
 
-            test().assertError(jfException);
+            subscribe().assertError(jfException);
         }
     }
 
     public class GetTicksCall {
-
-        private final List<ITick> ticks = Lists.newArrayList();
 
         private OngoingStubbing<List<ITick>> getStub() throws JFException {
             return when(historyMock.getTicks(instrumentForTest,
@@ -129,28 +119,32 @@ public class HistoryWrapperTest extends CommonUtilForTest {
                                              endDate));
         }
 
-        private TestObserver<List<ITick>> test() {
+        private TestObserver<List<ITick>> subscribe() {
             return historyWrapper
-                .getTicks(instrumentForTest,
-                          startDate,
-                          endDate)
+                .getTicksReversed(instrumentForTest,
+                                  startDate,
+                                  endDate)
                 .test();
         }
 
         @Test
-        public void TicksFromHistoryAreReturned() throws JFException {
-            getStub().thenReturn(ticks);
+        public void ticksFromHistoryAreReturnedAndReversed() throws JFException {
+            getStub().thenReturn(tickMockList);
 
-            test()
-                .assertComplete()
-                .assertValue(ticks);
+            final List<ITick> returnedTicks = subscribe()
+                .values()
+                .get(0);
+
+            assertThat(returnedTicks.get(0), equalTo(tickCMock));
+            assertThat(returnedTicks.get(1), equalTo(tickBMock));
+            assertThat(returnedTicks.get(2), equalTo(tickAMock));
         }
 
         @Test
-        public void ExecpetionOfHistoryIsPropagated() throws JFException {
+        public void execpetionOfHistoryIsPropagated() throws JFException {
             getStub().thenThrow(jfException);
 
-            test().assertError(jfException);
+            subscribe().assertError(jfException);
         }
     }
 
@@ -162,26 +156,26 @@ public class HistoryWrapperTest extends CommonUtilForTest {
             return when(historyMock.getTimeOfLastTick(instrumentForTest));
         }
 
-        private TestObserver<Long> test() {
+        private TestObserver<Long> subscribe() {
             return historyWrapper
                 .getTimeOfLastTick(instrumentForTest)
                 .test();
         }
 
         @Test
-        public void TimeFromHistoryIsReturned() throws JFException {
+        public void timeFromHistoryIsReturned() throws JFException {
             getStub().thenReturn(lastTickTime);
 
-            test()
+            subscribe()
                 .assertComplete()
                 .assertValue(lastTickTime);
         }
 
         @Test
-        public void ExecpetionOfHistoryIsPropagated() throws JFException {
+        public void execpetionOfHistoryIsPropagated() throws JFException {
             getStub().thenThrow(jfException);
 
-            test().assertError(jfException);
+            subscribe().assertError(jfException);
         }
     }
 
@@ -195,7 +189,7 @@ public class HistoryWrapperTest extends CommonUtilForTest {
                                                      endDate));
         }
 
-        private TestObserver<List<IOrder>> test() {
+        private TestObserver<List<IOrder>> subscribe() {
             return historyWrapper
                 .getOrdersHistory(instrumentForTest,
                                   startDate,
@@ -204,19 +198,19 @@ public class HistoryWrapperTest extends CommonUtilForTest {
         }
 
         @Test
-        public void OrdersFromHistoryAreReturned() throws JFException {
+        public void ordersFromHistoryAreReturned() throws JFException {
             getStub().thenReturn(orders);
 
-            test()
+            subscribe()
                 .assertComplete()
                 .assertValue(orders);
         }
 
         @Test
-        public void ExecpetionOfHistoryIsPropagated() throws JFException {
+        public void execpetionOfHistoryIsPropagated() throws JFException {
             getStub().thenThrow(jfException);
 
-            test().assertError(jfException);
+            subscribe().assertError(jfException);
         }
     }
 }

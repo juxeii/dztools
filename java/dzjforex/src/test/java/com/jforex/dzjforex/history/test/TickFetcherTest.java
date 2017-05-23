@@ -14,11 +14,10 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 import com.dukascopy.api.ITick;
-import com.google.common.collect.Lists;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
-import com.jforex.dzjforex.history.HistoryProvider;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.history.TickHistoryByShift;
+import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
 import com.jforex.programming.quote.TickQuote;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -26,41 +25,26 @@ import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
-public class TickFetcherTest extends CommonUtilForTest {
+public class TickFetcherTest extends BarsAndTicksForTest {
 
     private TickFetcher tickFetcher;
 
     @Mock
-    private HistoryProvider historyProviderMock;
+    private TickHistoryByShift tickHistoryByShiftMock;
     @Mock
     private BrokerHistoryData brokerHistoryDataMock;
     @Captor
     private ArgumentCaptor<List<TickQuote>> tickQuotesCaptor;
-    @Mock
-    private ITick tickAMock;
-    @Mock
-    private ITick tickBMock;
-    @Mock
-    private ITick tickCMock;
-
-    private final long tickATime = 12L;
-    private final long tickBTime = 14L;
-    private final long tickCTime = 17L;
 
     private final long endTimeForTick = 42L;
     private final long startTimeForTick = 21L;
     private final int noOfRequestedTicks = 300;
-    private final List<ITick> tickMockList = Lists.newArrayList();
 
     @Before
     public void setUp() {
         setUpMocks();
 
-        tickMockList.add(tickAMock);
-        tickMockList.add(tickBMock);
-        tickMockList.add(tickCMock);
-
-        tickFetcher = new TickFetcher(historyProviderMock);
+        tickFetcher = new TickFetcher(tickHistoryByShiftMock);
     }
 
     private void setUpMocks() {
@@ -68,10 +52,6 @@ public class TickFetcherTest extends CommonUtilForTest {
         when(brokerHistoryDataMock.noOfRequestedTicks()).thenReturn(noOfRequestedTicks);
         when(brokerHistoryDataMock.startTimeForTick()).thenReturn(startTimeForTick);
         doNothing().when(brokerHistoryDataMock).fillTickQuotes(tickQuotesCaptor.capture());
-
-        when(tickAMock.getTime()).thenReturn(tickATime);
-        when(tickBMock.getTime()).thenReturn(tickBTime);
-        when(tickCMock.getTime()).thenReturn(tickCTime);
     }
 
     private TestObserver<Integer> subscribe() {
@@ -80,25 +60,25 @@ public class TickFetcherTest extends CommonUtilForTest {
             .test();
     }
 
-    private void setHistoryProviderResult(final Single<List<ITick>> result) {
-        when(historyProviderMock.ticksByShift(instrumentForTest,
-                                              endTimeForTick,
-                                              noOfRequestedTicks - 1))
-                                                  .thenReturn(result);
+    private void setTickHistoryByShiftResult(final Single<List<ITick>> result) {
+        when(tickHistoryByShiftMock.get(instrumentForTest,
+                                        endTimeForTick,
+                                        noOfRequestedTicks - 1))
+                                            .thenReturn(result);
     }
 
     @Test
-    public void whenHistoryProviderFailsTheErrorIsPropagated() {
-        setHistoryProviderResult(Single.error(jfException));
+    public void whenTickHistoryByShiftFailsTheErrorIsPropagated() {
+        setTickHistoryByShiftResult(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
 
-    public class WhenHistoryProviderSucceeds {
+    public class WhenTickHistoryByShiftSucceeds {
 
         @Before
         public void setUp() {
-            setHistoryProviderResult(Single.just(tickMockList));
+            setTickHistoryByShiftResult(Single.just(tickMockList));
         }
 
         private void setTickStartTime(final long startTimeForTick) {

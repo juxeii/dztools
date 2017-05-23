@@ -5,25 +5,25 @@ import java.util.stream.Collectors;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.history.TickHistoryByShift;
 import com.jforex.programming.quote.TickQuote;
 
 import io.reactivex.Single;
 
 public class TickFetcher {
 
-    private final HistoryProvider historyProvider;
+    private final TickHistoryByShift tickHistoryByShift;
 
-    public TickFetcher(final HistoryProvider historyProvider) {
-        this.historyProvider = historyProvider;
+    public TickFetcher(final TickHistoryByShift tickHistoryByShift) {
+        this.tickHistoryByShift = tickHistoryByShift;
     }
 
     public Single<Integer> run(final Instrument instrument,
                                final BrokerHistoryData brokerHistoryData) {
-        return historyProvider
-            .ticksByShift(instrument,
-                          brokerHistoryData.endTimeForTick(),
-                          brokerHistoryData.noOfRequestedTicks() - 1)
+        return tickHistoryByShift
+            .get(instrument,
+                 brokerHistoryData.endTimeForTick(),
+                 brokerHistoryData.noOfRequestedTicks() - 1)
             .map(ticks -> filterTime(ticks, brokerHistoryData.startTimeForTick()))
             .map(ticks -> ticksToQuotes(ticks, instrument))
             .doOnSuccess(brokerHistoryData::fillTickQuotes)

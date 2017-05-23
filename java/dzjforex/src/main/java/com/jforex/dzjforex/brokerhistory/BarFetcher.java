@@ -7,7 +7,7 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.history.BarHistoryByShift;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;
@@ -16,19 +16,19 @@ import io.reactivex.Single;
 
 public class BarFetcher {
 
-    private final HistoryProvider historyProvider;
+    private final BarHistoryByShift barHistoryByShift;
 
-    public BarFetcher(final HistoryProvider historyProvider) {
-        this.historyProvider = historyProvider;
+    public BarFetcher(final BarHistoryByShift barHistoryByShift) {
+        this.barHistoryByShift = barHistoryByShift;
     }
 
     public Single<Integer> run(final Instrument instrument,
                                final BrokerHistoryData brokerHistoryData) {
         final BarParams barParams = createParams(instrument, brokerHistoryData);
-        return historyProvider
-            .barsByShift(barParams,
-                         brokerHistoryData.endTimeForBar(),
-                         brokerHistoryData.noOfRequestedTicks() - 1)
+        return barHistoryByShift
+            .get(barParams,
+                 brokerHistoryData.endTimeForBar(),
+                 brokerHistoryData.noOfRequestedTicks() - 1)
             .map(bars -> filterTime(bars, brokerHistoryData.startTimeForBar()))
             .map(bars -> barsToQuotes(bars, barParams))
             .doOnSuccess(brokerHistoryData::fillBarQuotes)

@@ -14,13 +14,10 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IBar;
-import com.dukascopy.api.OfferSide;
-import com.dukascopy.api.Period;
-import com.google.common.collect.Lists;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
-import com.jforex.dzjforex.history.HistoryProvider;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.history.BarHistoryByShift;
+import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;
 
@@ -29,46 +26,29 @@ import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
-public class BarFetcherTest extends CommonUtilForTest {
+public class BarFetcherTest extends BarsAndTicksForTest {
 
     private BarFetcher barFetcher;
 
     @Mock
-    private HistoryProvider historyProviderMock;
+    private BarHistoryByShift barHistoryByShiftMock;
     @Mock
     private BrokerHistoryData brokerHistoryDataMock;
     @Captor
     private ArgumentCaptor<BarParams> barParamsCaptor;
     @Captor
     private ArgumentCaptor<List<BarQuote>> barQuotesCaptor;
-    @Mock
-    private IBar barAMock;
-    @Mock
-    private IBar barBMock;
-    @Mock
-    private IBar barCMock;
 
-    private final long barATime = 12L;
-    private final long barBTime = 14L;
-    private final long barCTime = 17L;
-
-    private final Period period = Period.ONE_MIN;
-    private final OfferSide offerSide = OfferSide.ASK;
     private final long endTimeForBar = 42L;
     private final long startTimeForBar = 21L;
     private final int noOfRequestedTicks = 300;
     private final int noOfTickMinutes = 1;
-    private final List<IBar> barMockList = Lists.newArrayList();
 
     @Before
     public void setUp() {
         setUpMocks();
 
-        barMockList.add(barAMock);
-        barMockList.add(barBMock);
-        barMockList.add(barCMock);
-
-        barFetcher = new BarFetcher(historyProviderMock);
+        barFetcher = new BarFetcher(barHistoryByShiftMock);
     }
 
     private void setUpMocks() {
@@ -77,10 +57,6 @@ public class BarFetcherTest extends CommonUtilForTest {
         when(brokerHistoryDataMock.startTimeForBar()).thenReturn(startTimeForBar);
         when(brokerHistoryDataMock.noOfTickMinutes()).thenReturn(noOfTickMinutes);
         doNothing().when(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.capture());
-
-        when(barAMock.getTime()).thenReturn(barATime);
-        when(barBMock.getTime()).thenReturn(barBTime);
-        when(barCMock.getTime()).thenReturn(barCTime);
     }
 
     private TestObserver<Integer> subscribe() {
@@ -89,16 +65,16 @@ public class BarFetcherTest extends CommonUtilForTest {
             .test();
     }
 
-    private void setHistoryProviderResult(final Single<List<IBar>> result) {
-        when(historyProviderMock.barsByShift(barParamsCaptor.capture(),
-                                             eq(endTimeForBar),
-                                             eq(noOfRequestedTicks - 1)))
-                                                 .thenReturn(result);
+    private void setHistoryByShiftResult(final Single<List<IBar>> result) {
+        when(barHistoryByShiftMock.get(barParamsCaptor.capture(),
+                                       eq(endTimeForBar),
+                                       eq(noOfRequestedTicks - 1)))
+                                           .thenReturn(result);
     }
 
     @Test
     public void whenHistoryProviderFailsTheErrorIsPropagated() {
-        setHistoryProviderResult(Single.error(jfException));
+        setHistoryByShiftResult(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -107,7 +83,7 @@ public class BarFetcherTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setHistoryProviderResult(Single.just(barMockList));
+            setHistoryByShiftResult(Single.just(barMockList));
         }
 
         private void setBarStartTime(final long startTimeForBar) {

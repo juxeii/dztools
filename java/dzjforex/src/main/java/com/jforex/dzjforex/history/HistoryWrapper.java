@@ -1,5 +1,6 @@
 package com.jforex.dzjforex.history;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +20,7 @@ public class HistoryWrapper {
 
     private final IHistory history;
 
-    private final static Logger logger = LogManager.getLogger(HistoryProvider.class);
+    private final static Logger logger = LogManager.getLogger(HistoryWrapper.class);
 
     public HistoryWrapper(final IHistory history) {
         this.history = history;
@@ -41,9 +42,9 @@ public class HistoryWrapper {
                     + " for " + instrument));
     }
 
-    public Single<List<IBar>> getBars(final BarParams barParams,
-                                      final long startDate,
-                                      final long endDate) {
+    public Single<List<IBar>> getBarsReversed(final BarParams barParams,
+                                              final long startDate,
+                                              final long endDate) {
         final Instrument instrument = barParams.instrument();
         return Single
             .fromCallable(() -> history.getBars(instrument,
@@ -51,6 +52,7 @@ public class HistoryWrapper {
                                                 barParams.offerSide(),
                                                 startDate,
                                                 endDate))
+            .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching bars for " + instrument + ":\n"
                     + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
                     + "endDate: " + DateTimeUtil.formatMillis(endDate)))
@@ -60,12 +62,13 @@ public class HistoryWrapper {
                     + " bars for " + instrument));
     }
 
-    public Single<List<ITick>> getTicks(final Instrument instrument,
-                                        final long startDate,
-                                        final long endDate) {
+    public Single<List<ITick>> getTicksReversed(final Instrument instrument,
+                                                final long startDate,
+                                                final long endDate) {
         return Single.fromCallable(() -> history.getTicks(instrument,
                                                           startDate,
                                                           endDate))
+            .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching ticks for " + instrument + ":\n"
                     + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
                     + "endDate: " + DateTimeUtil.formatMillis(endDate)))
@@ -73,6 +76,11 @@ public class HistoryWrapper {
                     + " failed! " + e.getMessage()))
             .doOnSuccess(ticks -> logger.debug("Fetched " + ticks.size()
                     + " ticks for " + instrument));
+    }
+
+    private <T> List<T> reverseQuotes(final List<T> quotes) {
+        Collections.reverse(quotes);
+        return quotes;
     }
 
     public Single<Long> getTimeOfLastTick(final Instrument instrument) {

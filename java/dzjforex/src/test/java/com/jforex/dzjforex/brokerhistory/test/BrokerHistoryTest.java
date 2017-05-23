@@ -49,6 +49,14 @@ public class BrokerHistoryTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getCallIsDeferred() {
+        brokerHistory.get(brokerHistoryDataMock);
+
+        verifyZeroInteractions(barFetcherMock);
+        verifyZeroInteractions(tickFetcherMock);
+    }
+
+    @Test
     public void historyUnavailableWhenAssetNameIsInvalid() {
         setAssetName("Invalid");
 

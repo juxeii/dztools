@@ -1,191 +1,230 @@
-//package com.jforex.dzjforex.history.test;
-//
-//import static org.hamcrest.Matchers.equalTo;
-//import static org.junit.Assert.assertThat;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//
-//import org.junit.Before;
-//import org.junit.Test;
-//import org.junit.runner.RunWith;
-//import org.mockito.Mock;
-//
-//import com.dukascopy.api.IBar;
-//import com.dukascopy.api.ITick;
-//import com.dukascopy.api.Instrument;
-//import com.dukascopy.api.OfferSide;
-//import com.dukascopy.api.Period;
-//import com.jforex.dzjforex.config.ZorroReturnValues;
-//import com.jforex.dzjforex.history.BarFetcher;
-//import com.jforex.dzjforex.history.HistoryProvider;
-//import com.jforex.dzjforex.test.util.CommonUtilForTest;
-//import com.jforex.dzjforex.time.TimeConvert;
-//import com.jforex.programming.instrument.InstrumentUtil;
-//
-//import de.bechte.junit.runners.context.HierarchicalContextRunner;
-//import io.reactivex.Observable;
-//
-//@RunWith(HierarchicalContextRunner.class)
-//public class BarFetcherTest extends CommonUtilForTest {
-//
-//    private BarFetcher barFetcher;
-//
-//    @Mock
-//    private HistoryProvider historyProviderMock;
-//    @Mock
-//    private InstrumentUtil instrumentUtilMock;
-//    @Mock
-//    private IBar barAMock;
-//    @Mock
-//    private IBar barBMock;
-//    @Mock
-//    private ITick tickMock;
-//    private final double barAOpen = 1.32123;
-//    private final double barBOpen = 1.32126;
-//
-//    private final double barAClose = 1.32107;
-//    private final double barBClose = 1.32111;
-//
-//    private final double barAHigh = 1.32123;
-//    private final double barBHigh = 1.32126;
-//
-//    private final double barALow = 1.32123;
-//    private final double barBLow = 1.32126;
-//
-//    private final long barATime = 12L;
-//    private final long barBTime = 14L;
-//
-//    private final double barAVol = 223.34;
-//    private final double barBVol = 250.45;
-//
-//    private final Instrument fetchInstrument = Instrument.EURUSD;
-//    private final Period period = Period.ONE_MIN;
-//    private final OfferSide offerSide = OfferSide.ASK;
-//    private final double startDate = 12.4;
-//    private final double endDate = 13.7;
-//    private final int tickMinutes = 1;
-//    private final int nTicks = 270;
-//    private double tickParams[];
-//    private final long quoteTime = 12L;
-//    private final List<IBar> barMockList = new ArrayList<>();
-//
-//    @Before
-//    public void setUp() {
-//        setBarExpectations(barAMock,
-//                           barAOpen,
-//                           barAClose,
-//                           barAHigh,
-//                           barALow,
-//                           barATime,
-//                           barAVol);
-//        setBarExpectations(barBMock,
-//                           barBOpen,
-//                           barBClose,
-//                           barBHigh,
-//                           barBLow,
-//                           barBTime,
-//                           barBVol);
-//
-//        barMockList.add(barAMock);
-//        barMockList.add(barBMock);
-//        tickParams = new double[barMockList.size() * 7];
-//
-//        when(strategyUtilMock.instrumentUtil(fetchInstrument))
-//            .thenReturn(instrumentUtilMock);
-//        when(instrumentUtilMock.tickQuote())
-//            .thenReturn(tickMock);
-//        when(tickMock.getTime())
-//            .thenReturn(quoteTime);
-//
-//        barFetcher = new BarFetcher(historyProviderMock,
-//                                    strategyUtilMock,
-//                                    zorroMock);
-//    }
-//
-//    private void setBarExpectations(final IBar barMock,
-//                                    final double open,
-//                                    final double close,
-//                                    final double high,
-//                                    final double low,
-//                                    final long time,
-//                                    final double volume) {
-//        when(barMock.getOpen()).thenReturn(open);
-//        when(barMock.getClose()).thenReturn(close);
-//        when(barMock.getHigh()).thenReturn(high);
-//        when(barMock.getLow()).thenReturn(low);
-//        when(barMock.getTime()).thenReturn(time);
-//        when(barMock.getVolume()).thenReturn(volume);
-//    }
-//
-//    private int callFetch() {
-//        return barFetcher.fetch(fetchInstrument,
-//                                startDate,
-//                                endDate,
-//                                tickMinutes,
-//                                nTicks,
-//                                tickParams);
-//    }
-//
-//    private void setReturnedTickList(final List<IBar> barList) {
-//        when(historyProviderMock.fetchBars(eq(fetchInstrument),
-//                                           eq(period),
-//                                           eq(offerSide),
-//                                           anyLong(),
-//                                           anyLong()))
-//                                               .thenReturn(Observable.just(barList));
-//        when(zorroMock.progressWait(any())).thenReturn(barList);
-//    }
-//
-//    @Test
-//    public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
-//        setReturnedTickList(new ArrayList<>());
-//
-//        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
-//    }
-//
-//    public class WhenHistoryProviderReturnsBarMockList {
-//
-//        private int returnValue;
-//
-//        @Before
-//        public void setUp() {
-//            setReturnedTickList(barMockList);
-//
-//            returnValue = callFetch();
-//        }
-//
-//        @Test
-//        public void returnedTickSizeIsTwo() {
-//            assertThat(returnValue, equalTo(2));
-//        }
-//
-//        @Test
-//        public void fetchWasCalledCorrectOnHistoryProvider() {
-//            verify(historyProviderMock).fetchBars(eq(fetchInstrument),
-//                                                  eq(period),
-//                                                  eq(offerSide),
-//                                                  anyLong(),
-//                                                  anyLong());
-//        }
-//
-//        @Test
-//        public void filledBarValuesAreCorrect() {
-//            assertThat(tickParams[0], equalTo(barBOpen));
-//            assertThat(tickParams[1], equalTo(barBClose));
-//            assertThat(tickParams[2], equalTo(barBHigh));
-//            assertThat(tickParams[3], equalTo(barBLow));
-//            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromBar(barBMock)));
-//            assertThat(tickParams[5], equalTo(0.0));
-//            assertThat(tickParams[6], equalTo(barBVol));
-//
-//            assertThat(tickParams[7], equalTo(barAOpen));
-//            assertThat(tickParams[8], equalTo(barAClose));
-//            assertThat(tickParams[9], equalTo(barAHigh));
-//            assertThat(tickParams[10], equalTo(barALow));
-//            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromBar(barAMock)));
-//            assertThat(tickParams[12], equalTo(0.0));
-//            assertThat(tickParams[13], equalTo(barAVol));
-//        }
-//    }
-//}
+package com.jforex.dzjforex.history.test;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+
+import com.dukascopy.api.IBar;
+import com.dukascopy.api.OfferSide;
+import com.dukascopy.api.Period;
+import com.google.common.collect.Lists;
+import com.jforex.dzjforex.brokerhistory.BarFetcher;
+import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
+import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.programming.quote.BarParams;
+import com.jforex.programming.quote.BarQuote;
+
+import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
+
+@RunWith(HierarchicalContextRunner.class)
+public class BarFetcherTest extends CommonUtilForTest {
+
+    private BarFetcher barFetcher;
+
+    @Mock
+    private HistoryProvider historyProviderMock;
+    @Mock
+    private BrokerHistoryData brokerHistoryDataMock;
+    @Captor
+    private ArgumentCaptor<BarParams> barParamsCaptor;
+    @Captor
+    private ArgumentCaptor<List<BarQuote>> barQuotesCaptor;
+    @Mock
+    private IBar barAMock;
+    @Mock
+    private IBar barBMock;
+    @Mock
+    private IBar barCMock;
+
+    private final long barATime = 12L;
+    private final long barBTime = 14L;
+    private final long barCTime = 17L;
+
+    private final Period period = Period.ONE_MIN;
+    private final OfferSide offerSide = OfferSide.ASK;
+    private final long endTimeForBar = 42L;
+    private final long startTimeForBar = 21L;
+    private final int noOfRequestedTicks = 300;
+    private final int noOfTickMinutes = 1;
+    private final List<IBar> barMockList = Lists.newArrayList();
+
+    @Before
+    public void setUp() {
+        setUpMocks();
+
+        barMockList.add(barAMock);
+        barMockList.add(barBMock);
+        barMockList.add(barCMock);
+
+        barFetcher = new BarFetcher(historyProviderMock);
+    }
+
+    private void setUpMocks() {
+        when(brokerHistoryDataMock.endTimeForBar()).thenReturn(endTimeForBar);
+        when(brokerHistoryDataMock.noOfRequestedTicks()).thenReturn(noOfRequestedTicks);
+        when(brokerHistoryDataMock.startTimeForBar()).thenReturn(startTimeForBar);
+        when(brokerHistoryDataMock.noOfTickMinutes()).thenReturn(noOfTickMinutes);
+        doNothing().when(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.capture());
+
+        when(barAMock.getTime()).thenReturn(barATime);
+        when(barBMock.getTime()).thenReturn(barBTime);
+        when(barCMock.getTime()).thenReturn(barCTime);
+    }
+
+    private TestObserver<Integer> subscribe() {
+        return barFetcher
+            .run(instrumentForTest, brokerHistoryDataMock)
+            .test();
+    }
+
+    private void setHistoryProviderResult(final Single<List<IBar>> result) {
+        when(historyProviderMock.barsByShift(barParamsCaptor.capture(),
+                                             eq(endTimeForBar),
+                                             eq(noOfRequestedTicks - 1)))
+                                                 .thenReturn(result);
+    }
+
+    @Test
+    public void whenHistoryProviderFailsTheErrorIsPropagated() {
+        setHistoryProviderResult(Single.error(jfException));
+
+        subscribe().assertError(jfException);
+    }
+
+    public class WhenHistoryProviderSucceeds {
+
+        @Before
+        public void setUp() {
+            setHistoryProviderResult(Single.just(barMockList));
+        }
+
+        private void setBarStartTime(final long startTimeForBar) {
+            when(brokerHistoryDataMock.startTimeForBar()).thenReturn(startTimeForBar);
+        }
+
+        private void assertBarParams() {
+            final BarParams barParams = barParamsCaptor.getValue();
+
+            assertThat(barParams.instrument(), equalTo(instrumentForTest));
+            assertThat(barParams.period(), equalTo(period));
+            assertThat(barParams.offerSide(), equalTo(offerSide));
+        }
+
+        private void assertBarQuote(final BarQuote barQuote,
+                                    final IBar bar) {
+            final IBar barFromQuote = barQuote.bar();
+
+            assertThat(barQuote.instrument(), equalTo(instrumentForTest));
+            assertThat(barFromQuote.getTime(), equalTo(bar.getTime()));
+            assertThat(barQuote.barParams(), equalTo(barParamsCaptor.getValue()));
+        }
+
+        @Test
+        public void barParamsAreCorrectForHistoryProviderCall() {
+            subscribe();
+
+            assertBarParams();
+        }
+
+        public class WhenStartTimeIsSmallerThanAllBars {
+
+            @Before
+            public void setUp() {
+                setBarStartTime(1L);
+            }
+
+            @Test
+            public void noBarIsFiltered() {
+                subscribe().assertValue(barMockList.size());
+            }
+
+            @Test
+            public void quotesAreCorrectFilled() {
+                subscribe();
+
+                final List<BarQuote> barQuotes = barQuotesCaptor.getValue();
+                assertThat(barQuotes.size(), equalTo(3));
+                assertBarQuote(barQuotes.get(0), barAMock);
+                assertBarQuote(barQuotes.get(1), barBMock);
+                assertBarQuote(barQuotes.get(2), barCMock);
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.getValue());
+            }
+        }
+
+        public class WhenStartTimeIsBiggerThanAllBars {
+
+            @Before
+            public void setUp() {
+                setBarStartTime(55L);
+            }
+
+            @Test
+            public void allBarsAreFiltered() {
+                subscribe().assertValue(0);
+            }
+
+            @Test
+            public void noQuotesAreFilled() {
+                subscribe();
+
+                final List<BarQuote> barQuotes = barQuotesCaptor.getValue();
+                assertTrue(barQuotes.isEmpty());
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.getValue());
+            }
+        }
+
+        public class WhenStartTimeIsBiggerThanBarA {
+
+            @Before
+            public void setUp() {
+                setBarStartTime(13L);
+            }
+
+            @Test
+            public void barAIsFiltered() {
+                subscribe().assertValue(2);
+            }
+
+            @Test
+            public void barBAndbarCAreFilledAsQuotes() {
+                subscribe();
+
+                final List<BarQuote> barQuotes = barQuotesCaptor.getValue();
+                assertThat(barQuotes.size(), equalTo(2));
+                assertBarQuote(barQuotes.get(0), barBMock);
+                assertBarQuote(barQuotes.get(1), barCMock);
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.getValue());
+            }
+        }
+    }
+}

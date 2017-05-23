@@ -1,147 +1,205 @@
-//package com.jforex.dzjforex.history.test;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//
-//import org.junit.Before;
-//import org.mockito.Mock;
-//
-//import com.dukascopy.api.ITick;
-//import com.dukascopy.api.Instrument;
-//import com.jforex.dzjforex.history.HistoryProvider;
-//import com.jforex.dzjforex.history.TickFetcher;
-//import com.jforex.dzjforex.test.util.CommonUtilForTest;
-//import com.jforex.dzjforex.time.TimeConvert;
-//
-//import io.reactivex.Observable;
-//
-////@RunWith(HierarchicalContextRunner.class)
-//public class TickFetcherTest extends CommonUtilForTest {
-//
-//    private TickFetcher tickFetcher;
-//
-//    @Mock
-//    private HistoryProvider historyProviderMock;
-//    @Mock
-//    private ITick tickAMock;
-//    @Mock
-//    private ITick tickBMock;
-//    private final double tickAAsk = 1.32123;
-//    private final double tickBAsk = 1.32126;
-//
-//    private final double tickABid = 1.32107;
-//    private final double tickBBid = 1.32111;
-//
-//    private final long tickATime = 12L;
-//    private final long tickBTime = 14L;
-//
-//    private final double tickAVol = 223.34;
-//    private final double tickBVol = 250.45;
-//
-//    private final Instrument fetchInstrument = Instrument.EURUSD;
-//    private final double startDate = 12.4;
-//    private final double endDate = 13.7;
-//    private final int tickMinutes = 0;
-//    private final int nTicks = 270;
-//    private double tickParams[];
-//    private final List<ITick> tickMockList = new ArrayList<>();
-//
-//    @Before
-//    public void setUp() {
-//        setTickExpectations(tickAMock,
-//                            tickAAsk,
-//                            tickABid,
-//                            tickATime,
-//                            tickAVol);
-//        setTickExpectations(tickBMock,
-//                            tickBAsk,
-//                            tickBBid,
-//                            tickBTime,
-//                            tickBVol);
-//
-//        tickMockList.add(tickAMock);
-//        tickMockList.add(tickBMock);
-//
-//        tickParams = new double[tickMockList.size() * 7];
-//
-//        tickFetcher = new TickFetcher(systemHandlerMock, historyProviderMock);
-//    }
-//
-//    private void setTickExpectations(final ITick tickMock,
-//                                     final double ask,
-//                                     final double bid,
-//                                     final long time,
-//                                     final double volume) {
-//        when(tickMock.getAsk()).thenReturn(ask);
-//        when(tickMock.getBid()).thenReturn(bid);
-//        when(tickMock.getTime()).thenReturn(time);
-//        when(tickMock.getAskVolume()).thenReturn(volume);
-//    }
-//
-//    private int callFetch() {
-//        return tickFetcher.fetch(fetchInstrument,
-//                                 startDate,
-//                                 endDate,
-//                                 tickMinutes,
-//                                 nTicks,
-//                                 tickParams);
-//    }
-//
-//    private void setReturnedTickList(final List<ITick> tickList) {
-//        when(historyProviderMock.fetchTicks(Instrument.EURUSD,
-//                                            TimeConvert.millisFromOLEDate(startDate),
-//                                            TimeConvert.millisFromOLEDate(endDate)))
-//                                                .thenReturn(Observable.just(tickList));
-//        when(zorroMock.progressWait(any())).thenReturn(tickList);
-//    }
-//
-////    @Test
-////    public void whenHistoryProviderReturnesEmptyListTheResultIsHistoryUnavailable() {
-////        setReturnedTickList(new ArrayList<>());
-////
-////        assertThat(callFetch(), equalTo(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
-////    }
-//
-////    public class WhenHistoryProviderReturnsTickMockList {
-////
-////        private int returnValue;
-////
-////        @Before
-////        public void setUp() {
-////            setReturnedTickList(tickMockList);
-////
-////            returnValue = callFetch();
-////        }
-////
-////        @Test
-////        public void returnedTickSizeIsTwo() {
-////            assertThat(returnValue, equalTo(2));
-////        }
-////
-////        @Test
-////        public void fetchWasCalledCorrectOnHistoryProvider() {
-////            verify(historyProviderMock).fetchTicks(Instrument.EURUSD,
-////                                                   TimeConvert.millisFromOLEDate(startDate),
-////                                                   TimeConvert.millisFromOLEDate(endDate));
-////        }
-////
-////        @Test
-////        public void filledTickValuesAreCorrect() {
-////            assertThat(tickParams[0], equalTo(tickBAsk));
-////            assertThat(tickParams[1], equalTo(tickBAsk));
-////            assertThat(tickParams[2], equalTo(tickBAsk));
-////            assertThat(tickParams[3], equalTo(tickBAsk));
-////            assertThat(tickParams[4], equalTo(TimeConvert.getUTCTimeFromTick(tickBMock)));
-////            assertThat(tickParams[5], equalTo(MathUtil.roundPrice(tickBAsk - tickBBid, fetchInstrument)));
-////            assertThat(tickParams[6], equalTo(tickBVol));
-////
-////            assertThat(tickParams[7], equalTo(tickAAsk));
-////            assertThat(tickParams[8], equalTo(tickAAsk));
-////            assertThat(tickParams[9], equalTo(tickAAsk));
-////            assertThat(tickParams[10], equalTo(tickAAsk));
-////            assertThat(tickParams[11], equalTo(TimeConvert.getUTCTimeFromTick(tickAMock)));
-////            assertThat(tickParams[12], equalTo(MathUtil.roundPrice(tickAAsk - tickABid, fetchInstrument)));
-////            assertThat(tickParams[13], equalTo(tickAVol));
-////        }
-////    }
-//}
+package com.jforex.dzjforex.history.test;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+
+import com.dukascopy.api.ITick;
+import com.google.common.collect.Lists;
+import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
+import com.jforex.dzjforex.brokerhistory.TickFetcher;
+import com.jforex.dzjforex.history.HistoryProvider;
+import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.programming.quote.TickQuote;
+
+import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Single;
+import io.reactivex.observers.TestObserver;
+
+@RunWith(HierarchicalContextRunner.class)
+public class TickFetcherTest extends CommonUtilForTest {
+
+    private TickFetcher tickFetcher;
+
+    @Mock
+    private HistoryProvider historyProviderMock;
+    @Mock
+    private BrokerHistoryData brokerHistoryDataMock;
+    @Captor
+    private ArgumentCaptor<List<TickQuote>> tickQuotesCaptor;
+    @Mock
+    private ITick tickAMock;
+    @Mock
+    private ITick tickBMock;
+    @Mock
+    private ITick tickCMock;
+
+    private final long tickATime = 12L;
+    private final long tickBTime = 14L;
+    private final long tickCTime = 17L;
+
+    private final long endTimeForTick = 42L;
+    private final long startTimeForTick = 21L;
+    private final int noOfRequestedTicks = 300;
+    private final List<ITick> tickMockList = Lists.newArrayList();
+
+    @Before
+    public void setUp() {
+        setUpMocks();
+
+        tickMockList.add(tickAMock);
+        tickMockList.add(tickBMock);
+        tickMockList.add(tickCMock);
+
+        tickFetcher = new TickFetcher(historyProviderMock);
+    }
+
+    private void setUpMocks() {
+        when(brokerHistoryDataMock.endTimeForTick()).thenReturn(endTimeForTick);
+        when(brokerHistoryDataMock.noOfRequestedTicks()).thenReturn(noOfRequestedTicks);
+        when(brokerHistoryDataMock.startTimeForTick()).thenReturn(startTimeForTick);
+        doNothing().when(brokerHistoryDataMock).fillTickQuotes(tickQuotesCaptor.capture());
+
+        when(tickAMock.getTime()).thenReturn(tickATime);
+        when(tickBMock.getTime()).thenReturn(tickBTime);
+        when(tickCMock.getTime()).thenReturn(tickCTime);
+    }
+
+    private TestObserver<Integer> subscribe() {
+        return tickFetcher
+            .run(instrumentForTest, brokerHistoryDataMock)
+            .test();
+    }
+
+    private void setHistoryProviderResult(final Single<List<ITick>> result) {
+        when(historyProviderMock.ticksByShift(instrumentForTest,
+                                              endTimeForTick,
+                                              noOfRequestedTicks - 1))
+                                                  .thenReturn(result);
+    }
+
+    @Test
+    public void whenHistoryProviderFailsTheErrorIsPropagated() {
+        setHistoryProviderResult(Single.error(jfException));
+
+        subscribe().assertError(jfException);
+    }
+
+    public class WhenHistoryProviderSucceeds {
+
+        @Before
+        public void setUp() {
+            setHistoryProviderResult(Single.just(tickMockList));
+        }
+
+        private void setTickStartTime(final long startTimeForTick) {
+            when(brokerHistoryDataMock.startTimeForTick()).thenReturn(startTimeForTick);
+        }
+
+        private void assertTickQuote(final TickQuote tickQuote,
+                                     final ITick tick) {
+            final ITick tickFromQuote = tickQuote.tick();
+
+            assertThat(tickQuote.instrument(), equalTo(instrumentForTest));
+            assertThat(tickFromQuote.getTime(), equalTo(tick.getTime()));
+        }
+
+        public class WhenStartTimeIsSmallerThanAllTicks {
+
+            @Before
+            public void setUp() {
+                setTickStartTime(1L);
+            }
+
+            @Test
+            public void noTickIsFiltered() {
+                subscribe().assertValue(tickMockList.size());
+            }
+
+            @Test
+            public void quotesAreCorrectFilled() {
+                subscribe();
+
+                final List<TickQuote> tickQuotes = tickQuotesCaptor.getValue();
+                assertThat(tickQuotes.size(), equalTo(3));
+                assertTickQuote(tickQuotes.get(0), tickAMock);
+                assertTickQuote(tickQuotes.get(1), tickBMock);
+                assertTickQuote(tickQuotes.get(2), tickCMock);
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillTickQuotes(tickQuotesCaptor.getValue());
+            }
+        }
+
+        public class WhenStartTimeIsBiggerThanAllTicks {
+
+            @Before
+            public void setUp() {
+                setTickStartTime(55L);
+            }
+
+            @Test
+            public void allTicksAreFiltered() {
+                subscribe().assertValue(0);
+            }
+
+            @Test
+            public void noQuotesAreFilled() {
+                subscribe();
+
+                final List<TickQuote> tickQuotes = tickQuotesCaptor.getValue();
+                assertTrue(tickQuotes.isEmpty());
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillTickQuotes(tickQuotesCaptor.getValue());
+            }
+        }
+
+        public class WhenStartTimeIsBiggerThanTickA {
+
+            @Before
+            public void setUp() {
+                setTickStartTime(13L);
+            }
+
+            @Test
+            public void tickAIsFiltered() {
+                subscribe().assertValue(2);
+            }
+
+            @Test
+            public void tickBAndtickCAreFilledAsQuotes() {
+                subscribe();
+
+                final List<TickQuote> tickQuotes = tickQuotesCaptor.getValue();
+                assertThat(tickQuotes.size(), equalTo(2));
+                assertTickQuote(tickQuotes.get(0), tickBMock);
+                assertTickQuote(tickQuotes.get(1), tickCMock);
+            }
+
+            @Test
+            public void verifyFillCall() {
+                subscribe();
+
+                verify(brokerHistoryDataMock).fillTickQuotes(tickQuotesCaptor.getValue());
+            }
+        }
+    }
+}

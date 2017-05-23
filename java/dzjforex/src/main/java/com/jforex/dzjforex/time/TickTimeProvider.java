@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.time;
 
-import java.time.Clock;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,36 +15,31 @@ import io.reactivex.Single;
 public class TickTimeProvider {
 
     private final TickQuoteRepository tickQuoteRepository;
-    private final Clock clock;
-    private long latestTickTime;
-    private long synchTime;
+    private final TimeWatch timeWatch;
 
     private final static int INVALID_SERVER_TIME = ZorroReturnValues.INVALID_SERVER_TIME.getValue();
     private final static Logger logger = LogManager.getLogger(TickTimeProvider.class);
 
     public TickTimeProvider(final TickQuoteRepository tickQuoteRepository,
-                            final Clock clock) {
+                            final TimeWatch timeWatch) {
         this.tickQuoteRepository = tickQuoteRepository;
-        this.clock = clock;
+        this.timeWatch = timeWatch;
     }
 
     public Single<Long> get() {
         return Single.defer(() -> {
-            final long latestTickTimeFromRepository = fromRepository();
-            return latestTickTimeFromRepository == INVALID_SERVER_TIME
+            final long latestTickTime = fromRepository();
+            logger.debug("Fetched tick time " + DateTimeUtil.formatMillis(latestTickTime));
+            return latestTickTime == INVALID_SERVER_TIME
                     ? Single.error(new JFException("Fetching tick time failed!"))
-                    : Single.just(getForValidTickTime(latestTickTimeFromRepository));
+                    : Single.just(getForValidTickTime(latestTickTime));
         });
     }
 
-    private long getForValidTickTime(final long latestTickTimeFromRepository) {
-        final long serverTimeFromTickTime = latestTickTimeFromRepository > latestTickTime
-                ? setNewAndSynch(latestTickTimeFromRepository)
-                : estimateWithSynchTime();
-        logger.trace("serverTimeFromTickTime " + DateTimeUtil.formatMillis(serverTimeFromTickTime)
-                + " latestTickTimeFromRepository " + DateTimeUtil.formatMillis(latestTickTimeFromRepository)
-                + " synchTime " + DateTimeUtil.formatMillis(synchTime));
-        return serverTimeFromTickTime;
+    private long getForValidTickTime(final long latestTickTime) {
+        return latestTickTime > timeWatch.get()
+                ? synchTickTime(latestTickTime)
+                : timeWatch.get();
     }
 
     private long fromRepository() {
@@ -61,14 +54,8 @@ public class TickTimeProvider {
             .orElseGet(() -> INVALID_SERVER_TIME);
     }
 
-    private long setNewAndSynch(final long latestTickTimeFromRepository) {
-        latestTickTime = latestTickTimeFromRepository;
-        synchTime = clock.millis();
+    private long synchTickTime(final long latestTickTime) {
+        timeWatch.synch(latestTickTime);
         return latestTickTime;
-    }
-
-    private long estimateWithSynchTime() {
-        final long timeDiffToSynchTime = clock.millis() - synchTime;
-        return latestTickTime + timeDiffToSynchTime;
     }
 }

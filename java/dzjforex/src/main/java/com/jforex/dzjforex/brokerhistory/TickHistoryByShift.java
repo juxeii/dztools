@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.history;
+package com.jforex.dzjforex.brokerhistory;
 
 import java.util.List;
 
@@ -8,8 +8,10 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.RxUtility;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public class TickHistoryByShift {
@@ -34,8 +36,7 @@ public class TickHistoryByShift {
     public Single<List<ITick>> get(final Instrument instrument,
                                    final long endDate,
                                    final int shift) {
-        return historyFetchDate
-            .startDatesForTick(instrument, endDate)
+        return Observable.defer(() -> historyFetchDate.startDatesForTick(instrument, endDate))
             .flatMapSingle(startDate -> getTicksReversed(instrument, startDate))
             .flatMapIterable(ticks -> ticks)
             .take(shift + 1)

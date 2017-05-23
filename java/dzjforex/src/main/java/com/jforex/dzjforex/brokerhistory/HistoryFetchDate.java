@@ -1,10 +1,11 @@
-package com.jforex.dzjforex.history;
+package com.jforex.dzjforex.brokerhistory;
 
 import java.util.stream.LongStream;
 
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.programming.quote.BarParams;
 
 import io.reactivex.Observable;

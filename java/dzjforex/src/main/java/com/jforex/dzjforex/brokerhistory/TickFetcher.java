@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.history.TickHistoryByShift;
 import com.jforex.programming.quote.TickQuote;
 
 import io.reactivex.Single;

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.history.test;
+package com.jforex.dzjforex.brokerhistory.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -15,8 +15,8 @@ import org.mockito.Mock;
 
 import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
+import com.jforex.dzjforex.brokerhistory.BarHistoryByShift;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
-import com.jforex.dzjforex.history.BarHistoryByShift;
 import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;

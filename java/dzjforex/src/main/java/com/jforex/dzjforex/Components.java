@@ -17,16 +17,19 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuy;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsFactory;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsRunner;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
+import com.jforex.dzjforex.brokerhistory.BarHistoryByShift;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
+import com.jforex.dzjforex.brokerhistory.HistoryFetchDate;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
+import com.jforex.dzjforex.brokerhistory.TickHistoryByShift;
 import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.LoginRetryTimer;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
-import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.brokersell.CloseParamsFactory;
+import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
@@ -34,12 +37,9 @@ import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.history.BarHistoryByShift;
-import com.jforex.dzjforex.history.HistoryFetchDate;
 import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
-import com.jforex.dzjforex.history.TickHistoryByShift;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
@@ -54,6 +54,7 @@ import com.jforex.dzjforex.time.NTPFetch;
 import com.jforex.dzjforex.time.NTPProvider;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.dzjforex.time.TickTimeProvider;
+import com.jforex.dzjforex.time.TimeWatch;
 import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
@@ -117,10 +118,11 @@ public class Components {
         final TickQuoteRepository tickQuoteRepository = strategyUtil
             .tickQuoteProvider()
             .repository();
-        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, clock);
+        final TimeWatch timeWatch = new TimeWatch(clock);
+        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, timeWatch);
         serverTimeProvider = new ServerTimeProvider(ntpProvider,
                                                     tickTimeProvider,
-                                                    clock);
+                                                    timeWatch);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     marketData);

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.history.test;
+package com.jforex.dzjforex.brokerhistory.test;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.history.HistoryFetchDate;
+import com.jforex.dzjforex.brokerhistory.HistoryFetchDate;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.quote.BarParams;

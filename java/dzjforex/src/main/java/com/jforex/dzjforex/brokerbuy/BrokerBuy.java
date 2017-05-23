@@ -6,6 +6,7 @@ import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.TradeUtility;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class BrokerBuy {
@@ -38,7 +39,7 @@ public class BrokerBuy {
         return orderRepository
             .store(order)
             .doOnComplete(() -> brokerBuyData.fillOpenPrice(order))
-            .andThen(orderLabelUtil.idFromOrder(order))
+            .andThen(Maybe.defer(() -> orderLabelUtil.idFromOrder(order)))
             .toSingle()
             .map(orderID -> brokerBuyData.dStopDist() == -1.0
                     ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()

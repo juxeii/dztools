@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
@@ -40,6 +41,9 @@ import com.jforex.programming.order.task.params.ComposeData;
 import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.TaskParams;
 import com.jforex.programming.strategy.StrategyUtil;
+
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class CommonUtilForTest extends BDDMockito {
 
@@ -117,6 +121,9 @@ public class CommonUtilForTest extends BDDMockito {
                                                                     password,
                                                                     loginTypeDemo,
                                                                     accounts);
+    protected int historyAccessRetries = 3;
+    protected long historyAccessRetryDelay = 1500L;
+    protected long tickFetchMillis = 60000L;
 
     protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final JFException jfException = new JFException("");
@@ -140,6 +147,9 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.realConnectURL()).thenReturn(jnlpReal);
         when(pluginConfigMock.demoLoginType()).thenReturn(loginTypeDemo);
         when(pluginConfigMock.realLoginType()).thenReturn(loginTypeReal);
+        when(pluginConfigMock.historyAccessRetries()).thenReturn(historyAccessRetries);
+        when(pluginConfigMock.historyAccessRetryDelay()).thenReturn(historyAccessRetryDelay);
+        when(pluginConfigMock.tickFetchMillis()).thenReturn(tickFetchMillis);
 
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
         when(orderMockA.getLabel()).thenReturn(orderLabel);
@@ -159,6 +169,28 @@ public class CommonUtilForTest extends BDDMockito {
                                           tradeParams);
 
         coverageOnEnumsCorrection();
+    }
+
+    protected void advanceRetryTimes() {
+        RxTestUtil.advanceTimeInMillisBy(historyAccessRetries * historyAccessRetryDelay);
+    }
+
+    protected <T> void makeSingleStubFailRetriesThenSuccess(final OngoingStubbing<Single<T>> stub,
+                                                            final T successValue) {
+        stub
+            .thenReturn(Single.error(jfException))
+            .thenReturn(Single.error(jfException))
+            .thenReturn(Single.error(jfException))
+            .thenReturn(Single.just(successValue));
+    }
+
+    protected <T> void makeObservableStubFailRetriesThenSuccess(final OngoingStubbing<Observable<T>> stub,
+                                                                final T successValue) {
+        stub
+            .thenReturn(Observable.error(jfException))
+            .thenReturn(Observable.error(jfException))
+            .thenReturn(Observable.error(jfException))
+            .thenReturn(Observable.just(successValue));
     }
 
     private final void coverageOnEnumsCorrection() {

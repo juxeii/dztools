@@ -43,6 +43,9 @@ public class BarsAndTicksForTest extends CommonUtilForTest {
         .forInstrument(instrumentForTest)
         .period(period)
         .offerSide(offerSide);
+    protected long periodInterval = barParams
+        .period()
+        .getInterval();
 
     protected BarsAndTicksForTest() {
         setUpMocks();

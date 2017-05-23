@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.history;
+package com.jforex.dzjforex.brokerhistory;
 
 import java.util.List;
 
@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.quote.BarParams;
 
@@ -31,8 +32,8 @@ public class BarHistoryByShift {
     public Single<List<IBar>> get(final BarParams barParams,
                                   final long endDate,
                                   final int shift) {
-        return historyFetchDate
-            .endDateForBar(barParams, endDate)
+        return Single
+            .defer(() -> historyFetchDate.endDateForBar(barParams, endDate))
             .flatMap(endDateAdapted -> getBarsReversed(barParams,
                                                        endDateAdapted,
                                                        shift))

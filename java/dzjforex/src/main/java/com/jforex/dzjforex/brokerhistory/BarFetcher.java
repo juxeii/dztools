@@ -7,7 +7,6 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.history.BarHistoryByShift;
 import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;

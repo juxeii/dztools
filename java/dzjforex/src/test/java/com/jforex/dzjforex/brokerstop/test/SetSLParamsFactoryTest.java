@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.OfferSide;
@@ -13,9 +14,11 @@ import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
 
+import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
+@RunWith(HierarchicalContextRunner.class)
 public class SetSLParamsFactoryTest extends CommonUtilForTest {
 
     private SetSLParamsFactory setSLParamsFactory;

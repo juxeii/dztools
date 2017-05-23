@@ -150,7 +150,9 @@ public class Components {
             .getEngine();
         final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(pluginConfig, clock);
         final OrderRepository orderRepository = new OrderRepository(orderLabelUtil);
-        final OpenOrders openOrders = new OpenOrders(engine, orderRepository);
+        final OpenOrders openOrders = new OpenOrders(engine,
+                                                     orderRepository,
+                                                     pluginConfig);
         final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
                                                                                       brokerSubscribe,
                                                                                       pluginConfig,

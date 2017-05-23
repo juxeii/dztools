@@ -20,6 +20,6 @@ public class HistoryOrders {
         return Single.defer(() -> historyOrdersProvider
             .get()
             .flatMapCompletable(orderRepository::store)
-            .andThen(orderRepository.getByID(orderID)));
+            .andThen(Single.defer(() -> orderRepository.getByID(orderID))));
     }
 }

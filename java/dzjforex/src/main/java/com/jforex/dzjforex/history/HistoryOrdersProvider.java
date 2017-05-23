@@ -11,6 +11,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.programming.misc.DateTimeUtil;
 
@@ -56,6 +57,7 @@ public class HistoryOrdersProvider {
                                                                                  to))
                     .flatMapIterable(orders -> orders)
                     .toList()
+                    .retryWhen(RxUtility.retryForHistory(pluginConfig))
                     .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()
                             + " history orders for " + subscribedInstruments));
             });

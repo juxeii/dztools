@@ -141,6 +141,9 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.demoLoginType()).thenReturn(loginTypeDemo);
         when(pluginConfigMock.realLoginType()).thenReturn(loginTypeReal);
 
+        when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
+        when(orderMockA.getLabel()).thenReturn(orderLabel);
+
         orderEventA = new OrderEvent(orderMockA,
                                      OrderEventType.SUBMIT_OK,
                                      true);

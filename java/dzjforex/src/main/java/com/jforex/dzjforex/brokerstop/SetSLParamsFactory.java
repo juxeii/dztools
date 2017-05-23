@@ -10,15 +10,15 @@ import com.jforex.programming.order.task.params.basic.SetSLParams;
 
 import io.reactivex.Single;
 
-public class OrderSetSLParams {
+public class SetSLParamsFactory {
 
     private final StopLoss stopLoss;
     private final RetryParams retryParams;
 
-    private final static Logger logger = LogManager.getLogger(OrderSetSLParams.class);
+    private final static Logger logger = LogManager.getLogger(SetSLParamsFactory.class);
 
-    public OrderSetSLParams(final StopLoss stopLoss,
-                            final RetryParams retryParams) {
+    public SetSLParamsFactory(final StopLoss stopLoss,
+                              final RetryParams retryParams) {
         this.stopLoss = stopLoss;
         this.retryParams = retryParams;
     }

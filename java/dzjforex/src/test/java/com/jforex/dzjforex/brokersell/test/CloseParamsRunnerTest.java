@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
-import com.jforex.dzjforex.brokersell.OrderCloseParams;
+import com.jforex.dzjforex.brokersell.CloseParamsFactory;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
@@ -21,7 +21,7 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
     private CloseParamsRunner closeParamsRunner;
 
     @Mock
-    private OrderCloseParams orderCloseParamsMock;
+    private CloseParamsFactory orderCloseParamsMock;
     @Mock
     private CloseParams closeParamsMock;
 

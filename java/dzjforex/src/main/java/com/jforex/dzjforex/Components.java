@@ -26,9 +26,9 @@ import com.jforex.dzjforex.brokerlogin.LoginRetryTimer;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
 import com.jforex.dzjforex.brokersell.BrokerSell;
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
-import com.jforex.dzjforex.brokersell.OrderCloseParams;
+import com.jforex.dzjforex.brokersell.CloseParamsFactory;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
-import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
+import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
@@ -170,8 +170,8 @@ public class Components {
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
                                                                               stopLoss,
                                                                               orderLabelUtil);
-        final OrderCloseParams orderCloseParams = new OrderCloseParams(tradeUtility);
-        final OrderSetSLParams orderSetSLParams = new OrderSetSLParams(stopLoss, retryParamsForTrading);
+        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(tradeUtility);
+        final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
         orderUtil = strategyUtil.orderUtil();
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
         final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);

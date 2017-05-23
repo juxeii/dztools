@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.brokerstop.OrderSetSLParams;
+import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
@@ -21,7 +21,7 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
     private SetSLParamsRunner setSLParamsRunner;
 
     @Mock
-    private OrderSetSLParams orderSetSLParamsMock;
+    private SetSLParamsFactory orderSetSLParamsMock;
     @Mock
     private SetSLParams setSLParamsMock;
 

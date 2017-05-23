@@ -8,10 +8,10 @@ import io.reactivex.Completable;
 public class SetSLParamsRunner {
 
     private final OrderUtil orderUtil;
-    private final OrderSetSLParams orderSetSLParams;
+    private final SetSLParamsFactory orderSetSLParams;
 
     public SetSLParamsRunner(final OrderUtil orderUtil,
-                             final OrderSetSLParams orderSetSLParams) {
+                             final SetSLParamsFactory orderSetSLParams) {
         this.orderUtil = orderUtil;
         this.orderSetSLParams = orderSetSLParams;
     }

@@ -9,13 +9,13 @@ import com.jforex.programming.order.task.params.basic.CloseParams;
 
 import io.reactivex.Single;
 
-public class OrderCloseParams {
+public class CloseParamsFactory {
 
     private final TradeUtility tradeUtility;
 
-    private final static Logger logger = LogManager.getLogger(OrderCloseParams.class);
+    private final static Logger logger = LogManager.getLogger(CloseParamsFactory.class);
 
-    public OrderCloseParams(final TradeUtility tradeUtility) {
+    public CloseParamsFactory(final TradeUtility tradeUtility) {
         this.tradeUtility = tradeUtility;
     }
 

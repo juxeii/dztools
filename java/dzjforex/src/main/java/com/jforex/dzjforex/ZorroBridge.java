@@ -96,7 +96,9 @@ public class ZorroBridge {
 
     public int doBrokerTime(final double pTimeUTC[]) {
         final BrokerTimeData brokerTimeData = new BrokerTimeData(pTimeUTC);
-        return brokerTime.get(brokerTimeData);
+        return brokerTime
+            .get(brokerTimeData)
+            .blockingGet();
     }
 
     public int doSubscribeAsset(final String Asset) {

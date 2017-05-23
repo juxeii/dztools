@@ -47,7 +47,6 @@ public class BarHistoryByShift {
         final long periodInterval = barParams
             .period()
             .getInterval();
-
         return historyWrapper.getBarsReversed(barParams,
                                               endDate - shift * periodInterval,
                                               endDate);

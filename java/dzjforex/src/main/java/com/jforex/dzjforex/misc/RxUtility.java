@@ -16,6 +16,9 @@ import io.reactivex.Single;
 
 public class RxUtility {
 
+    private RxUtility() {
+    }
+
     public static Single<Instrument> instrumentFromName(final String assetName) {
         final Optional<Instrument> maybeInstrument = InstrumentFactory.maybeFromName(assetName);
         return maybeInstrument.isPresent()

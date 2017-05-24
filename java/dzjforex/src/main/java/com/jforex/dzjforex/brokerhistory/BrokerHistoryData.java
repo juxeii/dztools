@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
-import com.jforex.dzjforex.time.TimeConvert;
+import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.programming.quote.BarQuote;
 import com.jforex.programming.quote.TickQuote;
 

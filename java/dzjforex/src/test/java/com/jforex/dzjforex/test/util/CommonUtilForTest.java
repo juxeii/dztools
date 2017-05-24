@@ -8,6 +8,7 @@ import java.time.Clock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.Rule;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
@@ -26,6 +27,7 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
+import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
@@ -46,6 +48,9 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public class CommonUtilForTest extends BDDMockito {
+
+    @Rule
+    public final TestSchedulerRule rxTestScheduler = new TestSchedulerRule();
 
     @Mock
     protected IClient clientMock;
@@ -75,6 +80,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected OrderLookup orderLookupMock;
     @Mock
     protected OrderLabelUtil orderLabelUtilMock;
+    @Mock
+    protected TimeWatch timeWatchMock;
     @Mock
     protected PluginConfig pluginConfigMock;
     @Mock
@@ -126,7 +133,6 @@ public class CommonUtilForTest extends BDDMockito {
     protected long historyAccessRetryDelay = 1500L;
     protected long tickFetchMillis = 60000L;
 
-    protected static final RxTestUtil rxTestUtil = RxTestUtil.get();
     protected static final JFException jfException = new JFException("");
     protected static final Logger logger = LogManager.getLogger(CommonUtilForTest.class);
 
@@ -173,7 +179,7 @@ public class CommonUtilForTest extends BDDMockito {
     }
 
     protected void advanceRetryTimes() {
-        RxTestUtil.advanceTimeInMillisBy(historyAccessRetries * historyAccessRetryDelay);
+        rxTestScheduler.advanceTimeInMillisBy(historyAccessRetries * historyAccessRetryDelay);
     }
 
     protected void setHistoryRetries(final int retries) {

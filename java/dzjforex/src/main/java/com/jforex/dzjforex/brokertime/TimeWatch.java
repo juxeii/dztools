@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.time;
+package com.jforex.dzjforex.brokertime;
 
 import java.time.Clock;
 

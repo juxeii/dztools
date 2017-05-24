@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.brokertime;
 
-import com.jforex.dzjforex.time.TimeConvert;
-
 public class BrokerTimeData {
 
     private final double pTimeUTC[];

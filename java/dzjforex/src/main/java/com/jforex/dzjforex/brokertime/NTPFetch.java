@@ -1,7 +1,6 @@
-package com.jforex.dzjforex.time;
+package com.jforex.dzjforex.brokertime;
 
 import java.net.InetAddress;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.NtpV3Packet;
@@ -12,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.PluginConfig;
 
-import io.reactivex.Flowable;
 import io.reactivex.Single;
 
 public class NTPFetch {
@@ -31,8 +29,7 @@ public class NTPFetch {
             .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
             .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()
                     + "! Will retry in " + retryDelay
-                    + " milliseconds."))
-            .retryWhen(errors -> errors.flatMap(e -> Flowable.timer(retryDelay, TimeUnit.MILLISECONDS)));
+                    + " milliseconds."));
     }
 
     private Single<Long> fromURL(final String ntpServerURL) {

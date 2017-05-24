@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.time.TimeConvert;
+import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.BarQuote;

@@ -10,9 +10,9 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
+import com.jforex.dzjforex.brokertime.ServerTimeProvider;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
-import com.jforex.dzjforex.time.ServerTimeProvider;
 import com.jforex.programming.misc.DateTimeUtil;
 
 import io.reactivex.Observable;

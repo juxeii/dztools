@@ -8,8 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.jforex.dzjforex.brokerhistory.HistoryTickFiller;
+import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
-import com.jforex.dzjforex.time.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

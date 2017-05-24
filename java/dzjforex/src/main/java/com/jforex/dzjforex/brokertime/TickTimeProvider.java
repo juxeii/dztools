@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.time;
+package com.jforex.dzjforex.brokertime;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,23 +27,23 @@ public class TickTimeProvider {
     }
 
     public Single<Long> get() {
-        return Single.defer(() -> {
-            final long latestTickTime = fromRepository();
-            logger.debug("Fetched tick time " + DateTimeUtil.formatMillis(latestTickTime));
-            return latestTickTime == INVALID_SERVER_TIME
+        return Single
+            .fromCallable(this::fromRepository)
+            .doOnSuccess(latestTickTime -> logger.debug("Fetched latest tick time "
+                    + DateTimeUtil.formatMillis(latestTickTime)))
+            .flatMap(latestTickTime -> latestTickTime == INVALID_SERVER_TIME
                     ? Single.error(new JFException("Fetching tick time failed!"))
-                    : Single.just(getForValidTickTime(latestTickTime));
-        });
+                    : Single.just(getForValidTickTime(latestTickTime)));
     }
 
     private long getForValidTickTime(final long latestTickTime) {
-        return latestTickTime > timeWatch.get()
+        final long currentTimeWatch = timeWatch.get();
+        return latestTickTime > currentTimeWatch
                 ? synchTickTime(latestTickTime)
-                : timeWatch.get();
+                : currentTimeWatch;
     }
 
     private long fromRepository() {
-        logger.debug("Fetching tick times from repository...");
         return tickQuoteRepository
             .getAll()
             .values()

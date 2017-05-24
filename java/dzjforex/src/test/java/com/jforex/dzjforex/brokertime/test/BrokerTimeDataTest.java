@@ -7,8 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jforex.dzjforex.brokertime.BrokerTimeData;
+import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
-import com.jforex.dzjforex.time.TimeConvert;
 
 public class BrokerTimeDataTest extends CommonUtilForTest {
 

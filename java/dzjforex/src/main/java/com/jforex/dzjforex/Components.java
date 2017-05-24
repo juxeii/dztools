@@ -36,6 +36,12 @@ import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokertime.BrokerTime;
+import com.jforex.dzjforex.brokertime.NTPFetch;
+import com.jforex.dzjforex.brokertime.NTPProvider;
+import com.jforex.dzjforex.brokertime.NTPSynchTask;
+import com.jforex.dzjforex.brokertime.ServerTimeProvider;
+import com.jforex.dzjforex.brokertime.TickTimeProvider;
+import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
@@ -51,11 +57,6 @@ import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.dzjforex.time.NTPFetch;
-import com.jforex.dzjforex.time.NTPProvider;
-import com.jforex.dzjforex.time.ServerTimeProvider;
-import com.jforex.dzjforex.time.TickTimeProvider;
-import com.jforex.dzjforex.time.TimeWatch;
 import com.jforex.programming.client.ClientUtil;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
@@ -197,12 +198,13 @@ public class Components {
     private void initTimeComponents() {
         final NTPUDPClient ntpUDPClient = new NTPUDPClient();
         final NTPFetch ntpFetch = new NTPFetch(ntpUDPClient, pluginConfig);
-        final NTPProvider ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
+        final NTPSynchTask ntpSynchTask = new NTPSynchTask(ntpFetch, pluginConfig);
         final TimeWatch timeWatch = new TimeWatch(clock);
+        final NTPProvider ntpProvider = new NTPProvider(ntpSynchTask,
+                                                        timeWatch,
+                                                        pluginConfig);
         final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, timeWatch);
-        serverTimeProvider = new ServerTimeProvider(ntpProvider,
-                                                    tickTimeProvider,
-                                                    timeWatch);
+        serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     marketData);

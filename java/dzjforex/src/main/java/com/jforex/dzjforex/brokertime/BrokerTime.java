@@ -3,7 +3,6 @@ package com.jforex.dzjforex.brokertime;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.MarketState;
-import com.jforex.dzjforex.time.ServerTimeProvider;
 
 import io.reactivex.Single;
 

@@ -88,8 +88,9 @@ public class CommonUtilForTest extends BDDMockito {
     protected static final String loginTypeDemo = "Demo";
     protected static final String loginTypeReal = "Real";
     protected static final ICurrency accountCurrency = CurrencyFactory.EUR;
+    protected static final String orderID = "12345";
     protected static final String orderLabelPrefix = "Zorro";
-    protected static final String orderLabel = orderLabelPrefix + "12345";
+    protected static final String orderLabel = orderLabelPrefix + orderID;
 
     protected static final LoginCredentials loginCredentials =
             new LoginCredentials(jnlpDEMO,
@@ -173,6 +174,19 @@ public class CommonUtilForTest extends BDDMockito {
 
     protected void advanceRetryTimes() {
         RxTestUtil.advanceTimeInMillisBy(historyAccessRetries * historyAccessRetryDelay);
+    }
+
+    protected void setHistoryRetries(final int retries) {
+        when(pluginConfigMock.historyAccessRetries()).thenReturn(retries);
+    }
+
+    protected <T> void makeStubFailRetriesThenSuccess(final OngoingStubbing<T> stub,
+                                                      final T successValue) {
+        stub
+            .thenThrow(jfException)
+            .thenThrow(jfException)
+            .thenThrow(jfException)
+            .thenReturn(successValue);
     }
 
     protected <T> void makeSingleStubFailRetriesThenSuccess(final OngoingStubbing<Single<T>> stub,

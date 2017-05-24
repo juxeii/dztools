@@ -12,7 +12,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
-import io.reactivex.Single;
+import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -59,7 +59,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
     @Test
     public void whenOrderNotAvailableUnknownOrderIsReturned() {
-        when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Single.error(jfException));
+        when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Maybe.empty());
 
         subscribe().assertValue(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue());
     }
@@ -68,7 +68,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Single.just(orderMockA));
+            when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Maybe.just(orderMockA));
         }
 
         private void verifyFillCallWithCorrectCloseValue(final double pClose) {

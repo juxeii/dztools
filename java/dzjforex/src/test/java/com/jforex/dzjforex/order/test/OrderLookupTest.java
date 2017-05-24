@@ -6,7 +6,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IOrder;
-import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.order.OpenOrders;
 import com.jforex.dzjforex.order.OrderLookup;
@@ -14,7 +13,7 @@ import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
-import io.reactivex.Single;
+import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -44,30 +43,30 @@ public class OrderLookupTest extends CommonUtilForTest {
     }
 
     private void makeRepositoryPass() {
-        when(orderRepositoryMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
+        when(orderRepositoryMock.getByID(orderID)).thenReturn(Maybe.just(orderMockA));
     }
 
-    private void makeRepositoryFail() {
-        when(orderRepositoryMock.getByID(orderID)).thenReturn(Single.error(jfException));
+    private void makeRepositoryEmpty() {
+        when(orderRepositoryMock.getByID(orderID)).thenReturn(Maybe.empty());
     }
 
     private void makeOpenOrdersPass() {
-        when(openOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
+        when(openOrdersMock.getByID(orderID)).thenReturn(Maybe.just(orderMockA));
     }
 
-    private void makeOpenOrdersFail() {
-        when(openOrdersMock.getByID(orderID)).thenReturn(Single.error(jfException));
+    private void makeOpenOrdersEmpty() {
+        when(openOrdersMock.getByID(orderID)).thenReturn(Maybe.empty());
     }
 
     private void makeHistoryOrdersPass() {
-        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.just(orderMockA));
+        when(historyOrdersMock.getByID(orderID)).thenReturn(Maybe.just(orderMockA));
     }
 
-    private void makeHistoryOrdersFail() {
-        when(historyOrdersMock.getByID(orderID)).thenReturn(Single.error(jfException));
+    private void makeHistoryOrdersEmpty() {
+        when(historyOrdersMock.getByID(orderID)).thenReturn(Maybe.empty());
     }
 
-    private TestObserver<IOrder> testObserver() {
+    private TestObserver<IOrder> subscribe() {
         return orderLookup
             .getByID(orderID)
             .test();
@@ -77,35 +76,35 @@ public class OrderLookupTest extends CommonUtilForTest {
     public void orderFromRepositoryIsReturned() {
         makeRepositoryPass();
 
-        testObserver().assertValue(orderMockA);
+        subscribe().assertValue(orderMockA);
     }
 
     public class OnRepositoryFail {
 
         @Before
         public void setUp() {
-            makeRepositoryFail();
+            makeRepositoryEmpty();
         }
 
         public class OnOpenOrdersFail {
 
             @Before
             public void setUp() {
-                makeOpenOrdersFail();
+                makeOpenOrdersEmpty();
             }
 
             @Test
-            public void onHistoryLookupFailErrorIsPropagated() {
-                makeHistoryOrdersFail();
+            public void whenHistoryOrdersReturnNoOrderAnEmptyMaybeIsReturned() {
+                makeHistoryOrdersEmpty();
 
-                testObserver().assertError(JFException.class);
+                subscribe().assertNoValues();
             }
 
             @Test
             public void onHistoryLookupOKOrderIsReturned() {
                 makeHistoryOrdersPass();
 
-                testObserver().assertValue(orderMockA);
+                subscribe().assertValue(orderMockA);
             }
         }
 
@@ -118,12 +117,12 @@ public class OrderLookupTest extends CommonUtilForTest {
 
             @Test
             public void orderFromOpenOrdersIsReturned() {
-                testObserver().assertValue(orderMockA);
+                subscribe().assertValue(orderMockA);
             }
 
             @Test
             public void historyOrdersNotCalled() {
-                testObserver();
+                subscribe();
 
                 verifyZeroInteractions(historyOrderMock);
             }

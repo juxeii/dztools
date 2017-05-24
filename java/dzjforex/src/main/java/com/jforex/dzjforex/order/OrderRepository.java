@@ -7,17 +7,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.dukascopy.api.JFException;
 import com.google.common.collect.Maps;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 
 public class OrderRepository {
 
     private final OrderLabelUtil orderLabelUtil;
-    private final Map<Integer, IOrder> orderByTradeId = Maps.newHashMap();
+    private final Map<Integer, IOrder> orderByID = Maps.newHashMap();
 
     private final static Logger logger = LogManager.getLogger(OrderRepository.class);
 
@@ -25,23 +24,25 @@ public class OrderRepository {
         this.orderLabelUtil = orderLabelUtil;
     }
 
-    public Single<IOrder> getByID(final int orderID) {
-        return orderByTradeId.containsKey(orderID)
-                ? Single.just(orderByTradeId.get(orderID))
-                : Single.error(new JFException("No Zorro order with ID " + orderID + " in repository!"));
+    public Maybe<IOrder> getByID(final int orderID) {
+        return orderByID.containsKey(orderID)
+                ? Maybe.just(orderByID.get(orderID))
+                : Maybe.empty();
     }
 
     public Completable store(final List<IOrder> orders) {
         return Observable
             .fromIterable(orders)
-            .flatMapCompletable(this::store, true);
+            .flatMapCompletable(this::store);
     }
 
     public Completable store(final IOrder order) {
         return orderLabelUtil
             .idFromOrder(order)
-            .doOnSuccess(orderID -> orderByTradeId.put(orderID, order))
-            .doOnSuccess(orderID -> logger.debug("Stored Zorro order with ID " + orderID + " to repository."))
+            .doOnSuccess(orderID -> {
+                orderByID.put(orderID, order);
+                logger.debug("Stored Zorro order with ID " + orderID + " to repository.");
+            })
             .ignoreElement();
     }
 }

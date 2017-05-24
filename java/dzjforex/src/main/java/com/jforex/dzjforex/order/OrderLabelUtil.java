@@ -14,8 +14,8 @@ public class OrderLabelUtil {
 
     private static final int longModulo = 1000000000;
 
-    public OrderLabelUtil(final PluginConfig pluginConfig,
-                          final Clock clock) {
+    public OrderLabelUtil(final Clock clock,
+                          final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
         this.clock = clock;
     }
@@ -25,24 +25,22 @@ public class OrderLabelUtil {
     }
 
     public Maybe<Integer> idFromOrder(final IOrder order) {
-        return idFromLabel(order.getLabel());
+        return Maybe.defer(() -> idFromLabel(order.getLabel()));
     }
 
     public Maybe<Integer> idFromLabel(final String label) {
-        final String orderLabelPrefix = orderLabelPrefix();
-        if (label == null || !label.startsWith(orderLabelPrefix))
-            return Maybe.empty();
+        return Maybe.defer(() -> {
+            final String orderLabelPrefix = orderLabelPrefix();
+            if (label == null || !label.startsWith(orderLabelPrefix))
+                return Maybe.empty();
 
-        final String idName = label.substring(orderLabelPrefix.length());
-        return Maybe.just(Integer.parseInt(idName));
+            final String idName = label.substring(orderLabelPrefix.length());
+            return Maybe.just(Integer.parseInt(idName));
+        });
     }
 
     private String orderLabelPrefix() {
         return pluginConfig.orderLabelPrefix();
-    }
-
-    public String labelFromId(final int orderId) {
-        return orderLabelPrefix() + String.valueOf(orderId);
     }
 
     private int nowAsInteger() {

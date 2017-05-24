@@ -78,7 +78,7 @@ public class StopLoss {
         return dStopDist == noStopLossDistance || dStopDist == oppositeClose;
     }
 
-    public Single<Double> forPrice(final Instrument instrument,
+    public Single<Double> forSetSL(final Instrument instrument,
                                    final double slPrice) {
         final double currentAskPrice = tradeUtility.ask(instrument);
         final double pipDistance = InstrumentUtil.pipDistanceOfPrices(instrument,

@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
 
+import com.dukascopy.api.IContext;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.Instrument;
@@ -65,12 +66,18 @@ import com.jforex.programming.strategy.StrategyUtil;
 public class Components {
 
     private final PluginConfig pluginConfig;
-    private final IClient client;
-    private final Zorro zorro;
-    private final InfoStrategy infoStrategy;
-    private final Clock clock;
-    private final BrokerLogin brokerLogin;
+    private IClient client;
+    private ClientUtil clientUtil;
+    private Zorro zorro;
+    private InfoStrategy infoStrategy;
+    private Clock clock;
+    private BrokerLogin brokerLogin;
+    private IContext context;
+    private IEngine engine;
     private OrderUtil orderUtil;
+    private StrategyUtil strategyUtil;
+    private TickQuoteRepository tickQuoteRepository;
+    private MarketState marketData;
     private ServerTimeProvider serverTimeProvider;
     private BrokerTime brokerTime;
     private AccountInfo accountInfo;
@@ -83,55 +90,37 @@ public class Components {
     private BrokerSell brokerSell;
     private BrokerStop brokerStop;
     private TradeUtility tradeUtility;
-    private final RetryParams retryParamsForTrading;
+    private RetryParams retryParamsForTrading;
 
     public Components(final PluginConfig pluginConfig) {
         this.pluginConfig = pluginConfig;
 
+        initSystemComponents();
+        initLoginComponents();
+    }
+
+    private void initSystemComponents() {
         client = ClientProvider.get();
-        final ClientUtil clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
+        clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
         zorro = new Zorro(pluginConfig);
         infoStrategy = new InfoStrategy();
         clock = Clock.systemDefaultZone();
-        final PinProvider pinProvider = new PinProvider(client, pluginConfig().realConnectURL());
+    }
+
+    private void initLoginComponents() {
+        final PinProvider pinProvider = new PinProvider(client, pluginConfig.realConnectURL());
         final CredentialsFactory credentialsFactory = new CredentialsFactory(pinProvider, pluginConfig);
         final LoginRetryTimer loginRetryTimer = new LoginRetryTimer(pluginConfig);
         brokerLogin = new BrokerLogin(clientUtil.authentification(),
                                       credentialsFactory,
                                       loginRetryTimer);
-        retryParamsForTrading = retryParamsForTrading();
-    }
-
-    private RetryParams retryParamsForTrading() {
-        final RetryDelay delay = new RetryDelay(pluginConfig.orderSubmitRetryDelay(), TimeUnit.MILLISECONDS);
-        return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
     private void initAfterStrategyStart() {
-        final NTPUDPClient ntpUDPClient = new NTPUDPClient();
-        final NTPFetch ntpFetch = new NTPFetch(ntpUDPClient, pluginConfig);
-        final NTPProvider ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
-        final MarketState marketData = new MarketState(infoStrategy
-            .getContext()
-            .getDataService());
-        final StrategyUtil strategyUtil = infoStrategy.strategyUtil();
-        final TickQuoteRepository tickQuoteRepository = strategyUtil
-            .tickQuoteProvider()
-            .repository();
-        final TimeWatch timeWatch = new TimeWatch(clock);
-        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, timeWatch);
-        serverTimeProvider = new ServerTimeProvider(ntpProvider,
-                                                    tickTimeProvider,
-                                                    timeWatch);
-        brokerTime = new BrokerTime(client,
-                                    serverTimeProvider,
-                                    marketData);
-        accountInfo = new AccountInfo(infoStrategy.getAccount(),
-                                      strategyUtil.calculationUtil(),
-                                      pluginConfig);
-        brokerAccount = new BrokerAccount(accountInfo);
+        initStrategyComponents();
+        initTimeComponents();
+        initAccountComponents();
 
-        brokerSubscribe = new BrokerSubscribe(client, accountInfo);
         final IHistory history = infoStrategy.getHistory();
         final HistoryWrapper historyWrapper = new HistoryWrapper(history);
 
@@ -145,10 +134,8 @@ public class Components {
         final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
         final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
-        final IEngine engine = infoStrategy
-            .getContext()
-            .getEngine();
-        final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(pluginConfig, clock);
+
+        final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(clock, pluginConfig);
         final OrderRepository orderRepository = new OrderRepository(orderLabelUtil);
         final OpenOrders openOrders = new OpenOrders(engine,
                                                      orderRepository,
@@ -163,6 +150,7 @@ public class Components {
                                                         openOrders,
                                                         historyOrders);
         final PriceProvider priceProvider = new PriceProvider(strategyUtil);
+        retryParamsForTrading = retryParamsForTrading();
         tradeUtility = new TradeUtility(orderLookup,
                                         priceProvider,
                                         accountInfo,
@@ -176,7 +164,6 @@ public class Components {
                                                                               orderLabelUtil);
         final CloseParamsFactory orderCloseParams = new CloseParamsFactory(tradeUtility);
         final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
-        orderUtil = strategyUtil.orderUtil();
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
         final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
         final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
@@ -186,6 +173,44 @@ public class Components {
                                   tradeUtility);
         brokerSell = new BrokerSell(closeParamsRunner, tradeUtility);
         brokerStop = new BrokerStop(setSLParamsRunner, tradeUtility);
+    }
+
+    private void initStrategyComponents() {
+        context = infoStrategy.getContext();
+        engine = context.getEngine();
+        strategyUtil = infoStrategy.strategyUtil();
+        orderUtil = strategyUtil.orderUtil();
+        marketData = new MarketState(context.getDataService());
+        tickQuoteRepository = strategyUtil
+            .tickQuoteProvider()
+            .repository();
+    }
+
+    private void initAccountComponents() {
+        accountInfo = new AccountInfo(infoStrategy.getAccount(),
+                                      strategyUtil.calculationUtil(),
+                                      pluginConfig);
+        brokerAccount = new BrokerAccount(accountInfo);
+        brokerSubscribe = new BrokerSubscribe(client, accountInfo);
+    }
+
+    private void initTimeComponents() {
+        final NTPUDPClient ntpUDPClient = new NTPUDPClient();
+        final NTPFetch ntpFetch = new NTPFetch(ntpUDPClient, pluginConfig);
+        final NTPProvider ntpProvider = new NTPProvider(ntpFetch, pluginConfig);
+        final TimeWatch timeWatch = new TimeWatch(clock);
+        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, timeWatch);
+        serverTimeProvider = new ServerTimeProvider(ntpProvider,
+                                                    tickTimeProvider,
+                                                    timeWatch);
+        brokerTime = new BrokerTime(client,
+                                    serverTimeProvider,
+                                    marketData);
+    }
+
+    private RetryParams retryParamsForTrading() {
+        final RetryDelay delay = new RetryDelay(pluginConfig.orderSubmitRetryDelay(), TimeUnit.MILLISECONDS);
+        return new RetryParams(pluginConfig.orderSubmitRetries(), att -> delay);
     }
 
     public long startAndInitStrategyComponents(final BrokerLoginData brokerLoginData) {

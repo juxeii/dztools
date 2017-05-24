@@ -13,6 +13,7 @@ import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.programming.order.task.params.RetryParams;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class TradeUtility {
@@ -56,7 +57,7 @@ public class TradeUtility {
 
     public Single<IOrder> orderForTrading(final int nTradeID) {
         return isTradingAllowed()
-                ? orderByID(nTradeID)
+                ? orderByID(nTradeID).toSingle()
                 : Single.error(new JFException("Trading not allowed for nTradeID " + nTradeID));
     }
 
@@ -82,7 +83,7 @@ public class TradeUtility {
         return Math.abs(contracts) / pluginConfig.lotScale();
     }
 
-    public Single<IOrder> orderByID(final int nTradeID) {
+    public Maybe<IOrder> orderByID(final int nTradeID) {
         return orderRepository.getByID(nTradeID);
     }
 

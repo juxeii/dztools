@@ -13,6 +13,7 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuy;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
+import com.jforex.dzjforex.brokerhistory.HistoryTickFiller;
 import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSell;
@@ -169,12 +170,13 @@ public class ZorroBridge {
                                 final int nTickMinutes,
                                 final int nTicks,
                                 final double tickParams[]) {
+        final HistoryTickFiller historyTickFiller = new HistoryTickFiller(tickParams);
         final BrokerHistoryData brokerHistoryData = new BrokerHistoryData(Asset,
                                                                           tStart,
                                                                           tEnd,
                                                                           nTickMinutes,
                                                                           nTicks,
-                                                                          tickParams);
+                                                                          historyTickFiller);
         return zorro.progressWait(brokerHistory.get(brokerHistoryData));
     }
 

@@ -8,6 +8,7 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TradeUtility;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class BrokerTrade {
@@ -22,13 +23,14 @@ public class BrokerTrade {
     }
 
     public Single<Integer> fillParams(final BrokerTradeData brokerTradeData) {
-        return Single.defer(() -> tradeUtility
-            .orderByID(brokerTradeData.nTradeID())
+        return Maybe
+            .defer(() -> tradeUtility.orderByID(brokerTradeData.nTradeID()))
+            .toSingle()
             .doOnSuccess(order -> fillTradeParams(order, brokerTradeData))
             .map(order -> order.getState() == IOrder.State.CLOSED
                     ? ZorroReturnValues.ORDER_RECENTLY_CLOSED.getValue()
                     : tradeUtility.amountToContracts(order.getAmount()))
-            .onErrorReturnItem(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue()));
+            .onErrorReturnItem(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue());
     }
 
     private void fillTradeParams(final IOrder order,

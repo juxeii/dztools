@@ -10,6 +10,8 @@ import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.google.common.collect.Lists;
 import com.jforex.programming.quote.BarParams;
+import com.jforex.programming.quote.BarQuote;
+import com.jforex.programming.quote.TickQuote;
 
 public class BarsAndTicksForTest extends CommonUtilForTest {
 
@@ -26,6 +28,14 @@ public class BarsAndTicksForTest extends CommonUtilForTest {
     @Mock
     protected ITick tickCMock;
 
+    protected BarQuote barQuoteA;
+    protected BarQuote barQuoteB;
+    protected BarQuote barQuoteC;
+
+    protected TickQuote tickQuoteA;
+    protected TickQuote tickQuoteB;
+    protected TickQuote tickQuoteC;
+
     protected final long barATime = 12L;
     protected final long barBTime = 14L;
     protected final long barCTime = 17L;
@@ -38,6 +48,8 @@ public class BarsAndTicksForTest extends CommonUtilForTest {
     protected final OfferSide offerSide = OfferSide.ASK;
     protected final List<IBar> barMockList = Lists.newArrayList();
     protected final List<ITick> tickMockList = Lists.newArrayList();
+    protected final List<BarQuote> barQuoteList = Lists.newArrayList();
+    protected final List<TickQuote> tickQuoteList = Lists.newArrayList();
 
     protected final BarParams barParams = BarParams
         .forInstrument(instrumentForTest)
@@ -57,6 +69,20 @@ public class BarsAndTicksForTest extends CommonUtilForTest {
         tickMockList.add(tickAMock);
         tickMockList.add(tickBMock);
         tickMockList.add(tickCMock);
+
+        barQuoteA = new BarQuote(barAMock, barParams);
+        barQuoteB = new BarQuote(barBMock, barParams);
+        barQuoteB = new BarQuote(barCMock, barParams);
+        barQuoteList.add(barQuoteA);
+        barQuoteList.add(barQuoteB);
+        barQuoteList.add(barQuoteC);
+
+        tickQuoteA = new TickQuote(instrumentForTest, tickAMock);
+        tickQuoteB = new TickQuote(instrumentForTest, tickBMock);
+        tickQuoteC = new TickQuote(instrumentForTest, tickCMock);
+        tickQuoteList.add(tickQuoteA);
+        tickQuoteList.add(tickQuoteB);
+        tickQuoteList.add(tickQuoteC);
     }
 
     private void setUpMocks() {

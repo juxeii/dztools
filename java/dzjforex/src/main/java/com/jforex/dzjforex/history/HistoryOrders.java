@@ -3,6 +3,7 @@ package com.jforex.dzjforex.history;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.order.OrderRepository;
 
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class HistoryOrders {
@@ -16,10 +17,10 @@ public class HistoryOrders {
         this.orderRepository = orderRepository;
     }
 
-    public Single<IOrder> getByID(final int orderID) {
-        return Single.defer(() -> historyOrdersProvider
-            .get()
+    public Maybe<IOrder> getByID(final int orderID) {
+        return Single
+            .defer(historyOrdersProvider::get)
             .flatMapCompletable(orderRepository::store)
-            .andThen(Single.defer(() -> orderRepository.getByID(orderID))));
+            .andThen(Maybe.defer(() -> orderRepository.getByID(orderID)));
     }
 }

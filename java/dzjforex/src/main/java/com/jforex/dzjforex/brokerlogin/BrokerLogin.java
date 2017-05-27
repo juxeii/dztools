@@ -33,7 +33,7 @@ public class BrokerLogin {
 
     private Single<Integer> loginTask(final BrokerLoginData brokerLoginData) {
         return Single
-            .just(credentialsFactory.create(brokerLoginData))
+            .fromCallable(() -> credentialsFactory.create(brokerLoginData))
             .flatMapCompletable(authentification::login)
             .toSingleDefault(ZorroReturnValues.LOGIN_OK.getValue())
             .doOnError(e -> {
@@ -45,7 +45,7 @@ public class BrokerLogin {
 
     public Single<Integer> logout() {
         return Completable
-            .defer(() -> authentification.logout())
+            .defer(authentification::logout)
             .toSingleDefault(ZorroReturnValues.LOGOUT_OK.getValue());
     }
 }

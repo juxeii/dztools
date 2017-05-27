@@ -12,12 +12,21 @@ public class TimeWatch {
         this.clock = clock;
     }
 
-    public void synch(final long latestTime) {
+    public long getForNewTime(final long newTime) {
+        final long timeWithOffset = getWithOffset();
+        if (newTime > timeWithOffset) {
+            synch(newTime);
+            return newTime;
+        }
+        return timeWithOffset;
+    }
+
+    private void synch(final long latestTime) {
         this.latestTime = latestTime;
         synchTime = currentTime();
     }
 
-    public long get() {
+    private long getWithOffset() {
         final long diffToSynchTime = currentTime() - synchTime;
         return latestTime + diffToSynchTime;
     }

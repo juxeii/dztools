@@ -40,14 +40,15 @@ import com.jforex.dzjforex.brokertime.NTPFetch;
 import com.jforex.dzjforex.brokertime.NTPProvider;
 import com.jforex.dzjforex.brokertime.NTPSynchTask;
 import com.jforex.dzjforex.brokertime.ServerTimeProvider;
+import com.jforex.dzjforex.brokertime.TickTimeFetch;
 import com.jforex.dzjforex.brokertime.TickTimeProvider;
 import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
+import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
-import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.misc.PriceProvider;
@@ -58,6 +59,7 @@ import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.client.ClientUtil;
+import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.quote.TickQuoteRepository;
@@ -66,7 +68,7 @@ import com.jforex.programming.strategy.StrategyUtil;
 
 public class Components {
 
-    private final PluginConfig pluginConfig;
+    private PluginConfig pluginConfig;
     private IClient client;
     private ClientUtil clientUtil;
     private Zorro zorro;
@@ -92,19 +94,22 @@ public class Components {
     private BrokerStop brokerStop;
     private TradeUtility tradeUtility;
     private RetryParams retryParamsForTrading;
+    private OrderRepository orderRepository;
+    private OpenOrders openOrders;
+    private OrderLabelUtil orderLabelUtil;
+    private OrderLookup orderLookup;
 
-    public Components(final PluginConfig pluginConfig) {
-        this.pluginConfig = pluginConfig;
-
-        initSystemComponents();
+    public Components(final SystemComponents systemComponents) {
+        initSystemComponents(systemComponents);
         initLoginComponents();
     }
 
-    private void initSystemComponents() {
-        client = ClientProvider.get();
-        clientUtil = new ClientUtil(client, pluginConfig.cacheDirectory());
+    private void initSystemComponents(final SystemComponents systemComponents) {
+        client = systemComponents.client();
+        pluginConfig = systemComponents.pluginConfig();
+        infoStrategy = systemComponents.infoStrategy();
+        clientUtil = systemComponents.clientUtil();
         zorro = new Zorro(pluginConfig);
-        infoStrategy = new InfoStrategy();
         clock = Clock.systemDefaultZone();
     }
 
@@ -121,59 +126,9 @@ public class Components {
         initStrategyComponents();
         initTimeComponents();
         initAccountComponents();
-
-        final IHistory history = infoStrategy.getHistory();
-        final HistoryWrapper historyWrapper = new HistoryWrapper(history);
-
-        final HistoryFetchDate historyFetchDate = new HistoryFetchDate(historyWrapper, pluginConfig);
-        final BarHistoryByShift barHistoryByShift = new BarHistoryByShift(historyWrapper,
-                                                                          historyFetchDate,
-                                                                          pluginConfig);
-        final TickHistoryByShift tickHistoryByShift = new TickHistoryByShift(historyWrapper,
-                                                                             historyFetchDate,
-                                                                             pluginConfig);
-        final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
-        final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
-        brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
-
-        final OrderLabelUtil orderLabelUtil = new OrderLabelUtil(clock, pluginConfig);
-        final OrderRepository orderRepository = new OrderRepository(orderLabelUtil);
-        final OpenOrders openOrders = new OpenOrders(engine,
-                                                     orderRepository,
-                                                     pluginConfig);
-        final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
-                                                                                      brokerSubscribe,
-                                                                                      pluginConfig,
-                                                                                      serverTimeProvider);
-        final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
-
-        final OrderLookup orderLookup = new OrderLookup(orderRepository,
-                                                        openOrders,
-                                                        historyOrders);
-        final PriceProvider priceProvider = new PriceProvider(strategyUtil);
-        retryParamsForTrading = retryParamsForTrading();
-        tradeUtility = new TradeUtility(orderLookup,
-                                        priceProvider,
-                                        accountInfo,
-                                        orderLabelUtil,
-                                        retryParamsForTrading,
-                                        pluginConfig);
-        brokerAsset = new BrokerAsset(accountInfo, priceProvider);
-        final StopLoss stopLoss = new StopLoss(tradeUtility, pluginConfig.minPipsForSL());
-        final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
-                                                                              stopLoss,
-                                                                              orderLabelUtil);
-        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(tradeUtility);
-        final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
-        final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
-        final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
-        final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
-        brokerTrade = new BrokerTrade(tradeUtility);
-        brokerBuy = new BrokerBuy(submitParamsRunner,
-                                  orderRepository,
-                                  tradeUtility);
-        brokerSell = new BrokerSell(closeParamsRunner, tradeUtility);
-        brokerStop = new BrokerStop(setSLParamsRunner, tradeUtility);
+        initOrderComponents();
+        initHistoryComponents();
+        initTradeComponents();
     }
 
     private void initStrategyComponents() {
@@ -203,11 +158,73 @@ public class Components {
         final NTPProvider ntpProvider = new NTPProvider(ntpSynchTask,
                                                         timeWatch,
                                                         pluginConfig);
-        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickQuoteRepository, timeWatch);
+        final TickTimeFetch tickTimeFetch = new TickTimeFetch(tickQuoteRepository);
+        final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickTimeFetch, timeWatch);
         serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
                                     marketData);
+    }
+
+    private void initOrderComponents() {
+        orderLabelUtil = new OrderLabelUtil(clock, pluginConfig);
+        orderRepository = new OrderRepository(orderLabelUtil);
+        openOrders = new OpenOrders(engine,
+                                    orderRepository,
+                                    pluginConfig);
+    }
+
+    private void initHistoryComponents() {
+        final IHistory history = infoStrategy.getHistory();
+        final HistoryWrapper historyWrapper = new HistoryWrapper(history);
+
+        final HistoryFetchDate historyFetchDate = new HistoryFetchDate(historyWrapper, pluginConfig);
+        final BarHistoryByShift barHistoryByShift = new BarHistoryByShift(historyWrapper,
+                                                                          historyFetchDate,
+                                                                          pluginConfig);
+        final TickHistoryByShift tickHistoryByShift = new TickHistoryByShift(historyWrapper,
+                                                                             historyFetchDate,
+                                                                             pluginConfig);
+        final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
+        final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
+        brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
+        final HistoryOrdersDates historyOrdersDates = new HistoryOrdersDates(serverTimeProvider, pluginConfig);
+        final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
+                                                                                      brokerSubscribe,
+                                                                                      historyOrdersDates,
+                                                                                      pluginConfig);
+        final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
+        orderLookup = new OrderLookup(orderRepository,
+                                      openOrders,
+                                      historyOrders);
+    }
+
+    private void initTradeComponents() {
+        final PriceProvider priceProvider = new PriceProvider(strategyUtil);
+        retryParamsForTrading = retryParamsForTrading();
+        tradeUtility = new TradeUtility(orderLookup,
+                                        priceProvider,
+                                        accountInfo,
+                                        orderLabelUtil,
+                                        retryParamsForTrading,
+                                        pluginConfig);
+        brokerAsset = new BrokerAsset(accountInfo, priceProvider);
+        final CalculationUtil calculationUtil = strategyUtil.calculationUtil();
+        final StopLoss stopLoss = new StopLoss(calculationUtil, pluginConfig.minPipsForSL());
+        final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
+                                                                              stopLoss,
+                                                                              orderLabelUtil);
+        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(tradeUtility);
+        final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
+        final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
+        final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
+        final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
+        brokerTrade = new BrokerTrade(tradeUtility);
+        brokerBuy = new BrokerBuy(submitParamsRunner,
+                                  orderRepository,
+                                  tradeUtility);
+        brokerSell = new BrokerSell(closeParamsRunner, tradeUtility);
+        brokerStop = new BrokerStop(setSLParamsRunner, tradeUtility);
     }
 
     private RetryParams retryParamsForTrading() {
@@ -244,10 +261,6 @@ public class Components {
     }
 
     public BrokerSubscribe brokerSubscribe() {
-        return brokerSubscribe;
-    }
-
-    public BrokerSubscribe subscribeAsset() {
         return brokerSubscribe;
     }
 

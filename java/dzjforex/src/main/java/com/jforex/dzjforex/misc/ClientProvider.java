@@ -10,11 +10,14 @@ import io.reactivex.Single;
 
 public class ClientProvider {
 
+    private ClientProvider() {
+    }
+
     private final static Logger logger = LogManager.getLogger(ClientProvider.class);
 
     public static IClient get() {
         return Single
-            .fromCallable(() -> ClientFactory.getDefaultInstance())
+            .fromCallable(ClientFactory::getDefaultInstance)
             .doOnError(e -> logger.error("Error retrieving IClient instance! " + e.getMessage()))
             .blockingGet();
     }

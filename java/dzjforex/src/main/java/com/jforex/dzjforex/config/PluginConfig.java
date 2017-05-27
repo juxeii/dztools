@@ -92,7 +92,7 @@ public interface PluginConfig extends Config {
 
     @Key("ntp.retrydelay")
     @DefaultValue("5000")
-    int ntpRetryDelay();
+    long ntpRetryDelay();
 
     @Key("zorro.progressinterval")
     @DefaultValue("250")

@@ -4,91 +4,92 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine.OrderCommand;
+import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.math.MathUtil;
+import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Single;
 
 public class StopLoss {
 
-    private final TradeUtility tradeUtility;
+    private final CalculationUtil calculationUtil;
     private final double minPipsForSL;
 
     private final static double noStopLossDistance = 0.0;
     private final static double oppositeClose = -1;
     private final static Logger logger = LogManager.getLogger(StopLoss.class);
 
-    public StopLoss(final TradeUtility tradeUtility,
+    public StopLoss(final CalculationUtil calculationUtil,
                     final double minPipsForSL) {
-        this.tradeUtility = tradeUtility;
+        this.calculationUtil = calculationUtil;
         this.minPipsForSL = minPipsForSL;
     }
 
     public Single<Double> forSubmit(final Instrument instrument,
                                     final BrokerBuyData brokerBuyData) {
-        return Single.defer(() -> {
-            final double dStopDist = brokerBuyData.dStopDist();
-
-            if (!isDistanceOK(instrument, dStopDist))
-                return Single.error(new JFException("The stop loss distance " + dStopDist
-                        + " is too small for " + instrument
-                        + "! Minimum pip distance is " + minPipsForSL));
-            if (isDistanceForNoSL(dStopDist))
-                return Single.just(StrategyUtil.platformSettings.noSLPrice());
-
-            return Single.just(calculate(instrument,
-                                         brokerBuyData.orderCommand(),
-                                         dStopDist));
-        });
+        return Single
+            .fromCallable(brokerBuyData::dStopDist)
+            .flatMap(dStopDist -> isDistanceForNoSL(dStopDist)
+                    ? Single.just(StrategyUtil.platformSettings.noSLPrice())
+                    : forSubmitWithRealDistance(instrument, brokerBuyData));
     }
 
-    private double calculate(final Instrument instrument,
-                             final OrderCommand orderCommand,
-                             final double dStopDist) {
-        final double currentAskPrice = tradeUtility.ask(instrument);
-        final double spread = tradeUtility.spread(instrument);
-        final double rawSLPrice = orderCommand == OrderCommand.BUY
-                ? currentAskPrice - dStopDist - spread
-                : currentAskPrice + dStopDist + spread;
-        final double slPrice = MathUtil.roundPrice(rawSLPrice, instrument);
-        logger.debug("Calculated SL price for " + instrument + ":\n"
-                + " orderCommand: " + orderCommand + "\n"
-                + " dStopDist: " + dStopDist + "\n"
-                + " currentAskPrice: " + currentAskPrice + "\n"
-                + " spread: " + spread + "\n"
-                + " slPrice: " + slPrice);
-
-        return slPrice;
-    }
-
-    private boolean isDistanceOK(final Instrument instrument,
-                                 final double dStopDist) {
-        if (isDistanceForNoSL(dStopDist))
-            return true;
-
-        final double stopDistanceInPips = InstrumentUtil.scalePriceToPips(instrument, dStopDist);
-        return stopDistanceInPips >= minPipsForSL;
+    public Single<Double> forSubmitWithRealDistance(final Instrument instrument,
+                                                    final BrokerBuyData brokerBuyData) {
+        return Single
+            .just(brokerBuyData.dStopDist())
+            .map(dStopDist -> InstrumentUtil.scalePriceToPips(instrument, dStopDist))
+            .doOnSuccess(dist -> logger.info("dist " + dist))
+            .flatMap(this::checkPipDistance)
+            .map(pipDistance -> slPriceForPips(instrument,
+                                               brokerBuyData.orderCommand(),
+                                               pipDistance));
     }
 
     private boolean isDistanceForNoSL(final double dStopDist) {
         return dStopDist == noStopLossDistance || dStopDist == oppositeClose;
     }
 
-    public Single<Double> forSetSL(final Instrument instrument,
+    private double slPriceForPips(final Instrument instrument,
+                                  final OrderCommand orderCommand,
+                                  final double pipDistance) {
+        final double slPrice = calculationUtil.slPriceForPips(instrument,
+                                                              orderCommand,
+                                                              pipDistance);
+        logger.debug("Calculated SL price for " + instrument + ":\n"
+                + " orderCommand: " + orderCommand + "\n"
+                + " pipDistance: " + pipDistance + "\n"
+                + " slPrice: " + slPrice);
+        return slPrice;
+    }
+
+    public Single<Double> forSetSL(final IOrder order,
                                    final double slPrice) {
-        final double currentAskPrice = tradeUtility.ask(instrument);
-        final double pipDistance = InstrumentUtil.pipDistanceOfPrices(instrument,
-                                                                      currentAskPrice,
-                                                                      slPrice);
+        return Single
+            .fromCallable(() -> pipDistanceOfPrices(order, slPrice))
+            .flatMap(this::checkPipDistance)
+            .map(pipDistance -> slPrice);
+
+    }
+
+    private double pipDistanceOfPrices(final IOrder order,
+                                       final double slPrice) {
+        final Instrument instrument = order.getInstrument();
+        final double currentPrice = calculationUtil.currentQuoteForOrderCommand(instrument,
+                                                                                order.getOrderCommand());
+        return InstrumentUtil.pipDistanceOfPrices(instrument,
+                                                  currentPrice,
+                                                  slPrice);
+    }
+
+    private Single<Double> checkPipDistance(final double pipDistance) {
         return Math.abs(pipDistance) >= minPipsForSL
-                ? Single.just(slPrice)
-                : Single.error(new JFException("The stop loss price " + slPrice
-                        + " is too close to current ask " + currentAskPrice
-                        + " for " + instrument
-                        + "! Minimum pip distance is " + minPipsForSL));
+                ? Single.just(pipDistance)
+                : Single.error(new JFException("The stop loss pipDistance " + pipDistance
+                        + " is too small! Minimum pip distance is " + minPipsForSL));
     }
 }

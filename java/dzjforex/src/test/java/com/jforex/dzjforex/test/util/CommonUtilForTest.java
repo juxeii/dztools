@@ -13,9 +13,12 @@ import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
+import com.dukascopy.api.IAccount;
+import com.dukascopy.api.IContext;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IEngine.OrderCommand;
+import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
@@ -42,6 +45,7 @@ import com.jforex.programming.order.event.OrderEventType;
 import com.jforex.programming.order.task.params.ComposeData;
 import com.jforex.programming.order.task.params.RetryParams;
 import com.jforex.programming.order.task.params.TaskParams;
+import com.jforex.programming.quote.TickQuoteProvider;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Observable;
@@ -61,7 +65,13 @@ public class CommonUtilForTest extends BDDMockito {
     @Mock
     protected Zorro zorroMock;
     @Mock
+    protected IContext contextMock;
+    @Mock
     protected IEngine engineMock;
+    @Mock
+    protected IAccount accountMock;
+    @Mock
+    protected IHistory historyMock;
     @Mock
     protected TradeUtility tradeUtilityMock;
     @Mock
@@ -74,6 +84,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected OrderUtil orderUtilMock;
     @Mock
     protected InfoStrategy infoStrategyMock;
+    @Mock
+    protected TickQuoteProvider tickQuoteProviderMock;
     @Mock
     protected StrategyUtil strategyUtilMock;
     @Mock
@@ -143,6 +155,14 @@ public class CommonUtilForTest extends BDDMockito {
         when(componentsMock.pluginConfig()).thenReturn(pluginConfigMock);
 
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
+        when(infoStrategyMock.getContext()).thenReturn(contextMock);
+        when(infoStrategyMock.getAccount()).thenReturn(accountMock);
+
+        when(strategyUtilMock.tickQuoteProvider()).thenReturn(tickQuoteProviderMock);
+
+        when(contextMock.getEngine()).thenReturn(engineMock);
+        when(contextMock.getAccount()).thenReturn(accountMock);
+        when(contextMock.getHistory()).thenReturn(historyMock);
 
         when(tradeUtilityMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
         when(tradeUtilityMock.retryParams()).thenReturn(retryParamsMock);

@@ -41,7 +41,7 @@ public class SetSLParamsFactoryTest extends CommonUtilForTest {
     }
 
     private void setStopLossResult(final Single<Double> result) {
-        when(stopLossMock.forSetSL(instrumentForTest, slPrice))
+        when(stopLossMock.forSetSL(orderMockA, slPrice))
             .thenReturn(result);
     }
 

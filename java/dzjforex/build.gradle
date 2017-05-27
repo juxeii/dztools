@@ -30,7 +30,9 @@ dependencies {
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:java-hamcrest:2.0.0.0'
-    testCompile 'org.mockito:mockito-core:2.7.9'
+    testCompile 'org.mockito:mockito-core:2.8.9'
+    testCompile 'org.powermock:powermock-module-junit4:1.7.0RC4'
+    testCompile 'org.powermock:powermock-api-mockito2:1.7.0RC4'
     testCompile 'de.bechte.junit:junit-hierarchicalcontextrunner:4.12.1'
 }
 

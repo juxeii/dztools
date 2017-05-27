@@ -33,6 +33,7 @@ import io.reactivex.Single;
 
 public class ZorroBridge {
 
+    private final SystemComponents systemComponents;
     private final Components components;
     private final Zorro zorro;
     private final BrokerLogin brokerLogin;
@@ -52,7 +53,8 @@ public class ZorroBridge {
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        components = new Components(pluginConfig);
+        systemComponents = new SystemComponents(pluginConfig);
+        components = new Components(systemComponents);
         zorro = components.zorro();
         brokerLogin = components.brokerLogin();
     }

@@ -24,21 +24,18 @@ public class NTPFetch {
                     final PluginConfig pluginConfig) {
         this.ntpUDPClient = ntpUDPClient;
 
-        final long retryDelay = pluginConfig.ntpRetryDelay();
-        fetch = fromURL(pluginConfig.ntpServerURL())
-            .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
-            .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()
-                    + "! Will retry in " + retryDelay
-                    + " milliseconds."));
+        fetch = fromURL(pluginConfig.ntpServerURL());
     }
 
     private Single<Long> fromURL(final String ntpServerURL) {
         return Single
             .fromCallable(() -> InetAddress.getByName(ntpServerURL))
+            .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
             .map(ntpUDPClient::getTime)
             .map(TimeInfo::getMessage)
             .map(NtpV3Packet::getTransmitTimeStamp)
-            .map(TimeStamp::getTime);
+            .map(TimeStamp::getTime)
+            .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()));
     }
 
     public Single<Long> get() {

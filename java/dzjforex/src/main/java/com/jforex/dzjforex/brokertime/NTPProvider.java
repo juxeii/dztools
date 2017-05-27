@@ -27,20 +27,15 @@ public class NTPProvider {
 
     private void subscribeToNTPSynchTask(final long retryDelay) {
         Observable
-            .defer(() -> ntpSynchTask.get())
+            .defer(ntpSynchTask::get)
             .retryWhen(errors -> errors.flatMap(e -> Observable.timer(retryDelay, TimeUnit.MILLISECONDS)))
-            .subscribe(this::processNewNTP);
-    }
-
-    private void processNewNTP(final long newNTP) {
-        latestNTPTime.onNext(newNTP);
-        if (newNTP > timeWatch.get())
-            timeWatch.synch(newNTP);
+            .subscribe(latestNTPTime::onNext);
     }
 
     public Single<Long> get() {
-        return latestNTPTime.getValue() == noNTPAvailable
+        final long latestFromNTP = latestNTPTime.getValue();
+        return latestFromNTP == noNTPAvailable
                 ? Single.error(new JFException("No NTP available yet."))
-                : Single.just(timeWatch.get());
+                : Single.just(timeWatch.getForNewTime(latestFromNTP));
     }
 }

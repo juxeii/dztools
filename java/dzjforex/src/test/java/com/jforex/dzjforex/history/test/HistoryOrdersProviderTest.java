@@ -4,8 +4,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.List;
 import java.util.Set;
 
@@ -20,11 +18,11 @@ import com.dukascopy.api.Instrument;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
-import com.jforex.dzjforex.brokertime.ServerTimeProvider;
+import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
-import com.jforex.programming.misc.DateTimeUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;
@@ -40,12 +38,10 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
     @Mock
     private BrokerSubscribe brokerSubscribeMock;
     @Mock
-    private ServerTimeProvider serverTimeProviderMock;
-    private LocalDateTime toDateTime;
-    private LocalDateTime fromDateTime;
-    private long toDate;
-    private long fromDate;
-    private final int historyOrderInDays = 3;
+    private HistoryOrdersDates historyOrdersDatesMock;
+    private final long from = 14L;
+    private final long to = 18L;
+    private final TimeSpan timeSpan = new TimeSpan(from, to);
     private final Set<Instrument> subscribedInstruments = Sets.newHashSet();
     private final List<IOrder> historyOrdersA = Lists.newArrayList();
     private final List<IOrder> historyOrdersB = Lists.newArrayList();
@@ -54,14 +50,9 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
     public void setUp() {
         setUpMocks();
 
-        toDateTime = LocalDateTime.of(2017, Month.APRIL, 8, 12, 30);
-        fromDateTime = toDateTime.minusDays(historyOrderInDays);
-        toDate = DateTimeUtil.millisFromDateTime(toDateTime);
-        fromDate = DateTimeUtil.millisFromDateTime(fromDateTime);
-
         historyOrdersProvider = new HistoryOrdersProvider(historyWrapperMock,
                                                           brokerSubscribeMock,
-                                                          serverTimeProviderMock,
+                                                          historyOrdersDatesMock,
                                                           pluginConfigMock);
     }
 
@@ -73,8 +64,6 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         historyOrdersB.add(orderMockB);
 
         when(brokerSubscribeMock.subscribedInstruments()).thenReturn(subscribedInstruments);
-
-        when(pluginConfigMock.historyOrderInDays()).thenReturn(historyOrderInDays);
     }
 
     private TestObserver<List<IOrder>> subscribe() {
@@ -84,13 +73,11 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
     }
 
     private OngoingStubbing<Single<List<IOrder>>> stubGetOrdersHistory(final Instrument instrument) {
-        return when(historyWrapperMock.getOrdersHistory(instrument,
-                                                        fromDate,
-                                                        toDate));
+        return when(historyWrapperMock.getOrdersHistory(eq(instrument), any()));
     }
 
-    private OngoingStubbing<Single<Long>> stubServerTime() {
-        return when(serverTimeProviderMock.get());
+    private OngoingStubbing<Single<TimeSpan>> stubGetTimeSpan() {
+        return when(historyOrdersDatesMock.timeSpan());
     }
 
     @Test
@@ -99,36 +86,35 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
 
         verifyZeroInteractions(historyWrapperMock);
         verifyZeroInteractions(brokerSubscribeMock);
-        verifyZeroInteractions(serverTimeProviderMock);
+        verifyZeroInteractions(historyOrdersDatesMock);
     }
 
     @Test
-    public void whenServerTimeFailsRetriesAreDone() {
-        stubServerTime().thenReturn(Single.error(jfException));
+    public void whenGetTimeSpanFailsRetriesAreDone() {
+        stubGetTimeSpan().thenReturn(Single.error(jfException));
 
         subscribe();
 
         advanceRetryTimes();
-        verify(serverTimeProviderMock, times(historyAccessRetries + 1)).get();
+        verify(historyOrdersDatesMock, times(historyAccessRetries + 1)).timeSpan();
     }
 
-    public class WhenServerTimeSucceeds {
+    public class WhenGetTimeSpanSucceeds {
 
         @Before
         public void setUp() {
-            stubServerTime().thenReturn(Single.just(toDate));
+            stubGetTimeSpan().thenReturn(Single.just(timeSpan));
         }
 
         @Test
-        public void whenServerTimeFailsRetriesAreDone() {
+        public void whenGetOrdersHistoryFailsRetriesAreDone() {
             stubGetOrdersHistory(instrumentForTest).thenReturn(Single.error(jfException));
 
             subscribe();
 
             advanceRetryTimes();
-            verify(historyWrapperMock, times(historyAccessRetries + 1)).getOrdersHistory(any(),
-                                                                                         eq(fromDate),
-                                                                                         eq(toDate));
+            verify(historyWrapperMock, times(historyAccessRetries + 1))
+                .getOrdersHistory(any(), timeSpanCaptor.capture());
         }
 
         public class WhenGetOrdersHistorySucceeds {

@@ -12,7 +12,9 @@ import java.time.Clock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Rule;
+import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -40,6 +42,7 @@ import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.TradeUtility;
@@ -104,6 +107,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected PluginConfig pluginConfigMock;
     @Mock
     protected Clock clockMock;
+    @Captor
+    protected ArgumentCaptor<TimeSpan> timeSpanCaptor;
 
     protected static final String jnlpDEMO = "jnlpDEMO";
     protected static final String jnlpReal = "jnlpReal";

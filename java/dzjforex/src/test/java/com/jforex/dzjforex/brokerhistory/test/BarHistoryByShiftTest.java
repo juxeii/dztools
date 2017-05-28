@@ -1,5 +1,8 @@
 package com.jforex.dzjforex.brokerhistory.test;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
+
 import java.util.List;
 
 import org.junit.Before;
@@ -12,6 +15,7 @@ import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.brokerhistory.BarHistoryByShift;
 import com.jforex.dzjforex.brokerhistory.HistoryFetchDate;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -50,9 +54,7 @@ public class BarHistoryByShiftTest extends BarsAndTicksForTest {
     }
 
     private OngoingStubbing<Single<List<IBar>>> stubGetBars() {
-        return when(historyWrapperMock.getBarsReversed(barParams,
-                                                       endDate - shift * periodInterval,
-                                                       endDate));
+        return when(historyWrapperMock.getBarsReversed(eq(barParams), any()));
     }
 
     @Test
@@ -91,10 +93,7 @@ public class BarHistoryByShiftTest extends BarsAndTicksForTest {
             subscribe();
 
             advanceRetryTimes();
-            verify(historyWrapperMock, times(historyAccessRetries + 1))
-                .getBarsReversed(barParams,
-                                 endDate - shift * periodInterval,
-                                 endDate);
+            verify(historyWrapperMock, times(historyAccessRetries + 1)).getBarsReversed(eq(barParams), any());
         }
 
         @Test
@@ -102,6 +101,19 @@ public class BarHistoryByShiftTest extends BarsAndTicksForTest {
             stubGetBars().thenReturn(Single.just(barMockList));
 
             subscribe().assertValue(barMockList);
+        }
+
+        @Test
+        public void getCallsWrapperWithCorrectTimeSpan() {
+            stubGetBars().thenReturn(Single.just(barMockList));
+
+            subscribe();
+
+            verify(historyWrapperMock).getBarsReversed(eq(barParams), timeSpanCaptor.capture());
+
+            final TimeSpan calledTimeSpan = timeSpanCaptor.getValue();
+            assertThat(calledTimeSpan.from(), equalTo(endDate - shift * periodInterval));
+            assertThat(calledTimeSpan.to(), equalTo(endDate));
         }
     }
 }

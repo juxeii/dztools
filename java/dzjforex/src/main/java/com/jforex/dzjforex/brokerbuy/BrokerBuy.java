@@ -15,6 +15,7 @@ public class BrokerBuy {
     private final OrderRepository orderRepository;
     private final TradeUtility tradeUtility;
     private final OrderLabelUtil orderLabelUtil;
+    private final static double oppositeClose = -1;
 
     public BrokerBuy(final SubmitParamsRunner submitParamsRunner,
                      final OrderRepository orderRepository,
@@ -41,7 +42,7 @@ public class BrokerBuy {
             .doOnComplete(() -> brokerBuyData.fillOpenPrice(order))
             .andThen(Maybe.defer(() -> orderLabelUtil.idFromOrder(order)))
             .toSingle()
-            .map(orderID -> brokerBuyData.dStopDist() == -1.0
+            .map(orderID -> brokerBuyData.dStopDist() == oppositeClose
                     ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()
                     : orderID);
     }

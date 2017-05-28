@@ -10,6 +10,7 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.TimeSpan;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -47,8 +48,7 @@ public class TickHistoryByShift {
 
     private Single<List<ITick>> getTicksReversed(final Instrument instrument,
                                                  final long startDate) {
-        return historyWrapper.getTicksReversed(instrument,
-                                               startDate,
-                                               startDate + tickFetchMillis - 1);
+        final TimeSpan timeSpan = new TimeSpan(startDate, startDate + tickFetchMillis - 1);
+        return historyWrapper.getTicksReversed(instrument, timeSpan);
     }
 }

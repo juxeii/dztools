@@ -46,6 +46,7 @@ import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
+import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
@@ -187,9 +188,10 @@ public class Components {
         final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
         final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
+        final HistoryOrdersDates historyOrdersDates = new HistoryOrdersDates(serverTimeProvider, pluginConfig);
         final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
                                                                                       brokerSubscribe,
-                                                                                      serverTimeProvider,
+                                                                                      historyOrdersDates,
                                                                                       pluginConfig);
         final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
         orderLookup = new OrderLookup(orderRepository,

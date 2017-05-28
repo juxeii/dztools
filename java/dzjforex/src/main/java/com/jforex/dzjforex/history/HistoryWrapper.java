@@ -11,6 +11,7 @@ import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.BarParams;
 
@@ -43,19 +44,18 @@ public class HistoryWrapper {
     }
 
     public Single<List<IBar>> getBarsReversed(final BarParams barParams,
-                                              final long startDate,
-                                              final long endDate) {
+                                              final TimeSpan timeSpan) {
         final Instrument instrument = barParams.instrument();
         return Single
             .fromCallable(() -> history.getBars(instrument,
                                                 barParams.period(),
                                                 barParams.offerSide(),
-                                                startDate,
-                                                endDate))
+                                                timeSpan.from(),
+                                                timeSpan.to()))
             .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching bars for " + instrument + ":\n"
-                    + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
-                    + "endDate: " + DateTimeUtil.formatMillis(endDate)))
+                    + "from: " + timeSpan.formatFrom() + "\n"
+                    + "to: " + timeSpan.to()))
             .doOnError(e -> logger.error("Fetching bars for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(bars -> logger.debug("Fetched " + bars.size()
@@ -63,15 +63,14 @@ public class HistoryWrapper {
     }
 
     public Single<List<ITick>> getTicksReversed(final Instrument instrument,
-                                                final long startDate,
-                                                final long endDate) {
+                                                final TimeSpan timeSpan) {
         return Single.fromCallable(() -> history.getTicks(instrument,
-                                                          startDate,
-                                                          endDate))
+                                                          timeSpan.from(),
+                                                          timeSpan.to()))
             .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching ticks for " + instrument + ":\n"
-                    + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
-                    + "endDate: " + DateTimeUtil.formatMillis(endDate)))
+                    + "from: " + timeSpan.formatFrom() + "\n"
+                    + "to: " + timeSpan.to()))
             .doOnError(e -> logger.error("Fetching ticks for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(ticks -> logger.debug("Fetched " + ticks.size()
@@ -93,14 +92,13 @@ public class HistoryWrapper {
     }
 
     public Single<List<IOrder>> getOrdersHistory(final Instrument instrument,
-                                                 final long startDate,
-                                                 final long endDate) {
+                                                 final TimeSpan timeSpan) {
         return Single.fromCallable(() -> history.getOrdersHistory(instrument,
-                                                                  startDate,
-                                                                  endDate))
+                                                                  timeSpan.from(),
+                                                                  timeSpan.to()))
             .doOnSubscribe(d -> logger.debug("Fetching orders from history for " + instrument + ":\n"
-                    + "startDate: " + DateTimeUtil.formatMillis(startDate) + "\n"
-                    + "endDate: " + DateTimeUtil.formatMillis(endDate)))
+                    + "from: " + timeSpan.formatFrom() + "\n"
+                    + "to: " + timeSpan.to()))
             .doOnError(e -> logger.error("Fetching orders from history for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()

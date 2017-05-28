@@ -17,6 +17,7 @@ import com.dukascopy.api.ITick;
 import com.jforex.dzjforex.brokerhistory.HistoryFetchDate;
 import com.jforex.dzjforex.brokerhistory.TickHistoryByShift;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -57,9 +58,7 @@ public class TickHistoryByShiftTest extends BarsAndTicksForTest {
     }
 
     private OngoingStubbing<Single<List<ITick>>> stubGetTicks() {
-        return when(historyWrapperMock.getTicksReversed(instrumentForTest,
-                                                        startDate,
-                                                        startDate + tickFetchMillis - 1));
+        return when(historyWrapperMock.getTicksReversed(eq(instrumentForTest), any()));
     }
 
     @Test
@@ -99,9 +98,7 @@ public class TickHistoryByShiftTest extends BarsAndTicksForTest {
 
             advanceRetryTimes();
             verify(historyWrapperMock, times(historyAccessRetries + 1))
-                .getTicksReversed(instrumentForTest,
-                                  startDate,
-                                  startDate + tickFetchMillis - 1);
+                .getTicksReversed(eq(instrumentForTest), any());
         }
 
         @Test
@@ -109,6 +106,19 @@ public class TickHistoryByShiftTest extends BarsAndTicksForTest {
             stubGetTicks().thenReturn(Single.just(tickMockList));
 
             subscribe().assertValue(tickMockList);
+        }
+
+        @Test
+        public void getCallsWrapperWithCorrectTimeSpan() {
+            stubGetTicks().thenReturn(Single.just(tickMockList));
+
+            subscribe();
+
+            verify(historyWrapperMock).getTicksReversed(eq(instrumentForTest), timeSpanCaptor.capture());
+
+            final TimeSpan calledTimeSpan = timeSpanCaptor.getValue();
+            assertThat(calledTimeSpan.from(), equalTo(startDate));
+            assertThat(calledTimeSpan.to(), equalTo(startDate + tickFetchMillis - 1));
         }
 
         @Test

@@ -18,6 +18,7 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.JFException;
 import com.google.common.collect.Lists;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -32,6 +33,7 @@ public class HistoryWrapperTest extends BarsAndTicksForTest {
     private IHistory historyMock;
     private final long startDate = 12;
     private final long endDate = 42;
+    private final TimeSpan timeSpan = new TimeSpan(startDate, endDate);
 
     @Before
     public void setUp() {
@@ -84,9 +86,7 @@ public class HistoryWrapperTest extends BarsAndTicksForTest {
 
         private TestObserver<List<IBar>> subscribe() {
             return historyWrapper
-                .getBarsReversed(barParams,
-                                 startDate,
-                                 endDate)
+                .getBarsReversed(barParams, timeSpan)
                 .test();
         }
 
@@ -121,9 +121,7 @@ public class HistoryWrapperTest extends BarsAndTicksForTest {
 
         private TestObserver<List<ITick>> subscribe() {
             return historyWrapper
-                .getTicksReversed(instrumentForTest,
-                                  startDate,
-                                  endDate)
+                .getTicksReversed(instrumentForTest, timeSpan)
                 .test();
         }
 
@@ -191,9 +189,7 @@ public class HistoryWrapperTest extends BarsAndTicksForTest {
 
         private TestObserver<List<IOrder>> subscribe() {
             return historyWrapper
-                .getOrdersHistory(instrumentForTest,
-                                  startDate,
-                                  endDate)
+                .getOrdersHistory(instrumentForTest, timeSpan)
                 .test();
         }
 

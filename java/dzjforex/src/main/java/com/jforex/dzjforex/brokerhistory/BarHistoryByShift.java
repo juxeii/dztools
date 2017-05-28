@@ -9,6 +9,7 @@ import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.programming.quote.BarParams;
 
 import io.reactivex.Single;
@@ -47,8 +48,7 @@ public class BarHistoryByShift {
         final long periodInterval = barParams
             .period()
             .getInterval();
-        return historyWrapper.getBarsReversed(barParams,
-                                              endDate - shift * periodInterval,
-                                              endDate);
+        final TimeSpan timeSpan = new TimeSpan(endDate - shift * periodInterval, endDate);
+        return historyWrapper.getBarsReversed(barParams, timeSpan);
     }
 }

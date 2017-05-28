@@ -2,32 +2,39 @@ package com.jforex.dzjforex.history;
 
 import java.time.LocalDateTime;
 
+import com.jforex.dzjforex.brokertime.ServerTimeProvider;
 import com.jforex.dzjforex.config.PluginConfig;
+import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.programming.misc.DateTimeUtil;
+
+import io.reactivex.Single;
 
 public class HistoryOrdersDates {
 
-    private long to;
-    private long from;
+    private final ServerTimeProvider serverTimeProvider;
+    private final PluginConfig pluginConfig;
 
-    public HistoryOrdersDates(final long serverTime,
+    public HistoryOrdersDates(final ServerTimeProvider serverTimeProvider,
                               final PluginConfig pluginConfig) {
-        init(serverTime, pluginConfig);
+        this.serverTimeProvider = serverTimeProvider;
+        this.pluginConfig = pluginConfig;
     }
 
-    private void init(final long serverTime,
-                      final PluginConfig pluginConfig) {
-        final LocalDateTime toDate = DateTimeUtil.dateTimeFromMillis(serverTime);
-        final LocalDateTime fromDate = toDate.minusDays(pluginConfig.historyOrderInDays());
-        to = DateTimeUtil.millisFromDateTime(toDate);
-        from = DateTimeUtil.millisFromDateTime(fromDate);
+    public Single<TimeSpan> timeSpan() {
+        return Single
+            .defer(serverTimeProvider::get)
+            .map(this::timeSpanForServerTime);
     }
 
-    public long from() {
-        return from;
+    private TimeSpan timeSpanForServerTime(final long serverTime) {
+        return new TimeSpan(fromMillis(serverTime), serverTime);
     }
 
-    public long to() {
-        return to;
+    private long fromMillis(final long serverTime) {
+        final LocalDateTime fromDate = DateTimeUtil
+            .dateTimeFromMillis(serverTime)
+            .minusDays(pluginConfig.historyOrderInDays());
+
+        return DateTimeUtil.millisFromDateTime(fromDate);
     }
 }

@@ -43,9 +43,12 @@ public class PinProvider {
         return pd.pinfield.getText();
     }
 
-    @SuppressWarnings("serial")
     private class PinDialog extends JDialog {
 
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
         private final JTextField pinfield = new JTextField();
 
         public PinDialog() throws Exception {

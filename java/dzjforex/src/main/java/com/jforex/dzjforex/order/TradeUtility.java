@@ -10,7 +10,6 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
-import com.jforex.programming.order.task.params.RetryParams;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -27,7 +26,6 @@ public class TradeUtility {
     public TradeUtility(final OrderLookup orderLookup,
                         final AccountInfo accountInfo,
                         final OrderLabelUtil orderLabelUtil,
-                        final RetryParams retryParams,
                         final PluginConfig pluginConfig) {
         this.orderLookup = orderLookup;
         this.accountInfo = accountInfo;

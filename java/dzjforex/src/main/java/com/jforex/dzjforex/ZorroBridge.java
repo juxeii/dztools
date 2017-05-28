@@ -27,6 +27,7 @@ import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.order.TradeUtility;
 
 import io.reactivex.Single;
@@ -53,7 +54,7 @@ public class ZorroBridge {
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        systemComponents = new SystemComponents(pluginConfig);
+        systemComponents = new SystemComponents(ClientProvider.get(), pluginConfig);
         components = new Components(systemComponents);
         zorro = components.zorro();
         brokerLogin = components.brokerLogin();

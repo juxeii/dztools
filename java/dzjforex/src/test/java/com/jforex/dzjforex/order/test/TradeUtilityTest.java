@@ -36,7 +36,6 @@ public class TradeUtilityTest extends CommonUtilForTest {
         tradeUtility = new TradeUtility(orderLookupMock,
                                         accountInfoMock,
                                         orderLabelUtilMock,
-                                        retryParamsMock,
                                         pluginConfigMock);
     }
 

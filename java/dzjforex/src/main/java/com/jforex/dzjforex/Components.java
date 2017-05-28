@@ -203,7 +203,6 @@ public class Components {
         tradeUtility = new TradeUtility(orderLookup,
                                         accountInfo,
                                         orderLabelUtil,
-                                        retryParamsForTrading,
                                         pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, priceProvider);
         final CalculationUtil calculationUtil = strategyUtil.calculationUtil();

@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.order.test;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
@@ -56,7 +56,7 @@ public class OrderLabelUtilTest extends CommonUtilForTest {
         setClockMillis(nowMillisB);
         final String labelB = orderLabelUtil.create();
 
-        assertFalse(labelA == labelB);
+        assertThat(labelA, not(equalTo(labelB)));
     }
 
     @Test

@@ -182,6 +182,7 @@ public class CommonUtilForTest extends BDDMockito {
         when(pluginConfigMock.historyAccessRetries()).thenReturn(historyAccessRetries);
         when(pluginConfigMock.historyAccessRetryDelay()).thenReturn(historyAccessRetryDelay);
         when(pluginConfigMock.tickFetchMillis()).thenReturn(tickFetchMillis);
+        when(pluginConfigMock.cacheDirectory()).thenReturn("cacheDirectory");
 
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
         when(orderMockA.getLabel()).thenReturn(orderLabel);

@@ -7,7 +7,7 @@ import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jforex.dzjforex.brokerasset.BrokerAssetData;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 public class BrokerAssetDataTest extends CommonUtilForTest {
 

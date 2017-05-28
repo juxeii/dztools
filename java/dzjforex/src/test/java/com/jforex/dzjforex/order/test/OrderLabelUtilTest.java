@@ -8,7 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jforex.dzjforex.order.OrderLabelUtil;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 public class OrderLabelUtilTest extends CommonUtilForTest {
 

@@ -16,7 +16,7 @@ import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
 import com.google.common.collect.Sets;
 import com.jforex.dzjforex.misc.MarketState;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 

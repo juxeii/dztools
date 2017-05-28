@@ -12,7 +12,7 @@ import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsFactory;
 import com.jforex.dzjforex.order.StopLoss;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 

@@ -18,7 +18,7 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.JFException;
 import com.google.common.collect.Lists;
 import com.jforex.dzjforex.history.HistoryWrapper;
-import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
+import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.observers.TestObserver;

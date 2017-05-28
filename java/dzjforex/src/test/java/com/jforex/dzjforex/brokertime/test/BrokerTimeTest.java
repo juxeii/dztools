@@ -11,7 +11,7 @@ import com.jforex.dzjforex.brokertime.BrokerTimeData;
 import com.jforex.dzjforex.brokertime.ServerTimeProvider;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.MarketState;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;

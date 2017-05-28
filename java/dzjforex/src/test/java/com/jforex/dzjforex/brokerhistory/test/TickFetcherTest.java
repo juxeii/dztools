@@ -17,7 +17,7 @@ import com.dukascopy.api.ITick;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
 import com.jforex.dzjforex.brokerhistory.TickFetcher;
 import com.jforex.dzjforex.brokerhistory.TickHistoryByShift;
-import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
+import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 import com.jforex.programming.quote.TickQuote;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import com.jforex.dzjforex.brokersell.BrokerSell;
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Completable;

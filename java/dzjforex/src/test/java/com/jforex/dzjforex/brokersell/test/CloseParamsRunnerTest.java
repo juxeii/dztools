@@ -6,8 +6,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.dzjforex.brokersell.CloseParamsFactory;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

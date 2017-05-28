@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jforex.dzjforex.brokersell.CloseParamsFactory;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
 public class CloseParamsFactoryTest extends CommonUtilForTest {
@@ -18,7 +18,7 @@ public class CloseParamsFactoryTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        closeParamsFactory = new CloseParamsFactory(tradeUtilityMock);
+        closeParamsFactory = new CloseParamsFactory(retryParamsMock);
 
         closeParams = (CloseParams) closeParamsFactory
             .get(orderMockA, brokerSellData)

@@ -9,7 +9,7 @@ import org.mockito.stubbing.OngoingStubbing;
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.order.StopLoss;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.CalculationUtil;
 

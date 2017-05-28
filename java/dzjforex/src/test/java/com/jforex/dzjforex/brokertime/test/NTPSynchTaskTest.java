@@ -8,7 +8,7 @@ import org.mockito.stubbing.OngoingStubbing;
 
 import com.jforex.dzjforex.brokertime.NTPFetch;
 import com.jforex.dzjforex.brokertime.NTPSynchTask;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;

@@ -1,9 +1,12 @@
-package com.jforex.dzjforex.test.util;
+package com.jforex.dzjforex.testutil;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.time.Clock;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,10 +33,13 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
+import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
+import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.TradeUtility;
@@ -165,7 +171,6 @@ public class CommonUtilForTest extends BDDMockito {
         when(contextMock.getHistory()).thenReturn(historyMock);
 
         when(tradeUtilityMock.orderLabelUtil()).thenReturn(orderLabelUtilMock);
-        when(tradeUtilityMock.retryParams()).thenReturn(retryParamsMock);
 
         when(pluginConfigMock.orderLabelPrefix()).thenReturn(orderLabelPrefix);
         when(pluginConfigMock.lotScale()).thenReturn(1000000.0);
@@ -196,6 +201,19 @@ public class CommonUtilForTest extends BDDMockito {
                                           tradeParams);
 
         coverageOnEnumsCorrection();
+
+        try {
+            assertPrivateConstructor(ClientProvider.class);
+            assertPrivateConstructor(TimeConvert.class);
+            assertPrivateConstructor(RxUtility.class);
+        } catch (final Exception e) {}
+    }
+
+    protected void assertPrivateConstructor(final Class<?> clazz) throws Exception {
+        final Constructor<?> constructor = clazz.getDeclaredConstructor();
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        constructor.newInstance();
     }
 
     protected void advanceRetryTimes() {

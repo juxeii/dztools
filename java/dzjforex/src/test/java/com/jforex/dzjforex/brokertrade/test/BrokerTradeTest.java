@@ -5,11 +5,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
+import com.jforex.programming.math.CalculationUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Maybe;
@@ -21,10 +23,11 @@ public class BrokerTradeTest extends CommonUtilForTest {
     private BrokerTrade brokerTrade;
 
     @Mock
+    private CalculationUtil calculationUtilMock;
+    @Mock
     private BrokerTradeData brokerTradeDataMock;
-    private final int nTradeID = 42;
-    private final double ask = 1.1203;
-    private final double bid = 1.1200;
+    private final int orderID = 42;
+    private final double price = 1.1203;
     private final double orderAmount = 0.12;
     private final int orderContracts = 120000;
     private final double pOpen = 1.1203;
@@ -35,14 +38,13 @@ public class BrokerTradeTest extends CommonUtilForTest {
     public void setUp() {
         setUpMocks();
 
-        brokerTrade = new BrokerTrade(tradeUtilityMock);
+        brokerTrade = new BrokerTrade(tradeUtilityMock, calculationUtilMock);
     }
 
     private void setUpMocks() {
-        when(brokerTradeDataMock.nTradeID()).thenReturn(nTradeID);
+        when(brokerTradeDataMock.nTradeID()).thenReturn(orderID);
 
-        when(tradeUtilityMock.ask(instrumentForTest)).thenReturn(ask);
-        when(tradeUtilityMock.bid(instrumentForTest)).thenReturn(bid);
+        when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, OrderCommand.BUY)).thenReturn(price);
         when(tradeUtilityMock.amountToContracts(orderAmount)).thenReturn(orderContracts);
 
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
@@ -59,7 +61,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
     @Test
     public void whenOrderNotAvailableUnknownOrderIsReturned() {
-        when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Maybe.empty());
+        when(tradeUtilityMock.orderByID(orderID)).thenReturn(Maybe.empty());
 
         subscribe().assertValue(ZorroReturnValues.UNKNOWN_ORDER_ID.getValue());
     }
@@ -68,7 +70,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(tradeUtilityMock.orderByID(nTradeID)).thenReturn(Maybe.just(orderMockA));
+            when(tradeUtilityMock.orderByID(orderID)).thenReturn(Maybe.just(orderMockA));
         }
 
         private void verifyFillCallWithCorrectCloseValue(final double pClose) {
@@ -79,21 +81,12 @@ public class BrokerTradeTest extends CommonUtilForTest {
         }
 
         @Test
-        public void fillCallCorrectWhenOrderisLong() {
-            when(orderMockA.isLong()).thenReturn(true);
+        public void fillCallIsCorrect() {
+            when(orderMockA.getOrderCommand()).thenReturn(OrderCommand.BUY);
 
             subscribe();
 
-            verifyFillCallWithCorrectCloseValue(ask);
-        }
-
-        @Test
-        public void fillCallCorrectWhenOrderisShort() {
-            when(orderMockA.isLong()).thenReturn(false);
-
-            subscribe();
-
-            verifyFillCallWithCorrectCloseValue(bid);
+            verifyFillCallWithCorrectCloseValue(price);
         }
 
         @Test

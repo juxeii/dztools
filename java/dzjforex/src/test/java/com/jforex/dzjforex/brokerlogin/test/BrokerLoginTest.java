@@ -9,7 +9,7 @@ import com.jforex.dzjforex.brokerlogin.BrokerLogin;
 import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.LoginRetryTimer;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.connection.Authentification;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

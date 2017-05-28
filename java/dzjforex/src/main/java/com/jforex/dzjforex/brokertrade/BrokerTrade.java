@@ -7,6 +7,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TradeUtility;
+import com.jforex.programming.math.CalculationUtil;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -14,12 +15,15 @@ import io.reactivex.Single;
 public class BrokerTrade {
 
     private final TradeUtility tradeUtility;
+    private final CalculationUtil calculationUtil;
 
     private final static double rollOverNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerTrade.class);
 
-    public BrokerTrade(final TradeUtility tradeUtility) {
+    public BrokerTrade(final TradeUtility tradeUtility,
+                       final CalculationUtil calculationUtil) {
         this.tradeUtility = tradeUtility;
+        this.calculationUtil = calculationUtil;
     }
 
     public Single<Integer> fillParams(final BrokerTradeData brokerTradeData) {
@@ -37,9 +41,7 @@ public class BrokerTrade {
                                  final BrokerTradeData brokerTradeData) {
         final Instrument instrument = order.getInstrument();
         final double pOpen = order.getOpenPrice();
-        final double pClose = order.isLong()
-                ? tradeUtility.ask(instrument)
-                : tradeUtility.bid(instrument);
+        final double pClose = calculationUtil.currentQuoteForOrderCommand(instrument, order.getOrderCommand());
         final double pRoll = rollOverNotSupported;
         final double pProfit = order.getProfitLossInAccountCurrency();
 

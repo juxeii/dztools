@@ -17,7 +17,7 @@ import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BarHistoryByShift;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
-import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
+import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;
 

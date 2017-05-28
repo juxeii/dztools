@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.test.util;
+package com.jforex.dzjforex.testutil;
 
 import java.util.concurrent.TimeUnit;
 

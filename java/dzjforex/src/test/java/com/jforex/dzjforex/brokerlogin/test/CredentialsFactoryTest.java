@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokerlogin.CredentialsFactory;
 import com.jforex.dzjforex.brokerlogin.PinProvider;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.connection.LoginCredentials;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

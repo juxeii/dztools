@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import com.jforex.dzjforex.misc.PriceProvider;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
 
 public class PriceProviderTest extends CommonUtilForTest {

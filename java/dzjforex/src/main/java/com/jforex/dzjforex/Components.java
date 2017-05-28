@@ -46,7 +46,6 @@ import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.history.HistoryOrders;
-import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
@@ -188,10 +187,9 @@ public class Components {
         final BarFetcher barFetcher = new BarFetcher(barHistoryByShift);
         final TickFetcher tickFetcher = new TickFetcher(tickHistoryByShift);
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
-        final HistoryOrdersDates historyOrdersDates = new HistoryOrdersDates(serverTimeProvider, pluginConfig);
         final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
                                                                                       brokerSubscribe,
-                                                                                      historyOrdersDates,
+                                                                                      serverTimeProvider,
                                                                                       pluginConfig);
         final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
         orderLookup = new OrderLookup(orderRepository,
@@ -203,7 +201,6 @@ public class Components {
         final PriceProvider priceProvider = new PriceProvider(strategyUtil);
         retryParamsForTrading = retryParamsForTrading();
         tradeUtility = new TradeUtility(orderLookup,
-                                        priceProvider,
                                         accountInfo,
                                         orderLabelUtil,
                                         retryParamsForTrading,
@@ -214,12 +211,12 @@ public class Components {
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
                                                                               stopLoss,
                                                                               orderLabelUtil);
-        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(tradeUtility);
+        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(retryParamsForTrading);
         final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
         final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
         final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
-        brokerTrade = new BrokerTrade(tradeUtility);
+        brokerTrade = new BrokerTrade(tradeUtility, calculationUtil);
         brokerBuy = new BrokerBuy(submitParamsRunner,
                                   orderRepository,
                                   tradeUtility);

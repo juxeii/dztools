@@ -10,7 +10,7 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.google.common.collect.Maps;
 import com.jforex.dzjforex.brokertime.TickTimeFetch;
-import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
+import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 import com.jforex.programming.quote.TickQuote;
 import com.jforex.programming.quote.TickQuoteRepository;
 

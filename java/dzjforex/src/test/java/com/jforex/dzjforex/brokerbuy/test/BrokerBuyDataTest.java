@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 public class BrokerBuyDataTest extends CommonUtilForTest {
 

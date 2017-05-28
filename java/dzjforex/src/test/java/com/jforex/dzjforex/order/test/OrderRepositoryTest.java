@@ -10,7 +10,7 @@ import org.mockito.stubbing.OngoingStubbing;
 import com.dukascopy.api.IOrder;
 import com.google.common.collect.Lists;
 import com.jforex.dzjforex.order.OrderRepository;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Maybe;

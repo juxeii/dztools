@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsFactory;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsRunner;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

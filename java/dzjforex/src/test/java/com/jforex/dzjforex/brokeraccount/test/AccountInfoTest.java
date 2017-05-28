@@ -13,7 +13,7 @@ import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.math.CalculationUtil;
 

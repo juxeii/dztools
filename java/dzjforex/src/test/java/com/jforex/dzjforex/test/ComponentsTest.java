@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc.test;
+package com.jforex.dzjforex.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
@@ -14,7 +14,7 @@ import com.google.common.collect.Sets;
 import com.jforex.dzjforex.Components;
 import com.jforex.dzjforex.SystemComponents;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.client.ClientUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

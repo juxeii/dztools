@@ -7,7 +7,7 @@ import org.mockito.Mock;
 
 import com.jforex.dzjforex.brokertime.NTPProvider;
 import com.jforex.dzjforex.brokertime.NTPSynchTask;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.observers.TestObserver;

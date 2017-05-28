@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
 import com.jforex.dzjforex.brokerhistory.HistoryTickFiller;
 import com.jforex.dzjforex.brokertime.TimeConvert;
-import com.jforex.dzjforex.test.util.BarsAndTicksForTest;
+import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 

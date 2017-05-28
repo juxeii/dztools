@@ -10,7 +10,7 @@ import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.jforex.dzjforex.brokerhistory.HistoryFetchDate;
 import com.jforex.dzjforex.history.HistoryWrapper;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.quote.BarParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

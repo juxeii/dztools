@@ -48,8 +48,8 @@ public class ZorroBridge {
     private BrokerHistory brokerHistory;
     private TradeUtility tradeUtility;
     private long strategyID;
-    private final PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
 
+    private final static PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {

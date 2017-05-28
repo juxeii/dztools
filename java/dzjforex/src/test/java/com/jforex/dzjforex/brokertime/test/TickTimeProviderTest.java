@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
 import com.jforex.dzjforex.brokertime.TickTimeProvider;
+import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.dzjforex.brokertime.TickTimeFetch;
-import com.jforex.dzjforex.test.util.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;

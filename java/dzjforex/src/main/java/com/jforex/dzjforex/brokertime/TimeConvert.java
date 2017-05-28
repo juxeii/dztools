@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.SimpleTimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +15,9 @@ import com.dukascopy.api.Period;
 import com.dukascopy.api.Unit;
 
 public class TimeConvert {
+
+    private TimeConvert() {
+    }
 
     private static SimpleDateFormat simpleUTCormat;
     private static final int DAYS_SINCE_UTC_EPOCH;
@@ -28,9 +30,6 @@ public class TimeConvert {
         DAYS_SINCE_UTC_EPOCH = 25569;
         ZERO_COM_TIME = LocalDateTime.of(1899, 12, 30, 0, 0);
         MILLIS_PER_DAY = new BigDecimal(86400000);
-    }
-
-    private TimeConvert() {
     }
 
     public static LocalDateTime dateTimeFromOLEDate(final double oleTime) {
@@ -59,15 +58,6 @@ public class TimeConvert {
             .toInstant(ZoneOffset.UTC)
             .truncatedTo(ChronoUnit.MINUTES)
             .toEpochMilli();
-    }
-
-    public static String formatDateTime(final long dateTime) {
-        return simpleUTCormat.format(new Date(dateTime));
-    }
-
-    public static String formatOLETime(final double oleTime) {
-        final long dateTime = millisFromOLEDate(oleTime);
-        return formatDateTime(dateTime);
     }
 
     public static Period getPeriodFromMinutes(final int minutes) {

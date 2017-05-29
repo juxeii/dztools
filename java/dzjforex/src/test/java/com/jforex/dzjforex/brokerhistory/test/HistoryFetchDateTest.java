@@ -88,14 +88,14 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
             public void whenEndDateEqualsBarTimePlusPeriodInterval() {
                 endDateForBar = barTime + periodInterval;
 
-                subscribe().assertValue(endDateForBar);
+                subscribe().assertValue(endDateForBar - periodInterval);
             }
 
             @Test
             public void whenEndDateIsLowerBarTimePlusPeriodInterval() {
                 endDateForBar = barTime + periodInterval - 1;
 
-                subscribe().assertValue(endDateForBar);
+                subscribe().assertValue(endDateForBar - periodInterval);
             }
         }
     }

@@ -55,7 +55,7 @@ public class HistoryWrapper {
             .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching bars for " + instrument + ":\n"
                     + "from: " + timeSpan.formatFrom() + "\n"
-                    + "to: " + timeSpan.to()))
+                    + "to: " + timeSpan.formatTo()))
             .doOnError(e -> logger.error("Fetching bars for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(bars -> logger.debug("Fetched " + bars.size()
@@ -70,7 +70,7 @@ public class HistoryWrapper {
             .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching ticks for " + instrument + ":\n"
                     + "from: " + timeSpan.formatFrom() + "\n"
-                    + "to: " + timeSpan.to()))
+                    + "to: " + timeSpan.formatTo()))
             .doOnError(e -> logger.error("Fetching ticks for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(ticks -> logger.debug("Fetched " + ticks.size()
@@ -98,7 +98,7 @@ public class HistoryWrapper {
                                                                   timeSpan.to()))
             .doOnSubscribe(d -> logger.debug("Fetching orders from history for " + instrument + ":\n"
                     + "from: " + timeSpan.formatFrom() + "\n"
-                    + "to: " + timeSpan.to()))
+                    + "to: " + timeSpan.formatTo()))
             .doOnError(e -> logger.error("Fetching orders from history for " + instrument
                     + " failed! " + e.getMessage()))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size()

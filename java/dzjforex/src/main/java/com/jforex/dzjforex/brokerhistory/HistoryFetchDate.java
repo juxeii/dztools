@@ -34,7 +34,7 @@ public class HistoryFetchDate {
                     .getInterval();
                 return endDate > latestBarTime + periodInterval
                         ? latestBarTime
-                        : endDate;
+                        : endDate - periodInterval;
             });
     }
 

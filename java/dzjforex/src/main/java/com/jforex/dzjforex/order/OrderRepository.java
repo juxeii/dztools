@@ -39,10 +39,14 @@ public class OrderRepository {
     public Completable store(final IOrder order) {
         return orderLabelUtil
             .idFromOrder(order)
-            .doOnSuccess(orderID -> {
-                orderByID.put(orderID, order);
-                logger.debug("Stored Zorro order with ID " + orderID + " to repository.");
-            })
-            .ignoreElement();
+            .flatMapCompletable(orderID -> storeToMap(orderID, order));
+    }
+
+    private Completable storeToMap(final int orderID,
+                                   final IOrder order) {
+        return Completable.fromAction(() -> {
+            orderByID.put(orderID, order);
+            logger.debug("Stored Zorro order with ID " + orderID + " to repository.");
+        });
     }
 }

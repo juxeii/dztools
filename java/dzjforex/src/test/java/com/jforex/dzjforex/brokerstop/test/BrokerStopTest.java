@@ -37,7 +37,7 @@ public class BrokerStopTest extends CommonUtilForTest {
     }
 
     private OngoingStubbing<Single<IOrder>> stubOrderForTrading() {
-        return when(tradeUtilityMock.orderForTrading(nTradeID));
+        return when(tradeUtilityMock.orderForTrading(orderID));
     }
 
     @Test

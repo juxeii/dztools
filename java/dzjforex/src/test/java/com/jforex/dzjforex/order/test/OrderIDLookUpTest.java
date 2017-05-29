@@ -35,7 +35,7 @@ public class OrderIDLookUpTest extends CommonUtilForTest {
 
     private TestObserver<IOrder> subscribe() {
         return orderIDLookUp
-            .getByID(nTradeID)
+            .getByID(orderID)
             .test();
     }
 
@@ -43,7 +43,7 @@ public class OrderIDLookUpTest extends CommonUtilForTest {
     public void getByIDCallIsDeferred() {
         createSUTWithOrdersProvider(Single.just(orders));
 
-        orderIDLookUp.getByID(nTradeID);
+        orderIDLookUp.getByID(orderID);
 
         verifyZeroInteractions(orderRepositoryMock);
     }
@@ -81,7 +81,7 @@ public class OrderIDLookUpTest extends CommonUtilForTest {
             }
 
             private OngoingStubbing<Maybe<IOrder>> stubGetOrderID() {
-                return when(orderRepositoryMock.getByID(nTradeID));
+                return when(orderRepositoryMock.getByID(orderID));
             }
 
             @Test

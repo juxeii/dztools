@@ -121,9 +121,9 @@ public class CommonUtilForTest extends BDDMockito {
     protected static final String loginTypeDemo = "Demo";
     protected static final String loginTypeReal = "Real";
     protected static final ICurrency accountCurrency = CurrencyFactory.EUR;
-    protected static final String orderID = "42";
+    protected static final String orderIDName = "42";
     protected static final String orderLabelPrefix = "Zorro";
-    protected static final String orderLabel = orderLabelPrefix + orderID;
+    protected static final String orderLabel = orderLabelPrefix + orderIDName;
 
     protected static final LoginCredentials loginCredentials =
             new LoginCredentials(jnlpDEMO,
@@ -136,7 +136,7 @@ public class CommonUtilForTest extends BDDMockito {
                                  pin);
     protected final OrderEvent orderEventA;
     protected final OrderEvent orderEventB;
-    protected final int nTradeID = 42;
+    protected final int orderID = 42;
 
     protected final double slPrice = 1.09875;
 
@@ -189,12 +189,12 @@ public class CommonUtilForTest extends BDDMockito {
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
         when(orderMockA.getLabel()).thenReturn(orderLabel);
 
-        when(orderLabelUtilMock.idFromLabel(orderLabel)).thenReturn(Maybe.just(nTradeID));
-        when(orderLabelUtilMock.idFromOrder(orderMockA)).thenReturn(Maybe.just(nTradeID));
+        when(orderLabelUtilMock.idFromLabel(orderLabel)).thenReturn(Maybe.just(orderID));
+        when(orderLabelUtilMock.idFromOrder(orderMockA)).thenReturn(Maybe.just(orderID));
 
-        when(brokerSellDataMock.orderID()).thenReturn(nTradeID);
+        when(brokerSellDataMock.orderID()).thenReturn(orderID);
 
-        when(brokerStopDataMock.orderID()).thenReturn(nTradeID);
+        when(brokerStopDataMock.orderID()).thenReturn(orderID);
         when(brokerStopDataMock.slPrice()).thenReturn(slPrice);
 
         orderEventA = new OrderEvent(orderMockA,

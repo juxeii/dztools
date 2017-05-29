@@ -44,7 +44,7 @@ public class BrokerSellTest extends CommonUtilForTest {
 
     @Test
     public void sellFailsWhenOrderForTradingThrows() {
-        when(tradeUtilityMock.orderForTrading(nTradeID))
+        when(tradeUtilityMock.orderForTrading(orderID))
             .thenReturn(Single.error(jfException));
 
         subscribe().assertValue(ZorroReturnValues.BROKER_SELL_FAIL.getValue());
@@ -54,7 +54,7 @@ public class BrokerSellTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(tradeUtilityMock.orderForTrading(nTradeID))
+            when(tradeUtilityMock.orderForTrading(orderID))
                 .thenReturn(Single.just(orderMockA));
         }
 
@@ -74,7 +74,7 @@ public class BrokerSellTest extends CommonUtilForTest {
         public void whenParamsRunnerSucceedsTheTradeIDIsReturned() {
             setParamsRunnerResult(Completable.complete());
 
-            subscribe().assertValue(nTradeID);
+            subscribe().assertValue(orderID);
         }
     }
 }

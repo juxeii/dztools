@@ -99,6 +99,14 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         verify(historyOrdersDatesMock, times(historyAccessRetries + 1)).timeSpan();
     }
 
+    @Test
+    public void whenGetTimeSpanFailsErrorIsPropagated() {
+        setHistoryRetries(0);
+        stubGetTimeSpan().thenReturn(Single.error(jfException));
+
+        subscribe().assertError(jfException);
+    }
+
     public class WhenGetTimeSpanSucceeds {
 
         @Before

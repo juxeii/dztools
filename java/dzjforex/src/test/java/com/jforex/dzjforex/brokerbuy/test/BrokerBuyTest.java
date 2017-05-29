@@ -112,7 +112,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
             public void whenStopDistanceIsPositiveTheOrderIDIsReturned() {
                 stubSLDistance().thenReturn(0.0034);
 
-                subscribe().assertValue(nTradeID);
+                subscribe().assertValue(orderID);
             }
         }
     }

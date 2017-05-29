@@ -30,7 +30,7 @@ public class NTPFetch {
     private Single<Long> fromURL(final String ntpServerURL) {
         return Single
             .fromCallable(() -> InetAddress.getByName(ntpServerURL))
-            .doOnSubscribe(d -> logger.debug("Fetching NTP now..."))
+            .doOnSubscribe(d -> logger.debug("Fetching NTP from " + ntpServerURL))
             .map(ntpUDPClient::getTime)
             .map(TimeInfo::getMessage)
             .map(NtpV3Packet::getTransmitTimeStamp)

@@ -30,7 +30,7 @@ public class NTPSynchTask {
                       pluginConfig.ntpSynchInterval(),
                       TimeUnit.MILLISECONDS,
                       Schedulers.io())
-            .doOnNext(counter -> logger.debug("Starting NTP synch task..." + counter))
+            .doOnNext(counter -> logger.debug("Starting NTP synch task..."))
             .flatMapSingle(counter -> ntpFetch.get())
             .doOnNext(ntp -> logger.error("Received new NTP " + DateTimeUtil.formatMillis(ntp)))
             .doOnError(e -> logger.error("NTP synch failed! " + e.getMessage()));

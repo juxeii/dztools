@@ -4,7 +4,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
+import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.brokerstop.BrokerStop;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.config.ZorroReturnValues;
@@ -22,24 +24,25 @@ public class BrokerStopTest extends CommonUtilForTest {
 
     @Mock
     private SetSLParamsRunner setSLParamsRunnerMock;
-    private int nTradeID;
 
     @Before
     public void setUp() {
-        nTradeID = brokerSellData.orderID();
-
         brokerStop = new BrokerStop(setSLParamsRunnerMock, tradeUtilityMock);
     }
 
     private TestObserver<Integer> subscribe() {
         return brokerStop
-            .setSL(brokerStopData)
+            .setSL(brokerStopDataMock)
             .test();
+    }
+
+    private OngoingStubbing<Single<IOrder>> stubOrderForTrading() {
+        return when(tradeUtilityMock.orderForTrading(nTradeID));
     }
 
     @Test
     public void setSLCallIsDeferred() {
-        brokerStop.setSL(brokerStopData);
+        brokerStop.setSL(brokerStopDataMock);
 
         verifyZeroInteractions(setSLParamsRunnerMock);
         verifyZeroInteractions(tradeUtilityMock);
@@ -47,8 +50,7 @@ public class BrokerStopTest extends CommonUtilForTest {
 
     @Test
     public void setSLFailsWhenOrderForTradingThrows() {
-        when(tradeUtilityMock.orderForTrading(nTradeID))
-            .thenReturn(Single.error(jfException));
+        stubOrderForTrading().thenReturn(Single.error(jfException));
 
         subscribe().assertValue(ZorroReturnValues.ADJUST_SL_FAIL.getValue());
     }
@@ -57,12 +59,11 @@ public class BrokerStopTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(tradeUtilityMock.orderForTrading(nTradeID))
-                .thenReturn(Single.just(orderMockA));
+            stubOrderForTrading().thenReturn(Single.just(orderMockA));
         }
 
         private void setParamsRunnerResult(final Completable result) {
-            when(setSLParamsRunnerMock.get(orderMockA, brokerStopData))
+            when(setSLParamsRunnerMock.get(orderMockA, brokerStopDataMock))
                 .thenReturn(result);
         }
 

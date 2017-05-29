@@ -26,11 +26,11 @@ public class BrokerAsset {
     }
 
     public Single<Integer> fillParams(final BrokerAssetData brokerAssetData) {
-        return Single.defer(() -> RxUtility
-            .instrumentFromName(brokerAssetData.instrumentName())
+        return Single
+            .defer(() -> RxUtility.instrumentFromName(brokerAssetData.instrumentName()))
             .doOnSuccess(instrument -> fillAssetParams(instrument, brokerAssetData))
             .map(instrument -> ZorroReturnValues.ASSET_AVAILABLE.getValue())
-            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
 
     private void fillAssetParams(final Instrument instrument,

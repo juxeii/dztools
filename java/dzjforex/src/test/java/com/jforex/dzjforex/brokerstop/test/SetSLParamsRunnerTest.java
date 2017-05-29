@@ -4,10 +4,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
+import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.task.params.basic.SetSLParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -30,35 +32,23 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
         setSLParamsRunner = new SetSLParamsRunner(orderUtilMock, orderSetSLParamsMock);
     }
 
-    private void makeOrderUtilPass() {
-        when(orderUtilMock.paramsToObservable(setSLParamsMock))
-            .thenReturn(Observable.just(orderEventA));
+    private OngoingStubbing<Observable<OrderEvent>> stubParamsToObservable() {
+        return when(orderUtilMock.paramsToObservable(setSLParamsMock));
     }
 
-    private void makeOrderUtilFail() {
-        when(orderUtilMock.paramsToObservable(setSLParamsMock))
-            .thenReturn(Observable.error(jfException));
-    }
-
-    private void makeSetSLParamsPass() {
-        when(orderSetSLParamsMock.get(orderMockA, brokerStopData))
-            .thenReturn(Single.just(setSLParamsMock));
-    }
-
-    private void makeSetSLParamsFail() {
-        when(orderSetSLParamsMock.get(orderMockA, brokerStopData))
-            .thenReturn(Single.error(jfException));
+    private OngoingStubbing<Single<SetSLParams>> stubGetSLParams() {
+        return when(orderSetSLParamsMock.get(orderMockA, brokerStopDataMock));
     }
 
     private TestObserver<Void> subscribe() {
         return setSLParamsRunner
-            .get(orderMockA, brokerStopData)
+            .get(orderMockA, brokerStopDataMock)
             .test();
     }
 
     @Test
     public void setSLFailsWhenSetSLParamsFail() {
-        makeSetSLParamsFail();
+        stubGetSLParams().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -67,19 +57,19 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            makeSetSLParamsPass();
+            stubGetSLParams().thenReturn(Single.just(setSLParamsMock));
         }
 
         @Test
         public void setSLFailsWhenOrderUtilFails() {
-            makeOrderUtilFail();
+            stubParamsToObservable().thenReturn(Observable.error(jfException));
 
             subscribe().assertError(jfException);
         }
 
         @Test
         public void setSLSucceedsWhenOrderUtilSucceeds() {
-            makeOrderUtilPass();
+            stubParamsToObservable().thenReturn(Observable.just(orderEventA));
 
             subscribe().assertComplete();
         }

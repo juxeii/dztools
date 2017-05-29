@@ -41,7 +41,7 @@ public class StopLossTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(brokerBuyDataMock.dStopDist()).thenReturn(dStopDist);
+            when(brokerBuyDataMock.slDistance()).thenReturn(dStopDist);
             when(brokerBuyDataMock.orderCommand()).thenReturn(orderCommand);
         }
 
@@ -53,7 +53,7 @@ public class StopLossTest extends CommonUtilForTest {
 
         private void stubStopDistanceInPips(final double pipDistance) {
             final double dStopDist = InstrumentUtil.scalePipsToPrice(instrumentForTest, pipDistance);
-            when(brokerBuyDataMock.dStopDist()).thenReturn(dStopDist);
+            when(brokerBuyDataMock.slDistance()).thenReturn(dStopDist);
         }
 
         @Test
@@ -80,7 +80,7 @@ public class StopLossTest extends CommonUtilForTest {
 
         @Test
         public void whenDistanceIsForOppositeCloseNoSLIsReturned() {
-            when(brokerBuyDataMock.dStopDist()).thenReturn(oppositeClose);
+            when(brokerBuyDataMock.slDistance()).thenReturn(oppositeClose);
 
             subscribe().assertValue(noStopLossPrice);
         }

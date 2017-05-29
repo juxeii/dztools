@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
 import com.jforex.dzjforex.brokerhistory.BrokerHistory;
@@ -34,12 +35,12 @@ public class BrokerHistoryTest extends CommonUtilForTest {
         brokerHistory = new BrokerHistory(barFetcherMock, tickFetcherMock);
     }
 
-    private void setAssetName(final String assetName) {
-        when(brokerHistoryDataMock.instrumentName()).thenReturn(assetName);
+    private OngoingStubbing<String> stubAssetName() {
+        return when(brokerHistoryDataMock.instrumentName());
     }
 
-    private void setNoOfTickMinutes(final int noOfTickMinutes) {
-        when(brokerHistoryDataMock.noOfTickMinutes()).thenReturn(noOfTickMinutes);
+    private OngoingStubbing<Integer> stubNoOfTickMinutes() {
+        return when(brokerHistoryDataMock.noOfTickMinutes());
     }
 
     private TestObserver<Integer> subscribe() {
@@ -58,7 +59,7 @@ public class BrokerHistoryTest extends CommonUtilForTest {
 
     @Test
     public void historyUnavailableWhenAssetNameIsInvalid() {
-        setAssetName("Invalid");
+        stubAssetName().thenReturn("Invalid");
 
         subscribe().assertValue(historyUnavailable);
     }
@@ -67,24 +68,23 @@ public class BrokerHistoryTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setAssetName(instrumentNameForTest);
+            stubAssetName().thenReturn(instrumentNameForTest);
         }
 
         public class BarFetch {
 
             @Before
             public void setUp() {
-                setNoOfTickMinutes(1);
+                stubNoOfTickMinutes().thenReturn(1);
             }
 
-            private void setBarFetchResult(final Single<Integer> result) {
-                when(barFetcherMock.run(instrumentForTest, brokerHistoryDataMock))
-                    .thenReturn(result);
+            private OngoingStubbing<Single<Integer>> stubBarFetchResult() {
+                return when(barFetcherMock.run(instrumentForTest, brokerHistoryDataMock));
             }
 
             @Test
             public void historyUnavailableWhenBarFetcherFails() {
-                setBarFetchResult(Single.error(jfException));
+                stubBarFetchResult().thenReturn(Single.error(jfException));
 
                 subscribe().assertValue(historyUnavailable);
             }
@@ -92,7 +92,7 @@ public class BrokerHistoryTest extends CommonUtilForTest {
             @Test
             public void valueFromBarFetcherIsReturnedWhenBarFetcherSucceeds() {
                 final int expectedReturnValue = 42;
-                setBarFetchResult(Single.just(expectedReturnValue));
+                stubBarFetchResult().thenReturn(Single.just(expectedReturnValue));
 
                 subscribe().assertValue(expectedReturnValue);
             }
@@ -102,17 +102,16 @@ public class BrokerHistoryTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setNoOfTickMinutes(0);
+                stubNoOfTickMinutes().thenReturn(0);
             }
 
-            private void setTickFetchResult(final Single<Integer> result) {
-                when(tickFetcherMock.run(instrumentForTest, brokerHistoryDataMock))
-                    .thenReturn(result);
+            private OngoingStubbing<Single<Integer>> stubTickFetchResult() {
+                return when(tickFetcherMock.run(instrumentForTest, brokerHistoryDataMock));
             }
 
             @Test
             public void historyUnavailableWhenTickFetcherFails() {
-                setTickFetchResult(Single.error(jfException));
+                stubTickFetchResult().thenReturn(Single.error(jfException));
 
                 subscribe().assertValue(historyUnavailable);
             }
@@ -120,7 +119,7 @@ public class BrokerHistoryTest extends CommonUtilForTest {
             @Test
             public void valueFromBarFetcherIsReturnedWhenTickFetcherSucceeds() {
                 final int expectedReturnValue = 27;
-                setTickFetchResult(Single.just(expectedReturnValue));
+                stubTickFetchResult().thenReturn(Single.just(expectedReturnValue));
 
                 subscribe().assertValue(expectedReturnValue);
             }

@@ -30,10 +30,11 @@ public class HistoryWrapper {
     public Single<IBar> getBar(final BarParams barParams,
                                final int shift) {
         final Instrument instrument = barParams.instrument();
-        return Single.fromCallable(() -> history.getBar(instrument,
-                                                        barParams.period(),
-                                                        barParams.offerSide(),
-                                                        shift))
+        return Single
+            .fromCallable(() -> history.getBar(instrument,
+                                               barParams.period(),
+                                               barParams.offerSide(),
+                                               shift))
             .doOnSubscribe(d -> logger.debug("Fetching bar by " + shift
                     + " shift for " + instrument))
             .doOnError(e -> logger.error("Fetching bar by " + shift
@@ -64,9 +65,10 @@ public class HistoryWrapper {
 
     public Single<List<ITick>> getTicksReversed(final Instrument instrument,
                                                 final TimeSpan timeSpan) {
-        return Single.fromCallable(() -> history.getTicks(instrument,
-                                                          timeSpan.from(),
-                                                          timeSpan.to()))
+        return Single
+            .fromCallable(() -> history.getTicks(instrument,
+                                                 timeSpan.from(),
+                                                 timeSpan.to()))
             .map(this::reverseQuotes)
             .doOnSubscribe(d -> logger.debug("Fetching ticks for " + instrument + ":\n"
                     + "from: " + timeSpan.formatFrom() + "\n"
@@ -83,7 +85,8 @@ public class HistoryWrapper {
     }
 
     public Single<Long> getTimeOfLastTick(final Instrument instrument) {
-        return Single.fromCallable(() -> history.getTimeOfLastTick(instrument))
+        return Single
+            .fromCallable(() -> history.getTimeOfLastTick(instrument))
             .doOnSubscribe(d -> logger.debug("Fetching latest tick time for " + instrument))
             .doOnError(e -> logger.error("Fetching latest tick time for " + instrument
                     + " failed! " + e.getMessage()))
@@ -93,9 +96,10 @@ public class HistoryWrapper {
 
     public Single<List<IOrder>> getOrdersHistory(final Instrument instrument,
                                                  final TimeSpan timeSpan) {
-        return Single.fromCallable(() -> history.getOrdersHistory(instrument,
-                                                                  timeSpan.from(),
-                                                                  timeSpan.to()))
+        return Single
+            .fromCallable(() -> history.getOrdersHistory(instrument,
+                                                         timeSpan.from(),
+                                                         timeSpan.to()))
             .doOnSubscribe(d -> logger.debug("Fetching orders from history for " + instrument + ":\n"
                     + "from: " + timeSpan.formatFrom() + "\n"
                     + "to: " + timeSpan.formatTo()))

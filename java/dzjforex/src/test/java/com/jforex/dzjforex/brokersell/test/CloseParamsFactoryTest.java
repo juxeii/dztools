@@ -15,13 +15,16 @@ public class CloseParamsFactoryTest extends CommonUtilForTest {
     private CloseParamsFactory closeParamsFactory;
 
     private CloseParams closeParams;
+    private final double closeAmount = 0.045;
 
     @Before
     public void setUp() {
-        closeParamsFactory = new CloseParamsFactory(retryParamsMock);
+        when(brokerSellDataMock.amount()).thenReturn(closeAmount);
+
+        closeParamsFactory = new CloseParamsFactory(orderLabelUtilMock, retryParamsMock);
 
         closeParams = (CloseParams) closeParamsFactory
-            .get(orderMockA, brokerSellData)
+            .get(orderMockA, brokerSellDataMock)
             .test()
             .getEvents()
             .get(0)
@@ -31,7 +34,7 @@ public class CloseParamsFactoryTest extends CommonUtilForTest {
     @Test
     public void assertCloseParamsValues() {
         assertThat(closeParams.order(), equalTo(orderMockA));
-        assertThat(closeParams.partialCloseAmount(), equalTo(brokerSellData.amount()));
+        assertThat(closeParams.partialCloseAmount(), equalTo(closeAmount));
     }
 
     @Test

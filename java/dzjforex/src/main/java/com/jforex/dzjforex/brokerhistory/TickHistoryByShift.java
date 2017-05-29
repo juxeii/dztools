@@ -37,7 +37,8 @@ public class TickHistoryByShift {
     public Single<List<ITick>> get(final Instrument instrument,
                                    final long endDate,
                                    final int shift) {
-        return Observable.defer(() -> historyFetchDate.startDatesForTick(instrument, endDate))
+        return Observable
+            .defer(() -> historyFetchDate.startDatesForTick(instrument, endDate))
             .flatMapSingle(startDate -> getTicksReversed(instrument, startDate))
             .flatMapIterable(ticks -> ticks)
             .take(shift + 1)

@@ -13,17 +13,16 @@ public class BrokerSellDataTest extends CommonUtilForTest {
 
     private BrokerSellData brokerSellData;
 
-    private final int orderID = 42;
     private final double amount = 0.0125;
 
     @Before
     public void setUp() {
-        brokerSellData = new BrokerSellData(orderID, amount);
+        brokerSellData = new BrokerSellData(nTradeID, amount);
     }
 
     @Test
     public void assertOrderID() {
-        assertThat(brokerSellData.orderID(), equalTo(orderID));
+        assertThat(brokerSellData.orderID(), equalTo(nTradeID));
     }
 
     @Test

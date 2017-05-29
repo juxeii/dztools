@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.ITick;
 import com.jforex.dzjforex.brokerhistory.BrokerHistoryData;
@@ -60,16 +61,22 @@ public class TickFetcherTest extends BarsAndTicksForTest {
             .test();
     }
 
-    private void setTickHistoryByShiftResult(final Single<List<ITick>> result) {
-        when(tickHistoryByShiftMock.get(instrumentForTest,
-                                        endTimeForTick,
-                                        noOfRequestedTicks - 1))
-                                            .thenReturn(result);
+    private OngoingStubbing<Single<List<ITick>>> stubHistoryShift() {
+        return when(tickHistoryByShiftMock.get(instrumentForTest,
+                                               endTimeForTick,
+                                               noOfRequestedTicks - 1));
+    }
+
+    @Test
+    public void runCallIsDeferred() {
+        tickFetcher.run(instrumentForTest, brokerHistoryDataMock);
+
+        verifyZeroInteractions(tickHistoryByShiftMock);
     }
 
     @Test
     public void whenTickHistoryByShiftFailsTheErrorIsPropagated() {
-        setTickHistoryByShiftResult(Single.error(jfException));
+        stubHistoryShift().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -78,11 +85,11 @@ public class TickFetcherTest extends BarsAndTicksForTest {
 
         @Before
         public void setUp() {
-            setTickHistoryByShiftResult(Single.just(tickMockList));
+            stubHistoryShift().thenReturn(Single.just(tickMockList));
         }
 
-        private void setTickStartTime(final long startTimeForTick) {
-            when(brokerHistoryDataMock.startTimeForTick()).thenReturn(startTimeForTick);
+        private OngoingStubbing<Long> stubTickStartTime() {
+            return when(brokerHistoryDataMock.startTimeForTick());
         }
 
         private void assertTickQuote(final TickQuote tickQuote,
@@ -97,7 +104,7 @@ public class TickFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setTickStartTime(1L);
+                stubTickStartTime().thenReturn(1L);
             }
 
             @Test
@@ -128,7 +135,7 @@ public class TickFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setTickStartTime(55L);
+                stubTickStartTime().thenReturn(55L);
             }
 
             @Test
@@ -156,7 +163,7 @@ public class TickFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setTickStartTime(13L);
+                stubTickStartTime().thenReturn(13L);
             }
 
             @Test

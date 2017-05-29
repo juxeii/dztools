@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.OfferSide;
@@ -26,12 +27,9 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
     private HistoryWrapper historyWrapperMock;
     @Mock
     private IBar barMock;
-    private final long tickFetchMillis = 10L;
 
     @Before
     public void setUp() {
-        when(pluginConfigMock.tickFetchMillis()).thenReturn(tickFetchMillis);
-
         historyFetchDate = new HistoryFetchDate(historyWrapperMock, pluginConfigMock);
     }
 
@@ -47,23 +45,26 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
             .period(period)
             .offerSide(offerSide);
 
-        private void setBarTime(final long barTime) {
-            when(barMock.getTime()).thenReturn(barTime);
-        }
-
         private TestObserver<Long> subscribe() {
             return historyFetchDate
                 .endDateForBar(barParams, endDateForBar)
                 .test();
         }
 
-        private void setGetBarResult(final Single<IBar> result) {
-            when(historyWrapperMock.getBar(barParams, 1)).thenReturn(result);
+        private OngoingStubbing<Single<IBar>> stubBarShift1() {
+            return when(historyWrapperMock.getBar(barParams, 1));
+        }
+
+        @Test
+        public void endDateForBarIsDeferred() {
+            historyFetchDate.endDateForBar(barParams, endDateForBar);
+
+            verifyZeroInteractions(historyWrapperMock);
         }
 
         @Test
         public void whenHistoryWrapperrFailsTheErrorIsPropagated() {
-            setGetBarResult(Single.error(jfException));
+            stubBarShift1().thenReturn(Single.error(jfException));
 
             subscribe().assertError(jfException);
         }
@@ -73,8 +74,8 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
             @Before
             public void setUp() {
                 barTime = 42L;
-                setBarTime(barTime);
-                setGetBarResult(Single.just(barMock));
+                when(barMock.getTime()).thenReturn(barTime);
+                stubBarShift1().thenReturn(Single.just(barMock));
             }
 
             @Test
@@ -105,9 +106,8 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
         private final long latestTickTime = 42L;
         private long endDateForTick;
 
-        private void setLatestTickTimeResult(final Single<Long> result) {
-            when(historyWrapperMock.getTimeOfLastTick(instrumentForTest))
-                .thenReturn(result);
+        private OngoingStubbing<Single<Long>> stubTimeOfLastTick() {
+            return when(historyWrapperMock.getTimeOfLastTick(instrumentForTest));
         }
 
         private TestObserver<Long> subscribe() {
@@ -124,8 +124,15 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
         }
 
         @Test
+        public void startDatesForTickIsDeferred() {
+            historyFetchDate.startDatesForTick(instrumentForTest, endDateForTick);
+
+            verifyZeroInteractions(historyWrapperMock);
+        }
+
+        @Test
         public void whenHistoryWrapperFailsTheErrorIsPropagated() {
-            setLatestTickTimeResult(Single.error(jfException));
+            stubTimeOfLastTick().thenReturn(Single.error(jfException));
 
             subscribe().assertError(jfException);
         }
@@ -134,7 +141,7 @@ public class HistoryFetchDateTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setLatestTickTimeResult(Single.just(latestTickTime));
+                stubTimeOfLastTick().thenReturn(Single.just(latestTickTime));
             }
 
             @Test

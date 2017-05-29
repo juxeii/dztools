@@ -45,7 +45,7 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
 
     @Test
     public void assertStopDistance() {
-        assertThat(brokerBuyData.dStopDist(), equalTo(dStopDist));
+        assertThat(brokerBuyData.slDistance(), equalTo(dStopDist));
     }
 
     @Test

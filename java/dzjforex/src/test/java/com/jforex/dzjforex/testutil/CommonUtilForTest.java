@@ -22,7 +22,6 @@ import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IContext;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
-import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
@@ -31,7 +30,6 @@ import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.Components;
 import com.jforex.dzjforex.Zorro;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
-import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
@@ -57,6 +55,7 @@ import com.jforex.programming.order.task.params.TaskParams;
 import com.jforex.programming.quote.TickQuoteProvider;
 import com.jforex.programming.strategy.StrategyUtil;
 
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
@@ -107,6 +106,10 @@ public class CommonUtilForTest extends BDDMockito {
     protected PluginConfig pluginConfigMock;
     @Mock
     protected Clock clockMock;
+    @Mock
+    protected BrokerSellData brokerSellDataMock;
+    @Mock
+    protected BrokerStopData brokerStopDataMock;
     @Captor
     protected ArgumentCaptor<TimeSpan> timeSpanCaptor;
 
@@ -118,7 +121,7 @@ public class CommonUtilForTest extends BDDMockito {
     protected static final String loginTypeDemo = "Demo";
     protected static final String loginTypeReal = "Real";
     protected static final ICurrency accountCurrency = CurrencyFactory.EUR;
-    protected static final String orderID = "12345";
+    protected static final String orderID = "42";
     protected static final String orderLabelPrefix = "Zorro";
     protected static final String orderLabel = orderLabelPrefix + orderID;
 
@@ -133,19 +136,13 @@ public class CommonUtilForTest extends BDDMockito {
                                  pin);
     protected final OrderEvent orderEventA;
     protected final OrderEvent orderEventB;
-    private final int nTradeID = 42;
-    private final double orderAmount = 0.123;
-    private final double dStopDist = 0.0035;
-    protected BrokerSellData brokerSellData;
+    protected final int nTradeID = 42;
 
-    private final double slPrice = 1.09875;
-    protected BrokerStopData brokerStopData = new BrokerStopData(nTradeID, slPrice);
+    protected final double slPrice = 1.09875;
 
-    private final double tradeParams[] = new double[1];
     protected String instrumentNameForTest = "EUR/USD";
     protected Instrument instrumentForTest = Instrument.EURUSD;
     protected ICurrency baseCurrencyForTest = instrumentForTest.getPrimaryJFCurrency();
-    protected BrokerBuyData brokerBuyData;
 
     private final String accounts[] = new String[1];
     protected BrokerLoginData brokerLoginData = new BrokerLoginData(username,
@@ -192,19 +189,20 @@ public class CommonUtilForTest extends BDDMockito {
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
         when(orderMockA.getLabel()).thenReturn(orderLabel);
 
+        when(orderLabelUtilMock.idFromLabel(orderLabel)).thenReturn(Maybe.just(nTradeID));
+        when(orderLabelUtilMock.idFromOrder(orderMockA)).thenReturn(Maybe.just(nTradeID));
+
+        when(brokerSellDataMock.orderID()).thenReturn(nTradeID);
+
+        when(brokerStopDataMock.orderID()).thenReturn(nTradeID);
+        when(brokerStopDataMock.slPrice()).thenReturn(slPrice);
+
         orderEventA = new OrderEvent(orderMockA,
                                      OrderEventType.SUBMIT_OK,
                                      true);
         orderEventB = new OrderEvent(orderMockB,
                                      OrderEventType.FULLY_FILLED,
                                      true);
-
-        brokerSellData = new BrokerSellData(nTradeID, orderAmount);
-        brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                          orderAmount,
-                                          OrderCommand.BUY,
-                                          dStopDist,
-                                          tradeParams);
 
         coverageOnEnumsCorrection();
 

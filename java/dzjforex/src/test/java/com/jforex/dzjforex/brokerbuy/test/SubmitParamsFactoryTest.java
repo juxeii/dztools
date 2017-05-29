@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
@@ -32,7 +33,6 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
     private final double slPrice = 1.12345;
     private final double amount = 0.124;
     private final OrderCommand orderCommand = OrderCommand.BUY;
-    private final String orderLabel = "zorro123456";
 
     @Before
     public void setUp() {
@@ -51,15 +51,14 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
         when(orderLabelUtilMock.create()).thenReturn(orderLabel);
     }
 
+    private OngoingStubbing<Single<Double>> stubSetSLResult() {
+        return when(stopLossMock.forSubmit(instrumentForTest, brokerBuyDataMock));
+    }
+
     private TestObserver<SubmitParams> subscribe() {
         return submitParamsFactory
             .get(instrumentForTest, brokerBuyDataMock)
             .test();
-    }
-
-    private void setStopLossResult(final Single<Double> result) {
-        when(stopLossMock.forSubmit(instrumentForTest, brokerBuyDataMock))
-            .thenReturn(result);
     }
 
     @Test
@@ -73,7 +72,7 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
 
     @Test
     public void getFailsWhenStopLossFails() {
-        setStopLossResult(Single.error(jfException));
+        stubSetSLResult().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -85,7 +84,7 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setStopLossResult(Single.just(slPrice));
+            stubSetSLResult().thenReturn(Single.just(slPrice));
 
             submitParams = (SubmitParams) subscribe()
                 .getEvents()

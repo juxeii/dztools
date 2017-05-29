@@ -25,8 +25,8 @@ public class HistoryFetchDate {
 
     public Single<Long> endDateForBar(final BarParams barParams,
                                       final long endDate) {
-        return historyWrapper
-            .getBar(barParams, 1)
+        return Single
+            .defer(() -> historyWrapper.getBar(barParams, 1))
             .map(IBar::getTime)
             .map(latestBarTime -> {
                 final long periodInterval = barParams
@@ -40,8 +40,8 @@ public class HistoryFetchDate {
 
     public Observable<Long> startDatesForTick(final Instrument instrument,
                                               final long endDate) {
-        return historyWrapper
-            .getTimeOfLastTick(instrument)
+        return Single
+            .defer(() -> historyWrapper.getTimeOfLastTick(instrument))
             .map(latestTickTime -> endDate > latestTickTime
                     ? latestTickTime
                     : endDate)

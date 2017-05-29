@@ -81,6 +81,7 @@ public class BrokerHistoryDataTest extends BarsAndTicksForTest {
     public void fillBarQuotesCallsCorrectOnHistoryFiller() {
         brokerHistoryData.fillBarQuotes(barQuoteList);
 
+        verify(historyTickFillerMock, times(barQuoteList.size())).fillBarQuote(any(), anyInt());
         verify(historyTickFillerMock).fillBarQuote(barQuoteA, 0 * zorroTickSize);
         verify(historyTickFillerMock).fillBarQuote(barQuoteB, 1 * zorroTickSize);
         verify(historyTickFillerMock).fillBarQuote(barQuoteC, 2 * zorroTickSize);
@@ -90,6 +91,7 @@ public class BrokerHistoryDataTest extends BarsAndTicksForTest {
     public void fillTickQuotesCallsCorrectOnHistoryFiller() {
         brokerHistoryData.fillTickQuotes(tickQuoteList);
 
+        verify(historyTickFillerMock, times(tickQuoteList.size())).fillTickQuote(any(), anyInt());
         verify(historyTickFillerMock).fillTickQuote(tickQuoteA, 0 * zorroTickSize);
         verify(historyTickFillerMock).fillTickQuote(tickQuoteB, 1 * zorroTickSize);
         verify(historyTickFillerMock).fillTickQuote(tickQuoteC, 2 * zorroTickSize);

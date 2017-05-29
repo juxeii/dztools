@@ -43,6 +43,9 @@ public class SubmitParamsFactory {
                                 final BrokerBuyData brokerBuyData,
                                 final double slPrice) {
         final String orderLabel = orderLabelUtil.create();
+        final int orderID = orderLabelUtil
+            .idFromLabel(orderLabel)
+            .blockingGet();
         final OrderCommand orderCommand = brokerBuyData.orderCommand();
         final double amount = brokerBuyData.amount();
 
@@ -60,12 +63,13 @@ public class SubmitParamsFactory {
                     + "command: " + orderCommand + "\n"
                     + "amount: " + amount + "\n"
                     + "label: " + orderLabel + "\n"
+                    + "ID: " + orderID + "\n"
                     + "slPrice: " + slPrice))
             .doOnError(e -> logger.error("Opening order for " + instrument
-                    + " with label " + orderLabel
+                    + " with ID " + orderID
                     + " failed!" + e.getMessage()))
             .doOnComplete(() -> logger.info("Opening order for " + instrument
-                    + " with label " + orderLabel
+                    + " with ID " + orderID
                     + " done."))
             .retryOnReject(retryParams)
             .build();

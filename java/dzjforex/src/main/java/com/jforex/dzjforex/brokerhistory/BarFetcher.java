@@ -24,10 +24,10 @@ public class BarFetcher {
     public Single<Integer> run(final Instrument instrument,
                                final BrokerHistoryData brokerHistoryData) {
         final BarParams barParams = createParams(instrument, brokerHistoryData);
-        return barHistoryByShift
-            .get(barParams,
-                 brokerHistoryData.endTimeForBar(),
-                 brokerHistoryData.noOfRequestedTicks() - 1)
+        return Single
+            .defer(() -> barHistoryByShift.get(barParams,
+                                               brokerHistoryData.endTimeForBar(),
+                                               brokerHistoryData.noOfRequestedTicks() - 1))
             .map(bars -> filterTime(bars, brokerHistoryData.startTimeForBar()))
             .map(bars -> barsToQuotes(bars, barParams))
             .doOnSuccess(brokerHistoryData::fillBarQuotes)

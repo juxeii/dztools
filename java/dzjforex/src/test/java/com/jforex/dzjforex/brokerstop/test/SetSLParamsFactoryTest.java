@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.OfferSide;
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
@@ -25,29 +26,27 @@ public class SetSLParamsFactoryTest extends CommonUtilForTest {
 
     @Mock
     private StopLoss stopLossMock;
-    private double slPrice;
 
     @Before
     public void setUp() {
-        slPrice = brokerStopData.slPrice();
-
-        setSLParamsFactory = new SetSLParamsFactory(stopLossMock, retryParamsMock);
+        setSLParamsFactory = new SetSLParamsFactory(stopLossMock,
+                                                    orderLabelUtilMock,
+                                                    retryParamsMock);
     }
 
     private TestObserver<SetSLParams> subscribe() {
         return setSLParamsFactory
-            .get(orderMockA, brokerStopData)
+            .get(orderMockA, brokerStopDataMock)
             .test();
     }
 
-    private void setStopLossResult(final Single<Double> result) {
-        when(stopLossMock.forSetSL(orderMockA, slPrice))
-            .thenReturn(result);
+    private OngoingStubbing<Single<Double>> stubSetSLResult() {
+        return when(stopLossMock.forSetSL(orderMockA, slPrice));
     }
 
     @Test
     public void getFailsWhenStopLossFails() {
-        setStopLossResult(Single.error(jfException));
+        stubSetSLResult().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -58,7 +57,7 @@ public class SetSLParamsFactoryTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setStopLossResult(Single.just(slPrice));
+            stubSetSLResult().thenReturn(Single.just(slPrice));
 
             setSLParams = (SetSLParams) subscribe()
                 .getEvents()

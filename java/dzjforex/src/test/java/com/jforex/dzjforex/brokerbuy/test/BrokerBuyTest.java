@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
@@ -16,7 +17,6 @@ import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Completable;
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
@@ -31,7 +31,6 @@ public class BrokerBuyTest extends CommonUtilForTest {
     private OrderRepository orderRepositoryMock;
     @Mock
     private BrokerBuyData brokerBuyDataMock;
-    private final int orderID = 42;
 
     @Before
     public void setUp() {
@@ -45,8 +44,6 @@ public class BrokerBuyTest extends CommonUtilForTest {
     private void setUpMocks() {
         when(brokerBuyDataMock.instrumentName()).thenReturn(instrumentNameForTest);
 
-        when(orderLabelUtilMock.idFromOrder(orderMockA)).thenReturn(Maybe.just(orderID));
-
         when(orderRepositoryMock.store(orderMockA)).thenReturn(Completable.complete());
     }
 
@@ -56,9 +53,8 @@ public class BrokerBuyTest extends CommonUtilForTest {
             .test();
     }
 
-    private void setTradeUtilityResult(final Single<Instrument> result) {
-        when(tradeUtilityMock.instrumentForTrading(instrumentNameForTest))
-            .thenReturn(result);
+    private OngoingStubbing<Single<Instrument>> stubInstrumentForTrading() {
+        return when(tradeUtilityMock.instrumentForTrading(instrumentNameForTest));
     }
 
     @Test
@@ -71,7 +67,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
     @Test
     public void submitFailsWhenInstrumentIsNotAvailable() {
-        setTradeUtilityResult(Single.error(jfException));
+        stubInstrumentForTrading().thenReturn(Single.error(jfException));
 
         subscribe().assertValue(ZorroReturnValues.BROKER_BUY_FAIL.getValue());
     }
@@ -80,17 +76,16 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setTradeUtilityResult(Single.just(instrumentForTest));
+            stubInstrumentForTrading().thenReturn(Single.just(instrumentForTest));
         }
 
-        private void setParamsRunnerResult(final Single<IOrder> result) {
-            when(submitParamsRunnerMock.get(instrumentForTest, brokerBuyDataMock))
-                .thenReturn(result);
+        private OngoingStubbing<Single<IOrder>> stubParamsRunner() {
+            return when(submitParamsRunnerMock.get(instrumentForTest, brokerBuyDataMock));
         }
 
         @Test
         public void submitFailsWhenParamsRunnerFails() {
-            setParamsRunnerResult(Single.error(jfException));
+            stubParamsRunner().thenReturn(Single.error(jfException));
 
             subscribe().assertValue(ZorroReturnValues.BROKER_BUY_FAIL.getValue());
         }
@@ -99,21 +94,25 @@ public class BrokerBuyTest extends CommonUtilForTest {
 
             @Before
             public void setUp() {
-                setParamsRunnerResult(Single.just(orderMockA));
+                stubParamsRunner().thenReturn(Single.just(orderMockA));
+            }
+
+            private OngoingStubbing<Double> stubSLDistance() {
+                return when(brokerBuyDataMock.slDistance());
             }
 
             @Test
             public void whenStopDistanceIsNegativOppositeCloseIsReturned() {
-                when(brokerBuyDataMock.dStopDist()).thenReturn(-1.0);
+                stubSLDistance().thenReturn(-1.0);
 
                 subscribe().assertValue(ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue());
             }
 
             @Test
             public void whenStopDistanceIsPositiveTheOrderIDIsReturned() {
-                when(brokerBuyDataMock.dStopDist()).thenReturn(0.0034);
+                stubSLDistance().thenReturn(0.0034);
 
-                subscribe().assertValue(orderID);
+                subscribe().assertValue(nTradeID);
             }
         }
     }

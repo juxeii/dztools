@@ -4,11 +4,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IOrder;
+import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsFactory;
 import com.jforex.dzjforex.brokerbuy.SubmitParamsRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
+import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -25,6 +28,8 @@ public class SubmitParamsRunnerTest extends CommonUtilForTest {
     private SubmitParamsFactory submitParamsFactoryMock;
     @Mock
     private SubmitParams submitParamsMock;
+    @Mock
+    private BrokerBuyData brokerBuyDataMock;
 
     @Before
     public void setUp() {
@@ -33,18 +38,21 @@ public class SubmitParamsRunnerTest extends CommonUtilForTest {
 
     private TestObserver<IOrder> subscribe() {
         return submitParamsRunner
-            .get(instrumentForTest, brokerBuyData)
+            .get(instrumentForTest, brokerBuyDataMock)
             .test();
     }
 
-    private void setSubmitParamsFactoryResult(final Single<SubmitParams> result) {
-        when(submitParamsFactoryMock.get(instrumentForTest, brokerBuyData))
-            .thenReturn(result);
+    private OngoingStubbing<Observable<OrderEvent>> stubParamsToObservable() {
+        return when(orderUtilMock.paramsToObservable(submitParamsMock));
+    }
+
+    private OngoingStubbing<Single<SubmitParams>> stubGetSubmitParams() {
+        return when(submitParamsFactoryMock.get(instrumentForTest, brokerBuyDataMock));
     }
 
     @Test
     public void submitFailsWhenSubmitParamsFail() {
-        setSubmitParamsFactoryResult(Single.error(jfException));
+        stubGetSubmitParams().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -53,21 +61,19 @@ public class SubmitParamsRunnerTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            setSubmitParamsFactoryResult(Single.just(submitParamsMock));
+            stubGetSubmitParams().thenReturn(Single.just(submitParamsMock));
         }
 
         @Test
         public void submitFailsWhenOrderUtilFails() {
-            when(orderUtilMock.paramsToObservable(submitParamsMock))
-                .thenReturn(Observable.error(jfException));
+            stubParamsToObservable().thenReturn(Observable.error(jfException));
 
             subscribe().assertError(jfException);
         }
 
         @Test
         public void submitSucceedsWhenOrderUtilSucceeds() {
-            when(orderUtilMock.paramsToObservable(submitParamsMock))
-                .thenReturn(Observable.just(orderEventA, orderEventB));
+            stubParamsToObservable().thenReturn(Observable.just(orderEventA, orderEventB));
 
             subscribe()
                 .assertValue(orderMockB)

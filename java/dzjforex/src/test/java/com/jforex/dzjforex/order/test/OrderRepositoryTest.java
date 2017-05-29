@@ -55,6 +55,27 @@ public class OrderRepositoryTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getByIDCallIsDeferred() {
+        orderRepository.getByID(orderID);
+
+        verifyZeroInteractions(orderLabelUtilMock);
+    }
+
+    @Test
+    public void storeOrderCallIsDeferred() {
+        orderRepository.store(orderMockA);
+
+        verifyZeroInteractions(orderLabelUtilMock);
+    }
+
+    @Test
+    public void storeOrdersCallIsDeferred() {
+        orderRepository.store(orders);
+
+        verifyZeroInteractions(orderLabelUtilMock);
+    }
+
+    @Test
     public void orderIDNotFoundWhenNotStoredBefore() {
         subscribeGetByID().assertNoValues();
     }

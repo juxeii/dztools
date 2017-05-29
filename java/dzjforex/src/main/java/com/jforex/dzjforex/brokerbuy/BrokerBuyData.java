@@ -6,7 +6,7 @@ import com.dukascopy.api.IOrder;
 public class BrokerBuyData {
 
     private final String instrumentName;
-    private final double dStopDist;
+    private final double slDistance;
     private final double tradeParams[];
     private final OrderCommand orderCommand;
     private final double amount;
@@ -14,12 +14,12 @@ public class BrokerBuyData {
     public BrokerBuyData(final String instrumentName,
                          final double amount,
                          final OrderCommand orderCommand,
-                         final double dStopDist,
+                         final double slDistance,
                          final double tradeParams[]) {
         this.instrumentName = instrumentName;
         this.amount = amount;
         this.orderCommand = orderCommand;
-        this.dStopDist = dStopDist;
+        this.slDistance = slDistance;
         this.tradeParams = tradeParams;
     }
 
@@ -31,8 +31,8 @@ public class BrokerBuyData {
         return amount;
     }
 
-    public double dStopDist() {
-        return dStopDist;
+    public double slDistance() {
+        return slDistance;
     }
 
     public OrderCommand orderCommand() {

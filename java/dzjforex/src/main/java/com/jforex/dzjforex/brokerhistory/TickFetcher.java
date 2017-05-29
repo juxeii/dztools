@@ -19,10 +19,10 @@ public class TickFetcher {
 
     public Single<Integer> run(final Instrument instrument,
                                final BrokerHistoryData brokerHistoryData) {
-        return tickHistoryByShift
-            .get(instrument,
-                 brokerHistoryData.endTimeForTick(),
-                 brokerHistoryData.noOfRequestedTicks() - 1)
+        return Single
+            .defer(() -> tickHistoryByShift.get(instrument,
+                                                brokerHistoryData.endTimeForTick(),
+                                                brokerHistoryData.noOfRequestedTicks() - 1))
             .map(ticks -> filterTime(ticks, brokerHistoryData.startTimeForTick()))
             .map(ticks -> ticksToQuotes(ticks, instrument))
             .doOnSuccess(brokerHistoryData::fillTickQuotes)

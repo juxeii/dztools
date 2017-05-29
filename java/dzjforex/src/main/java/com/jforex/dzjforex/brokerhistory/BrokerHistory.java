@@ -18,10 +18,10 @@ public class BrokerHistory {
     }
 
     public Single<Integer> get(final BrokerHistoryData brokerHistoryData) {
-        return Single.defer(() -> RxUtility
-            .instrumentFromName(brokerHistoryData.instrumentName())
+        return Single
+            .defer(() -> RxUtility.instrumentFromName(brokerHistoryData.instrumentName()))
             .flatMap(instrument -> fetchForValidInstrument(instrument, brokerHistoryData))
-            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue()));
+            .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue());
     }
 
     private Single<Integer> fetchForValidInstrument(final Instrument instrument,

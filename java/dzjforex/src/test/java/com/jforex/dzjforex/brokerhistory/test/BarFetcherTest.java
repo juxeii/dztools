@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IBar;
 import com.jforex.dzjforex.brokerhistory.BarFetcher;
@@ -65,16 +66,22 @@ public class BarFetcherTest extends BarsAndTicksForTest {
             .test();
     }
 
-    private void setHistoryByShiftResult(final Single<List<IBar>> result) {
-        when(barHistoryByShiftMock.get(barParamsCaptor.capture(),
-                                       eq(endTimeForBar),
-                                       eq(noOfRequestedTicks - 1)))
-                                           .thenReturn(result);
+    private OngoingStubbing<Single<List<IBar>>> stubHistoryShift() {
+        return when(barHistoryByShiftMock.get(barParamsCaptor.capture(),
+                                              eq(endTimeForBar),
+                                              eq(noOfRequestedTicks - 1)));
+    }
+
+    @Test
+    public void runCallIsDeferred() {
+        barFetcher.run(instrumentForTest, brokerHistoryDataMock);
+
+        verifyZeroInteractions(barHistoryByShiftMock);
     }
 
     @Test
     public void whenHistoryProviderFailsTheErrorIsPropagated() {
-        setHistoryByShiftResult(Single.error(jfException));
+        stubHistoryShift().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -83,11 +90,11 @@ public class BarFetcherTest extends BarsAndTicksForTest {
 
         @Before
         public void setUp() {
-            setHistoryByShiftResult(Single.just(barMockList));
+            stubHistoryShift().thenReturn(Single.just(barMockList));
         }
 
-        private void setBarStartTime(final long startTimeForBar) {
-            when(brokerHistoryDataMock.startTimeForBar()).thenReturn(startTimeForBar);
+        private OngoingStubbing<Long> stubBarStartTime() {
+            return when(brokerHistoryDataMock.startTimeForBar());
         }
 
         private void assertBarParams() {
@@ -118,7 +125,7 @@ public class BarFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setBarStartTime(1L);
+                stubBarStartTime().thenReturn(1L);
             }
 
             @Test
@@ -149,7 +156,7 @@ public class BarFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setBarStartTime(55L);
+                stubBarStartTime().thenReturn(55L);
             }
 
             @Test
@@ -177,7 +184,7 @@ public class BarFetcherTest extends BarsAndTicksForTest {
 
             @Before
             public void setUp() {
-                setBarStartTime(13L);
+                stubBarStartTime().thenReturn(13L);
             }
 
             @Test
@@ -186,7 +193,7 @@ public class BarFetcherTest extends BarsAndTicksForTest {
             }
 
             @Test
-            public void barBAndbarCAreFilledAsQuotes() {
+            public void barBAndBarCAreFilledAsQuotes() {
                 subscribe();
 
                 final List<BarQuote> barQuotes = barQuotesCaptor.getValue();

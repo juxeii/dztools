@@ -25,20 +25,20 @@ public class OrderRepository {
     }
 
     public Maybe<IOrder> getByID(final int orderID) {
-        return orderByID.containsKey(orderID)
+        return Maybe.defer(() -> orderByID.containsKey(orderID)
                 ? Maybe.just(orderByID.get(orderID))
-                : Maybe.empty();
+                : Maybe.empty());
     }
 
     public Completable store(final List<IOrder> orders) {
         return Observable
-            .fromIterable(orders)
+            .defer(() -> Observable.fromIterable(orders))
             .flatMapCompletable(this::store);
     }
 
     public Completable store(final IOrder order) {
-        return orderLabelUtil
-            .idFromOrder(order)
+        return Maybe
+            .defer(() -> orderLabelUtil.idFromOrder(order))
             .flatMapCompletable(orderID -> storeToMap(orderID, order));
     }
 

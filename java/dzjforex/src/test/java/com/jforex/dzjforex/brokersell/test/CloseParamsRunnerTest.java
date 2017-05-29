@@ -4,10 +4,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 
+import com.jforex.dzjforex.brokersell.CloseParamsFactory;
 import com.jforex.dzjforex.brokersell.CloseParamsRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
-import com.jforex.dzjforex.brokersell.CloseParamsFactory;
+import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.task.params.basic.CloseParams;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -30,35 +32,23 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
         closeParamsRunner = new CloseParamsRunner(orderUtilMock, orderCloseParamsMock);
     }
 
-    private void makeOrderUtilPass() {
-        when(orderUtilMock.paramsToObservable(closeParamsMock))
-            .thenReturn(Observable.just(orderEventA));
+    private OngoingStubbing<Observable<OrderEvent>> stubParamsToObservable() {
+        return when(orderUtilMock.paramsToObservable(closeParamsMock));
     }
 
-    private void makeOrderUtilFail() {
-        when(orderUtilMock.paramsToObservable(closeParamsMock))
-            .thenReturn(Observable.error(jfException));
-    }
-
-    private void makeCloseParamsPass() {
-        when(orderCloseParamsMock.get(orderMockA, brokerSellData))
-            .thenReturn(Single.just(closeParamsMock));
-    }
-
-    private void makeCloseParamsFail() {
-        when(orderCloseParamsMock.get(orderMockA, brokerSellData))
-            .thenReturn(Single.error(jfException));
+    private OngoingStubbing<Single<CloseParams>> stubGetCloseParams() {
+        return when(orderCloseParamsMock.get(orderMockA, brokerSellDataMock));
     }
 
     private TestObserver<Void> subscribe() {
         return closeParamsRunner
-            .get(orderMockA, brokerSellData)
+            .get(orderMockA, brokerSellDataMock)
             .test();
     }
 
     @Test
     public void closeFailsWhenCloseParamsFail() {
-        makeCloseParamsFail();
+        stubGetCloseParams().thenReturn(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
@@ -67,19 +57,19 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            makeCloseParamsPass();
+            stubGetCloseParams().thenReturn(Single.just(closeParamsMock));
         }
 
         @Test
         public void closeFailsWhenOrderUtilFails() {
-            makeOrderUtilFail();
+            stubParamsToObservable().thenReturn(Observable.error(jfException));
 
             subscribe().assertError(jfException);
         }
 
         @Test
         public void closeSucceedsWhenOrderUtilSucceeds() {
-            makeOrderUtilPass();
+            stubParamsToObservable().thenReturn(Observable.just(orderEventA));
 
             subscribe().assertComplete();
         }

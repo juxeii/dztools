@@ -42,7 +42,7 @@ public class BrokerBuy {
             .doOnComplete(() -> brokerBuyData.fillOpenPrice(order))
             .andThen(Maybe.defer(() -> orderLabelUtil.idFromOrder(order)))
             .toSingle()
-            .map(orderID -> brokerBuyData.dStopDist() == oppositeClose
+            .map(orderID -> brokerBuyData.slDistance() == oppositeClose
                     ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()
                     : orderID);
     }

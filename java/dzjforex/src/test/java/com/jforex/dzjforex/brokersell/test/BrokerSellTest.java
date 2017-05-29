@@ -22,24 +22,21 @@ public class BrokerSellTest extends CommonUtilForTest {
 
     @Mock
     private CloseParamsRunner closeParamsRunnerMock;
-    private int nTradeID;
 
     @Before
     public void setUp() {
-        nTradeID = brokerSellData.orderID();
-
         brokerSell = new BrokerSell(closeParamsRunnerMock, tradeUtilityMock);
     }
 
     private TestObserver<Integer> subscribe() {
         return brokerSell
-            .closeTrade(brokerSellData)
+            .closeTrade(brokerSellDataMock)
             .test();
     }
 
     @Test
     public void closeCallIsDeferred() {
-        brokerSell.closeTrade(brokerSellData);
+        brokerSell.closeTrade(brokerSellDataMock);
 
         verifyZeroInteractions(closeParamsRunnerMock);
         verifyZeroInteractions(tradeUtilityMock);
@@ -62,7 +59,7 @@ public class BrokerSellTest extends CommonUtilForTest {
         }
 
         private void setParamsRunnerResult(final Completable result) {
-            when(closeParamsRunnerMock.get(orderMockA, brokerSellData))
+            when(closeParamsRunnerMock.get(orderMockA, brokerSellDataMock))
                 .thenReturn(result);
         }
 

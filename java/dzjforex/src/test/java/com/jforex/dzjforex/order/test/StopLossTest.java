@@ -12,6 +12,7 @@ import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.CalculationUtil;
+import com.jforex.programming.math.MathUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.observers.TestObserver;
@@ -110,6 +111,22 @@ public class StopLossTest extends CommonUtilForTest {
                 subscribe().assertValue(slFromCalculcation);
             }
         }
+    }
+
+    @Test
+    public void slPriceIsRoundedForSetSL() {
+        final double slPrice = 1.1234997564;
+        final double priceForMock = InstrumentUtil.addPipsToPrice(instrumentForTest,
+                                                                  slPrice,
+                                                                  25.0);
+        when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, orderCommand))
+            .thenReturn(priceForMock);
+
+        stopLoss
+            .forSetSL(orderMockA, slPrice)
+            .test()
+            .assertValue(MathUtil.roundPrice(slPrice, instrumentForTest))
+            .assertComplete();
     }
 
     public class ForSetSL {

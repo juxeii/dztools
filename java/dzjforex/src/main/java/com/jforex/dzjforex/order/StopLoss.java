@@ -10,6 +10,7 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.CalculationUtil;
+import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.strategy.StrategyUtil;
 
 import io.reactivex.Single;
@@ -57,9 +58,10 @@ public class StopLoss {
     private double slPriceForPips(final Instrument instrument,
                                   final OrderCommand orderCommand,
                                   final double pipDistance) {
-        final double slPrice = calculationUtil.slPriceForPips(instrument,
-                                                              orderCommand,
-                                                              pipDistance);
+        final double rawSLPrice = calculationUtil.slPriceForPips(instrument,
+                                                                 orderCommand,
+                                                                 pipDistance);
+        final double slPrice = MathUtil.roundPrice(rawSLPrice, instrument);
         logger.debug("Calculated SL price for " + instrument + ":\n"
                 + " orderCommand: " + orderCommand + "\n"
                 + " pipDistance: " + pipDistance + "\n"
@@ -72,7 +74,7 @@ public class StopLoss {
         return Single
             .fromCallable(() -> pipDistanceOfPrices(order, slPrice))
             .flatMap(this::checkPipDistance)
-            .map(pipDistance -> slPrice);
+            .map(pipDistance -> MathUtil.roundPrice(slPrice, order.getInstrument()));
 
     }
 

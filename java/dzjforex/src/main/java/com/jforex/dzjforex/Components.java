@@ -45,14 +45,14 @@ import com.jforex.dzjforex.brokertime.TickTimeProvider;
 import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.config.PluginConfig;
-import com.jforex.dzjforex.history.HistoryOrders;
 import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.misc.PriceProvider;
-import com.jforex.dzjforex.order.OpenOrders;
+import com.jforex.dzjforex.order.OpenOrdersProvider;
+import com.jforex.dzjforex.order.OrderIDLookUp;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.OrderRepository;
@@ -95,9 +95,9 @@ public class Components {
     private TradeUtility tradeUtility;
     private RetryParams retryParamsForTrading;
     private OrderRepository orderRepository;
-    private OpenOrders openOrders;
     private OrderLabelUtil orderLabelUtil;
     private OrderLookup orderLookup;
+    private OpenOrdersProvider openOrdersProvider;
 
     public Components(final SystemComponents systemComponents) {
         initSystemComponents(systemComponents);
@@ -169,9 +169,8 @@ public class Components {
     private void initOrderComponents() {
         orderLabelUtil = new OrderLabelUtil(clock, pluginConfig);
         orderRepository = new OrderRepository(orderLabelUtil);
-        openOrders = new OpenOrders(engine,
-                                    orderRepository,
-                                    pluginConfig);
+        openOrdersProvider = new OpenOrdersProvider(engine, pluginConfig);
+        // openOrders = new OpenOrders(openOrdersProvider, orderRepository);
     }
 
     private void initHistoryComponents() {
@@ -193,10 +192,12 @@ public class Components {
                                                                                       brokerSubscribe,
                                                                                       historyOrdersDates,
                                                                                       pluginConfig);
-        final HistoryOrders historyOrders = new HistoryOrders(historyOrdersProvider, orderRepository);
+        final OrderIDLookUp orderIDLookUpForOpenOrders = new OrderIDLookUp(openOrdersProvider.get(), orderRepository);
+        final OrderIDLookUp orderIDLookUpForHistoryOrders =
+                new OrderIDLookUp(historyOrdersProvider.get(), orderRepository);
         orderLookup = new OrderLookup(orderRepository,
-                                      openOrders,
-                                      historyOrders);
+                                      orderIDLookUpForOpenOrders,
+                                      orderIDLookUpForHistoryOrders);
     }
 
     private void initTradeComponents() {

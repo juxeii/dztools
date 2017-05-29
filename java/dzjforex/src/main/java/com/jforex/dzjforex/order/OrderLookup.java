@@ -4,21 +4,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.history.HistoryOrders;
 
 import io.reactivex.Maybe;
 
 public class OrderLookup {
 
     private final OrderRepository orderRepository;
-    private final OpenOrders openOrders;
-    private final HistoryOrders historyOrders;
+    private final OrderIDLookUp openOrders;
+    private final OrderIDLookUp historyOrders;
 
     private final static Logger logger = LogManager.getLogger(OrderLookup.class);
 
     public OrderLookup(final OrderRepository orderRepository,
-                       final OpenOrders openOrders,
-                       final HistoryOrders historyOrders) {
+                       final OrderIDLookUp openOrders,
+                       final OrderIDLookUp historyOrders) {
         this.orderRepository = orderRepository;
         this.openOrders = openOrders;
         this.historyOrders = historyOrders;

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.history.test;
+package com.jforex.dzjforex.order.test;
 
 import java.util.List;
 
@@ -10,8 +10,7 @@ import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IOrder;
 import com.google.common.collect.Lists;
-import com.jforex.dzjforex.history.HistoryOrders;
-import com.jforex.dzjforex.history.HistoryOrdersProvider;
+import com.jforex.dzjforex.order.OrderIDLookUp;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
@@ -22,57 +21,49 @@ import io.reactivex.Single;
 import io.reactivex.observers.TestObserver;
 
 @RunWith(HierarchicalContextRunner.class)
-public class HistoryOrdersTest extends CommonUtilForTest {
+public class OrderIDLookUpTest extends CommonUtilForTest {
 
-    private HistoryOrders historyOrders;
+    private OrderIDLookUp orderIDLookUp;
 
-    @Mock
-    private HistoryOrdersProvider historyOrdersProviderMock;
     @Mock
     private OrderRepository orderRepositoryMock;
-    private final int orderID = 42;
+    private final List<IOrder> orders = Lists.newArrayList();
 
-    @Before
-    public void setUp() {
-        historyOrders = new HistoryOrders(historyOrdersProviderMock, orderRepositoryMock);
+    private void createSUTWithOrdersProvider(final Single<List<IOrder>> ordersProvider) {
+        orderIDLookUp = new OrderIDLookUp(ordersProvider, orderRepositoryMock);
     }
 
     private TestObserver<IOrder> subscribe() {
-        return historyOrders
-            .getByID(orderID)
+        return orderIDLookUp
+            .getByID(nTradeID)
             .test();
-    }
-
-    private OngoingStubbing<Single<List<IOrder>>> stubGetHistoryOrders() {
-        return when(historyOrdersProviderMock.get());
     }
 
     @Test
     public void getByIDCallIsDeferred() {
-        historyOrders.getByID(orderID);
+        createSUTWithOrdersProvider(Single.just(orders));
 
-        verifyZeroInteractions(historyOrdersProviderMock);
+        orderIDLookUp.getByID(nTradeID);
+
         verifyZeroInteractions(orderRepositoryMock);
     }
 
     @Test
     public void whenHistoryOrdersProviderFailsErrorIsPropagated() {
-        stubGetHistoryOrders().thenReturn(Single.error(jfException));
+        createSUTWithOrdersProvider(Single.error(jfException));
 
         subscribe().assertError(jfException);
     }
 
-    public class WhenHistoryOrdersProviderSucceeds {
-
-        private final List<IOrder> historyOrders = Lists.newArrayList();
+    public class WhenOrdersProviderSucceeds {
 
         @Before
         public void setUp() {
-            stubGetHistoryOrders().thenReturn(Single.just(historyOrders));
+            createSUTWithOrdersProvider(Single.just(orders));
         }
 
         private OngoingStubbing<Completable> stubRepositoryStore() {
-            return when(orderRepositoryMock.store(historyOrders));
+            return when(orderRepositoryMock.store(orders));
         }
 
         @Test
@@ -90,7 +81,7 @@ public class HistoryOrdersTest extends CommonUtilForTest {
             }
 
             private OngoingStubbing<Maybe<IOrder>> stubGetOrderID() {
-                return when(orderRepositoryMock.getByID(orderID));
+                return when(orderRepositoryMock.getByID(nTradeID));
             }
 
             @Test

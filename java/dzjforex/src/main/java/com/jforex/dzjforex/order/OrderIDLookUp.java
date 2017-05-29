@@ -1,25 +1,26 @@
-package com.jforex.dzjforex.history;
+package com.jforex.dzjforex.order;
+
+import java.util.List;
 
 import com.dukascopy.api.IOrder;
-import com.jforex.dzjforex.order.OrderRepository;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
-public class HistoryOrders {
+public class OrderIDLookUp {
 
-    private final HistoryOrdersProvider historyOrdersProvider;
+    private final Single<List<IOrder>> ordersProvider;
     private final OrderRepository orderRepository;
 
-    public HistoryOrders(final HistoryOrdersProvider historyOrdersProvider,
+    public OrderIDLookUp(final Single<List<IOrder>> ordersProvider,
                          final OrderRepository orderRepository) {
-        this.historyOrdersProvider = historyOrdersProvider;
+        this.ordersProvider = ordersProvider;
         this.orderRepository = orderRepository;
     }
 
     public Maybe<IOrder> getByID(final int orderID) {
         return Single
-            .defer(historyOrdersProvider::get)
+            .defer(() -> ordersProvider)
             .flatMapCompletable(orderRepository::store)
             .andThen(Maybe.defer(() -> orderRepository.getByID(orderID)));
     }

@@ -22,7 +22,7 @@ public class HistoryOrdersProvider {
     private final HistoryOrdersDates historyOrdersDates;
     private final PluginConfig pluginConfig;
 
-    private final static Logger logger = LogManager.getLogger(HistoryOrders.class);
+    private final static Logger logger = LogManager.getLogger(HistoryOrdersProvider.class);
 
     public HistoryOrdersProvider(final HistoryWrapper historyWrapper,
                                  final BrokerSubscribe brokerSubscribe,
@@ -55,6 +55,7 @@ public class HistoryOrdersProvider {
             .doOnSubscribe(d -> logger.debug("Fetching history orders for " + instrument
                     + " from " + timeSpan.formatFrom()
                     + " to " + timeSpan.formatTo()))
-            .doOnSuccess(orders -> logger.debug("Fetched " + orders.size() + " history orders for " + instrument));
+            .doOnSuccess(orders -> logger.debug("Fetched " + orders.size() + " history orders for " + instrument))
+            .doOnError(e -> logger.info("Fetching history orders failed! " + e.getMessage()));
     }
 }

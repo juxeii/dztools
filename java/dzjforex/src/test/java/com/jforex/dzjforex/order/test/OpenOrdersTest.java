@@ -17,6 +17,7 @@ import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
+import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
 
@@ -57,6 +58,10 @@ public class OpenOrdersTest extends CommonUtilForTest {
         return when(engineMock.getOrders());
     }
 
+    private OngoingStubbing<Completable> stubStoreOrdersAtRepository() {
+        return when(orderRepositoryMock.store(ordersFromEngine));
+    }
+
     @Test
     public void getByIDCallIsDeferred() {
         openOrders.getByID(orderID);
@@ -68,6 +73,7 @@ public class OpenOrdersTest extends CommonUtilForTest {
 
     @Test
     public void whenEngineFetchFailsRetriesAreDone() throws JFException {
+        stubStoreOrdersAtRepository().thenReturn(Completable.error(jfException));
         makeStubFailRetriesThenSuccess(stubGetOrdersFromEngine(), ordersFromEngine);
 
         subscribe();
@@ -76,21 +82,13 @@ public class OpenOrdersTest extends CommonUtilForTest {
         verify(engineMock, times(historyAccessRetries + 1)).getOrders();
     }
 
-    @Test
-    public void whenEngineFetchFailsNoErrorIsPropagated() throws JFException {
-        setHistoryRetries(0);
-        when(orderRepositoryMock.getByID(orderID)).thenReturn(Maybe.empty());
-        stubGetOrdersFromEngine().thenThrow(jfException);
-
-        subscribe()
-            .assertNoErrors()
-            .assertNoValues();
-    }
-
     public class WhenEngineSucceeds {
 
         @Before
         public void setUp() throws JFException {
+            ordersFromEngine.add(orderMockA);
+
+            stubStoreOrdersAtRepository().thenReturn(Completable.complete());
             stubGetOrdersFromEngine().thenReturn(ordersFromEngine);
         }
 
@@ -116,7 +114,9 @@ public class OpenOrdersTest extends CommonUtilForTest {
         public void whenOrderIDWasNotFoundNoOrderIsReturned() {
             stubGetOrderByID().thenReturn(Maybe.empty());
 
-            subscribe().assertNoValues();
+            subscribe()
+                .assertNoValues()
+                .assertComplete();
         }
     }
 }

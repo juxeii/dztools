@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IOrder;
-import com.google.common.collect.Lists;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
 
@@ -33,8 +32,7 @@ public class OpenOrders {
     public Maybe<IOrder> getByID(final int orderID) {
         return Single
             .defer(this::ordersFromEngine)
-            .doOnSuccess(orderRepository::store)
-            .toCompletable()
+            .flatMapCompletable(orderRepository::store)
             .andThen(Maybe.defer(() -> orderRepository.getByID(orderID)));
     }
 
@@ -44,7 +42,6 @@ public class OpenOrders {
             .doOnSubscribe(d -> logger.debug("Fetching open orders..."))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size() + " open orders."))
             .retryWhen(RxUtility.retryForHistory(pluginConfig))
-            .doOnError(e -> logger.error("Error while fetching open orders! " + e.getMessage()))
-            .onErrorReturnItem(Lists.newArrayList());
+            .doOnError(e -> logger.info("Fetching open orders failed! " + e.getMessage()));
     }
 }

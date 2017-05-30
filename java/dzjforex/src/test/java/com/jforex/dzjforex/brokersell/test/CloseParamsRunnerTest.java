@@ -47,6 +47,14 @@ public class CloseParamsRunnerTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getCallIsDeferred() {
+        closeParamsRunner.get(orderMockA, brokerSellDataMock);
+
+        verifyZeroInteractions(orderUtilMock);
+        verifyZeroInteractions(orderCloseParamsMock);
+    }
+
+    @Test
     public void closeFailsWhenCloseParamsFail() {
         stubGetCloseParams().thenReturn(Single.error(jfException));
 

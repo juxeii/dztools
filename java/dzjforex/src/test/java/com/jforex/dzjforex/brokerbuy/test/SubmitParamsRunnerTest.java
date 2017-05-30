@@ -51,6 +51,14 @@ public class SubmitParamsRunnerTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getCallIsDeferred() {
+        submitParamsRunner.get(instrumentForTest, brokerBuyDataMock);
+
+        verifyZeroInteractions(orderUtilMock);
+        verifyZeroInteractions(submitParamsFactoryMock);
+    }
+
+    @Test
     public void submitFailsWhenSubmitParamsFail() {
         stubGetSubmitParams().thenReturn(Single.error(jfException));
 

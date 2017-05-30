@@ -47,6 +47,14 @@ public class SetSLParamsRunnerTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getCallIsDeferred() {
+        setSLParamsRunner.get(orderMockA, brokerStopDataMock);
+
+        verifyZeroInteractions(orderUtilMock);
+        verifyZeroInteractions(orderSetSLParamsMock);
+    }
+
+    @Test
     public void setSLFailsWhenSetSLParamsFail() {
         stubGetSLParams().thenReturn(Single.error(jfException));
 

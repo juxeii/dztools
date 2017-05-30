@@ -4,6 +4,7 @@ import com.dukascopy.api.IOrder;
 import com.jforex.programming.order.OrderUtil;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
 
 public class CloseParamsRunner {
 
@@ -18,8 +19,8 @@ public class CloseParamsRunner {
 
     public Completable get(final IOrder order,
                            final BrokerSellData brokerSellData) {
-        return orderCloseParams
-            .get(order, brokerSellData)
+        return Single
+            .defer(() -> orderCloseParams.get(order, brokerSellData))
             .flatMapObservable(orderUtil::paramsToObservable)
             .ignoreElements();
     }

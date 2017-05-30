@@ -34,7 +34,7 @@ public class StopLoss {
                                     final BrokerBuyData brokerBuyData) {
         return Single
             .fromCallable(brokerBuyData::slDistance)
-            .flatMap(dStopDist -> isDistanceForNoSL(dStopDist)
+            .flatMap(slDistance -> isDistanceForNoSL(slDistance)
                     ? Single.just(StrategyUtil.platformSettings.noSLPrice())
                     : forSubmitWithRealDistance(instrument, brokerBuyData));
     }
@@ -43,8 +43,7 @@ public class StopLoss {
                                                     final BrokerBuyData brokerBuyData) {
         return Single
             .just(brokerBuyData.slDistance())
-            .map(dStopDist -> InstrumentUtil.scalePriceToPips(instrument, dStopDist))
-            .doOnSuccess(dist -> logger.info("dist " + dist))
+            .map(slDistance -> InstrumentUtil.scalePriceToPips(instrument, slDistance))
             .flatMap(this::checkPipDistance)
             .map(pipDistance -> slPriceForPips(instrument,
                                                brokerBuyData.orderCommand(),
@@ -66,6 +65,7 @@ public class StopLoss {
                 + " orderCommand: " + orderCommand + "\n"
                 + " pipDistance: " + pipDistance + "\n"
                 + " slPrice: " + slPrice);
+
         return slPrice;
     }
 

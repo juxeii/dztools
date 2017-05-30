@@ -36,10 +36,10 @@ public class BrokerSubscribe {
     }
 
     public Single<Integer> forName(final String instrumentName) {
-        return Single.defer(() -> RxUtility
-            .instrumentFromName(instrumentName)
+        return Single
+            .defer(() -> RxUtility.instrumentFromName(instrumentName))
             .map(this::subscribeValidInstrumentName)
-            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue()));
+            .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
 
     private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {

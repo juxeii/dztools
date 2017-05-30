@@ -21,7 +21,7 @@ public class CloseParamsFactoryTest extends CommonUtilForTest {
     public void setUp() {
         when(brokerSellDataMock.amount()).thenReturn(closeAmount);
 
-        closeParamsFactory = new CloseParamsFactory(orderLabelUtilMock, retryParamsMock);
+        closeParamsFactory = new CloseParamsFactory(retryParamsMock);
 
         closeParams = (CloseParams) closeParamsFactory
             .get(orderMockA, brokerSellDataMock)

@@ -213,10 +213,8 @@ public class Components {
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
                                                                               stopLoss,
                                                                               orderLabelUtil);
-        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(orderLabelUtil, retryParamsForTrading);
-        final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss,
-                                                                           orderLabelUtil,
-                                                                           retryParamsForTrading);
+        final CloseParamsFactory orderCloseParams = new CloseParamsFactory(retryParamsForTrading);
+        final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
         final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
         final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);

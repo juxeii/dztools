@@ -20,8 +20,8 @@ public class SubmitParamsRunner {
 
     public Single<IOrder> get(final Instrument instrument,
                               final BrokerBuyData brokerBuyData) {
-        return submitParamsFactory
-            .get(instrument, brokerBuyData)
+        return Single
+            .defer(() -> submitParamsFactory.get(instrument, brokerBuyData))
             .flatMapObservable(orderUtil::paramsToObservable)
             .map(OrderEvent::order)
             .lastOrError();

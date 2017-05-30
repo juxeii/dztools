@@ -24,7 +24,7 @@ public class PinProvider {
     private final String liveURL;
     private static JFrame noParentFrame = null;
 
-    private final static Logger logger = LogManager.getLogger(PinDialog.class);
+    private final static Logger logger = LogManager.getLogger(PinProvider.class);
 
     public PinProvider(final IClient client,
                        final String liveURL) {
@@ -37,7 +37,7 @@ public class PinProvider {
         try {
             pd = new PinDialog();
         } catch (final Exception e) {
-            logger.error("getPin exc: " + e.getMessage());
+            logger.error("Creating Pin dialog failed! " + e.getMessage());
             Zorro.indicateError();
         }
         return pd.pinfield.getText();
@@ -45,9 +45,6 @@ public class PinProvider {
 
     private class PinDialog extends JDialog {
 
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
         private final JTextField pinfield = new JTextField();
 
@@ -79,7 +76,7 @@ public class PinProvider {
                 try {
                     captchaImage.setIcon(new ImageIcon(client.getCaptchaImage(liveURL)));
                 } catch (final Exception ex) {
-                    logger.error("getPin exc: " + ex.getMessage());
+                    logger.error("Get captcha image for pin faile! " + ex.getMessage());
                     Zorro.indicateError();
                 }
             });

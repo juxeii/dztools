@@ -1,8 +1,12 @@
 package com.jforex.dzjforex;
 
 import org.aeonbits.owner.ConfigFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine.OrderCommand;
+import com.dukascopy.api.system.ClientFactory;
+import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
 import com.jforex.dzjforex.brokeraccount.BrokerAccountData;
 import com.jforex.dzjforex.brokerasset.BrokerAsset;
@@ -25,7 +29,6 @@ import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.order.TradeUtility;
 
 import io.reactivex.Single;
@@ -49,12 +52,20 @@ public class ZorroBridge {
     private long strategyID;
 
     private final static PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
+    private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        systemComponents = new SystemComponents(ClientProvider.get(), pluginConfig);
+        systemComponents = new SystemComponents(getClient(), pluginConfig);
         components = new Components(systemComponents);
         zorro = components.zorro();
         brokerLogin = components.brokerLogin();
+    }
+
+    private IClient getClient() {
+        return Single
+            .fromCallable(ClientFactory::getDefaultInstance)
+            .doOnError(e -> logger.error("Error retrieving IClient instance! " + e.getMessage()))
+            .blockingGet();
     }
 
     private void initComponents(final BrokerLoginData brokerLoginData) {

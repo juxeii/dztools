@@ -29,9 +29,7 @@ public class SetSLParamsFactoryTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        setSLParamsFactory = new SetSLParamsFactory(stopLossMock,
-                                                    orderLabelUtilMock,
-                                                    retryParamsMock);
+        setSLParamsFactory = new SetSLParamsFactory(stopLossMock, retryParamsMock);
     }
 
     private TestObserver<SetSLParams> subscribe() {

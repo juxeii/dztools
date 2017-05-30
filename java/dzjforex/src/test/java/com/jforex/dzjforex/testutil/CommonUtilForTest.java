@@ -37,7 +37,6 @@ import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.ClientProvider;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.misc.TimeSpan;
@@ -205,9 +204,7 @@ public class CommonUtilForTest extends BDDMockito {
                                      true);
 
         coverageOnEnumsCorrection();
-
         try {
-            assertPrivateConstructor(ClientProvider.class);
             assertPrivateConstructor(TimeConvert.class);
             assertPrivateConstructor(RxUtility.class);
         } catch (final Exception e) {}
@@ -256,8 +253,7 @@ public class CommonUtilForTest extends BDDMockito {
     }
 
     private final void coverageOnEnumsCorrection() {
-        ZorroReturnValues
-            .valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
+        ZorroReturnValues.valueOf(ZorroReturnValues.ACCOUNT_AVAILABLE.toString());
     }
 
     public void assertComposeParamsForTask(final TaskParams taskParams) throws Exception {

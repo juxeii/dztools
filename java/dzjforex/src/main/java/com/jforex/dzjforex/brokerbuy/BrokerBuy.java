@@ -29,7 +29,7 @@ public class BrokerBuy {
 
     public Single<Integer> openTrade(final BrokerBuyData brokerBuyData) {
         return Single
-            .defer(() -> tradeUtility.instrumentForTrading(brokerBuyData.instrumentName()))
+            .defer(() -> tradeUtility.instrumentForTrading(brokerBuyData.assetName()))
             .flatMap(instrument -> submitParamsRunner.get(instrument, brokerBuyData))
             .flatMap(order -> processOrderAndGetResult(order, brokerBuyData))
             .onErrorReturnItem(ZorroReturnValues.BROKER_BUY_FAIL.getValue());

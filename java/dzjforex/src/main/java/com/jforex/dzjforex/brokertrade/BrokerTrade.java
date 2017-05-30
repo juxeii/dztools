@@ -28,7 +28,7 @@ public class BrokerTrade {
 
     public Single<Integer> fillParams(final BrokerTradeData brokerTradeData) {
         return Maybe
-            .defer(() -> tradeUtility.orderByID(brokerTradeData.nTradeID()))
+            .defer(() -> tradeUtility.orderByID(brokerTradeData.orderID()))
             .toSingle()
             .doOnSuccess(order -> fillTradeParams(order, brokerTradeData))
             .map(order -> order.getState() == IOrder.State.CLOSED
@@ -49,10 +49,10 @@ public class BrokerTrade {
                              pClose,
                              pRoll,
                              pProfit);
-        logger.trace("Trade params for nTradeID " + brokerTradeData.nTradeID() + "\n"
+        logger.trace("Trade params for orderID " + brokerTradeData.orderID() + "\n"
                 + "pOpen: " + pOpen + "\n"
                 + "pClose: " + pClose + "\n"
                 + "pRoll: " + pRoll + "\n"
-                + "pProfit: " + pProfit + "\n");
+                + "pProfit: " + pProfit);
     }
 }

@@ -45,13 +45,14 @@ public class HistoryOrdersProvider {
         return Observable
             .fromIterable(brokerSubscribe.subscribedInstruments())
             .flatMapSingle(instrument -> ordersForInstrument(instrument, timeSpan))
-            .flatMapIterable(orders -> orders)
+            .concatMapIterable(orders -> orders)
             .toList();
     }
 
     private Single<List<IOrder>> ordersForInstrument(final Instrument instrument,
                                                      final TimeSpan timeSpan) {
-        return historyWrapper.getOrdersHistory(instrument, timeSpan)
+        return historyWrapper
+            .getOrdersHistory(instrument, timeSpan)
             .doOnSubscribe(d -> logger.debug("Fetching history orders for " + instrument
                     + " from " + timeSpan.formatFrom()
                     + " to " + timeSpan.formatTo()))

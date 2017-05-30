@@ -40,7 +40,7 @@ public class BrokerHistoryDataTest extends BarsAndTicksForTest {
 
     @Test
     public void assertInstrumentName() {
-        assertThat(brokerHistoryData.instrumentName(), equalTo(instrumentNameForTest));
+        assertThat(brokerHistoryData.assetName(), equalTo(instrumentNameForTest));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class BrokerHistoryDataTest extends BarsAndTicksForTest {
 
     @Test
     public void assertNoOfTickMinutes() {
-        assertThat(brokerHistoryData.noOfTickMinutes(), equalTo(noOfTickMinutes));
+        assertThat(brokerHistoryData.periodInMinutes(), equalTo(noOfTickMinutes));
     }
 
     @Test

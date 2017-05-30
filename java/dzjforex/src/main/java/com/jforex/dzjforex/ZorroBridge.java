@@ -83,13 +83,13 @@ public class ZorroBridge {
         tradeUtility = components.tradeUtility();
     }
 
-    public int doLogin(final String User,
-                       final String Pwd,
-                       final String Type,
+    public int doLogin(final String username,
+                       final String password,
+                       final String accountType,
                        final String Accounts[]) {
-        final BrokerLoginData brokerLoginData = new BrokerLoginData(User,
-                                                                    Pwd,
-                                                                    Type,
+        final BrokerLoginData brokerLoginData = new BrokerLoginData(username,
+                                                                    password,
+                                                                    accountType,
                                                                     Accounts);
         final Single<Integer> loginTask = brokerLogin
             .login(brokerLoginData)
@@ -113,15 +113,15 @@ public class ZorroBridge {
             .blockingGet();
     }
 
-    public int doSubscribeAsset(final String Asset) {
+    public int doSubscribeAsset(final String assetName) {
         return brokerSubscribe
-            .forName(Asset)
+            .forName(assetName)
             .blockingGet();
     }
 
-    public int doBrokerAsset(final String Asset,
+    public int doBrokerAsset(final String assetName,
                              final double assetParams[]) {
-        final BrokerAssetData brokerAssetData = new BrokerAssetData(Asset, assetParams);
+        final BrokerAssetData brokerAssetData = new BrokerAssetData(assetName, assetParams);
         return brokerAsset
             .fillParams(brokerAssetData)
             .blockingGet();
@@ -134,59 +134,59 @@ public class ZorroBridge {
             .blockingGet();
     }
 
-    public int doBrokerTrade(final int nTradeID,
+    public int doBrokerTrade(final int orderID,
                              final double tradeParams[]) {
-        final BrokerTradeData brokerTradeData = new BrokerTradeData(nTradeID, tradeParams);
+        final BrokerTradeData brokerTradeData = new BrokerTradeData(orderID, tradeParams);
         return brokerTrade
             .fillParams(brokerTradeData)
             .blockingGet();
     }
 
-    public int doBrokerBuy(final String Asset,
-                           final int nAmount,
-                           final double dStopDist,
+    public int doBrokerBuy(final String assetName,
+                           final int contracts,
+                           final double slDistance,
                            final double tradeParams[]) {
-        final double amount = tradeUtility.contractsToAmount(nAmount);
-        final OrderCommand orderCommand = tradeUtility.orderCommandForContracts(nAmount);
-        final BrokerBuyData brokerBuyData = new BrokerBuyData(Asset,
+        final double amount = tradeUtility.contractsToAmount(contracts);
+        final OrderCommand orderCommand = tradeUtility.orderCommandForContracts(contracts);
+        final BrokerBuyData brokerBuyData = new BrokerBuyData(assetName,
                                                               amount,
                                                               orderCommand,
-                                                              dStopDist,
+                                                              slDistance,
                                                               tradeParams);
         return brokerBuy
             .openTrade(brokerBuyData)
             .blockingGet();
     }
 
-    public int doBrokerSell(final int nTradeID,
-                            final int nAmount) {
-        final double amount = tradeUtility.contractsToAmount(nAmount);
-        final BrokerSellData brokerSellData = new BrokerSellData(nTradeID, amount);
+    public int doBrokerSell(final int orderID,
+                            final int contracts) {
+        final double amount = tradeUtility.contractsToAmount(contracts);
+        final BrokerSellData brokerSellData = new BrokerSellData(orderID, amount);
         return brokerSell
             .closeTrade(brokerSellData)
             .blockingGet();
     }
 
-    public int doBrokerStop(final int nTradeID,
-                            final double dStop) {
-        final BrokerStopData brokerStopData = new BrokerStopData(nTradeID, dStop);
+    public int doBrokerStop(final int orderID,
+                            final double slPrice) {
+        final BrokerStopData brokerStopData = new BrokerStopData(orderID, slPrice);
         return brokerStop
             .setSL(brokerStopData)
             .blockingGet();
     }
 
-    public int doBrokerHistory2(final String Asset,
-                                final double tStart,
-                                final double tEnd,
-                                final int nTickMinutes,
-                                final int nTicks,
+    public int doBrokerHistory2(final String assetName,
+                                final double utcStartDate,
+                                final double utcEndDate,
+                                final int periodInMinutes,
+                                final int noOfTicks,
                                 final double tickParams[]) {
         final HistoryTickFiller historyTickFiller = new HistoryTickFiller(tickParams);
-        final BrokerHistoryData brokerHistoryData = new BrokerHistoryData(Asset,
-                                                                          tStart,
-                                                                          tEnd,
-                                                                          nTickMinutes,
-                                                                          nTicks,
+        final BrokerHistoryData brokerHistoryData = new BrokerHistoryData(assetName,
+                                                                          utcStartDate,
+                                                                          utcEndDate,
+                                                                          periodInMinutes,
+                                                                          noOfTicks,
                                                                           historyTickFiller);
         return zorro.progressWait(brokerHistory.get(brokerHistoryData));
     }

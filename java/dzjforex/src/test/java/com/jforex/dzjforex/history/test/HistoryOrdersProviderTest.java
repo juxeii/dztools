@@ -115,8 +115,18 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         }
 
         @Test
+        public void whenGetOrdersHistoryErrorIsPropagated() {
+            setHistoryRetries(0);
+            stubGetOrdersHistory(instrumentForTest).thenReturn(Single.error(jfException));
+            stubGetOrdersHistory(Instrument.EURAUD).thenReturn(Single.error(jfException));
+
+            subscribe().assertError(jfException);
+        }
+
+        @Test
         public void whenGetOrdersHistoryFailsRetriesAreDone() {
             stubGetOrdersHistory(instrumentForTest).thenReturn(Single.error(jfException));
+            stubGetOrdersHistory(Instrument.EURAUD).thenReturn(Single.error(jfException));
 
             subscribe();
 

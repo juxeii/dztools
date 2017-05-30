@@ -46,7 +46,7 @@ public class BrokerAssetDataTest extends CommonUtilForTest {
 
     @Test
     public void assertInstrumentName() {
-        assertThat(brokerAssetData.instrumentName(), equalTo(instrumentNameForTest));
+        assertThat(brokerAssetData.assetName(), equalTo(instrumentNameForTest));
     }
 
     @Test

@@ -42,7 +42,7 @@ public class BrokerTradeTest extends CommonUtilForTest {
     }
 
     private void setUpMocks() {
-        when(brokerTradeDataMock.nTradeID()).thenReturn(orderID);
+        when(brokerTradeDataMock.orderID()).thenReturn(orderID);
 
         when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, OrderCommand.BUY)).thenReturn(price);
         when(tradeUtilityMock.amountToContracts(orderAmount)).thenReturn(orderContracts);

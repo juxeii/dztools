@@ -44,7 +44,7 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
     }
 
     private void setUpMocks() {
-        when(brokerBuyDataMock.instrumentName()).thenReturn(instrumentNameForTest);
+        when(brokerBuyDataMock.assetName()).thenReturn(instrumentNameForTest);
         when(brokerBuyDataMock.orderCommand()).thenReturn(orderCommand);
         when(brokerBuyDataMock.amount()).thenReturn(amount);
 

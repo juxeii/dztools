@@ -36,11 +36,11 @@ public class BrokerHistoryTest extends CommonUtilForTest {
     }
 
     private OngoingStubbing<String> stubAssetName() {
-        return when(brokerHistoryDataMock.instrumentName());
+        return when(brokerHistoryDataMock.assetName());
     }
 
     private OngoingStubbing<Integer> stubNoOfTickMinutes() {
-        return when(brokerHistoryDataMock.noOfTickMinutes());
+        return when(brokerHistoryDataMock.periodInMinutes());
     }
 
     private TestObserver<Integer> subscribe() {

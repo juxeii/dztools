@@ -37,7 +37,7 @@ public class BrokerTradeDataTest extends CommonUtilForTest {
 
     @Test
     public void assertTradeID() {
-        assertThat(brokerTradeData.nTradeID(), equalTo(nTradeID));
+        assertThat(brokerTradeData.orderID(), equalTo(nTradeID));
     }
 
     @Test

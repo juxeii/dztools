@@ -10,50 +10,50 @@ import com.jforex.programming.quote.TickQuote;
 
 public class BrokerHistoryData {
 
-    private final String instrumentName;
-    private final double startTime;
-    private final double endTime;
-    private final int noOfTickMinutes;
+    private final String assetName;
+    private final double utcStartDate;
+    private final double utcEndDate;
+    private final int periodInMinutes;
     private final int noOfRequestedTicks;
     private final HistoryTickFiller historyTickFiller;
     private final static int zorroTickSize = 7;
 
-    public BrokerHistoryData(final String instrumentName,
-                             final double startTime,
-                             final double endTime,
-                             final int noOfTickMinutes,
-                             final int noOfRequestedTicks,
+    public BrokerHistoryData(final String assetName,
+                             final double utcStartDate,
+                             final double utcEndDate,
+                             final int periodInMinutes,
+                             final int noOfTicks,
                              final HistoryTickFiller historyTickFiller) {
-        this.instrumentName = instrumentName;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.noOfTickMinutes = noOfTickMinutes;
-        this.noOfRequestedTicks = noOfRequestedTicks;
+        this.assetName = assetName;
+        this.utcStartDate = utcStartDate;
+        this.utcEndDate = utcEndDate;
+        this.periodInMinutes = periodInMinutes;
+        this.noOfRequestedTicks = noOfTicks;
         this.historyTickFiller = historyTickFiller;
     }
 
-    public String instrumentName() {
-        return instrumentName;
+    public String assetName() {
+        return assetName;
     }
 
     public long startTimeForBar() {
-        return TimeConvert.millisFromOLEDateRoundMinutes(startTime);
+        return TimeConvert.millisFromOLEDateRoundMinutes(utcStartDate);
     }
 
     public long endTimeForBar() {
-        return TimeConvert.millisFromOLEDateRoundMinutes(endTime);
+        return TimeConvert.millisFromOLEDateRoundMinutes(utcEndDate);
     }
 
     public long startTimeForTick() {
-        return TimeConvert.millisFromOLEDate(startTime);
+        return TimeConvert.millisFromOLEDate(utcStartDate);
     }
 
     public long endTimeForTick() {
-        return TimeConvert.millisFromOLEDate(endTime) - 2;
+        return TimeConvert.millisFromOLEDate(utcEndDate) - 2;
     }
 
-    public int noOfTickMinutes() {
-        return noOfTickMinutes;
+    public int periodInMinutes() {
+        return periodInMinutes;
     }
 
     public int noOfRequestedTicks() {

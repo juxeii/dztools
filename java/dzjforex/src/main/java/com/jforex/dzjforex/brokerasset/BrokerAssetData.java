@@ -2,17 +2,17 @@ package com.jforex.dzjforex.brokerasset;
 
 public class BrokerAssetData {
 
-    private final String instrumentName;
+    private final String assetName;
     private final double assetParams[];
 
-    public BrokerAssetData(final String instrumentName,
+    public BrokerAssetData(final String assetName,
                            final double assetParams[]) {
-        this.instrumentName = instrumentName;
+        this.assetName = assetName;
         this.assetParams = assetParams;
     }
 
-    public String instrumentName() {
-        return instrumentName;
+    public String assetName() {
+        return assetName;
     }
 
     public void fill(final double pPrice,

@@ -42,7 +42,7 @@ public class BrokerBuyTest extends CommonUtilForTest {
     }
 
     private void setUpMocks() {
-        when(brokerBuyDataMock.instrumentName()).thenReturn(instrumentNameForTest);
+        when(brokerBuyDataMock.assetName()).thenReturn(instrumentNameForTest);
 
         when(orderRepositoryMock.store(orderMockA)).thenReturn(Completable.complete());
     }

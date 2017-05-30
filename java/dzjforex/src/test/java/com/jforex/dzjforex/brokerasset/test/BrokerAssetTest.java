@@ -61,7 +61,7 @@ public class BrokerAssetTest extends CommonUtilForTest {
 
     @Test
     public void anInvalidAssetNameGivesAssetUnavailable() {
-        when(brokerAssetDataMock.instrumentName()).thenReturn("Invalid");
+        when(brokerAssetDataMock.assetName()).thenReturn("Invalid");
 
         subscribe().assertValue(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
@@ -70,7 +70,7 @@ public class BrokerAssetTest extends CommonUtilForTest {
 
         @Before
         public void setUp() {
-            when(brokerAssetDataMock.instrumentName()).thenReturn(instrumentNameForTest);
+            when(brokerAssetDataMock.assetName()).thenReturn(instrumentNameForTest);
         }
 
         @Test

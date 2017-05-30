@@ -27,7 +27,7 @@ public class BrokerAsset {
 
     public Single<Integer> fillParams(final BrokerAssetData brokerAssetData) {
         return Single
-            .defer(() -> RxUtility.instrumentFromName(brokerAssetData.instrumentName()))
+            .defer(() -> RxUtility.instrumentFromName(brokerAssetData.assetName()))
             .doOnSuccess(instrument -> fillAssetParams(instrument, brokerAssetData))
             .map(instrument -> ZorroReturnValues.ASSET_AVAILABLE.getValue())
             .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());

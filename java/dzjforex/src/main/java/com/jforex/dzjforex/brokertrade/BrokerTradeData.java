@@ -2,17 +2,17 @@ package com.jforex.dzjforex.brokertrade;
 
 public class BrokerTradeData {
 
-    private final int nTradeID;
+    private final int orderID;
     private final double tradeParams[];
 
-    public BrokerTradeData(final int nTradeID,
+    public BrokerTradeData(final int orderID,
                            final double tradeParams[]) {
-        this.nTradeID = nTradeID;
+        this.orderID = orderID;
         this.tradeParams = tradeParams;
     }
 
-    public int nTradeID() {
-        return nTradeID;
+    public int orderID() {
+        return orderID;
     }
 
     public void fill(final double pOpen,

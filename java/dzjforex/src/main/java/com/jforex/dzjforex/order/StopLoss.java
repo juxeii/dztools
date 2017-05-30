@@ -45,25 +45,25 @@ public class StopLoss {
             .just(brokerBuyData.slDistance())
             .map(slDistance -> InstrumentUtil.scalePriceToPips(instrument, slDistance))
             .flatMap(this::checkPipDistance)
-            .map(pipDistance -> slPriceForPips(instrument,
-                                               brokerBuyData.orderCommand(),
-                                               pipDistance));
+            .map(slDistance -> slPriceForPips(instrument,
+                                              brokerBuyData.orderCommand(),
+                                              slDistance));
     }
 
-    private boolean isDistanceForNoSL(final double dStopDist) {
-        return dStopDist == noStopLossDistance || dStopDist == oppositeClose;
+    private boolean isDistanceForNoSL(final double slDistance) {
+        return slDistance == noStopLossDistance || slDistance == oppositeClose;
     }
 
     private double slPriceForPips(final Instrument instrument,
                                   final OrderCommand orderCommand,
-                                  final double pipDistance) {
+                                  final double slDistance) {
         final double rawSLPrice = calculationUtil.slPriceForPips(instrument,
                                                                  orderCommand,
-                                                                 pipDistance);
+                                                                 slDistance);
         final double slPrice = MathUtil.roundPrice(rawSLPrice, instrument);
         logger.debug("Calculated SL price for " + instrument + ":\n"
                 + " orderCommand: " + orderCommand + "\n"
-                + " pipDistance: " + pipDistance + "\n"
+                + " slDistance: " + slDistance + "\n"
                 + " slPrice: " + slPrice);
 
         return slPrice;
@@ -74,7 +74,7 @@ public class StopLoss {
         return Single
             .fromCallable(() -> pipDistanceOfPrices(order, slPrice))
             .flatMap(this::checkPipDistance)
-            .map(pipDistance -> MathUtil.roundPrice(slPrice, order.getInstrument()));
+            .map(slDistance -> MathUtil.roundPrice(slPrice, order.getInstrument()));
 
     }
 
@@ -88,10 +88,10 @@ public class StopLoss {
                                                   slPrice);
     }
 
-    private Single<Double> checkPipDistance(final double pipDistance) {
-        return Math.abs(pipDistance) >= minPipsForSL
-                ? Single.just(pipDistance)
-                : Single.error(new JFException("The stop loss pipDistance " + pipDistance
+    private Single<Double> checkPipDistance(final double slDistance) {
+        return Math.abs(slDistance) >= minPipsForSL
+                ? Single.just(slDistance)
+                : Single.error(new JFException("The stop loss slDistance " + slDistance
                         + " is too small! Minimum pip distance is " + minPipsForSL));
     }
 }

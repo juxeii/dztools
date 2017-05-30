@@ -25,17 +25,15 @@ public class HistoryFetchDate {
 
     public Single<Long> endDateForBar(final BarParams barParams,
                                       final long endDate) {
+        final long periodInterval = barParams
+            .period()
+            .getInterval();
         return Single
             .defer(() -> historyWrapper.getBar(barParams, 1))
             .map(IBar::getTime)
-            .map(latestBarTime -> {
-                final long periodInterval = barParams
-                    .period()
-                    .getInterval();
-                return endDate > latestBarTime + periodInterval
-                        ? latestBarTime
-                        : endDate - periodInterval;
-            });
+            .map(latestBarTime -> endDate > latestBarTime + periodInterval
+                    ? latestBarTime
+                    : endDate - periodInterval);
     }
 
     public Observable<Long> startDatesForTick(final Instrument instrument,

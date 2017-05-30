@@ -1,9 +1,7 @@
 package com.jforex.dzjforex.brokerhistory;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.jforex.programming.quote.TickQuote;
 
@@ -23,25 +21,11 @@ public class TickFetcher {
             .defer(() -> tickHistoryByShift.get(instrument,
                                                 brokerHistoryData.endTimeForTick(),
                                                 brokerHistoryData.noOfRequestedTicks() - 1))
-            .map(ticks -> filterTime(ticks, brokerHistoryData.startTimeForTick()))
-            .map(ticks -> ticksToQuotes(ticks, instrument))
+            .flattenAsObservable(bars -> bars)
+            .filter(tick -> tick.getTime() >= brokerHistoryData.startTimeForTick())
+            .map(tick -> new TickQuote(instrument, tick))
+            .toList()
             .doOnSuccess(brokerHistoryData::fillTickQuotes)
             .map(List::size);
-    }
-
-    private List<ITick> filterTime(final List<ITick> ticks,
-                                   final long startDate) {
-        return ticks
-            .stream()
-            .filter(tick -> tick.getTime() >= startDate)
-            .collect(Collectors.toList());
-    }
-
-    private List<TickQuote> ticksToQuotes(final List<ITick> ticks,
-                                          final Instrument instrument) {
-        return ticks
-            .stream()
-            .map(tick -> new TickQuote(instrument, tick))
-            .collect(Collectors.toList());
     }
 }

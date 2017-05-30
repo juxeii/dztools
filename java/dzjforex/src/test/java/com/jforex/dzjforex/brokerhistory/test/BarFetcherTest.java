@@ -56,7 +56,7 @@ public class BarFetcherTest extends BarsAndTicksForTest {
         when(brokerHistoryDataMock.endTimeForBar()).thenReturn(endTimeForBar);
         when(brokerHistoryDataMock.noOfRequestedTicks()).thenReturn(noOfRequestedTicks);
         when(brokerHistoryDataMock.startTimeForBar()).thenReturn(startTimeForBar);
-        when(brokerHistoryDataMock.noOfTickMinutes()).thenReturn(noOfTickMinutes);
+        when(brokerHistoryDataMock.periodInMinutes()).thenReturn(noOfTickMinutes);
         doNothing().when(brokerHistoryDataMock).fillBarQuotes(barQuotesCaptor.capture());
     }
 

@@ -30,13 +30,4 @@ public class ServerTimeProvider {
             return tickTimeProvider.get();
         });
     }
-
-//    private long serverTimeFromValidNTP(final long latestNTP) {
-//        final long currentTimeWatch = timeWatch.get();
-//        if (latestNTP > currentTimeWatch) {
-//            timeWatch.synch(latestNTP);
-//            return latestNTP;
-//        }
-//        return currentTimeWatch;
-//    }
 }

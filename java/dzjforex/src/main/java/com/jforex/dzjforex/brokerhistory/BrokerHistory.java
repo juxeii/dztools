@@ -19,14 +19,14 @@ public class BrokerHistory {
 
     public Single<Integer> get(final BrokerHistoryData brokerHistoryData) {
         return Single
-            .defer(() -> RxUtility.instrumentFromName(brokerHistoryData.instrumentName()))
+            .defer(() -> RxUtility.instrumentFromName(brokerHistoryData.assetName()))
             .flatMap(instrument -> fetchForValidInstrument(instrument, brokerHistoryData))
             .onErrorReturnItem(ZorroReturnValues.HISTORY_UNAVAILABLE.getValue());
     }
 
     private Single<Integer> fetchForValidInstrument(final Instrument instrument,
                                                     final BrokerHistoryData brokerHistoryData) {
-        return brokerHistoryData.noOfTickMinutes() != 0
+        return brokerHistoryData.periodInMinutes() != 0
                 ? barFetcher.run(instrument, brokerHistoryData)
                 : tickFetcher.run(instrument, brokerHistoryData);
     }

@@ -40,7 +40,7 @@ public class TickHistoryByShift {
         return Observable
             .defer(() -> historyFetchDate.startDatesForTick(instrument, endDate))
             .flatMapSingle(startDate -> getTicksReversed(instrument, startDate))
-            .flatMapIterable(ticks -> ticks)
+            .concatMapIterable(ticks -> ticks)
             .take(shift + 1)
             .toList()
             .retryWhen(RxUtility.retryForHistory(pluginConfig))

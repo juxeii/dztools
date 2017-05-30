@@ -5,26 +5,26 @@ import com.dukascopy.api.IOrder;
 
 public class BrokerBuyData {
 
-    private final String instrumentName;
+    private final String assetName;
     private final double slDistance;
     private final double tradeParams[];
     private final OrderCommand orderCommand;
     private final double amount;
 
-    public BrokerBuyData(final String instrumentName,
+    public BrokerBuyData(final String assetName,
                          final double amount,
                          final OrderCommand orderCommand,
                          final double slDistance,
                          final double tradeParams[]) {
-        this.instrumentName = instrumentName;
+        this.assetName = assetName;
         this.amount = amount;
         this.orderCommand = orderCommand;
         this.slDistance = slDistance;
         this.tradeParams = tradeParams;
     }
 
-    public String instrumentName() {
-        return instrumentName;
+    public String assetName() {
+        return assetName;
     }
 
     public double amount() {

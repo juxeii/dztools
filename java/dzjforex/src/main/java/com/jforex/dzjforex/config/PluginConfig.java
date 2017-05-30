@@ -88,7 +88,7 @@ public interface PluginConfig extends Config {
 
     @Key("ntp.timeout")
     @DefaultValue("2000")
-    int ntpTimeOut();
+    long ntpTimeOut();
 
     @Key("ntp.retrydelay")
     @DefaultValue("5000")

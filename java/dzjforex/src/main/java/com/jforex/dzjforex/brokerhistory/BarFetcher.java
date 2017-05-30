@@ -22,7 +22,6 @@ public class BarFetcher {
     public Single<Integer> run(final Instrument instrument,
                                final BrokerHistoryData brokerHistoryData) {
         final BarParams barParams = createParams(instrument, brokerHistoryData);
-
         return Single
             .defer(() -> barHistoryByShift.get(barParams,
                                                brokerHistoryData.endTimeForBar(),

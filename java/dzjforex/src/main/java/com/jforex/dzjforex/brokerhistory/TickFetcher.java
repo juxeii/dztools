@@ -21,7 +21,7 @@ public class TickFetcher {
             .defer(() -> tickHistoryByShift.get(instrument,
                                                 brokerHistoryData.endTimeForTick(),
                                                 brokerHistoryData.noOfRequestedTicks() - 1))
-            .flattenAsObservable(bars -> bars)
+            .flattenAsObservable(ticks -> ticks)
             .filter(tick -> tick.getTime() >= brokerHistoryData.startTimeForTick())
             .map(tick -> new TickQuote(instrument, tick))
             .toList()

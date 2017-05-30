@@ -43,6 +43,15 @@ public class SetSLParamsFactoryTest extends CommonUtilForTest {
     }
 
     @Test
+    public void getCallIsDeferred() {
+        setSLParamsFactory.get(orderMockA, brokerStopDataMock);
+
+        verifyZeroInteractions(brokerStopDataMock);
+        verifyZeroInteractions(stopLossMock);
+        verifyZeroInteractions(retryParamsMock);
+    }
+
+    @Test
     public void getFailsWhenStopLossFails() {
         stubSetSLResult().thenReturn(Single.error(jfException));
 

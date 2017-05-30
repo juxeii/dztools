@@ -25,8 +25,8 @@ public class SetSLParamsFactory {
 
     public Single<SetSLParams> get(final IOrder order,
                                    final BrokerStopData brokerStopData) {
-        return stopLoss
-            .forSetSL(order, brokerStopData.slPrice())
+        return Single
+            .defer(() -> stopLoss.forSetSL(order, brokerStopData.slPrice()))
             .map(slPrice -> create(order,
                                    brokerStopData.orderID(),
                                    slPrice));

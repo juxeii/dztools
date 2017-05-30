@@ -21,10 +21,15 @@ public class CloseParamsFactory {
 
     public Single<CloseParams> get(final IOrder order,
                                    final BrokerSellData brokerSellData) {
-        final double closeAmount = brokerSellData.amount();
-        final int orderID = brokerSellData.orderID();
+        return Single.fromCallable(() -> create(order,
+                                                brokerSellData.orderID(),
+                                                brokerSellData.amount()));
+    }
 
-        final CloseParams closeParams = CloseParams
+    private CloseParams create(final IOrder order,
+                               final int orderID,
+                               final double closeAmount) {
+        return CloseParams
             .withOrder(order)
             .closePartial(closeAmount)
             .doOnStart(() -> logger.info("Trying to close orderID " + orderID
@@ -34,7 +39,5 @@ public class CloseParamsFactory {
             .doOnComplete(() -> logger.info("Closing orderID " + orderID + " done."))
             .retryOnReject(retryParams)
             .build();
-
-        return Single.just(closeParams);
     }
 }

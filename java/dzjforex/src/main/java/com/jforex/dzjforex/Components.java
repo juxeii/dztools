@@ -35,6 +35,7 @@ import com.jforex.dzjforex.brokerstop.BrokerStop;
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
+import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertime.NTPFetch;
 import com.jforex.dzjforex.brokertime.NTPProvider;
@@ -86,6 +87,7 @@ public class Components {
     private AccountInfo accountInfo;
     private BrokerAsset brokerAsset;
     private BrokerAccount brokerAccount;
+    private Subscription subscription;
     private BrokerSubscribe brokerSubscribe;
     private BrokerHistory brokerHistory;
     private BrokerTrade brokerTrade;
@@ -147,7 +149,8 @@ public class Components {
                                       strategyUtil.calculationUtil(),
                                       pluginConfig);
         brokerAccount = new BrokerAccount(accountInfo);
-        brokerSubscribe = new BrokerSubscribe(client, accountInfo);
+        subscription = new Subscription(client);
+        brokerSubscribe = new BrokerSubscribe(subscription, accountInfo);
     }
 
     private void initTimeComponents() {
@@ -189,7 +192,7 @@ public class Components {
         brokerHistory = new BrokerHistory(barFetcher, tickFetcher);
         final HistoryOrdersDates historyOrdersDates = new HistoryOrdersDates(serverTimeProvider, pluginConfig);
         final HistoryOrdersProvider historyOrdersProvider = new HistoryOrdersProvider(historyWrapper,
-                                                                                      brokerSubscribe,
+                                                                                      subscription,
                                                                                       historyOrdersDates,
                                                                                       pluginConfig);
         final OrderIDLookUp orderIDLookUpForOpenOrders = new OrderIDLookUp(openOrdersProvider.get(), orderRepository);

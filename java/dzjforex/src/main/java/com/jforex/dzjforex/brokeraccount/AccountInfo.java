@@ -74,10 +74,6 @@ public class AccountInfo {
         return account.isConnected();
     }
 
-    public boolean isNFACompliant() {
-        return account.isGlobal();
-    }
-
     public boolean isTradingAllowed() {
         return state() == IAccount.AccountState.OK ||
                 state() == IAccount.AccountState.OK_NO_MARGIN_CALL;

@@ -37,6 +37,14 @@ public class BrokerAccountTest extends CommonUtilForTest {
     }
 
     @Test
+    public void handleCallIsDeferred() {
+        brokerAccount.handle(brokerAccountDataMock);
+
+        verifyZeroInteractions(brokerAccountDataMock);
+        verifyZeroInteractions(accountInfoMock);
+    }
+
+    @Test
     public void accountIsNotAvailableWhenNotConnected() {
         setConnectedState(false);
 

@@ -17,7 +17,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
+import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
@@ -36,7 +36,7 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
     @Mock
     private HistoryWrapper historyWrapperMock;
     @Mock
-    private BrokerSubscribe brokerSubscribeMock;
+    private Subscription subscriptionMock;
     @Mock
     private HistoryOrdersDates historyOrdersDatesMock;
     private final long from = 14L;
@@ -51,7 +51,7 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         setUpMocks();
 
         historyOrdersProvider = new HistoryOrdersProvider(historyWrapperMock,
-                                                          brokerSubscribeMock,
+                                                          subscriptionMock,
                                                           historyOrdersDatesMock,
                                                           pluginConfigMock);
     }
@@ -63,7 +63,7 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         historyOrdersA.add(orderMockA);
         historyOrdersB.add(orderMockB);
 
-        when(brokerSubscribeMock.subscribedInstruments()).thenReturn(subscribedInstruments);
+        when(subscriptionMock.instruments()).thenReturn(subscribedInstruments);
     }
 
     private TestObserver<List<IOrder>> subscribe() {
@@ -85,7 +85,7 @@ public class HistoryOrdersProviderTest extends CommonUtilForTest {
         historyOrdersProvider.get();
 
         verifyZeroInteractions(historyWrapperMock);
-        verifyZeroInteractions(brokerSubscribeMock);
+        verifyZeroInteractions(subscriptionMock);
         verifyZeroInteractions(historyOrdersDatesMock);
     }
 

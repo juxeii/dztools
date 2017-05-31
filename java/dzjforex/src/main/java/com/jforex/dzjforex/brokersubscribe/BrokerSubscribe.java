@@ -2,13 +2,8 @@ package com.jforex.dzjforex.brokersubscribe;
 
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.Instrument;
-import com.dukascopy.api.system.IClient;
-import com.google.common.collect.Sets;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
@@ -16,56 +11,46 @@ import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.currency.CurrencyUtil;
 import com.jforex.programming.instrument.InstrumentFactory;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 
 public class BrokerSubscribe {
 
-    private final IClient client;
+    private final Subscription subscription;
     private final AccountInfo accountInfo;
 
-    private final static Logger logger = LogManager.getLogger(BrokerSubscribe.class);
-
-    public BrokerSubscribe(final IClient client,
+    public BrokerSubscribe(final Subscription subscription,
                            final AccountInfo accountInfo) {
-        this.client = client;
+        this.subscription = subscription;
         this.accountInfo = accountInfo;
     }
 
-    public Set<Instrument> subscribedInstruments() {
-        return client.getSubscribedInstruments();
-    }
-
-    public Single<Integer> forName(final String instrumentName) {
+    public Single<Integer> forName(final String assetName) {
         return Single
-            .defer(() -> RxUtility.instrumentFromName(instrumentName))
-            .map(this::subscribeValidInstrumentName)
+            .defer(() -> RxUtility.instrumentFromName(assetName))
+            .flatMap(instrument -> subscription.isSubscribed(instrument)
+                    ? Single.just(ZorroReturnValues.ASSET_AVAILABLE.getValue())
+                    : subscribe(instrument))
             .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
 
-    private int subscribeValidInstrumentName(final Instrument instrumentToSubscribe) {
-        if (!isInstrumentSubscribed(instrumentToSubscribe))
-            subscribeWithCrossInstruments(instrumentToSubscribe);
-        return ZorroReturnValues.ASSET_AVAILABLE.getValue();
+    private Single<Integer> subscribe(final Instrument instrumentToSubscribe) {
+        return Observable
+            .just(instrumentToSubscribe)
+            .mergeWith(crossInstruments(instrumentToSubscribe))
+            .toList()
+            .flatMapCompletable(subscription::set)
+            .toSingleDefault(ZorroReturnValues.ASSET_AVAILABLE.getValue());
     }
 
-    private boolean isInstrumentSubscribed(final Instrument instrument) {
-        return client
-            .getSubscribedInstruments()
-            .contains(instrument);
-    }
-
-    private Set<Instrument> crossInstruments(final Instrument instrumentToSubscribe) {
-        final Set<ICurrency> crossCurrencies = CurrencyFactory.fromInstrument(instrumentToSubscribe);
-        return InstrumentFactory.combineWithAnchorCurrency(accountInfo.currency(), crossCurrencies);
-    }
-
-    private void subscribeWithCrossInstruments(final Instrument instrumentToSubscribe) {
-        final Set<Instrument> instrumentsToSubscribe = Sets.newHashSet(instrumentToSubscribe);
-        if (!CurrencyUtil.isInInstrument(accountInfo.currency(), instrumentToSubscribe))
-            instrumentsToSubscribe.addAll(crossInstruments(instrumentToSubscribe));
-
-        logger.debug("Trying to subscribe instruments: " + instrumentsToSubscribe);
-        client.setSubscribedInstruments(instrumentsToSubscribe);
-        logger.debug("Subscribed instruments:" + client.getSubscribedInstruments());
+    private Observable<Instrument> crossInstruments(final Instrument instrumentToSubscribe) {
+        return Single
+            .just(accountInfo.currency())
+            .filter(accountCurrency -> !CurrencyUtil.isInInstrument(accountCurrency, instrumentToSubscribe))
+            .flatMapObservable(accountCurrency -> {
+                final Set<ICurrency> crossCurrencies = CurrencyFactory.fromInstrument(instrumentToSubscribe);
+                return Observable.fromIterable(InstrumentFactory.combineWithAnchorCurrency(accountCurrency,
+                                                                                           crossCurrencies));
+            });
     }
 }

@@ -125,11 +125,6 @@ public class AccountInfoTest extends CommonUtilForTest {
     }
 
     @Test
-    public void isNFACompliantIsCorrect() {
-        assertThat(accountInfo.isNFACompliant(), equalTo(isGlobal));
-    }
-
-    @Test
     public void tradingIsNotAllowedInState() {
         assertTradingAllowed(IAccount.AccountState.OK, true);
         assertTradingAllowed(IAccount.AccountState.OK_NO_MARGIN_CALL, true);

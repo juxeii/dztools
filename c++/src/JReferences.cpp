@@ -29,7 +29,7 @@ JMethodDesc excGetName=        { nullptr, "getName",          "()Ljava/lang/Stri
 const JNINativeMethod nativesTable[2] { { (char*)"jcallback_BrokerError",    (char*)"(Ljava/lang/String;)I", (void *)&jcallback_BrokerError },
                                         { (char*)"jcallback_BrokerProgress", (char*)"(I)I",                  (void *)&jcallback_BrokerProgress } };
 
-const char* JVMClassPathOption =  "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.5.jar";
+const char* JVMClassPathOption =  "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.6.jar";
 const char* DukaZorroBridgePath = "com/jforex/dzjforex/ZorroBridge";
 const char* ZorroPath =           "com/jforex/dzjforex/Zorro";
 const char* ExcPath =             "java/lang/Class";

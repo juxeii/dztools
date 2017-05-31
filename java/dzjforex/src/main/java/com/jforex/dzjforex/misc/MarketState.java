@@ -1,38 +1,23 @@
 package com.jforex.dzjforex.misc;
 
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.dukascopy.api.IDataService;
-import com.dukascopy.api.ITimeDomain;
+import com.jforex.dzjforex.brokertime.DummySubmit;
 
 public class MarketState {
 
     private final IDataService dataService;
+    private final DummySubmit dummySubmit;
 
-    private final static Logger logger = LogManager.getLogger(MarketState.class);
-
-    public MarketState(final IDataService dataService) {
+    public MarketState(final IDataService dataService,
+                       final DummySubmit dummySubmit) {
         this.dataService = dataService;
+        this.dummySubmit = dummySubmit;
     }
 
-//    public boolean isClosed(final long currentServerTime) {
-//        final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
-//
-//        return Single
-//            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
-//            .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
-//            .doOnError(e -> logger.error("Get market offline times failed! " + e.getMessage()))
-//            .onErrorReturnItem(true)
-//            .blockingGet();
-//    }
-
-    private boolean isServerTimeInOfflineDomains(final long serverTime,
-                                                 final Set<ITimeDomain> offlineDomains) {
-        return offlineDomains
-            .stream()
-            .anyMatch(timeDomain -> serverTime >= timeDomain.getStart() && serverTime <= timeDomain.getEnd());
+    public boolean isClosed(final long serverTime) {
+        // return dummySubmit.wasOffline();
+        return dataService.isOfflineTime(serverTime)
+                ? true
+                : dummySubmit.wasOffline();
     }
 }

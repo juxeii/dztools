@@ -38,6 +38,7 @@ import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
 import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.brokertime.BrokerTime;
+import com.jforex.dzjforex.brokertime.DummySubmit;
 import com.jforex.dzjforex.brokertime.NTPFetch;
 import com.jforex.dzjforex.brokertime.NTPProvider;
 import com.jforex.dzjforex.brokertime.NTPSynchTask;
@@ -51,6 +52,7 @@ import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
+import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.order.OpenOrdersProvider;
 import com.jforex.dzjforex.order.OrderIDLookUp;
@@ -164,9 +166,13 @@ public class Components {
         final TickTimeFetch tickTimeFetch = new TickTimeFetch(tickQuoteRepository);
         final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickTimeFetch, timeWatch);
         serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
+        final DummySubmit dummySubmit = new DummySubmit(orderUtil,
+                                                        infoStrategy.orderMessages(),
+                                                        serverTimeProvider);
+        final MarketState marketState = new MarketState(dataService, dummySubmit);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
-                                    dataService);
+                                    marketState);
     }
 
     private void initOrderComponents() {

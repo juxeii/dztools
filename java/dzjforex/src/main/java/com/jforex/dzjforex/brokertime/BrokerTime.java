@@ -1,8 +1,8 @@
 package com.jforex.dzjforex.brokertime;
 
-import com.dukascopy.api.IDataService;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.MarketState;
 
 import io.reactivex.Single;
 
@@ -10,14 +10,14 @@ public class BrokerTime {
 
     private final IClient client;
     private final ServerTimeProvider serverTimeProvider;
-    private final IDataService dataService;
+    private final MarketState marketData;
 
     public BrokerTime(final IClient client,
                       final ServerTimeProvider serverTimeProvider,
-                      final IDataService dataService) {
+                      final MarketState marketData) {
         this.client = client;
         this.serverTimeProvider = serverTimeProvider;
-        this.dataService = dataService;
+        this.marketData = marketData;
     }
 
     public Single<Integer> get(final BrokerTimeData brokerTimeData) {
@@ -30,7 +30,7 @@ public class BrokerTime {
         return serverTimeProvider
             .get()
             .doOnSuccess(brokerTimeData::fill)
-            .map(serverTime -> dataService.isOfflineTime(serverTime)
+            .map(serverTime -> marketData.isClosed(serverTime)
                     ? ZorroReturnValues.CONNECTION_OK_BUT_MARKET_CLOSED.getValue()
                     : ZorroReturnValues.CONNECTION_OK.getValue())
             .onErrorReturnItem(ZorroReturnValues.INVALID_SERVER_TIME.getValue());

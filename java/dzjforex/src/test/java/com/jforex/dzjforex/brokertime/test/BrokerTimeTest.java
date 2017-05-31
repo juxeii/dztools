@@ -6,11 +6,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
+import com.dukascopy.api.IDataService;
 import com.jforex.dzjforex.brokertime.BrokerTime;
 import com.jforex.dzjforex.brokertime.BrokerTimeData;
 import com.jforex.dzjforex.brokertime.ServerTimeProvider;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -27,14 +27,14 @@ public class BrokerTimeTest extends CommonUtilForTest {
     @Mock
     private ServerTimeProvider serverTimeProviderMock;
     @Mock
-    private MarketState marketStateMock;
+    private IDataService dataServiceMock;
     private final long serverTime = 42L;
 
     @Before
     public void setUp() {
         brokerTime = new BrokerTime(clientMock,
                                     serverTimeProviderMock,
-                                    marketStateMock);
+                                    dataServiceMock);
     }
 
     private TestObserver<Integer> subscribe() {
@@ -53,7 +53,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
 
         verifyZeroInteractions(clientMock);
         verifyZeroInteractions(serverTimeProviderMock);
-        verifyZeroInteractions(marketStateMock);
+        verifyZeroInteractions(dataServiceMock);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class BrokerTimeTest extends CommonUtilForTest {
             }
 
             private OngoingStubbing<Boolean> stubIsMarketClosed() {
-                return when(marketStateMock.isClosed(serverTime));
+                return when(dataServiceMock.isOfflineTime(serverTime));
             }
 
             @Test

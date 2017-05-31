@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.net.ntp.NTPUDPClient;
 
 import com.dukascopy.api.IContext;
+import com.dukascopy.api.IDataService;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IHistory;
 import com.dukascopy.api.Instrument;
@@ -50,7 +51,6 @@ import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
-import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.order.OpenOrdersProvider;
 import com.jforex.dzjforex.order.OrderIDLookUp;
@@ -81,7 +81,7 @@ public class Components {
     private OrderUtil orderUtil;
     private StrategyUtil strategyUtil;
     private TickQuoteRepository tickQuoteRepository;
-    private MarketState marketData;
+    private IDataService dataService;
     private ServerTimeProvider serverTimeProvider;
     private BrokerTime brokerTime;
     private AccountInfo accountInfo;
@@ -138,7 +138,7 @@ public class Components {
         engine = context.getEngine();
         strategyUtil = infoStrategy.strategyUtil();
         orderUtil = strategyUtil.orderUtil();
-        marketData = new MarketState(context.getDataService());
+        dataService = context.getDataService();
         tickQuoteRepository = strategyUtil
             .tickQuoteProvider()
             .repository();
@@ -166,14 +166,13 @@ public class Components {
         serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,
-                                    marketData);
+                                    dataService);
     }
 
     private void initOrderComponents() {
         orderLabelUtil = new OrderLabelUtil(clock, pluginConfig);
         orderRepository = new OrderRepository(orderLabelUtil);
         openOrdersProvider = new OpenOrdersProvider(engine, pluginConfig);
-        // openOrders = new OpenOrders(openOrdersProvider, orderRepository);
     }
 
     private void initHistoryComponents() {

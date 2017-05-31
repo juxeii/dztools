@@ -7,9 +7,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IDataService;
 import com.dukascopy.api.ITimeDomain;
-import com.dukascopy.api.Period;
-
-import io.reactivex.Single;
 
 public class MarketState {
 
@@ -21,16 +18,16 @@ public class MarketState {
         this.dataService = dataService;
     }
 
-    public boolean isClosed(final long currentServerTime) {
-        final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
-
-        return Single
-            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
-            .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
-            .doOnError(e -> logger.error("Get market offline times failed! " + e.getMessage()))
-            .onErrorReturnItem(true)
-            .blockingGet();
-    }
+//    public boolean isClosed(final long currentServerTime) {
+//        final long lookUpEndTime = currentServerTime + Period.ONE_MIN.getInterval();
+//
+//        return Single
+//            .fromCallable(() -> dataService.getOfflineTimeDomains(currentServerTime, lookUpEndTime))
+//            .map(domains -> isServerTimeInOfflineDomains(currentServerTime, domains))
+//            .doOnError(e -> logger.error("Get market offline times failed! " + e.getMessage()))
+//            .onErrorReturnItem(true)
+//            .blockingGet();
+//    }
 
     private boolean isServerTimeInOfflineDomains(final long serverTime,
                                                  final Set<ITimeDomain> offlineDomains) {

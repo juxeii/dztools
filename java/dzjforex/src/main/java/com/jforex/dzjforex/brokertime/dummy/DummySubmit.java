@@ -30,13 +30,15 @@ public class DummySubmit {
     }
 
     private void checkForSubmit(final long serverTime) {
-        Single
-            .just(serverMinute(serverTime))
-            .filter(serverMinute -> serverMinute % minuteForHour == 0)
-            .filter(serverMinute -> submitTime.hasValue()
-                    ? serverMinute(submitTime.getValue()) != serverMinute
-                    : true)
-            .subscribe(serverMinute -> startNewSubmit(serverTime, serverMinute));
+        final int serverMinute = serverMinute(serverTime);
+        if (!submitTime.hasValue())
+            startNewSubmit(serverTime, serverMinute);
+        else
+            Single
+                .just(serverMinute)
+                .filter(minute -> minute % minuteForHour == 0)
+                .filter(minute -> serverMinute(submitTime.getValue()) != minute)
+                .subscribe(minute -> startNewSubmit(serverTime, minute));
     }
 
     private void startNewSubmit(final long serverTime,

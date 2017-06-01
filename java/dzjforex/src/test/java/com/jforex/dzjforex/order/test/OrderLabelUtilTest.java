@@ -81,8 +81,7 @@ public class OrderLabelUtilTest extends CommonUtilForTest {
         orderLabelUtil
             .idFromOrder(orderMockA)
             .test()
-            .assertNoErrors()
-            .assertNoValues();
+            .assertComplete();
     }
 
     @Test
@@ -92,8 +91,7 @@ public class OrderLabelUtilTest extends CommonUtilForTest {
         orderLabelUtil
             .idFromOrder(orderMockA)
             .test()
-            .assertNoErrors()
-            .assertNoValues();
+            .assertComplete();
     }
 
     @Test
@@ -112,11 +110,18 @@ public class OrderLabelUtilTest extends CommonUtilForTest {
     }
 
     @Test
+    public void idFromLabelCompletesWhenLabelIsNull() {
+        orderLabelUtil
+            .idFromLabel(null)
+            .test()
+            .assertComplete();
+    }
+
+    @Test
     public void idFromLabelCallWithNoZorroPrefixIsEmpty() {
         orderLabelUtil
             .idFromLabel("NoZorroOrder")
             .test()
-            .assertNoErrors()
-            .assertNoValues();
+            .assertComplete();
     }
 }

@@ -16,8 +16,8 @@ import org.mockito.stubbing.OngoingStubbing;
 import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
-import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.currency.CurrencyFactory;
 

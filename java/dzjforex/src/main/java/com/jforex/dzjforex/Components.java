@@ -36,9 +36,10 @@ import com.jforex.dzjforex.brokerstop.BrokerStop;
 import com.jforex.dzjforex.brokerstop.SetSLParamsFactory;
 import com.jforex.dzjforex.brokerstop.SetSLParamsRunner;
 import com.jforex.dzjforex.brokersubscribe.BrokerSubscribe;
-import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.brokertime.BrokerTime;
+import com.jforex.dzjforex.brokertime.DummyMessageHandler;
 import com.jforex.dzjforex.brokertime.DummySubmit;
+import com.jforex.dzjforex.brokertime.DummySubmitRunner;
 import com.jforex.dzjforex.brokertime.NTPFetch;
 import com.jforex.dzjforex.brokertime.NTPProvider;
 import com.jforex.dzjforex.brokertime.NTPSynchTask;
@@ -54,6 +55,7 @@ import com.jforex.dzjforex.history.HistoryWrapper;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.misc.PriceProvider;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.dzjforex.order.OpenOrdersProvider;
 import com.jforex.dzjforex.order.OrderIDLookUp;
 import com.jforex.dzjforex.order.OrderLabelUtil;
@@ -166,9 +168,9 @@ public class Components {
         final TickTimeFetch tickTimeFetch = new TickTimeFetch(tickQuoteRepository);
         final TickTimeProvider tickTimeProvider = new TickTimeProvider(tickTimeFetch, timeWatch);
         serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
-        final DummySubmit dummySubmit = new DummySubmit(orderUtil,
-                                                        infoStrategy.orderMessages(),
-                                                        serverTimeProvider);
+        final DummyMessageHandler dummyMessageHandler = new DummyMessageHandler(infoStrategy.orderMessages());
+        final DummySubmitRunner dummySubmitRunner = new DummySubmitRunner(orderUtil, dummyMessageHandler);
+        final DummySubmit dummySubmit = new DummySubmit(dummySubmitRunner);
         final MarketState marketState = new MarketState(dataService, dummySubmit);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,

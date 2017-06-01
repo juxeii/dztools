@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokersubscribe;
+package com.jforex.dzjforex.misc;
 
 import java.util.List;
 import java.util.Set;

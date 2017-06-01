@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.misc;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IContext;
@@ -22,15 +19,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
 
     private IContext context;
     private final JFHotPublisher<IMessage> messagePublisher = new JFHotPublisher<>();
-    private final Observable<IMessage> orderMessages;
-
-    private final static Logger logger = LogManager.getLogger(InfoStrategy.class);
-
-    public InfoStrategy() {
-        orderMessages = messagePublisher
-            .observable()
-            .filter(message -> message.getOrder() != null);
-    }
 
     public IContext getContext() {
         return context;
@@ -49,7 +37,7 @@ public class InfoStrategy extends JForexUtilsStrategy {
     }
 
     public Observable<IMessage> orderMessages() {
-        return orderMessages;
+        return messagePublisher.observable();
     }
 
     @Override
@@ -65,7 +53,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
 
     @Override
     public void onJFMessage(final IMessage message) throws JFException {
-        logger.info("Received message type " + message.getType());
         messagePublisher.onNext(message);
     }
 

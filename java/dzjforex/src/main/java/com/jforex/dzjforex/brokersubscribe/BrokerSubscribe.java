@@ -7,6 +7,7 @@ import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.currency.CurrencyUtil;
 import com.jforex.programming.instrument.InstrumentFactory;

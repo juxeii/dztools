@@ -17,10 +17,10 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.history.HistoryOrdersDates;
 import com.jforex.dzjforex.history.HistoryOrdersProvider;
 import com.jforex.dzjforex.history.HistoryWrapper;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 

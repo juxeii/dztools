@@ -7,9 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.brokersubscribe.Subscription;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.dzjforex.misc.TimeSpan;
 
 import io.reactivex.Observable;

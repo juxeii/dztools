@@ -32,7 +32,6 @@ public class OrderLabelUtil {
     public Maybe<Integer> idFromLabel(final String orderLabel) {
         return Maybe
             .fromCallable(() -> orderLabel)
-            .filter(label -> label != null)
             .filter(label -> label.startsWith(orderLabelPrefix))
             .map(label -> label.substring(orderLabelPrefix.length()))
             .map(idName -> Integer.parseInt(idName));

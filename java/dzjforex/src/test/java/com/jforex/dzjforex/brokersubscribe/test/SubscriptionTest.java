@@ -18,7 +18,7 @@ import org.mockito.stubbing.OngoingStubbing;
 import com.dukascopy.api.Instrument;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.jforex.dzjforex.brokersubscribe.Subscription;
+import com.jforex.dzjforex.misc.Subscription;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 public class SubscriptionTest extends CommonUtilForTest {

@@ -15,9 +15,8 @@ public class MarketState {
     }
 
     public boolean isClosed(final long serverTime) {
-        // return dummySubmit.wasOffline();
         return dataService.isOfflineTime(serverTime)
                 ? true
-                : dummySubmit.wasOffline();
+                : dummySubmit.wasOffline(serverTime);
     }
 }

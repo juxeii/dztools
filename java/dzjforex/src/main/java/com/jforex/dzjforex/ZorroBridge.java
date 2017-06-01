@@ -37,6 +37,7 @@ public class ZorroBridge {
 
     private final SystemComponents systemComponents;
     private final Components components;
+    private final IClient client;
     private final Zorro zorro;
     private final BrokerLogin brokerLogin;
     private BrokerTime brokerTime;
@@ -55,7 +56,8 @@ public class ZorroBridge {
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        systemComponents = new SystemComponents(getClient(), pluginConfig);
+        client = getClient();
+        systemComponents = new SystemComponents(client, pluginConfig);
         components = new Components(systemComponents);
         zorro = components.zorro();
         brokerLogin = components.brokerLogin();
@@ -99,11 +101,10 @@ public class ZorroBridge {
     }
 
     public int doLogout() {
-//        client.stopStrategy(strategyID);
-//        return brokerLogin
-//            .logout()
-//            .blockingGet();
-        return ZorroReturnValues.LOGOUT_OK.getValue();
+        client.stopStrategy(strategyID);
+        return brokerLogin
+            .logout()
+            .blockingGet();
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {

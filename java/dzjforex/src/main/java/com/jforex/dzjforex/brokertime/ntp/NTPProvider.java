@@ -1,8 +1,9 @@
-package com.jforex.dzjforex.brokertime;
+package com.jforex.dzjforex.brokertime.ntp;
 
 import java.util.concurrent.TimeUnit;
 
 import com.dukascopy.api.JFException;
+import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 
 import io.reactivex.Observable;

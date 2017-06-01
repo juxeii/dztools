@@ -1,7 +1,4 @@
-package com.jforex.dzjforex.brokertime;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+package com.jforex.dzjforex.brokertime.dummy;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
@@ -14,10 +11,9 @@ public class DummySubmitRunner {
     private final OrderUtil orderUtil;
     private final DummyMessageHandler dummyMessageHandler;
 
-    private static String orderLabel = "DummyOrder";
-    private static double invalidSLPrice = 1.12345678;
-    private static double amount = 0.001;
-    private final static Logger logger = LogManager.getLogger(DummySubmitRunner.class);
+    private final static String orderLabel = "DummyOrder";
+    private final static double invalidSLPrice = 1.12345678;
+    private final static double amount = 0.001;
 
     public DummySubmitRunner(final OrderUtil orderUtil,
                              final DummyMessageHandler dummyMessageHandler) {
@@ -30,21 +26,23 @@ public class DummySubmitRunner {
     }
 
     public void start() {
-        final OrderParams orderParams = OrderParams
+        orderUtil.execute(submitParams());
+    }
+
+    public SubmitParams submitParams() {
+        return SubmitParams
+            .withOrderParams(orderParams())
+            .doOnSubmitReject(dummyMessageHandler::handleOrderEvent)
+            .build();
+    }
+
+    public OrderParams orderParams() {
+        return OrderParams
             .forInstrument(Instrument.EURUSD)
             .withOrderCommand(OrderCommand.BUY)
             .withAmount(amount)
             .withLabel(orderLabel)
             .stopLossPrice(invalidSLPrice)
             .build();
-
-        final SubmitParams submitParams = SubmitParams
-            .withOrderParams(orderParams)
-            .doOnStart(() -> logger.debug("Submitting dummy order now..."))
-            .doOnError(e -> logger.error("Submitting dummy order failed! " + e.getMessage()))
-            .doOnSubmitReject(dummyMessageHandler::handleOrderEvent)
-            .build();
-
-        orderUtil.execute(submitParams);
     }
 }

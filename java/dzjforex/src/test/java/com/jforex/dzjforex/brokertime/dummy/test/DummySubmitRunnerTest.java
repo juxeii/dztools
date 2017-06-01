@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime.test;
+package com.jforex.dzjforex.brokertime.dummy.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
@@ -15,8 +15,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IEngine.OrderCommand;
-import com.jforex.dzjforex.brokertime.DummyMessageHandler;
-import com.jforex.dzjforex.brokertime.DummySubmitRunner;
+import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
+import com.jforex.dzjforex.brokertime.dummy.DummySubmitRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.event.OrderEvent;

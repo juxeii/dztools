@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime.test;
+package com.jforex.dzjforex.brokertime.ticktime.test;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -6,9 +6,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
-import com.jforex.dzjforex.brokertime.TickTimeProvider;
+import com.jforex.dzjforex.brokertime.ticktime.TickTimeFetch;
+import com.jforex.dzjforex.brokertime.ticktime.TickTimeProvider;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
-import com.jforex.dzjforex.brokertime.TickTimeFetch;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 import io.reactivex.Single;

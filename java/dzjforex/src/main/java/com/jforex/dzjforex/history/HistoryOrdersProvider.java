@@ -57,6 +57,6 @@ public class HistoryOrdersProvider {
                     + " from " + timeSpan.formatFrom()
                     + " to " + timeSpan.formatTo()))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size() + " history orders for " + instrument))
-            .doOnError(e -> logger.info("Fetching history orders failed! " + e.getMessage()));
+            .doOnError(e -> logger.error("Fetching history orders failed! " + e.getMessage()));
     }
 }

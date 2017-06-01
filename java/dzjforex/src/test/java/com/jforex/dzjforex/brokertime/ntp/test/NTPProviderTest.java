@@ -1,12 +1,12 @@
-package com.jforex.dzjforex.brokertime.test;
+package com.jforex.dzjforex.brokertime.ntp.test;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import com.jforex.dzjforex.brokertime.NTPProvider;
-import com.jforex.dzjforex.brokertime.NTPSynchTask;
+import com.jforex.dzjforex.brokertime.ntp.NTPProvider;
+import com.jforex.dzjforex.brokertime.ntp.NTPSynchTask;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

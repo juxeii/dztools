@@ -49,7 +49,7 @@ public class BrokerTrade {
                              pClose,
                              pRoll,
                              pProfit);
-        logger.trace("Trade params for orderID " + brokerTradeData.orderID() + "\n"
+        logger.trace("Trade params for orderID " + brokerTradeData.orderID() + ":\n"
                 + "pOpen: " + pOpen + "\n"
                 + "pClose: " + pClose + "\n"
                 + "pRoll: " + pRoll + "\n"

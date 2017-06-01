@@ -10,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
 import com.dukascopy.api.IDataService;
-import com.jforex.dzjforex.brokertime.DummySubmit;
+import com.jforex.dzjforex.brokertime.dummy.DummySubmit;
 import com.jforex.dzjforex.misc.MarketState;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 

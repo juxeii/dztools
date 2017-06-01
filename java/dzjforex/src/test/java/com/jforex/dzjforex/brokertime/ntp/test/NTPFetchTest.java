@@ -1,3 +1,4 @@
+package com.jforex.dzjforex.brokertime.ntp.test;
 //package com.jforex.dzjforex.brokertime.test;
 //
 //import static org.powermock.api.mockito.PowerMockito.mockStatic;

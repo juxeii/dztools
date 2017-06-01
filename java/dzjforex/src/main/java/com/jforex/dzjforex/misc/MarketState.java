@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.misc;
 
 import com.dukascopy.api.IDataService;
-import com.jforex.dzjforex.brokertime.DummySubmit;
+import com.jforex.dzjforex.brokertime.dummy.DummySubmit;
 
 public class MarketState {
 

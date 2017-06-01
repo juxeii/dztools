@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime;
+package com.jforex.dzjforex.brokertime.dummy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.programming.misc.DateTimeUtil;
 
+import io.reactivex.Single;
 import io.reactivex.subjects.BehaviorSubject;
 
 public class DummySubmit {
@@ -29,19 +30,18 @@ public class DummySubmit {
     }
 
     private void checkForSubmit(final long serverTime) {
-        final int serverMinute = serverMinute(serverTime);
-        final boolean isMinuteForCheck = serverMinute % minuteForHour == 0;
-        if (!isMinuteForCheck)
-            return;
+        Single
+            .just(serverMinute(serverTime))
+            .filter(serverMinute -> serverMinute % minuteForHour == 0)
+            .filter(serverMinute -> serverMinute(submitTime.getValue()) != serverMinute)
+            .subscribe(serverMinute -> startNewSubmit(serverTime, serverMinute));
+    }
 
-        final int submitServerMinute = serverMinute(submitTime.getValue());
-        if (submitServerMinute == serverMinute)
-            return;
-
+    private void startNewSubmit(final long serverTime,
+                                final int serverMinute) {
         logger.debug("Starting next dummy submit. ServerTime " + DateTimeUtil.formatMillis(serverTime)
                 + " serverMinute " + serverMinute
-                + " submitServerMinute " + submitServerMinute
-                + " isMinuteForCheck " + isMinuteForCheck);
+                + " submitServerMinute " + serverMinute(submitTime.getValue()));
         submitTime.onNext(serverTime);
         dummySubmitRunner.start();
     }

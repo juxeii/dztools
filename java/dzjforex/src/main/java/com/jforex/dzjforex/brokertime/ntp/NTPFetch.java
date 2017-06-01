@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime;
+package com.jforex.dzjforex.brokertime.ntp;
 
 import java.net.InetAddress;
 

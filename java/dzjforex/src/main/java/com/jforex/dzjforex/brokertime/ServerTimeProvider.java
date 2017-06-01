@@ -3,6 +3,9 @@ package com.jforex.dzjforex.brokertime;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jforex.dzjforex.brokertime.ntp.NTPProvider;
+import com.jforex.dzjforex.brokertime.ticktime.TickTimeProvider;
+
 import io.reactivex.Single;
 
 public class ServerTimeProvider {

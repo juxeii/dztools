@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime.test;
+package com.jforex.dzjforex.brokertime.dummy.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -12,8 +12,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.stubbing.OngoingStubbing;
 
-import com.jforex.dzjforex.brokertime.DummySubmit;
-import com.jforex.dzjforex.brokertime.DummySubmitRunner;
+import com.jforex.dzjforex.brokertime.dummy.DummySubmit;
+import com.jforex.dzjforex.brokertime.dummy.DummySubmitRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.misc.DateTimeUtil;
 

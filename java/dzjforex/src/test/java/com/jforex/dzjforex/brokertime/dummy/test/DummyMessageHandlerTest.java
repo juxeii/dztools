@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime.test;
+package com.jforex.dzjforex.brokertime.dummy.test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IMessage;
-import com.jforex.dzjforex.brokertime.DummyMessageHandler;
+import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;

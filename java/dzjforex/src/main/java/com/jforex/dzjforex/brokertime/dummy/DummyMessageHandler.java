@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokertime;
+package com.jforex.dzjforex.brokertime.dummy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +15,7 @@ public class DummyMessageHandler {
     private final Observable<IMessage> orderMessages;
     private final BehaviorSubject<Boolean> wasOffline = BehaviorSubject.createDefault(false);
 
-    private static String systemOfflinePrefix = "System offline";
+    private final static String systemOfflinePrefix = "System offline";
     private final static Logger logger = LogManager.getLogger(DummyMessageHandler.class);
 
     public DummyMessageHandler(final Observable<IMessage> orderMessages) {
@@ -30,14 +30,11 @@ public class DummyMessageHandler {
         final IOrder order = orderEvent.order();
         orderMessages
             .filter(message -> message.getOrder() != null)
-            .doOnNext(msg -> logger.debug("Received msg for order " + msg.getOrder().getLabel()))
             .filter(msg -> msg.getOrder() == order)
-            .doOnNext(msg -> logger.debug("Received dummy msg type " + msg.getType()))
             .takeUntil(msg -> msg.getType() == IMessage.Type.ORDER_SUBMIT_REJECTED)
-            .doOnNext(msg -> logger.debug("Rejected type recieved"))
             .map(IMessage::getContent)
             .subscribe(msgContent -> {
-                logger.debug("Received msg content for dummy order: " + msgContent);
+                logger.debug("Received message content for dummy order: " + msgContent);
                 if (msgContent.startsWith(systemOfflinePrefix)) {
                     logger.debug("System offline message for dummy order received -> market is closed.");
                     wasOffline.onNext(true);

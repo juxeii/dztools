@@ -170,7 +170,7 @@ public class Components {
         serverTimeProvider = new ServerTimeProvider(ntpProvider, tickTimeProvider);
         final DummyMessageHandler dummyMessageHandler = new DummyMessageHandler(infoStrategy.orderMessages());
         final DummySubmitRunner dummySubmitRunner = new DummySubmitRunner(orderUtil, dummyMessageHandler);
-        final DummySubmit dummySubmit = new DummySubmit(dummySubmitRunner);
+        final DummySubmit dummySubmit = new DummySubmit(dummySubmitRunner, pluginConfig);
         final MarketState marketState = new MarketState(dataService, dummySubmit);
         brokerTime = new BrokerTime(client,
                                     serverTimeProvider,

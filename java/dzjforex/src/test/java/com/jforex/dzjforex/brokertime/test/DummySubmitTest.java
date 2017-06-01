@@ -26,17 +26,19 @@ public class DummySubmitTest extends CommonUtilForTest {
 
     @Mock
     private DummySubmitRunner dummySubmitRunnerMock;
-    private final LocalDateTime halfHourTime = LocalDateTime.of(2017, Month.APRIL, 8, 12, 30);
-    private final LocalDateTime fullHourTime = LocalDateTime.of(2017, Month.APRIL, 8, 13, 00);
-    private long halfHourMillis;
-    private long fullHourMillis;
+    private final LocalDateTime firstSubmitTime = LocalDateTime.of(2017, Month.APRIL, 8, 12, 22);
+    private final LocalDateTime secondSubmitTime = LocalDateTime.of(2017, Month.APRIL, 8, 13, 24);
+    private long firstsubmitMillis;
+    private long secondSubmitMillis;
 
     @Before
     public void setUp() {
-        halfHourMillis = DateTimeUtil.millisFromDateTime(halfHourTime);
-        fullHourMillis = DateTimeUtil.millisFromDateTime(fullHourTime);
+        firstsubmitMillis = DateTimeUtil.millisFromDateTime(firstSubmitTime);
+        secondSubmitMillis = DateTimeUtil.millisFromDateTime(secondSubmitTime);
 
-        dummySubmit = new DummySubmit(dummySubmitRunnerMock);
+        when(pluginConfigMock.dummySubmitMinuteForHour()).thenReturn(2);
+
+        dummySubmit = new DummySubmit(dummySubmitRunnerMock, pluginConfigMock);
     }
 
     private void assertIsMarketOffline(final boolean isOffline,
@@ -62,11 +64,11 @@ public class DummySubmitTest extends CommonUtilForTest {
         assertIsMarketOffline(false, 42L);
     }
 
-    public class WhenHalfHourServerTime {
+    public class WhenFirstSubmitTime {
 
         @Before
         public void setUp() {
-            dummySubmit.wasOffline(halfHourMillis);
+            dummySubmit.wasOffline(firstsubmitMillis);
         }
 
         @Test
@@ -76,55 +78,21 @@ public class DummySubmitTest extends CommonUtilForTest {
 
         @Test
         public void noNextSubmitWithinOneMinute() {
-            dummySubmit.wasOffline(halfHourMillis + 59999);
+            dummySubmit.wasOffline(firstsubmitMillis + 59999);
 
             verify(dummySubmitRunnerMock).start();
         }
 
         @Test
-        public void noNextSubmitWithin15Minutes() {
-            dummySubmit.wasOffline(halfHourMillis + (15 * 60000));
+        public void noNextSubmitWithinTwoMinutes() {
+            dummySubmit.wasOffline(firstsubmitMillis + (2 * 60000) - 1);
 
             verify(dummySubmitRunnerMock).start();
         }
 
         @Test
-        public void nextSubmitOnFullHourTime() {
-            dummySubmit.wasOffline(fullHourMillis);
-
-            verify(dummySubmitRunnerMock, times(2)).start();
-        }
-    }
-
-    public class WhenFullHourServerTime {
-
-        @Before
-        public void setUp() {
-            dummySubmit.wasOffline(fullHourMillis);
-        }
-
-        @Test
-        public void submitWasCalledOnRunner() {
-            verify(dummySubmitRunnerMock).start();
-        }
-
-        @Test
-        public void noNextSubmitWithinOneMinute() {
-            dummySubmit.wasOffline(halfHourMillis + 59999);
-
-            verify(dummySubmitRunnerMock).start();
-        }
-
-        @Test
-        public void noNextSubmitWithin15Minutes() {
-            dummySubmit.wasOffline(halfHourMillis + (15 * 60000));
-
-            verify(dummySubmitRunnerMock).start();
-        }
-
-        @Test
-        public void nextSubmitOnHalfHourTime() {
-            dummySubmit.wasOffline(fullHourMillis + (30 * 60000));
+        public void nextSubmitOnSecondSubmitTime() {
+            dummySubmit.wasOffline(secondSubmitMillis);
 
             verify(dummySubmitRunnerMock, times(2)).start();
         }

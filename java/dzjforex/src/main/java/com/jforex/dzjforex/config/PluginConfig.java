@@ -97,4 +97,8 @@ public interface PluginConfig extends Config {
     @Key("zorro.progressinterval")
     @DefaultValue("250")
     long zorroProgressInterval();
+
+    @Key("dummysubmit.minuteforhour")
+    @DefaultValue("30")
+    int dummySubmitMinuteForHour();
 }

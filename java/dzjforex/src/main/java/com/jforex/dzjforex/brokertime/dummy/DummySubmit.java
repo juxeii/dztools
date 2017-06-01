@@ -12,7 +12,7 @@ import io.reactivex.subjects.BehaviorSubject;
 public class DummySubmit {
 
     private final DummySubmitRunner dummySubmitRunner;
-    private final BehaviorSubject<Long> submitTime = BehaviorSubject.createDefault(0L);
+    private final BehaviorSubject<Long> submitTime = BehaviorSubject.create();
 
     private final int minuteForHour;
     private final static Logger logger = LogManager.getLogger(DummySubmit.class);
@@ -33,15 +33,16 @@ public class DummySubmit {
         Single
             .just(serverMinute(serverTime))
             .filter(serverMinute -> serverMinute % minuteForHour == 0)
-            .filter(serverMinute -> serverMinute(submitTime.getValue()) != serverMinute)
+            .filter(serverMinute -> submitTime.hasValue()
+                    ? serverMinute(submitTime.getValue()) != serverMinute
+                    : true)
             .subscribe(serverMinute -> startNewSubmit(serverTime, serverMinute));
     }
 
     private void startNewSubmit(final long serverTime,
                                 final int serverMinute) {
         logger.debug("Starting next dummy submit. ServerTime " + DateTimeUtil.formatMillis(serverTime)
-                + " serverMinute " + serverMinute
-                + " submitServerMinute " + serverMinute(submitTime.getValue()));
+                + " serverMinute " + serverMinute);
         submitTime.onNext(serverTime);
         dummySubmitRunner.start();
     }

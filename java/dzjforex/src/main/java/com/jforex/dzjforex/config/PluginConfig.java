@@ -83,7 +83,7 @@ public interface PluginConfig extends Config {
     String ntpServerURL();
 
     @Key("ntp.syncinterval")
-    @DefaultValue("300000")
+    @DefaultValue("3600000")
     long ntpSynchInterval();
 
     @Key("ntp.timeout")

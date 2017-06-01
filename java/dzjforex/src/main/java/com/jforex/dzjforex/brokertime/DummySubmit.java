@@ -12,7 +12,7 @@ public class DummySubmit {
     private final DummySubmitRunner dummySubmitRunner;
     private final BehaviorSubject<Long> submitTime = BehaviorSubject.createDefault(0L);
 
-    private final static int minuteForHour = 30;
+    private final static int minuteForHour = 2;
     private final static long minDiffToNextSubmit = 60000;
     private final static Logger logger = LogManager.getLogger(DummySubmit.class);
 
@@ -28,21 +28,17 @@ public class DummySubmit {
     private void checkForSubmit(final long serverTime) {
         final int serverMinute = (int) ((serverTime / (1000 * 60)) % 60);
         final boolean isMinuteForCheck = serverMinute % minuteForHour == 0;
-        logger.debug("serverTime " + DateTimeUtil.formatMillis(serverTime)
-                + " serverMinute " + serverMinute
-                + " isMinuteForCheck " + isMinuteForCheck);
-        if (!isMinuteForCheck) {
-            logger.debug("No time for dummy submit");
+        if (!isMinuteForCheck)
             return;
-        }
 
         final long diffToLatestSubmit = serverTime - submitTime.getValue();
-        logger.debug("diffToLatestSubmit " + diffToLatestSubmit);
-        if (diffToLatestSubmit <= minDiffToNextSubmit) {
-            logger.debug("diffToLatestSubmit smaller than minDiffToNextSubmit");
+        if (diffToLatestSubmit <= minDiffToNextSubmit)
             return;
-        }
 
+        logger.debug("Starting next dummy submit. ServerTime " + DateTimeUtil.formatMillis(serverTime)
+                + " serverMinute " + serverMinute
+                + " diffToLatestSubmit " + diffToLatestSubmit
+                + " isMinuteForCheck " + isMinuteForCheck);
         submitTime.onNext(serverTime);
         dummySubmitRunner.start();
     }

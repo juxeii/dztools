@@ -32,7 +32,7 @@ public class HistoryTickFiller {
         tickParams[startIndex + 2] = bar.getHigh();
         tickParams[startIndex + 3] = bar.getLow();
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
-        logger.debug("Stored bar time time " + DateTimeUtil.formatMillis(bar.getTime()));
+        logger.trace("Stored bar time time " + DateTimeUtil.formatMillis(bar.getTime()));
         tickParams[startIndex + 5] = noSpreadAvailable;
         tickParams[startIndex + 6] = bar.getVolume();
     }
@@ -49,7 +49,7 @@ public class HistoryTickFiller {
         tickParams[startIndex + 2] = ask;
         tickParams[startIndex + 3] = ask;
         tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
-        logger.debug("Stored tick with time " + DateTimeUtil.formatMillis(tick.getTime()));
+        logger.trace("Stored tick with time " + DateTimeUtil.formatMillis(tick.getTime()));
         tickParams[startIndex + 5] = MathUtil.roundPrice(ask - bid, instrument);
         tickParams[startIndex + 6] = tick.getAskVolume();
     }

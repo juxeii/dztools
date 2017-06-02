@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.brokersubscribe.test;
+package com.jforex.dzjforex.misc.test;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;

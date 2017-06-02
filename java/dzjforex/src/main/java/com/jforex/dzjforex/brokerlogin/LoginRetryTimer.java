@@ -7,19 +7,22 @@ import org.apache.logging.log4j.Logger;
 
 import com.jforex.dzjforex.config.PluginConfig;
 
-import io.reactivex.Observable;
+import io.reactivex.Completable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 
 public class LoginRetryTimer {
 
-    private final Observable<Long> delayTimer;
+    private final Completable delayTimer;
     private final BehaviorSubject<Boolean> isLoginPermitted = BehaviorSubject.createDefault(true);
 
     private final static Logger logger = LogManager.getLogger(LoginRetryTimer.class);
 
     public LoginRetryTimer(final PluginConfig pluginConfig) {
-        delayTimer = Observable
-            .timer(pluginConfig.loginRetryDelay(), TimeUnit.MILLISECONDS)
+        delayTimer = Completable
+            .timer(pluginConfig.loginRetryDelay(),
+                   TimeUnit.MILLISECONDS,
+                   Schedulers.io())
             .doOnSubscribe(d -> {
                 isLoginPermitted.onNext(false);
                 logger.debug("Starting login retry delay timer. Login is not available until timer elapsed.");
@@ -28,7 +31,7 @@ public class LoginRetryTimer {
     }
 
     public void start() {
-        delayTimer.subscribe(tick -> isLoginPermitted.onNext(true));
+        delayTimer.subscribe(() -> isLoginPermitted.onNext(true));
     }
 
     public boolean isLoginPermitted() {

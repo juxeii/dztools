@@ -12,6 +12,7 @@ import com.jforex.programming.currency.CurrencyFactory;
 import com.jforex.programming.currency.CurrencyUtil;
 import com.jforex.programming.instrument.InstrumentFactory;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
@@ -29,19 +30,18 @@ public class BrokerSubscribe {
     public Single<Integer> forName(final String assetName) {
         return Single
             .defer(() -> RxUtility.instrumentFromName(assetName))
-            .flatMap(instrument -> subscription.isSubscribed(instrument)
-                    ? Single.just(ZorroReturnValues.ASSET_AVAILABLE.getValue())
-                    : subscribe(instrument))
+            .filter(instrument -> !subscription.isSubscribed(instrument))
+            .flatMapCompletable(this::subscribe)
+            .toSingleDefault(ZorroReturnValues.ASSET_AVAILABLE.getValue())
             .onErrorReturnItem(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
 
-    private Single<Integer> subscribe(final Instrument instrumentToSubscribe) {
+    private Completable subscribe(final Instrument instrumentToSubscribe) {
         return Observable
             .just(instrumentToSubscribe)
             .mergeWith(crossInstruments(instrumentToSubscribe))
             .toList()
-            .flatMapCompletable(subscription::set)
-            .toSingleDefault(ZorroReturnValues.ASSET_AVAILABLE.getValue());
+            .flatMapCompletable(subscription::set);
     }
 
     private Observable<Instrument> crossInstruments(final Instrument instrumentToSubscribe) {

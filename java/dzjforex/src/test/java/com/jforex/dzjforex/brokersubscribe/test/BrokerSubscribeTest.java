@@ -65,17 +65,14 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         brokerSubscribe
             .forName("Invalid")
             .test()
-            .assertValue(ZorroReturnValues.ASSET_UNAVAILABLE.getValue())
-            .assertComplete();
+            .assertValue(ZorroReturnValues.ASSET_UNAVAILABLE.getValue());
     }
 
     @Test
     public void whenAssetAlreadySubscribedAssetIsAvailable() {
         stubIsSubscribed().thenReturn(true);
 
-        subscribe()
-            .assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue())
-            .assertComplete();
+        subscribe().assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue());
     }
 
     public class WhenAssetNotSubscribed {
@@ -92,8 +89,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
             when(accountInfoMock.currency()).thenReturn(baseCurrencyForTest);
 
             subscribe()
-                .assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue())
-                .assertComplete();
+                .assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue());
 
             verify(subscriptionMock).set(instrumentsCaptor.capture());
             assertThat(instrumentsCaptor.getValue(), containsInAnyOrder(instrumentForTest));
@@ -103,9 +99,7 @@ public class BrokerSubscribeTest extends CommonUtilForTest {
         public void whenAssetHasNoAccountCurrencyAssetAndCrossAssetsAreSubscribed() {
             when(accountInfoMock.currency()).thenReturn(CurrencyFactory.BRL);
 
-            subscribe()
-                .assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue())
-                .assertComplete();
+            subscribe().assertValue(ZorroReturnValues.ASSET_AVAILABLE.getValue());
 
             verify(subscriptionMock).set(instrumentsCaptor.capture());
             assertThat(instrumentsCaptor.getValue(), containsInAnyOrder(instrumentForTest,

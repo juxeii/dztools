@@ -15,6 +15,7 @@ public class BrokerBuy {
     private final OrderRepository orderRepository;
     private final TradeUtility tradeUtility;
     private final OrderLabelUtil orderLabelUtil;
+
     private final static double oppositeClose = -1;
 
     public BrokerBuy(final SubmitParamsRunner submitParamsRunner,

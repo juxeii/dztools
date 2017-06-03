@@ -75,13 +75,6 @@ public class DummySubmitRunnerTest extends CommonUtilForTest {
             .consumerByEventType()
             .get(OrderEventType.SUBMIT_REJECTED);
         rejectConsumer.accept(orderEventA);
-        verify(dummyMessageHandlerMock).handleOrderEvent(orderEventA);
-
-        final Consumer<OrderEvent> okConsumer = submitParams
-            .composeData()
-            .consumerByEventType()
-            .get(OrderEventType.SUBMIT_OK);
-        okConsumer.accept(orderEventA);
-        verify(orderMockA).close();
+        verify(dummyMessageHandlerMock).handleRejectEvent(orderEventA);
     }
 }

@@ -7,6 +7,7 @@ import com.dukascopy.api.IMessage;
 import com.dukascopy.api.IOrder;
 import com.jforex.programming.order.event.OrderEvent;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
 
@@ -15,7 +16,7 @@ public class DummyMessageHandler {
     private final Observable<IMessage> orderMessages;
     private final BehaviorSubject<Boolean> wasOffline = BehaviorSubject.createDefault(false);
 
-    private final static String systemOfflinePrefix = "SYSTEM_UNAVAILABLE";
+    private final static String systemUnavailablePrefix = "SYSTEM_UNAVAILABLE";
     private final static Logger logger = LogManager.getLogger(DummyMessageHandler.class);
 
     public DummyMessageHandler(final Observable<IMessage> orderMessages) {
@@ -26,7 +27,7 @@ public class DummyMessageHandler {
         return wasOffline.getValue();
     }
 
-    public void handleOrderEvent(final OrderEvent orderEvent) {
+    public void handleRejectEvent(final OrderEvent orderEvent) {
         final IOrder order = orderEvent.order();
         orderMessages
             .filter(message -> message.getOrder() != null)
@@ -35,13 +36,20 @@ public class DummyMessageHandler {
             .map(IMessage::getContent)
             .subscribe(msgContent -> {
                 logger.debug("Received message content for dummy order: " + msgContent);
-                if (msgContent.startsWith(systemOfflinePrefix)) {
-                    logger.debug("System offline message for dummy order received -> market is closed.");
+                if (msgContent.startsWith(systemUnavailablePrefix)) {
+                    logger.debug("System unavailable message for dummy order received -> market is closed.");
                     wasOffline.onNext(true);
-                } else {
-                    logger.debug("Reject message from dummy order received -> market is open.");
+                } else
                     wasOffline.onNext(false);
-                }
             });
+    }
+
+    public void handleOKEvent(final OrderEvent orderEvent) {
+        logger.debug("Dummy order was opened -> market is open.");
+        wasOffline.onNext(false);
+        final IOrder order = orderEvent.order();
+        Completable
+            .fromAction(order::close)
+            .subscribe();
     }
 }

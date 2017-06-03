@@ -1,14 +1,10 @@
 package com.jforex.dzjforex.brokertime.dummy;
 
 import com.dukascopy.api.IEngine.OrderCommand;
-import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.OrderUtil;
-import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.task.params.basic.SubmitParams;
-
-import io.reactivex.Completable;
 
 public class DummySubmitRunner {
 
@@ -36,16 +32,9 @@ public class DummySubmitRunner {
     public SubmitParams submitParams() {
         return SubmitParams
             .withOrderParams(orderParams())
-            .doOnSubmitReject(dummyMessageHandler::handleOrderEvent)
-            .doOnSubmit(this::close)
+            .doOnSubmit(dummyMessageHandler::handleOKEvent)
+            .doOnSubmitReject(dummyMessageHandler::handleRejectEvent)
             .build();
-    }
-
-    private void close(final OrderEvent orderEvent) {
-        final IOrder order = orderEvent.order();
-        Completable
-            .fromAction(order::close)
-            .subscribe();
     }
 
     public OrderParams orderParams() {

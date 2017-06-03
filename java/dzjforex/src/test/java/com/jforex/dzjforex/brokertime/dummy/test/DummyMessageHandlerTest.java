@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IMessage;
+import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
@@ -37,7 +38,7 @@ public class DummyMessageHandlerTest extends CommonUtilForTest {
     }
 
     private void callHandlerOrderEvent() {
-        dummyMessageHandler.handleOrderEvent(orderEventA);
+        dummyMessageHandler.handleRejectEvent(orderEventA);
         orderMessages.onNext(messageMock);
     }
 
@@ -60,6 +61,15 @@ public class DummyMessageHandlerTest extends CommonUtilForTest {
         when(messageMock.getOrder()).thenReturn(orderMockB);
 
         callHandlerOrderEvent();
+
+        assertWasOffline(false);
+    }
+
+    @Test
+    public void handleOKClosesOrder() throws JFException {
+        dummyMessageHandler.handleOKEvent(orderEventA);
+
+        verify(orderMockA).close();
 
         assertWasOffline(false);
     }

@@ -23,7 +23,7 @@ public class SubmitParamsRunner {
         return Single
             .defer(() -> submitParamsFactory.get(instrument, brokerBuyData))
             .flatMapObservable(orderUtil::paramsToObservable)
-            .map(OrderEvent::order)
-            .lastOrError();
+            .lastOrError()
+            .map(OrderEvent::order);
     }
 }

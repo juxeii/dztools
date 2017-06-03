@@ -100,16 +100,6 @@ public class ZorroReturnValuesTest {
     }
 
     @Test
-    public void historyDownloadFAILIsZero() {
-        assertEnumValue(ZorroReturnValues.HISTORY_DOWNLOAD_FAIL.getValue(), 0);
-    }
-
-    @Test
-    public void historyDownloadOKIsOne() {
-        assertEnumValue(ZorroReturnValues.HISTORY_DOWNLOAD_OK.getValue(), 1);
-    }
-
-    @Test
     public void brokerCommandOKIsOne() {
         assertEnumValue(ZorroReturnValues.BROKER_COMMAND_OK.getValue(), 1);
     }

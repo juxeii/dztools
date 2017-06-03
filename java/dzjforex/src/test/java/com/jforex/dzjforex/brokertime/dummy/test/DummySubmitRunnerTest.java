@@ -15,6 +15,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 import com.dukascopy.api.IEngine.OrderCommand;
+import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
 import com.jforex.dzjforex.brokertime.dummy.DummySubmitRunner;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
@@ -35,9 +36,9 @@ public class DummySubmitRunnerTest extends CommonUtilForTest {
     @Captor
     private ArgumentCaptor<SubmitParams> submitParamsCaptor;
     private final String orderLabel = "DummyOrder";
-    private final double invalidSLPrice = 1.12345678;
     private final double amount = 0.001;
-    private final OrderCommand orderCommand = OrderCommand.BUY;
+    private final double price = 42.0;
+    private final OrderCommand orderCommand = OrderCommand.BUYSTOP;
 
     @Before
     public void setUp() {
@@ -56,7 +57,7 @@ public class DummySubmitRunnerTest extends CommonUtilForTest {
     }
 
     @Test
-    public void submitParamsAreCorrect() {
+    public void submitParamsAreCorrect() throws JFException {
         dummySubmitRunner.start();
 
         verify(orderUtilMock).execute(submitParamsCaptor.capture());
@@ -67,13 +68,20 @@ public class DummySubmitRunnerTest extends CommonUtilForTest {
         assertThat(orderParams.orderCommand(), equalTo(orderCommand));
         assertThat(orderParams.amount(), equalTo(amount));
         assertThat(orderParams.label(), equalTo(orderLabel));
-        assertThat(orderParams.stopLossPrice(), equalTo(invalidSLPrice));
+        assertThat(orderParams.price(), equalTo(price));
 
-        final Consumer<OrderEvent> orderEventConsumer = submitParams
+        final Consumer<OrderEvent> rejectConsumer = submitParams
             .composeData()
             .consumerByEventType()
             .get(OrderEventType.SUBMIT_REJECTED);
-        orderEventConsumer.accept(orderEventA);
+        rejectConsumer.accept(orderEventA);
         verify(dummyMessageHandlerMock).handleOrderEvent(orderEventA);
+
+        final Consumer<OrderEvent> okConsumer = submitParams
+            .composeData()
+            .consumerByEventType()
+            .get(OrderEventType.SUBMIT_OK);
+        okConsumer.accept(orderEventA);
+        verify(orderMockA).close();
     }
 }

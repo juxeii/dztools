@@ -15,7 +15,7 @@ public class DummyMessageHandler {
     private final Observable<IMessage> orderMessages;
     private final BehaviorSubject<Boolean> wasOffline = BehaviorSubject.createDefault(false);
 
-    private final static String systemOfflinePrefix = "System offline";
+    private final static String systemOfflinePrefix = "SYSTEM_UNAVAILABLE";
     private final static Logger logger = LogManager.getLogger(DummyMessageHandler.class);
 
     public DummyMessageHandler(final Observable<IMessage> orderMessages) {

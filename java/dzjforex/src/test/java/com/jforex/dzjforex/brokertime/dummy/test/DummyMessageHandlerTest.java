@@ -24,7 +24,7 @@ public class DummyMessageHandlerTest extends CommonUtilForTest {
     @Mock
     private IMessage messageMock;
     private final Subject<IMessage> orderMessages = PublishSubject.create();
-    private static String systemOfflinePrefix = "System offline";
+    private static String systemOfflinePrefix = "SYSTEM_UNAVAILABLE";
     private static String systemOnlinePrefix = "System online";
 
     @Before

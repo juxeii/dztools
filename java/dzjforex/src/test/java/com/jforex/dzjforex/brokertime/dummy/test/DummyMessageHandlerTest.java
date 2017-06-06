@@ -5,15 +5,11 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
-
-@RunWith(HierarchicalContextRunner.class)
 public class DummyMessageHandlerTest extends CommonUtilForTest {
 
     private DummyMessageHandler dummyMessageHandler;

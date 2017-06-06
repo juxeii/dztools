@@ -21,24 +21,22 @@ public class DummyMessageHandler {
     }
 
     public void handleRejectEvent(final OrderEvent orderEvent) {
-        final String messageContent = orderEvent
-            .message()
-            .getContent();
-
-        if (messageContent.startsWith(systemUnavailablePrefix)) {
-            logger.debug("System unavailable message for dummy order received -> market is closed.");
-            wasOffline.onNext(true);
-        } else
-            wasOffline.onNext(false);
+        Single
+            .just(orderEvent
+                .message()
+                .getContent())
+            .filter(content -> content.startsWith(systemUnavailablePrefix))
+            .doOnSuccess(content -> logger.debug("System unavailable message received -> market is closed."))
+            .isEmpty()
+            .subscribe(isSystemAvailable -> wasOffline.onNext(!isSystemAvailable));
     }
 
     public void handleOKEvent(final OrderEvent orderEvent) {
+        logger.debug("Dummy order was opened -> market is open.");
+        wasOffline.onNext(false);
+
         Single
             .just(orderEvent.order())
-            .doOnSubscribe(d -> {
-                wasOffline.onNext(false);
-                logger.debug("Dummy order was opened -> market is open.");
-            })
             .flatMapCompletable(order -> Completable.fromAction(order::close))
             .subscribe();
     }

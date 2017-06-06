@@ -31,14 +31,14 @@ public class DummySubmit {
 
     private void checkForSubmit(final long serverTime) {
         final int serverMinute = serverMinute(serverTime);
-        if (!submitTime.hasValue())
-            startNewSubmit(serverTime, serverMinute);
-        else
+        if (submitTime.hasValue())
             Single
                 .just(serverMinute)
                 .filter(minute -> minute % minuteForHour == 0)
                 .filter(minute -> serverMinute(submitTime.getValue()) != minute)
                 .subscribe(minute -> startNewSubmit(serverTime, minute));
+        else
+            startNewSubmit(serverTime, serverMinute);
     }
 
     private void startNewSubmit(final long serverTime,

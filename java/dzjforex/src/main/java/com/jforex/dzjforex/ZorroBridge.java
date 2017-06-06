@@ -28,8 +28,8 @@ import com.jforex.dzjforex.brokertrade.BrokerTrade;
 import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
+import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.order.TradeUtility;
-import com.jforex.programming.math.CalculationUtil;
 
 import io.reactivex.Single;
 
@@ -50,7 +50,7 @@ public class ZorroBridge {
     private BrokerStop brokerStop;
     private BrokerHistory brokerHistory;
     private TradeUtility tradeUtility;
-    private CalculationUtil calculationUtil;
+    private PriceProvider priceProvider;
     private long strategyID;
 
     private final static PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
@@ -84,7 +84,7 @@ public class ZorroBridge {
         brokerStop = components.brokerStop();
         brokerHistory = components.brokerHistory();
         tradeUtility = components.tradeUtility();
-        calculationUtil = components.calculationUtil();
+        priceProvider = components.priceProvider();
     }
 
     public int doLogin(final String username,
@@ -141,7 +141,7 @@ public class ZorroBridge {
                              final double tradeParams[]) {
         final BrokerTradeData brokerTradeData = new BrokerTradeData(orderID,
                                                                     tradeParams,
-                                                                    calculationUtil);
+                                                                    priceProvider);
         return brokerTrade
             .fillParams(brokerTradeData)
             .blockingGet();

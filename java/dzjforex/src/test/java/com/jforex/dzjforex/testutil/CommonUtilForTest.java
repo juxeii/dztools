@@ -39,6 +39,7 @@ import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
+import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.misc.RxUtility;
 import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.order.OrderLabelUtil;
@@ -97,6 +98,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected InfoStrategy infoStrategyMock;
     @Mock
     protected CalculationUtil calculationUtilMock;
+    @Mock
+    protected PriceProvider priceProviderMock;
     @Mock
     protected TickQuoteProvider tickQuoteProviderMock;
     @Mock

@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
@@ -20,6 +21,7 @@ public class PriceProviderTest extends CommonUtilForTest {
     private final double ask = 1.12345;
     private final double bid = 1.12327;
     private final double spread = 1.8;
+    private final double priceForOrder = 1.14567;
 
     @Before
     public void setUp() {
@@ -48,5 +50,16 @@ public class PriceProviderTest extends CommonUtilForTest {
         when(instrumentUtilMock.spread()).thenReturn(spread);
 
         assertThat(priceProvider.spread(instrumentForTest), equalTo(spread));
+    }
+
+    @Test
+    public void forOrderIsCorrect() {
+        when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
+        when(orderMockA.getOrderCommand()).thenReturn(OrderCommand.BUY);
+
+        when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, OrderCommand.BUY))
+            .thenReturn(priceForOrder);
+
+        assertThat(priceProvider.forOrder(orderMockA), equalTo(priceForOrder));
     }
 }

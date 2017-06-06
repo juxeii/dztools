@@ -8,6 +8,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
+import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.programming.instrument.InstrumentUtil;
 import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.math.MathUtil;
@@ -18,6 +19,7 @@ import io.reactivex.Single;
 public class StopLoss {
 
     private final CalculationUtil calculationUtil;
+    private final PriceProvider priceProvider;
     private final double minPipsForSL;
 
     private final static double noStopLossDistance = 0.0;
@@ -25,8 +27,10 @@ public class StopLoss {
     private final static Logger logger = LogManager.getLogger(StopLoss.class);
 
     public StopLoss(final CalculationUtil calculationUtil,
+                    final PriceProvider priceProvider,
                     final double minPipsForSL) {
         this.calculationUtil = calculationUtil;
+        this.priceProvider = priceProvider;
         this.minPipsForSL = minPipsForSL;
     }
 
@@ -81,10 +85,9 @@ public class StopLoss {
     private double pipDistanceOfPrices(final IOrder order,
                                        final double slPrice) {
         final Instrument instrument = order.getInstrument();
-        final double currentPrice = calculationUtil.currentQuoteForOrderCommand(instrument,
-                                                                                order.getOrderCommand());
+        final double currentOrderPrice = priceProvider.forOrder(order);
         return InstrumentUtil.pipDistanceOfPrices(instrument,
-                                                  currentPrice,
+                                                  currentOrderPrice,
                                                   slPrice);
     }
 

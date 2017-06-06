@@ -5,23 +5,23 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
-import com.jforex.programming.math.CalculationUtil;
+import com.jforex.dzjforex.misc.PriceProvider;
 
 public class BrokerTradeData {
 
     private final int orderID;
     private final double tradeParams[];
-    private final CalculationUtil calculationUtil;
+    private final PriceProvider priceProvider;
 
     private final static double rollOverNotSupported = 0.0;
     private final static Logger logger = LogManager.getLogger(BrokerTradeData.class);
 
     public BrokerTradeData(final int orderID,
                            final double tradeParams[],
-                           final CalculationUtil calculationUtil) {
+                           final PriceProvider priceProvider) {
         this.orderID = orderID;
         this.tradeParams = tradeParams;
-        this.calculationUtil = calculationUtil;
+        this.priceProvider = priceProvider;
     }
 
     public int orderID() {
@@ -31,7 +31,7 @@ public class BrokerTradeData {
     public void fill(final IOrder order) {
         final Instrument instrument = order.getInstrument();
         final double pOpen = order.getOpenPrice();
-        final double pClose = calculationUtil.currentQuoteForOrderCommand(instrument, order.getOrderCommand());
+        final double pClose = priceProvider.forOrder(order);
         final double pRoll = rollOverNotSupported;
         final double pProfit = order.getProfitLossInAccountCurrency();
 

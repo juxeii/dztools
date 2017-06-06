@@ -85,6 +85,7 @@ public class Components {
     private OrderUtil orderUtil;
     private StrategyUtil strategyUtil;
     private CalculationUtil calculationUtil;
+    private PriceProvider priceProvider;
     private TickQuoteRepository tickQuoteRepository;
     private IDataService dataService;
     private ServerTimeProvider serverTimeProvider;
@@ -213,14 +214,16 @@ public class Components {
     }
 
     private void initTradeComponents() {
-        final PriceProvider priceProvider = new PriceProvider(strategyUtil);
+        priceProvider = new PriceProvider(strategyUtil);
         retryParamsForTrading = retryParamsForTrading();
         tradeUtility = new TradeUtility(orderLookup,
                                         accountInfo,
                                         orderLabelUtil,
                                         pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, priceProvider);
-        final StopLoss stopLoss = new StopLoss(calculationUtil, pluginConfig.minPipsForSL());
+        final StopLoss stopLoss = new StopLoss(calculationUtil,
+                                               priceProvider,
+                                               pluginConfig.minPipsForSL());
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
                                                                               stopLoss,
                                                                               orderLabelUtil);
@@ -264,6 +267,10 @@ public class Components {
 
     public CalculationUtil calculationUtil() {
         return calculationUtil;
+    }
+
+    public PriceProvider priceProvider() {
+        return priceProvider;
     }
 
     public BrokerLogin brokerLogin() {

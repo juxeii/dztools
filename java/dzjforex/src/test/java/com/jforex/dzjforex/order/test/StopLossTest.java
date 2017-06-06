@@ -11,7 +11,6 @@ import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 import com.jforex.programming.instrument.InstrumentUtil;
-import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.math.MathUtil;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
@@ -23,8 +22,6 @@ public class StopLossTest extends CommonUtilForTest {
     private StopLoss stopLoss;
 
     @Mock
-    private CalculationUtil calculationUtilMock;
-    @Mock
     private BrokerBuyData brokerBuyDataMock;
     private final OrderCommand orderCommand = OrderCommand.BUY;
     private final double dStopDist = 8.5;
@@ -34,7 +31,9 @@ public class StopLossTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        stopLoss = new StopLoss(calculationUtilMock, minPipsForSL);
+        stopLoss = new StopLoss(calculationUtilMock,
+                                priceProviderMock,
+                                minPipsForSL);
     }
 
     public class ForSubmit {
@@ -119,8 +118,7 @@ public class StopLossTest extends CommonUtilForTest {
         final double priceForMock = InstrumentUtil.addPipsToPrice(instrumentForTest,
                                                                   slPrice,
                                                                   25.0);
-        when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, orderCommand))
-            .thenReturn(priceForMock);
+        when(priceProviderMock.forOrder(orderMockA)).thenReturn(priceForMock);
 
         stopLoss
             .forSetSL(orderMockA, slPrice)
@@ -139,7 +137,7 @@ public class StopLossTest extends CommonUtilForTest {
         }
 
         private OngoingStubbing<Double> stubCurrentPrice() {
-            return when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, orderCommand));
+            return when(priceProviderMock.forOrder(orderMockA));
         }
 
         private void assertSLWithPipDistance(final double pipDistance) {

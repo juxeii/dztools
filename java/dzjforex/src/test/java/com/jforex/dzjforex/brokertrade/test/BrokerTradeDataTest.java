@@ -27,13 +27,13 @@ public class BrokerTradeDataTest extends CommonUtilForTest {
 
         brokerTradeData = new BrokerTradeData(orderID,
                                               tradeParams,
-                                              calculationUtilMock);
+                                              priceProviderMock);
 
         brokerTradeData.fill(orderMockA);
     }
 
     private void setUpMocks() {
-        when(calculationUtilMock.currentQuoteForOrderCommand(instrumentForTest, OrderCommand.BUY)).thenReturn(price);
+        when(priceProviderMock.forOrder(orderMockA)).thenReturn(price);
 
         when(orderMockA.getInstrument()).thenReturn(instrumentForTest);
         when(orderMockA.getOrderCommand()).thenReturn(OrderCommand.BUY);

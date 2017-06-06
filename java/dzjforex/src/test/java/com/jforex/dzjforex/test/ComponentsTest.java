@@ -101,6 +101,11 @@ public class ComponentsTest extends CommonUtilForTest {
         }
 
         @Test
+        public void assertCalculationUtil() {
+            assertNotNull(components.calculationUtil());
+        }
+
+        @Test
         public void assertBrokerTime() {
             assertNotNull(components.brokerTime());
         }

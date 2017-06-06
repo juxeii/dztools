@@ -84,6 +84,7 @@ public class Components {
     private IEngine engine;
     private OrderUtil orderUtil;
     private StrategyUtil strategyUtil;
+    private CalculationUtil calculationUtil;
     private TickQuoteRepository tickQuoteRepository;
     private IDataService dataService;
     private ServerTimeProvider serverTimeProvider;
@@ -149,8 +150,9 @@ public class Components {
     }
 
     private void initAccountComponents() {
+        calculationUtil = strategyUtil.calculationUtil();
         accountInfo = new AccountInfo(infoStrategy.getAccount(),
-                                      strategyUtil.calculationUtil(),
+                                      calculationUtil,
                                       pluginConfig);
         brokerAccount = new BrokerAccount(accountInfo);
         subscription = new Subscription(client);
@@ -218,7 +220,6 @@ public class Components {
                                         orderLabelUtil,
                                         pluginConfig);
         brokerAsset = new BrokerAsset(accountInfo, priceProvider);
-        final CalculationUtil calculationUtil = strategyUtil.calculationUtil();
         final StopLoss stopLoss = new StopLoss(calculationUtil, pluginConfig.minPipsForSL());
         final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
                                                                               stopLoss,
@@ -228,7 +229,7 @@ public class Components {
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);
         final CloseParamsRunner closeParamsRunner = new CloseParamsRunner(orderUtil, orderCloseParams);
         final SetSLParamsRunner setSLParamsRunner = new SetSLParamsRunner(orderUtil, orderSetSLParams);
-        brokerTrade = new BrokerTrade(tradeUtility, calculationUtil);
+        brokerTrade = new BrokerTrade(tradeUtility);
         brokerBuy = new BrokerBuy(submitParamsRunner,
                                   orderRepository,
                                   tradeUtility);
@@ -259,6 +260,10 @@ public class Components {
 
     public Zorro zorro() {
         return zorro;
+    }
+
+    public CalculationUtil calculationUtil() {
+        return calculationUtil;
     }
 
     public BrokerLogin brokerLogin() {

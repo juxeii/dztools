@@ -45,6 +45,7 @@ import com.jforex.dzjforex.order.OrderLookup;
 import com.jforex.dzjforex.order.TradeUtility;
 import com.jforex.programming.connection.LoginCredentials;
 import com.jforex.programming.currency.CurrencyFactory;
+import com.jforex.programming.math.CalculationUtil;
 import com.jforex.programming.order.OrderUtil;
 import com.jforex.programming.order.event.OrderEvent;
 import com.jforex.programming.order.event.OrderEventType;
@@ -91,6 +92,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected OrderUtil orderUtilMock;
     @Mock
     protected InfoStrategy infoStrategyMock;
+    @Mock
+    protected CalculationUtil calculationUtilMock;
     @Mock
     protected TickQuoteProvider tickQuoteProviderMock;
     @Mock
@@ -166,6 +169,7 @@ public class CommonUtilForTest extends BDDMockito {
         when(infoStrategyMock.getAccount()).thenReturn(accountMock);
 
         when(strategyUtilMock.tickQuoteProvider()).thenReturn(tickQuoteProviderMock);
+        when(strategyUtilMock.calculationUtil()).thenReturn(calculationUtilMock);
 
         when(contextMock.getEngine()).thenReturn(engineMock);
         when(contextMock.getAccount()).thenReturn(accountMock);

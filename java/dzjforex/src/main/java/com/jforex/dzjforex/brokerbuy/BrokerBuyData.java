@@ -2,6 +2,7 @@ package com.jforex.dzjforex.brokerbuy;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
+import com.jforex.dzjforex.order.TradeUtility;
 
 public class BrokerBuyData {
 
@@ -12,15 +13,16 @@ public class BrokerBuyData {
     private final double amount;
 
     public BrokerBuyData(final String assetName,
-                         final double amount,
-                         final OrderCommand orderCommand,
+                         final int contracts,
                          final double slDistance,
-                         final double tradeParams[]) {
+                         final double tradeParams[],
+                         final TradeUtility tradeUtility) {
         this.assetName = assetName;
-        this.amount = amount;
-        this.orderCommand = orderCommand;
         this.slDistance = slDistance;
         this.tradeParams = tradeParams;
+
+        amount = tradeUtility.contractsToAmount(contracts);
+        orderCommand = tradeUtility.orderCommandForContracts(contracts);
     }
 
     public String assetName() {

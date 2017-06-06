@@ -4,7 +4,6 @@ import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.brokeraccount.BrokerAccount;
@@ -30,6 +29,7 @@ import com.jforex.dzjforex.brokertrade.BrokerTradeData;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.order.TradeUtility;
+import com.jforex.programming.math.CalculationUtil;
 
 import io.reactivex.Single;
 
@@ -50,6 +50,7 @@ public class ZorroBridge {
     private BrokerStop brokerStop;
     private BrokerHistory brokerHistory;
     private TradeUtility tradeUtility;
+    private CalculationUtil calculationUtil;
     private long strategyID;
 
     private final static PluginConfig pluginConfig = ConfigFactory.create(PluginConfig.class);
@@ -83,6 +84,7 @@ public class ZorroBridge {
         brokerStop = components.brokerStop();
         brokerHistory = components.brokerHistory();
         tradeUtility = components.tradeUtility();
+        calculationUtil = components.calculationUtil();
     }
 
     public int doLogin(final String username,
@@ -137,7 +139,9 @@ public class ZorroBridge {
 
     public int doBrokerTrade(final int orderID,
                              final double tradeParams[]) {
-        final BrokerTradeData brokerTradeData = new BrokerTradeData(orderID, tradeParams);
+        final BrokerTradeData brokerTradeData = new BrokerTradeData(orderID,
+                                                                    tradeParams,
+                                                                    calculationUtil);
         return brokerTrade
             .fillParams(brokerTradeData)
             .blockingGet();
@@ -147,13 +151,11 @@ public class ZorroBridge {
                            final int contracts,
                            final double slDistance,
                            final double tradeParams[]) {
-        final double amount = tradeUtility.contractsToAmount(contracts);
-        final OrderCommand orderCommand = tradeUtility.orderCommandForContracts(contracts);
         final BrokerBuyData brokerBuyData = new BrokerBuyData(assetName,
-                                                              amount,
-                                                              orderCommand,
+                                                              contracts,
                                                               slDistance,
-                                                              tradeParams);
+                                                              tradeParams,
+                                                              tradeUtility);
         return brokerBuy
             .openTrade(brokerBuyData)
             .blockingGet();

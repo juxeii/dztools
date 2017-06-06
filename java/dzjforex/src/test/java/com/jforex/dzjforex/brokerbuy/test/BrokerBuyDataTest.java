@@ -15,6 +15,7 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
     private BrokerBuyData brokerBuyData;
 
     private final double tradeParams[] = new double[1];
+    private final int contracts = 12500;
     private final double amount = 0.0125;
     private final double dStopDist = 0.0034;
     private final double openPrice = 1.12345;
@@ -22,15 +23,22 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
 
     @Before
     public void setUp() {
-        when(orderMockA.getOpenPrice()).thenReturn(openPrice);
+        setUpMocks();
 
         brokerBuyData = new BrokerBuyData(instrumentNameForTest,
-                                          amount,
-                                          orderCommand,
+                                          contracts,
                                           dStopDist,
-                                          tradeParams);
+                                          tradeParams,
+                                          tradeUtilityMock);
 
         brokerBuyData.fillOpenPrice(orderMockA);
+    }
+
+    private void setUpMocks() {
+        when(orderMockA.getOpenPrice()).thenReturn(openPrice);
+
+        when(tradeUtilityMock.contractsToAmount(contracts)).thenReturn(amount);
+        when(tradeUtilityMock.orderCommandForContracts(contracts)).thenReturn(orderCommand);
     }
 
     @Test

@@ -13,8 +13,6 @@ import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
-import io.reactivex.observers.TestObserver;
-
 public class InfoStrategyTest extends CommonUtilForTest {
 
     private InfoStrategy infoStrategy;
@@ -30,6 +28,7 @@ public class InfoStrategyTest extends CommonUtilForTest {
         infoStrategy.onJFStop();
         infoStrategy.onJFAccount(null);
         infoStrategy.onJFTick(null, null);
+        infoStrategy.onJFMessage(null);
         infoStrategy.onJFBar(null,
                              null,
                              null,
@@ -54,18 +53,5 @@ public class InfoStrategyTest extends CommonUtilForTest {
     @Test
     public void assertValidHistory() {
         assertThat(infoStrategy.getHistory(), equalTo(historyMock));
-    }
-
-    @Test
-    public void assertValidMessagePublisher() throws JFException {
-        final TestObserver<IMessage> messages = infoStrategy
-            .orderMessages()
-            .test();
-
-        infoStrategy.onJFMessage(messageMock);
-
-        messages
-            .assertValue(messageMock)
-            .assertNotComplete();
     }
 }

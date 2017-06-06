@@ -6,31 +6,24 @@ import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 
-import com.dukascopy.api.IMessage;
 import com.dukascopy.api.JFException;
 import com.jforex.dzjforex.brokertime.dummy.DummyMessageHandler;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 @RunWith(HierarchicalContextRunner.class)
 public class DummyMessageHandlerTest extends CommonUtilForTest {
 
     private DummyMessageHandler dummyMessageHandler;
 
-    @Mock
-    private IMessage messageMock;
-    private final Subject<IMessage> orderMessages = PublishSubject.create();
     private static String systemOfflinePrefix = "SYSTEM_UNAVAILABLE";
     private static String systemOnlinePrefix = "System online";
 
     @Before
     public void setUp() {
-        dummyMessageHandler = new DummyMessageHandler(orderMessages);
+        dummyMessageHandler = new DummyMessageHandler();
     }
 
     private void assertWasOffline(final boolean expectedWasOffline) {
@@ -39,29 +32,10 @@ public class DummyMessageHandlerTest extends CommonUtilForTest {
 
     private void callHandlerOrderEvent() {
         dummyMessageHandler.handleRejectEvent(orderEventA);
-        orderMessages.onNext(messageMock);
     }
 
     @Test
     public void afterCreationMessageWasNotOffline() {
-        assertWasOffline(false);
-    }
-
-    @Test
-    public void whenOrderOfMessageIsNullReturnValueIsNotOffline() {
-        when(messageMock.getOrder()).thenReturn(null);
-
-        callHandlerOrderEvent();
-
-        assertWasOffline(false);
-    }
-
-    @Test
-    public void whenOrderOfMessageDoesNotMatchReturnValueIsNotOffline() {
-        when(messageMock.getOrder()).thenReturn(orderMockB);
-
-        callHandlerOrderEvent();
-
         assertWasOffline(false);
     }
 
@@ -74,46 +48,21 @@ public class DummyMessageHandlerTest extends CommonUtilForTest {
         assertWasOffline(false);
     }
 
-    public class WhenOrderOfMessageMatchesOrderEvent {
+    @Test
+    public void handleRejectEventForSystemAvailableReturnValueIsNotOffline() {
+        when(messageMock.getContent()).thenReturn(systemOnlinePrefix);
 
-        @Before
-        public void setUp() {
-            when(messageMock.getOrder()).thenReturn(orderMockA);
-        }
+        callHandlerOrderEvent();
 
-        @Test
-        public void whenTypeOfMessageIsNotSubmitRejectReturnValueIsNotOffline() {
-            when(messageMock.getType()).thenReturn(IMessage.Type.NOTIFICATION);
+        assertWasOffline(false);
+    }
 
-            callHandlerOrderEvent();
+    @Test
+    public void handleRejectEventForSystemUnavailableReturnValueIsOffline() {
+        when(messageMock.getContent()).thenReturn(systemOfflinePrefix);
 
-            assertWasOffline(false);
-        }
+        callHandlerOrderEvent();
 
-        public class WhenTypeOfMessageIsSubmitReject {
-
-            @Before
-            public void setUp() {
-                when(messageMock.getType()).thenReturn(IMessage.Type.ORDER_SUBMIT_REJECTED);
-            }
-
-            @Test
-            public void whenContentSignalsSystemOnlineReturnValueIsNotOffline() {
-                when(messageMock.getContent()).thenReturn(systemOnlinePrefix);
-
-                callHandlerOrderEvent();
-
-                assertWasOffline(false);
-            }
-
-            @Test
-            public void whenContentSignalsSystemOfflineReturnValueIsOffline() {
-                when(messageMock.getContent()).thenReturn(systemOfflinePrefix);
-
-                callHandlerOrderEvent();
-
-                assertWasOffline(true);
-            }
-        }
+        assertWasOffline(true);
     }
 }

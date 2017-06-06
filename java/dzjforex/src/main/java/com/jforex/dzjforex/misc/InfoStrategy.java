@@ -9,16 +9,12 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
 import com.dukascopy.api.Period;
-import com.jforex.programming.rx.JFHotPublisher;
 import com.jforex.programming.strategy.JForexUtilsStrategy;
 import com.jforex.programming.strategy.StrategyUtil;
-
-import io.reactivex.Observable;
 
 public class InfoStrategy extends JForexUtilsStrategy {
 
     private IContext context;
-    private final JFHotPublisher<IMessage> messagePublisher = new JFHotPublisher<>();
 
     public IContext getContext() {
         return context;
@@ -36,10 +32,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
         return strategyUtil;
     }
 
-    public Observable<IMessage> orderMessages() {
-        return messagePublisher.observable();
-    }
-
     @Override
     public void onJFAccount(final IAccount account) throws JFException {
     }
@@ -53,7 +45,6 @@ public class InfoStrategy extends JForexUtilsStrategy {
 
     @Override
     public void onJFMessage(final IMessage message) throws JFException {
-        messagePublisher.onNext(message);
     }
 
     @Override

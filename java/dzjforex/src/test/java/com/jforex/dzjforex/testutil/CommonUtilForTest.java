@@ -23,6 +23,7 @@ import com.dukascopy.api.IContext;
 import com.dukascopy.api.ICurrency;
 import com.dukascopy.api.IEngine;
 import com.dukascopy.api.IHistory;
+import com.dukascopy.api.IMessage;
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.JFException;
@@ -88,6 +89,8 @@ public class CommonUtilForTest extends BDDMockito {
     protected IOrder orderMockA;
     @Mock
     protected IOrder orderMockB;
+    @Mock
+    protected IMessage messageMock;
     @Mock
     protected OrderUtil orderUtilMock;
     @Mock
@@ -201,9 +204,11 @@ public class CommonUtilForTest extends BDDMockito {
         when(brokerStopDataMock.slPrice()).thenReturn(slPrice);
 
         orderEventA = new OrderEvent(orderMockA,
+                                     messageMock,
                                      OrderEventType.SUBMIT_OK,
                                      true);
         orderEventB = new OrderEvent(orderMockB,
+                                     messageMock,
                                      OrderEventType.FULLY_FILLED,
                                      true);
 

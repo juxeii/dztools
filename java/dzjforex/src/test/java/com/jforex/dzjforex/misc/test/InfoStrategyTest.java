@@ -36,22 +36,12 @@ public class InfoStrategyTest extends CommonUtilForTest {
     }
 
     @Test
-    public void assertValidStrategyUtil() {
-        assertNull(infoStrategy.strategyUtil());
-    }
-
-    @Test
     public void assertValidContext() {
         assertThat(infoStrategy.getContext(), equalTo(contextMock));
     }
 
     @Test
-    public void assertValidAccount() {
-        assertThat(infoStrategy.getAccount(), equalTo(accountMock));
-    }
-
-    @Test
-    public void assertValidHistory() {
-        assertThat(infoStrategy.getHistory(), equalTo(historyMock));
+    public void assertValidStrategyUtil() {
+        assertNull(infoStrategy.strategyUtil());
     }
 }

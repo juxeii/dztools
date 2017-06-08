@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.brokertime.TimeConvert;
+import com.jforex.dzjforex.misc.TimeConvert;
 import com.jforex.programming.math.MathUtil;
 import com.jforex.programming.misc.DateTimeUtil;
 import com.jforex.programming.quote.BarQuote;
@@ -25,43 +25,52 @@ public class HistoryTickFiller {
     public void fillBarQuote(final BarQuote barQuote,
                              final int startIndex) {
         final IBar bar = barQuote.bar();
-        final double noSpreadAvailable = 0.0;
+        final double open = bar.getOpen();
+        final double close = bar.getClose();
+        final double high = bar.getHigh();
+        final double low = bar.getLow();
+        final double utcTime = TimeConvert.getUTCTimeFromBar(bar);
+        final double spread = 0.0;
+        final double volume = bar.getVolume();
 
-        tickParams[startIndex] = bar.getOpen();
-        tickParams[startIndex + 1] = bar.getClose();
-        tickParams[startIndex + 2] = bar.getHigh();
-        tickParams[startIndex + 3] = bar.getLow();
-        tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromBar(bar);
-        tickParams[startIndex + 5] = noSpreadAvailable;
-        tickParams[startIndex + 6] = bar.getVolume();
+        tickParams[startIndex] = open;
+        tickParams[startIndex + 1] = close;
+        tickParams[startIndex + 2] = high;
+        tickParams[startIndex + 3] = low;
+        tickParams[startIndex + 4] = utcTime;
+        tickParams[startIndex + 5] = spread;
+        tickParams[startIndex + 6] = volume;
         logger.trace("Stored bar for " + barQuote.instrument()
-                + " open " + bar.getOpen()
-                + " close " + bar.getClose()
-                + " high " + bar.getHigh()
-                + " low " + bar.getLow()
+                + " open " + open
+                + " close " + close
+                + " high " + high
+                + " low " + low
                 + " time " + DateTimeUtil.formatMillis(bar.getTime())
-                + " spread " + noSpreadAvailable
-                + " volume " + bar.getVolume());
+                + " spread " + spread
+                + " volume " + volume);
     }
 
     public void fillTickQuote(final TickQuote tickQuote,
                               final int startIndex) {
         final ITick tick = tickQuote.tick();
+        final Instrument instrument = tickQuote.instrument();
         final double ask = tick.getAsk();
         final double bid = tick.getBid();
-        final Instrument instrument = tickQuote.instrument();
+        final double utcTime = TimeConvert.getUTCTimeFromTick(tick);
+        final double spread = MathUtil.roundPrice(ask - bid, instrument);
+        final double volume = tick.getAskVolume();
 
         tickParams[startIndex] = ask;
         tickParams[startIndex + 1] = ask;
         tickParams[startIndex + 2] = ask;
         tickParams[startIndex + 3] = ask;
-        tickParams[startIndex + 4] = TimeConvert.getUTCTimeFromTick(tick);
-        tickParams[startIndex + 5] = MathUtil.roundPrice(ask - bid, instrument);
-        tickParams[startIndex + 6] = tick.getAskVolume();
+        tickParams[startIndex + 4] = utcTime;
+        tickParams[startIndex + 5] = spread;
+        tickParams[startIndex + 6] = volume;
         logger.trace("Stored tick for " + instrument
                 + " ask " + ask
                 + " time " + DateTimeUtil.formatMillis(tick.getTime())
-                + " spread " + MathUtil.roundPrice(ask - bid, instrument)
-                + " volume " + tick.getAskVolume());
+                + " spread " + spread
+                + " volume " + volume);
     }
 }

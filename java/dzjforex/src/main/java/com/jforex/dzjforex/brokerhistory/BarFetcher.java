@@ -5,7 +5,7 @@ import java.util.List;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
-import com.jforex.dzjforex.brokertime.TimeConvert;
+import com.jforex.dzjforex.misc.TimeConvert;
 import com.jforex.programming.quote.BarParams;
 import com.jforex.programming.quote.BarQuote;
 

@@ -34,13 +34,13 @@ import com.jforex.dzjforex.brokeraccount.AccountInfo;
 import com.jforex.dzjforex.brokerlogin.BrokerLoginData;
 import com.jforex.dzjforex.brokersell.BrokerSellData;
 import com.jforex.dzjforex.brokerstop.BrokerStopData;
-import com.jforex.dzjforex.brokertime.TimeConvert;
 import com.jforex.dzjforex.brokertime.TimeWatch;
 import com.jforex.dzjforex.config.PluginConfig;
 import com.jforex.dzjforex.config.ZorroReturnValues;
 import com.jforex.dzjforex.misc.InfoStrategy;
 import com.jforex.dzjforex.misc.PriceProvider;
 import com.jforex.dzjforex.misc.RxUtility;
+import com.jforex.dzjforex.misc.TimeConvert;
 import com.jforex.dzjforex.misc.TimeSpan;
 import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderLookup;
@@ -172,7 +172,6 @@ public class CommonUtilForTest extends BDDMockito {
 
         when(infoStrategyMock.strategyUtil()).thenReturn(strategyUtilMock);
         when(infoStrategyMock.getContext()).thenReturn(contextMock);
-        when(infoStrategyMock.getAccount()).thenReturn(accountMock);
 
         when(strategyUtilMock.tickQuoteProvider()).thenReturn(tickQuoteProviderMock);
         when(strategyUtilMock.calculationUtil()).thenReturn(calculationUtilMock);

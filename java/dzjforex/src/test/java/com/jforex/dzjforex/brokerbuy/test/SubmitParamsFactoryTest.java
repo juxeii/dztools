@@ -38,17 +38,15 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
     public void setUp() {
         setUpMocks();
 
-        submitParamsFactory = new SubmitParamsFactory(retryParamsMock,
-                                                      stopLossMock,
-                                                      orderLabelUtilMock);
+        submitParamsFactory = new SubmitParamsFactory(retryParamsMock, stopLossMock);
     }
 
     private void setUpMocks() {
         when(brokerBuyDataMock.assetName()).thenReturn(instrumentNameForTest);
         when(brokerBuyDataMock.orderCommand()).thenReturn(orderCommand);
         when(brokerBuyDataMock.amount()).thenReturn(amount);
-
-        when(orderLabelUtilMock.create()).thenReturn(orderLabel);
+        when(brokerBuyDataMock.orderLabel()).thenReturn(orderLabel);
+        when(brokerBuyDataMock.orderID()).thenReturn(orderID);
     }
 
     private OngoingStubbing<Single<Double>> stubSetSLResult() {
@@ -67,7 +65,7 @@ public class SubmitParamsFactoryTest extends CommonUtilForTest {
 
         verifyZeroInteractions(tradeUtilityMock);
         verifyZeroInteractions(stopLossMock);
-        verifyZeroInteractions(orderLabelUtilMock);
+        verifyZeroInteractions(brokerBuyDataMock);
     }
 
     @Test

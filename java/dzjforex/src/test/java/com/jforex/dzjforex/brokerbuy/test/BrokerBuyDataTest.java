@@ -10,6 +10,8 @@ import com.dukascopy.api.IEngine.OrderCommand;
 import com.jforex.dzjforex.brokerbuy.BrokerBuyData;
 import com.jforex.dzjforex.testutil.CommonUtilForTest;
 
+import io.reactivex.Maybe;
+
 public class BrokerBuyDataTest extends CommonUtilForTest {
 
     private BrokerBuyData brokerBuyData;
@@ -35,6 +37,9 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
     }
 
     private void setUpMocks() {
+        when(orderLabelUtilMock.create()).thenReturn(orderLabel);
+        when(orderLabelUtilMock.idFromLabel(orderLabel)).thenReturn(Maybe.just(orderID));
+
         when(orderMockA.getOpenPrice()).thenReturn(openPrice);
 
         when(tradeUtilityMock.contractsToAmount(contracts)).thenReturn(amount);
@@ -59,6 +64,16 @@ public class BrokerBuyDataTest extends CommonUtilForTest {
     @Test
     public void assertAmount() {
         assertThat(brokerBuyData.amount(), equalTo(amount));
+    }
+
+    @Test
+    public void assertOrderLabel() {
+        assertThat(brokerBuyData.orderLabel(), equalTo(orderLabel));
+    }
+
+    @Test
+    public void assertOrderID() {
+        assertThat(brokerBuyData.orderID(), equalTo(orderID));
     }
 
     @Test

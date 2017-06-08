@@ -2,6 +2,7 @@ package com.jforex.dzjforex.brokerbuy;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IOrder;
+import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.TradeUtility;
 
 public class BrokerBuyData {
@@ -11,6 +12,8 @@ public class BrokerBuyData {
     private final double tradeParams[];
     private final OrderCommand orderCommand;
     private final double amount;
+    private final String orderLabel;
+    private final int orderID;
 
     public BrokerBuyData(final String assetName,
                          final int contracts,
@@ -23,6 +26,11 @@ public class BrokerBuyData {
 
         amount = tradeUtility.contractsToAmount(contracts);
         orderCommand = tradeUtility.orderCommandForContracts(contracts);
+        final OrderLabelUtil orderLabelUtil = tradeUtility.orderLabelUtil();
+        orderLabel = orderLabelUtil.create();
+        orderID = orderLabelUtil
+            .idFromLabel(orderLabel)
+            .blockingGet();
     }
 
     public String assetName() {
@@ -39,6 +47,14 @@ public class BrokerBuyData {
 
     public OrderCommand orderCommand() {
         return orderCommand;
+    }
+
+    public String orderLabel() {
+        return orderLabel;
+    }
+
+    public int orderID() {
+        return orderID;
     }
 
     public void fillOpenPrice(final IOrder order) {

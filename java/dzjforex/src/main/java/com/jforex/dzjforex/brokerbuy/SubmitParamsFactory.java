@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.Instrument;
-import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.StopLoss;
 import com.jforex.programming.order.OrderParams;
 import com.jforex.programming.order.task.params.RetryParams;
@@ -17,16 +16,13 @@ public class SubmitParamsFactory {
 
     private final RetryParams retryParams;
     private final StopLoss stopLoss;
-    private final OrderLabelUtil orderLabelUtil;
 
     private final static Logger logger = LogManager.getLogger(SubmitParamsFactory.class);
 
     public SubmitParamsFactory(final RetryParams retryParams,
-                               final StopLoss stopLoss,
-                               final OrderLabelUtil orderLabelUtil) {
+                               final StopLoss stopLoss) {
         this.retryParams = retryParams;
         this.stopLoss = stopLoss;
-        this.orderLabelUtil = orderLabelUtil;
     }
 
     public Single<SubmitParams> get(final Instrument instrument,
@@ -42,10 +38,8 @@ public class SubmitParamsFactory {
     private SubmitParams create(final Instrument instrument,
                                 final BrokerBuyData brokerBuyData,
                                 final double slPrice) {
-        final String orderLabel = orderLabelUtil.create();
-        final int orderID = orderLabelUtil
-            .idFromLabel(orderLabel)
-            .blockingGet();
+        final String orderLabel = brokerBuyData.orderLabel();
+        final int orderID = brokerBuyData.orderID();
         final OrderCommand orderCommand = brokerBuyData.orderCommand();
         final double amount = brokerBuyData.amount();
 

@@ -21,10 +21,12 @@ public class DummyMessageHandler {
     }
 
     public void handleRejectEvent(final OrderEvent orderEvent) {
+        final String messageContent = orderEvent
+            .message()
+            .getContent();
+
         Single
-            .just(orderEvent
-                .message()
-                .getContent())
+            .just(messageContent)
             .filter(content -> content.startsWith(systemUnavailablePrefix))
             .doOnSuccess(content -> logger.debug("System unavailable message received -> market is closed."))
             .isEmpty()

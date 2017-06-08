@@ -2,11 +2,9 @@ package com.jforex.dzjforex.brokerbuy;
 
 import com.dukascopy.api.IOrder;
 import com.jforex.dzjforex.config.ZorroReturnValues;
-import com.jforex.dzjforex.order.OrderLabelUtil;
 import com.jforex.dzjforex.order.OrderRepository;
 import com.jforex.dzjforex.order.TradeUtility;
 
-import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 public class BrokerBuy {
@@ -14,7 +12,6 @@ public class BrokerBuy {
     private final SubmitParamsRunner submitParamsRunner;
     private final OrderRepository orderRepository;
     private final TradeUtility tradeUtility;
-    private final OrderLabelUtil orderLabelUtil;
 
     private final static double oppositeClose = -1;
 
@@ -24,8 +21,6 @@ public class BrokerBuy {
         this.submitParamsRunner = submitParamsRunner;
         this.orderRepository = orderRepository;
         this.tradeUtility = tradeUtility;
-
-        orderLabelUtil = tradeUtility.orderLabelUtil();
     }
 
     public Single<Integer> openTrade(final BrokerBuyData brokerBuyData) {
@@ -41,10 +36,8 @@ public class BrokerBuy {
         return orderRepository
             .store(order)
             .doOnComplete(() -> brokerBuyData.fillOpenPrice(order))
-            .andThen(Maybe.defer(() -> orderLabelUtil.idFromOrder(order)))
-            .toSingle()
-            .map(orderID -> brokerBuyData.slDistance() == oppositeClose
+            .toSingleDefault(brokerBuyData.slDistance() == oppositeClose
                     ? ZorroReturnValues.BROKER_BUY_OPPOSITE_CLOSE.getValue()
-                    : orderID);
+                    : brokerBuyData.orderID());
     }
 }

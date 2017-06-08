@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.jforex.dzjforex.brokerhistory.HistoryTickFiller;
-import com.jforex.dzjforex.brokertime.TimeConvert;
+import com.jforex.dzjforex.misc.TimeConvert;
 import com.jforex.dzjforex.testutil.BarsAndTicksForTest;
 import com.jforex.programming.math.MathUtil;
 

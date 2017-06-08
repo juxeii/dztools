@@ -152,7 +152,7 @@ public class Components {
 
     private void initAccountComponents() {
         calculationUtil = strategyUtil.calculationUtil();
-        accountInfo = new AccountInfo(infoStrategy.getAccount(),
+        accountInfo = new AccountInfo(context.getAccount(),
                                       calculationUtil,
                                       pluginConfig);
         brokerAccount = new BrokerAccount(accountInfo);
@@ -187,7 +187,7 @@ public class Components {
     }
 
     private void initHistoryComponents() {
-        final IHistory history = infoStrategy.getHistory();
+        final IHistory history = context.getHistory();
         final HistoryWrapper historyWrapper = new HistoryWrapper(history);
 
         final HistoryFetchDate historyFetchDate = new HistoryFetchDate(historyWrapper, pluginConfig);
@@ -224,9 +224,7 @@ public class Components {
         final StopLoss stopLoss = new StopLoss(calculationUtil,
                                                priceProvider,
                                                pluginConfig.minPipsForSL());
-        final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading,
-                                                                              stopLoss,
-                                                                              orderLabelUtil);
+        final SubmitParamsFactory orderSubmitParams = new SubmitParamsFactory(retryParamsForTrading, stopLoss);
         final CloseParamsFactory orderCloseParams = new CloseParamsFactory(retryParamsForTrading);
         final SetSLParamsFactory orderSetSLParams = new SetSLParamsFactory(stopLoss, retryParamsForTrading);
         final SubmitParamsRunner submitParamsRunner = new SubmitParamsRunner(orderUtil, orderSubmitParams);

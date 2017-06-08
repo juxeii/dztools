@@ -24,9 +24,8 @@ public class TickTimeProvider {
     public Single<Long> get() {
         return Single
             .defer(tickTimeFetch::get)
-            .map(latestTickTime -> {
-                logger.debug("Fetched latest tick time " + DateTimeUtil.formatMillis(latestTickTime));
-                return timeWatch.getForNewTime(latestTickTime);
-            });
+            .doOnSuccess(latestTickTime -> logger.debug("Fetched latest tick time "
+                    + DateTimeUtil.formatMillis(latestTickTime)))
+            .map(timeWatch::getForNewTime);
     }
 }

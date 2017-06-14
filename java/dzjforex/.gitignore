@@ -1,0 +1,13 @@
+/.classpath
+/.gradle/
+/bin/
+/.project
+/gradlew
+/gradlew.bat
+/.settings/
+/build/
+/settings.gradle
+/gradle.properties
+/logs/
+/Plugin/
+/cacheDirectory

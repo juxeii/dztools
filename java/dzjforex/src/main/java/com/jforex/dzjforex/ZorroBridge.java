@@ -163,8 +163,9 @@ public class ZorroBridge {
 
     public int doBrokerSell(final int orderID,
                             final int contracts) {
-        final double amount = tradeUtility.contractsToAmount(contracts);
-        final BrokerSellData brokerSellData = new BrokerSellData(orderID, amount);
+        final BrokerSellData brokerSellData = new BrokerSellData(orderID,
+                                                                 contracts,
+                                                                 tradeUtility);
         return brokerSell
             .closeTrade(brokerSellData)
             .blockingGet();

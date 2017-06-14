@@ -13,11 +13,16 @@ public class BrokerSellDataTest extends CommonUtilForTest {
 
     private BrokerSellData brokerSellData;
 
+    private final int contracts = 12500;
     private final double amount = 0.0125;
 
     @Before
     public void setUp() {
-        brokerSellData = new BrokerSellData(orderID, amount);
+        when(tradeUtilityMock.contractsToAmount(contracts)).thenReturn(amount);
+
+        brokerSellData = new BrokerSellData(orderID,
+                                            contracts,
+                                            tradeUtilityMock);
     }
 
     @Test

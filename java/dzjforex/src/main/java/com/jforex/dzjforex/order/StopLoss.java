@@ -65,7 +65,7 @@ public class StopLoss {
                                                                  orderCommand,
                                                                  slDistance);
         final double slPrice = MathUtil.roundPrice(rawSLPrice, instrument);
-        logger.debug("Calculated SL price for " + instrument + ":\n"
+        logger.trace("Calculated SL price for " + instrument + ":\n"
                 + " orderCommand: " + orderCommand + "\n"
                 + " slDistance: " + slDistance + "\n"
                 + " slPrice: " + slPrice);

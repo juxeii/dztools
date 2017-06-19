@@ -30,7 +30,7 @@ public class OpenOrdersProvider {
             .fromCallable(engine::getOrders)
             .doOnSubscribe(d -> logger.debug("Fetching open orders..."))
             .doOnSuccess(orders -> logger.debug("Fetched " + orders.size() + " open orders."))
-            .doOnError(e -> logger.info("Fetching open orders failed! " + e.getMessage()))
+            .doOnError(e -> logger.error("Fetching open orders failed! " + e.getMessage()))
             .retryWhen(RxUtility.retryForHistory(pluginConfig));
     }
 }

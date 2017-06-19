@@ -35,7 +35,7 @@ public class NTPFetch {
             .map(TimeInfo::getMessage)
             .map(NtpV3Packet::getTransmitTimeStamp)
             .map(TimeStamp::getTime)
-            .doOnError(e -> logger.debug("NTP fetch task failed with error: " + e.getMessage()));
+            .doOnError(e -> logger.error("NTP fetch task failed with error: " + e.getMessage()));
     }
 
     public Single<Long> get() {

@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.dukascopy.api.IOrder;
-import com.dukascopy.api.Instrument;
 import com.jforex.dzjforex.misc.PriceProvider;
 
 public class BrokerTradeData {
@@ -29,7 +28,6 @@ public class BrokerTradeData {
     }
 
     public void fill(final IOrder order) {
-        final Instrument instrument = order.getInstrument();
         final double pOpen = order.getOpenPrice();
         final double pClose = priceProvider.forOrder(order);
         final double pRoll = rollOverNotSupported;

@@ -32,7 +32,7 @@ public class NTPSynchTask {
                       Schedulers.io())
             .doOnNext(counter -> logger.debug("Starting NTP synch task..."))
             .flatMapSingle(counter -> ntpFetch.get())
-            .doOnNext(ntp -> logger.error("Received new NTP " + DateTimeUtil.formatMillis(ntp)))
+            .doOnNext(ntp -> logger.debug("Received new NTP " + DateTimeUtil.formatMillis(ntp)))
             .doOnError(e -> logger.error("NTP synch failed! " + e.getMessage()));
     }
 }

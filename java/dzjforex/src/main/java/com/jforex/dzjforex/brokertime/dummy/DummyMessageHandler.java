@@ -3,6 +3,7 @@ package com.jforex.dzjforex.brokertime.dummy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.dukascopy.api.IMessage;
 import com.jforex.programming.order.event.OrderEvent;
 
 import io.reactivex.Completable;
@@ -21,12 +22,9 @@ public class DummyMessageHandler {
     }
 
     public void handleRejectEvent(final OrderEvent orderEvent) {
-        final String messageContent = orderEvent
-            .message()
-            .getContent();
-
         Single
-            .just(messageContent)
+            .just(orderEvent.message())
+            .map(IMessage::getContent)
             .filter(content -> content.startsWith(systemUnavailablePrefix))
             .doOnSuccess(content -> logger.debug("System unavailable message received -> market is closed."))
             .isEmpty()
@@ -34,11 +32,12 @@ public class DummyMessageHandler {
     }
 
     public void handleOKEvent(final OrderEvent orderEvent) {
-        logger.debug("Dummy order was opened -> market is open.");
-        wasOffline.onNext(false);
-
         Single
             .just(orderEvent.order())
+            .doOnSubscribe(d -> {
+                logger.debug("Dummy order was opened -> market is open.");
+                wasOffline.onNext(false);
+            })
             .flatMapCompletable(order -> Completable.fromAction(order::close))
             .subscribe();
     }

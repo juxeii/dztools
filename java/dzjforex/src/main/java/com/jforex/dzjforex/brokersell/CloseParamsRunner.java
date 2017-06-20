@@ -9,18 +9,18 @@ import io.reactivex.Single;
 public class CloseParamsRunner {
 
     private final OrderUtil orderUtil;
-    private final CloseParamsFactory orderCloseParams;
+    private final CloseParamsFactory closeParamsFactory;
 
     public CloseParamsRunner(final OrderUtil orderUtil,
-                             final CloseParamsFactory orderCloseParams) {
+                             final CloseParamsFactory closeParamsFactory) {
         this.orderUtil = orderUtil;
-        this.orderCloseParams = orderCloseParams;
+        this.closeParamsFactory = closeParamsFactory;
     }
 
     public Completable get(final IOrder order,
                            final BrokerSellData brokerSellData) {
         return Single
-            .defer(() -> orderCloseParams.get(order, brokerSellData))
+            .defer(() -> closeParamsFactory.get(order, brokerSellData))
             .flatMapObservable(orderUtil::paramsToObservable)
             .ignoreElements();
     }

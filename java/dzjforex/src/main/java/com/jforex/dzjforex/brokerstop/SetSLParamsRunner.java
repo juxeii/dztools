@@ -9,18 +9,18 @@ import io.reactivex.Single;
 public class SetSLParamsRunner {
 
     private final OrderUtil orderUtil;
-    private final SetSLParamsFactory orderSetSLParams;
+    private final SetSLParamsFactory setSLParamsFactory;
 
     public SetSLParamsRunner(final OrderUtil orderUtil,
-                             final SetSLParamsFactory orderSetSLParams) {
+                             final SetSLParamsFactory setSLParamsFactory) {
         this.orderUtil = orderUtil;
-        this.orderSetSLParams = orderSetSLParams;
+        this.setSLParamsFactory = setSLParamsFactory;
     }
 
     public Completable get(final IOrder order,
                            final BrokerStopData brokerStopData) {
         return Single
-            .defer(() -> orderSetSLParams.get(order, brokerStopData))
+            .defer(() -> setSLParamsFactory.get(order, brokerStopData))
             .flatMapObservable(orderUtil::paramsToObservable)
             .ignoreElements();
     }

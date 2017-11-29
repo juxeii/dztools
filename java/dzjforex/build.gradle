@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.2.1'
+    compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.2.19'
     compile 'com.jforex.programming:JForexUtils:0.9.813'
     compile 'org.aeonbits.owner:owner:1.0.9'
     compile 'commons-net:commons-net:3.6'

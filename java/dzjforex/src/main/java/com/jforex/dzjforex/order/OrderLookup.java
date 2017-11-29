@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.order;
 
+import java.util.function.Function;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,26 +32,30 @@ public class OrderLookup {
     }
 
     private Maybe<IOrder> orderInRepository(final int orderID) {
-        return Maybe
-            .defer(() -> orderRepository.getByID(orderID))
-            .doOnSubscribe(d -> logger.trace("Looking up orderID " + orderID + " in cache..."))
-            .doAfterSuccess(order -> logger.trace("Found orderID " + orderID + " in cache."))
-            .doOnComplete(() -> logger.debug("OrderID " + orderID + " not found in cache."));
+        return maybeOrder(orderRepository::getByID,
+                          orderID,
+                          "cache orders");
     }
 
     private Maybe<IOrder> orderInOpenOrders(final int orderID) {
-        return Maybe
-            .defer(() -> openOrders.getByID(orderID))
-            .doOnSubscribe(d -> logger.debug("Looking up orderID " + orderID + " in open orders..."))
-            .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in open orders."))
-            .doOnComplete(() -> logger.debug("OrderID " + orderID + " not found in open orders."));
+        return maybeOrder(openOrders::getByID,
+                          orderID,
+                          "open orders");
     }
 
     private Maybe<IOrder> orderInHistory(final int orderID) {
+        return maybeOrder(historyOrders::getByID,
+                          orderID,
+                          "history");
+    }
+
+    private Maybe<IOrder> maybeOrder(final Function<Integer, Maybe<IOrder>> orderLookup,
+                                     final int orderID,
+                                     final String lookupName) {
         return Maybe
-            .defer(() -> historyOrders.getByID(orderID))
-            .doOnSubscribe(d -> logger.debug("Looking up orderID " + orderID + " in history..."))
-            .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in history."))
-            .doOnComplete(() -> logger.error("OrderID " + orderID + " not found in history!"));
+            .defer(() -> orderLookup.apply(orderID))
+            .doOnSubscribe(d -> logger.debug("Looking up orderID " + orderID + " in " + lookupName + "..."))
+            .doAfterSuccess(order -> logger.debug("Found orderID " + orderID + " in " + lookupName + "."))
+            .doOnComplete(() -> logger.error("OrderID " + orderID + " not found in " + lookupName + "!"));
     }
 }

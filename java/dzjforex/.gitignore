@@ -11,3 +11,22 @@
 /logs/
 /Plugin/
 /cacheDirectory
+
+# IDEA
+.idea
+*.iml
+/out/
+
+# Kotlin
+*.class
+
+# Package Files #
+*.jar
+
+# Gradle
+.gradle
+!gradle-wrapper.jar
+/build/
+
+# Misc
+hs_err_pid*

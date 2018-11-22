@@ -209,10 +209,7 @@ BrokerCommand(int nCommand,
     }
     default:
         {
-           char str[80];
-           sprintf_s(str, "Command %i not yet supported.", nCommand);
-           puts(str);
-           BrokerError(str);
+           
         }
     }
     return 0.0;

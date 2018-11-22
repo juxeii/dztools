@@ -1,5 +1,10 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.3.10"
+}
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
+apply plugin: 'kotlin'
 
 group= 'com.jforex.dzplugin'
 version = '0.9.6'
@@ -23,15 +28,9 @@ repositories {
 }
 
 dependencies {
-    compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.4.6'
-    compile 'com.jforex.programming:JForexUtils:0.9.813'
+    compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.4.13'
+    compile 'com.jforex:KForexUtils:0.2.0-SNAPSHOT'
     compile 'org.aeonbits.owner:owner:1.0.10'
-    compile 'commons-net:commons-net:3.6'
-    
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.hamcrest:java-hamcrest:2.0.0.0'
-    testCompile 'org.mockito:mockito-core:2.8.9'
-    testCompile 'de.bechte.junit:junit-hierarchicalcontextrunner:4.12.1'
 }
 
 gradle.projectsEvaluated {
@@ -42,7 +41,7 @@ gradle.projectsEvaluated {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': project.name,  
+        attributes 'Implementation-Title': project.name,
                    'Implementation-Version': version,
                    'Class-Path' : ". ${(configurations.runtime.collect { "lib/$it.name" }).join(' ') }"
     }
@@ -67,39 +66,39 @@ task copyDepsToPluginLibFolder(type: Copy) {
 task createPluginFolder(dependsOn: ':jar') {
     delete pluginFolder
     mkdir pluginFolder
-    
+
     copy{
         from "../../c++/Release/dukascopy.dll"
         into pluginFolder
     }
-    
+
     def dukascopyFolder = "${pluginFolder}/dukascopy"
     mkdir dukascopyFolder
     def configFolder = "src/main/config"
-    
+
     copy{
         from jar
         into dukascopyFolder
     }
-    
+
     copy{
         from "${configFolder}/log4j2.xml"
         into dukascopyFolder
     }
-    
+
     copy{
         from "${configFolder}/log4j.properties"
         into dukascopyFolder
     }
-    
+
     copy{
         from "${configFolder}/Plugin.properties"
         into dukascopyFolder
     }
-    
+
     def libFolder = "${dukascopyFolder}/lib"
     mkdir libFolder
-    
+
     copy{
         from configurations.runtime
         into libFolder

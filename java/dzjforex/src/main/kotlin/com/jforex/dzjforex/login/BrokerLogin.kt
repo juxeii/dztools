@@ -1,23 +1,45 @@
 package com.jforex.dzjforex.login
 
 import com.dukascopy.api.system.IClient
+import com.jforex.dzjforex.misc.LOGIN_FAIL
+import com.jforex.dzjforex.misc.LOGIN_OK
+import com.jforex.dzjforex.misc.LOGOUT_OK
+import com.jforex.dzjforex.misc.realLoginType
 import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
+import com.jforex.kforexutils.client.logout
+import io.reactivex.Completable
+import io.reactivex.Single
 import org.apache.logging.log4j.LogManager
 
-class BrokerLogin
+internal class BrokerLogin(private val client: IClient)
 {
     private val logger = LogManager.getLogger(BrokerLogin::class.java)
 
-    fun login(client: IClient): Int
+    fun login(loginData: LoginData): Single<Int> =
+        if (client.isConnected) Single.just(LOGIN_OK)
+        else clientLogin(loginData)
+            .toSingleDefault(LOGIN_OK)
+            .doOnError { logger.debug("Login exception! " + it.message) }
+            .onErrorReturnItem(LOGIN_FAIL)
+
+    private fun clientLogin(loginData: LoginData): Completable
     {
-        logger.debug("Starting login")
-        val cred = LoginCredentials("DEMO3JHtFV", "JHtFV")
-        val result = client
-            .login(cred, LoginType.DEMO)
-            .doOnError { logger.debug("Login failed with " + it.message) }
-            .blockingGet()
-        return if (result == null) 1 else 0
+        val loginCredentials = LoginCredentials(
+            username = loginData.username,
+            password = loginData.password
+        )
+        val loginType = getLoginType(loginData.accountType)
+
+        return client.login(loginCredentials, loginType)
     }
+
+    private fun getLoginType(accountType: String) =
+        if (accountType == realLoginType) LoginType.LIVE
+        else LoginType.DEMO
+
+    fun logout(): Single<Int> = Completable
+        .fromCallable { client.logout() }
+        .toSingleDefault(LOGOUT_OK)
 }

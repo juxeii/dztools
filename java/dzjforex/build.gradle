@@ -105,7 +105,12 @@ task createPluginFolder(dependsOn: ':jar') {
     }
 }
 
-task dzDeploy(type: Zip, dependsOn: ':createPluginFolder') {
+task createZip(type: Zip, dependsOn: ':createPluginFolder') {
     baseName = project.name
     from pluginFolder
+}
+
+task copyPluginFolderToZorro(type: Copy, dependsOn: ':createPluginFolder') {
+    from pluginFolder
+    into "${zorroPath}/Plugin"
 }

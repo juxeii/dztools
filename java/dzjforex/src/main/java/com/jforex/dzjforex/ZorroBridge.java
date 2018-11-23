@@ -1,9 +1,14 @@
 package com.jforex.dzjforex;
 
-import com.dukascopy.api.system.ClientFactory;
 import com.dukascopy.api.system.IClient;
 import com.jforex.dzjforex.login.BrokerLogin;
+import com.jforex.dzjforex.login.LoginData;
+import com.jforex.dzjforex.misc.FunctionsKt;
+import com.jforex.dzjforex.misc.PluginStrategy;
+import com.jforex.dzjforex.misc.ZorroCommunication;
+import com.jforex.dzjforex.settings.PluginSettings;
 import io.reactivex.Single;
+import org.aeonbits.owner.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,35 +16,39 @@ public class ZorroBridge {
 
     private final IClient client;
     private final BrokerLogin brokerLogin;
-    private long strategyID;
+    private final ZorroCommunication zCommunication;
+    private final PluginStrategy pluginStrategy;
 
+    private final static PluginSettings pluginSettings = ConfigFactory.create(PluginSettings.class);
     private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public ZorroBridge() {
-        client = getClient();
-        brokerLogin = new BrokerLogin();
-    }
-
-    private IClient getClient() {
-        return Single
-                .fromCallable(ClientFactory::getDefaultInstance)
-                .doOnError(e -> logger.error("Error retrieving IClient instance! " + e.getMessage()))
-                .blockingGet();
+        client = FunctionsKt.getClient();
+        zCommunication = new ZorroCommunication(pluginSettings);
+        brokerLogin = new BrokerLogin(client);
+        pluginStrategy = new PluginStrategy(client);
     }
 
     public int doLogin(final String username,
                        final String password,
                        final String accountType,
                        final String Accounts[]) {
-        logger.debug("WOOOOOOOOOOOOOOOOO");
-        int result = brokerLogin.login(client);
-        logger.debug("Login result is " + result);
-        return result;
+        LoginData loginData = new LoginData(
+                username,
+                password,
+                accountType);
+        Single<Integer> loginTask = brokerLogin
+                .login(loginData)
+                .doOnSuccess(loginOK -> pluginStrategy.start(Accounts));
+
+        return zCommunication.progressWait(loginTask);
     }
 
     public int doLogout() {
-        return 42;
-
+        pluginStrategy.stop();
+        return brokerLogin
+                .logout()
+                .blockingGet();
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {

@@ -27,7 +27,7 @@ extern JMethodDesc doBrokerTime;
 extern JMethodDesc doSubscribeAsset;
 extern JMethodDesc doBrokerAsset;
 extern JMethodDesc doBrokerAccount;
-extern JMethodDesc doBrokerBuy;
+extern JMethodDesc doBrokerBuy2;
 extern JMethodDesc doBrokerTrade;
 extern JMethodDesc doBrokerStop;
 extern JMethodDesc doBrokerSell;

@@ -51,10 +51,12 @@ public:
                   double *pMarginVal);
 
     int
-    BrokerBuy(const char *Asset,
-              int nAmount,
-              double dStopDist,
-              double *pPrice);
+    BrokerBuy2(char* Asset,
+        int nAmount,
+        double dStopDist,
+        double limit,
+        double *pPrice,
+        double *pFill);
 
     int
     BrokerTrade(const int nTradeID,

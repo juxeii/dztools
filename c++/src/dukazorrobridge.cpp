@@ -152,15 +152,19 @@ BrokerAccount(char* Account,
 }
 
 DLLFUNC int
-BrokerBuy(char* Asset,
+BrokerBuy2(char* Asset,
           int nAmount,
           double dStopDist,
-          double *pPrice)
+          double limit,
+          double *pPrice,
+          double *pFill)
 {
-    return dllCallHandler.BrokerBuy(Asset,
+    return dllCallHandler.BrokerBuy2(Asset,
                                     nAmount,
                                     dStopDist,
-                                    pPrice);
+                                    limit,
+                                    pPrice,
+                                    pFill);
 }
 
 DLLFUNC int

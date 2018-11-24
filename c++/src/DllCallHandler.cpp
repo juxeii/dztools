@@ -227,24 +227,29 @@ DllCallHandler::BrokerAccount(const char *Account,
 }
 
 int
-DllCallHandler::BrokerBuy(const char *Asset,
-                          const int nAmount,
-                          const double dStopDist,
-                          double *pPrice)
+DllCallHandler::BrokerBuy2(char* Asset,
+        int nAmount,
+        double dStopDist,
+        double limit,
+        double *pPrice,
+        double *pFill)
 {
     jstring jAsset = env->NewStringUTF(Asset);
-    jdoubleArray jTradeParamsArray = env->NewDoubleArray(1);
+    jdoubleArray jTradeParamsArray = env->NewDoubleArray(2);
 
     jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                             JData::doBrokerBuy.methodID,
+                                             JData::doBrokerBuy2.methodID,
                                              jAsset,
 											 nAmount,
 		                                     dStopDist,
+                                             limit,
                                              jTradeParamsArray);
     jdouble *tradeParams = env->GetDoubleArrayElements(jTradeParamsArray, 0);
 
     if (pPrice)
         *pPrice = tradeParams[0];
+    if (pFill)
+        *pFill = tradeParams[1];
 
     env->DeleteLocalRef(jAsset);
     env->ReleaseDoubleArrayElements(jTradeParamsArray, tradeParams, 0);

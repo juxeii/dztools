@@ -16,7 +16,7 @@ JMethodDesc doBrokerTime =     { nullptr, "doBrokerTime",     "([D)I" };
 JMethodDesc doSubscribeAsset = { nullptr, "doSubscribeAsset", "(Ljava/lang/String;)I" };
 JMethodDesc doBrokerAsset =    { nullptr, "doBrokerAsset",    "(Ljava/lang/String;[D)I" };
 JMethodDesc doBrokerAccount =  { nullptr, "doBrokerAccount",  "([D)I" };
-JMethodDesc doBrokerBuy =      { nullptr, "doBrokerBuy",      "(Ljava/lang/String;ID[D)I" };
+JMethodDesc doBrokerBuy2 =     { nullptr, "doBrokerBuy2",     "(Ljava/lang/String;IDD[D)I" };
 JMethodDesc doBrokerTrade =    { nullptr, "doBrokerTrade",    "(I[D)I" };
 JMethodDesc doBrokerStop =     { nullptr, "doBrokerStop",     "(ID)I" };
 JMethodDesc doBrokerSell =     { nullptr, "doBrokerSell",     "(II)I" };
@@ -41,7 +41,7 @@ const std::vector<JMethodDesc*> dukaZorroBridgeMethods = { &constructor,
                                                            &doSubscribeAsset,
                                                            &doBrokerAsset,
                                                            &doBrokerAccount,
-                                                           &doBrokerBuy,
+                                                           &doBrokerBuy2,
                                                            &doBrokerTrade,
                                                            &doBrokerStop,
                                                            &doBrokerSell,

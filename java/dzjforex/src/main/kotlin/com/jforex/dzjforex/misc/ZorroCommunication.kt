@@ -13,22 +13,22 @@ import java.util.concurrent.TimeUnit
 class ZorroCommunication(pluginSettings: PluginSettings)
 {
     private val logger = LogManager.getLogger(ZorroCommunication::class.java)
-    val heartBeat = Observable.interval(
+    private val heartBeat: Observable<Long> = Observable.interval(
         0,
         pluginSettings.zorroProgressInterval(),
         TimeUnit.MILLISECONDS
     )
 
-    fun <T> progressWait(task: Single<T>): T?
+    fun <T> progressWait(task: Single<T>): T
     {
         val stateRelay = BehaviorRelay.create<T>()
         task
             .subscribeOn(Schedulers.io())
             .subscribe { it -> stateRelay.accept(it) }
         heartBeat
-            .takeWhile { _ -> !stateRelay.hasValue() }
-            .blockingSubscribe { _ -> callProgress(heartBeatIndication) }
+            .takeWhile { !stateRelay.hasValue() }
+            .blockingSubscribe { callProgress(heartBeatIndication) }
 
-        return stateRelay.value
+        return stateRelay.value!!
     }
 }

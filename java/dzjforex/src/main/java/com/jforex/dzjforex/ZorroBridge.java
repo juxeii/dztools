@@ -1,96 +1,71 @@
 package com.jforex.dzjforex;
 
-import com.dukascopy.api.system.IClient;
-import com.jforex.dzjforex.login.BrokerLogin;
-import com.jforex.dzjforex.login.LoginData;
-import com.jforex.dzjforex.misc.FunctionsKt;
-import com.jforex.dzjforex.misc.PluginStrategy;
-import com.jforex.dzjforex.misc.ZorroCommunication;
-import com.jforex.dzjforex.settings.PluginSettings;
-import io.reactivex.Single;
-import org.aeonbits.owner.ConfigFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.jforex.dzjforex.misc.KZorroBridge;
 
 public class ZorroBridge {
 
-    private final IClient client;
-    private final BrokerLogin brokerLogin;
-    private final ZorroCommunication zCommunication;
-    private final PluginStrategy pluginStrategy;
-
-    private final static PluginSettings pluginSettings = ConfigFactory.create(PluginSettings.class);
-    private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
+    private final KZorroBridge kBridge;
 
     public ZorroBridge() {
-        client = FunctionsKt.getClient();
-        zCommunication = new ZorroCommunication(pluginSettings);
-        brokerLogin = new BrokerLogin(client);
-        pluginStrategy = new PluginStrategy(client);
+        kBridge = new KZorroBridge();
     }
 
     public int doLogin(final String username,
                        final String password,
                        final String accountType,
                        final String Accounts[]) {
-        LoginData loginData = new LoginData(
-                username,
+        return kBridge.doLogin(username,
                 password,
-                accountType);
-        Single<Integer> loginTask = brokerLogin
-                .login(loginData)
-                .doOnSuccess(loginOK -> pluginStrategy.start(Accounts));
-
-        return zCommunication.progressWait(loginTask);
+                accountType,
+                Accounts);
     }
 
     public int doLogout() {
-        pluginStrategy.stop();
-        return brokerLogin
-                .logout()
-                .blockingGet();
+        return kBridge.doLogout();
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {
-        return 42;
-
+        return kBridge.doBrokerTime(pTimeUTC);
     }
 
     public int doSubscribeAsset(final String assetName) {
-        return 42;
-
+        return kBridge.doSubscribeAsset(assetName);
     }
 
     public int doBrokerAsset(final String assetName,
                              final double assetParams[]) {
-        return 42;
+        return kBridge.doBrokerAsset(assetName, assetParams);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
-        return 42;
+        return kBridge.doBrokerAccount(accountInfoParams);
     }
 
     public int doBrokerTrade(final int orderID,
                              final double tradeParams[]) {
-        return 42;
+        return kBridge.doBrokerTrade(orderID, tradeParams);
     }
 
-    public int doBrokerBuy(final String assetName,
-                           final int contracts,
-                           final double slDistance,
-                           final double tradeParams[]) {
-        return 42;
+    public int doBrokerBuy2(final String assetName,
+                            final int contracts,
+                            final double slDistance,
+                            final double limit,
+                            final double tradeParams[]) {
+        return kBridge.doBrokerBuy2(assetName,
+                contracts,
+                slDistance,
+                limit,
+                tradeParams);
     }
 
     public int doBrokerSell(final int orderID,
                             final int contracts) {
-        return 42;
+        return kBridge.doBrokerSell(orderID, contracts);
     }
 
     public int doBrokerStop(final int orderID,
                             final double slPrice) {
-        return 42;
-
+        return kBridge.doBrokerStop(orderID, slPrice);
     }
 
     public int doBrokerHistory2(final String assetName,
@@ -99,8 +74,12 @@ public class ZorroBridge {
                                 final int periodInMinutes,
                                 final int noOfTicks,
                                 final double tickParams[]) {
-        return 42;
-
+        return kBridge.doBrokerHistory2(assetName,
+                utcStartDate,
+                utcEndDate,
+                periodInMinutes,
+                noOfTicks,
+                tickParams);
     }
 
     public int doSetOrderText(final String orderText) {

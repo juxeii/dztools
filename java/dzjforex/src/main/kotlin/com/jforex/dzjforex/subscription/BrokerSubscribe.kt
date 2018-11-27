@@ -15,10 +15,13 @@ private val logger = LogManager.getLogger()
 class BrokerSubscribe(
     private val client: IClient,
     private val accountInfo: AccountInfo
-) {
-
+)
+{
     fun subscribe(assetName: String) = instrumentFromAssetName(assetName)
-        .filter { !isSubscribed(it) }
+        .map {
+            logger.debug("Asking Subscribing instrument: $it")
+            it
+        }
         .map(::instrumentsToSubscribe)
         .map {
             logger.debug("Subscribing instruments: $it")
@@ -26,9 +29,13 @@ class BrokerSubscribe(
         }
         .fold({ ASSET_UNAVAILABLE }) { ASSET_AVAILABLE }
 
-    private fun instrumentsToSubscribe(instrument: Instrument) = InstrumentFactory.fromCombinedCurrencies(
-        instrument.currencies.plus(accountInfo.accountCurrency)
-    )
+    private fun instrumentsToSubscribe(instrument: Instrument): Set<Instrument>
+    {
+        logger.debug("Account curr: ${accountInfo.accountCurrency}")
+        return InstrumentFactory.fromCombinedCurrencies(
+            instrument.currencies.plus(accountInfo.accountCurrency)
+        )
+    }
 
     fun subscribedInstruments() = client.subscribedInstruments
 

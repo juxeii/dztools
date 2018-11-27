@@ -111,6 +111,8 @@ task createZip(type: Zip, dependsOn: ':createPluginFolder') {
 }
 
 task copyPluginFolderToZorro(type: Copy, dependsOn: ':createPluginFolder') {
+    delete "${zorroPath}/Plugin/dukascopy"
+    
     from pluginFolder
     into "${zorroPath}/Plugin"
 }

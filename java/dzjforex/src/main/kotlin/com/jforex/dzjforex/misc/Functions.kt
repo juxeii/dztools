@@ -14,7 +14,7 @@ private val logger = LogManager.getLogger()
 internal fun getClient(): IClient {
     var client = Single
         .fromCallable { ClientFactory.getDefaultInstance() }
-        .doOnError { logger.error("Error retrieving IClient instance! " + it.message) }
+        .doOnError { logger.debug("Error retrieving IClient instance! " + it.message) }
         .blockingGet()
     client.init()
     return client
@@ -23,6 +23,9 @@ internal fun getClient(): IClient {
 internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
     .fromName(assetName)
     .fold({
-        logger.error("Cannot create instrument from asset name $assetName!")
+        logger.debug("Cannot create instrument from asset name $assetName!")
         None
-    }, { Some(it) })
+    }, {
+        logger.debug("Created instrument of $it!")
+        Some(it
+        ) })

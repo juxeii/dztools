@@ -1,14 +1,13 @@
 package com.jforex.dzjforex;
 
 import com.jforex.dzjforex.zorro.KZorroBridge;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 public class ZorroBridge {
 
-    private final KZorroBridge kBridge;
-
-    public ZorroBridge() {
-        kBridge = new KZorroBridge();
-    }
+    private final KZorroBridge kBridge = new KZorroBridge();
+    private final static Logger logger = LogManager.getLogger(ZorroBridge.class);
 
     public int doLogin(final String username,
                        final String password,

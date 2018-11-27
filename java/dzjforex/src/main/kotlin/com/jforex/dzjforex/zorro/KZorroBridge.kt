@@ -1,9 +1,11 @@
 package com.jforex.dzjforex.zorro
 
+import com.jforex.dzjforex.Zorro
 import com.jforex.dzjforex.asset.BrokerAsset
 import com.jforex.dzjforex.login.BrokerLogin
 import com.jforex.dzjforex.login.LoginData
 import com.jforex.dzjforex.misc.PluginStrategy
+import com.jforex.dzjforex.misc.QuoteProvider
 import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.BrokerSubscribe
@@ -11,8 +13,10 @@ import com.jforex.dzjforex.time.BrokerTime
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 
-class KZorroBridge {
+class KZorroBridge
+{
     private val client = getClient()
+    private val zoro = Zorro()
     private val brokerLogin = BrokerLogin(client)
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
     private val zCommunication = ZorroCommunication(pluginSettings)
@@ -23,14 +27,17 @@ class KZorroBridge {
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
 
-    private fun initComponents() {
+    private fun initComponents()
+    {
+        logger.debug("Init components")
         brokerSubscribe = BrokerSubscribe(client, pluginStrategy.accountInfo)
         brokerTime = BrokerTime(
             client,
             pluginStrategy.context,
             pluginStrategy.accountInfo
         )
-        brokerAsset = BrokerAsset()
+        brokerAsset = BrokerAsset(pluginStrategy.quoteProvider)
+        logger.debug("Init components done")
     }
 
     fun doLogin(
@@ -38,7 +45,9 @@ class KZorroBridge {
         password: String,
         accountType: String,
         out_AccountNames: Array<String>
-    ): Int {
+    ): Int
+    {
+        logger.debug("Login called")
         val loginData = LoginData(
             username,
             password,
@@ -47,7 +56,9 @@ class KZorroBridge {
         val loginTask = brokerLogin
             .login(loginData)
             .map { loginResult ->
-                if (loginResult == LOGIN_OK) {
+                logger.debug("Login result $loginResult")
+                if (loginResult == LOGIN_OK)
+                {
                     pluginStrategy.start(out_AccountNames)
                     initComponents()
                 }
@@ -57,14 +68,20 @@ class KZorroBridge {
         return zCommunication.progressWait(loginTask)
     }
 
-    fun doLogout(): Int {
+    fun doLogout(): Int
+    {
+        logger.debug("Logout called")
         pluginStrategy.stop()
         return brokerLogin
             .logout()
             .blockingGet()
     }
 
-    fun doBrokerTime(pTimeUTC: DoubleArray) = brokerTime.get(pTimeUTC)
+    fun doBrokerTime(pTimeUTC: DoubleArray): Int
+    {
+        logger.debug("doBrokerTime called")
+        return brokerTime.get(pTimeUTC)
+    }
 
     fun doSubscribeAsset(assetName: String) = brokerSubscribe.subscribe(assetName)
 
@@ -73,14 +90,16 @@ class KZorroBridge {
         assetParams: DoubleArray
     ) = brokerAsset.get(assetName, assetParams)
 
-    fun doBrokerAccount(accountInfoParams: DoubleArray): Int {
+    fun doBrokerAccount(accountInfoParams: DoubleArray): Int
+    {
         return 42
     }
 
     fun doBrokerTrade(
         orderID: Int,
         tradeParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
@@ -90,21 +109,24 @@ class KZorroBridge {
         slDistance: Double,
         limit: Double,
         tradeParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
     fun doBrokerSell(
         orderID: Int,
         contracts: Int
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
     fun doBrokerStop(
         orderID: Int,
         slPrice: Double
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
@@ -115,7 +137,8 @@ class KZorroBridge {
         periodInMinutes: Int,
         noOfTicks: Int,
         tickParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 }

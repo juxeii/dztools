@@ -17,12 +17,15 @@ internal class BrokerLogin(private val client: IClient)
 {
     private val logger = LogManager.getLogger(BrokerLogin::class.java)
 
-    fun login(loginData: LoginData): Single<Int> =
-        if (client.isConnected) Single.just(LOGIN_OK)
+    fun login(loginData: LoginData): Single<Int>
+    {
+        return if (client.isConnected) Single.just(LOGIN_OK)
         else clientLogin(loginData)
+            .doOnComplete { logger.debug("login completed") }
             .toSingleDefault(LOGIN_OK)
             .doOnError { logger.debug("Login exception! " + it.message) }
             .onErrorReturnItem(LOGIN_FAIL)
+    }
 
     private fun clientLogin(loginData: LoginData): Completable
     {

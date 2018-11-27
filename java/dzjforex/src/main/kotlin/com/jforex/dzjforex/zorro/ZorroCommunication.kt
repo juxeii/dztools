@@ -1,6 +1,8 @@
 package com.jforex.dzjforex.zorro
 
 import com.jakewharton.rxrelay2.BehaviorRelay
+import com.jforex.dzjforex.Zorro.jcallback_BrokerError
+import com.jforex.dzjforex.Zorro.jcallback_BrokerProgress
 import com.jforex.dzjforex.settings.PluginSettings
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -10,7 +12,8 @@ import org.apache.logging.log4j.Logger
 import java.util.concurrent.TimeUnit
 
 
-class ZorroCommunication(pluginSettings: PluginSettings) {
+class ZorroCommunication(pluginSettings: PluginSettings)
+{
     private val logger = LogManager.getLogger(ZorroCommunication::class.java)
     private val heartBeat: Observable<Long> = Observable.interval(
         0,
@@ -18,7 +21,8 @@ class ZorroCommunication(pluginSettings: PluginSettings) {
         TimeUnit.MILLISECONDS
     )
 
-    fun <T> progressWait(task: Single<T>): T {
+    fun <T> progressWait(task: Single<T>): T
+    {
         val stateRelay = BehaviorRelay.create<T>()
         task
             .subscribeOn(Schedulers.io())
@@ -35,7 +39,8 @@ class ZorroCommunication(pluginSettings: PluginSettings) {
     fun logError(
         errorMsg: String,
         logger: Logger
-    ): Int {
+    ): Int
+    {
         logger.error(errorMsg)
         return logError(errorMsg)
     }
@@ -49,8 +54,4 @@ class ZorroCommunication(pluginSettings: PluginSettings) {
     fun indicateError() = logError("Severe error occured, check dzplugin.log logfile!")
 
     fun showError(errorMsg: String) = logError(errorMsg)
-
-    private external fun jcallback_BrokerError(errorMsg: String): Int
-
-    private external fun jcallback_BrokerProgress(progress: Int): Int
 }

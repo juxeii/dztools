@@ -11,6 +11,7 @@
 /logs/
 /Plugin/
 /cacheDirectory
+/src/main/kotlin/runner
 
 # IDEA
 .idea

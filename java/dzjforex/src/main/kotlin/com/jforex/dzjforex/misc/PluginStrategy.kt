@@ -13,21 +13,22 @@ class PluginStrategy(
     private val pluginSettings: PluginSettings
 )
 {
-    val infoStrategy = KForexUtilsStrategy()
+    private val infoStrategy = KForexUtilsStrategy()
     private var strategyID = 0L
     private lateinit var kForexUtils: KForexUtils
-    private lateinit var context: IContext
+    lateinit var context: IContext
+        private set
     lateinit var accountInfo: AccountInfo
         private set
 
-    fun start(accountInfoToFill: Array<String>)
+    fun start(out_AccountNames: Array<String>)
     {
         client.subscribedInstruments = setOf(Instrument.EURUSD)
         strategyID = client.startStrategy(infoStrategy);
         kForexUtils = infoStrategy.kForexUtils
         context = kForexUtils.context
         accountInfo = AccountInfo(context.account, pluginSettings)
-        accountInfoToFill[0] = accountInfo.accountId
+        out_AccountNames[0] = accountInfo.accountId
     }
 
     fun stop()

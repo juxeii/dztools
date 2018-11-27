@@ -1,10 +1,10 @@
 package com.jforex.dzjforex.login
 
 import com.dukascopy.api.system.IClient
-import com.jforex.dzjforex.misc.LOGIN_FAIL
-import com.jforex.dzjforex.misc.LOGIN_OK
-import com.jforex.dzjforex.misc.LOGOUT_OK
-import com.jforex.dzjforex.misc.realLoginType
+import com.jforex.dzjforex.zorro.LOGIN_FAIL
+import com.jforex.dzjforex.zorro.LOGIN_OK
+import com.jforex.dzjforex.zorro.LOGOUT_OK
+import com.jforex.dzjforex.zorro.realLoginType
 import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login

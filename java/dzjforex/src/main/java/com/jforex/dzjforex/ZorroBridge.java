@@ -1,6 +1,6 @@
 package com.jforex.dzjforex;
 
-import com.jforex.dzjforex.misc.KZorroBridge;
+import com.jforex.dzjforex.zorro.KZorroBridge;
 
 public class ZorroBridge {
 

@@ -1,5 +1,6 @@
 package com.jforex.dzjforex.zorro
 
+import com.jforex.dzjforex.asset.BrokerAsset
 import com.jforex.dzjforex.login.BrokerLogin
 import com.jforex.dzjforex.login.LoginData
 import com.jforex.dzjforex.misc.PluginStrategy
@@ -18,6 +19,7 @@ class KZorroBridge {
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
     private lateinit var brokerSubscribe: BrokerSubscribe
     private lateinit var brokerTime: BrokerTime
+    private lateinit var brokerAsset: BrokerAsset
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
 
@@ -28,6 +30,7 @@ class KZorroBridge {
             pluginStrategy.context,
             pluginStrategy.accountInfo
         )
+        brokerAsset = BrokerAsset()
     }
 
     fun doLogin(
@@ -43,9 +46,12 @@ class KZorroBridge {
         )
         val loginTask = brokerLogin
             .login(loginData)
-            .doOnSuccess {
-                pluginStrategy.start(out_AccountNames)
-                initComponents()
+            .map { loginResult ->
+                if (loginResult == LOGIN_OK) {
+                    pluginStrategy.start(out_AccountNames)
+                    initComponents()
+                }
+                loginResult
             }
 
         return zCommunication.progressWait(loginTask)
@@ -58,18 +64,14 @@ class KZorroBridge {
             .blockingGet()
     }
 
-    fun doBrokerTime(pTimeUTC: DoubleArray): Int {
-        return 42
-    }
+    fun doBrokerTime(pTimeUTC: DoubleArray) = brokerTime.get(pTimeUTC)
 
     fun doSubscribeAsset(assetName: String) = brokerSubscribe.subscribe(assetName)
 
     fun doBrokerAsset(
         assetName: String,
         assetParams: DoubleArray
-    ): Int {
-        return 42
-    }
+    ) = brokerAsset.get(assetName, assetParams)
 
     fun doBrokerAccount(accountInfoParams: DoubleArray): Int {
         return 42

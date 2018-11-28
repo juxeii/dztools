@@ -24,70 +24,64 @@ internal data class BrokerTimeResult(
     val maybeTime: Option<Double>
 )
 
-internal fun getServerTime() =
-    ReaderApi
-        .monad<PluginEnvironment>()
-        .binding {
-            if (!isPluginConnected().bind()) createBrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
-            else if (!areTradeOrdersAllowed().bind()) createBrokerTimeResult(CONNECTION_OK_BUT_TRADING_NOT_ALLOWED)
-            else getWhenConnected().bind()
-        }.fix()
+internal fun getServerTime() = ReaderApi
+    .monad<PluginEnvironment>()
+    .binding {
+        if (!isPluginConnected().bind()) createBrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
+        else if (!areTradeOrdersAllowed().bind()) createBrokerTimeResult(CONNECTION_OK_BUT_TRADING_NOT_ALLOWED)
+        else getWhenConnected().bind()
+    }.fix()
 
-private fun getWhenConnected() =
-    ReaderApi
-        .monad<PluginEnvironment>()
-        .binding {
-            val serverTime = getServerTimeFromContext().bind()
-            val isMarketClosed = isMarketClosed(serverTime).bind()
-            if (isMarketClosed) createBrokerTimeResult(CONNECTION_OK_BUT_MARKET_CLOSED)
-            else createBrokerTimeResult(CONNECTION_OK, Some(toDATEFormatInSeconds(serverTime)))
-        }.fix()
+private fun getWhenConnected() = ReaderApi
+    .monad<PluginEnvironment>()
+    .binding {
+        val serverTime = getServerTimeFromContext().bind()
+        val isMarketClosed = isMarketClosed(serverTime).bind()
+        if (isMarketClosed) createBrokerTimeResult(CONNECTION_OK_BUT_MARKET_CLOSED)
+        else createBrokerTimeResult(CONNECTION_OK, Some(toDATEFormatInSeconds(serverTime)))
+    }.fix()
 
-private fun getServerTimeFromContext() =
-    ReaderApi
-        .ask<PluginEnvironment>()
-        .map { env ->
-            env
-                .pluginStrategy
-                .context
-                .time
-        }
+private fun getServerTimeFromContext() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .pluginStrategy
+            .context
+            .time
+    }
 
-private fun isMarketClosed(serverTime: Long) =
-    ReaderApi
-        .ask<PluginEnvironment>()
-        .map { env ->
-            val isClosed = env
-                .pluginStrategy
-                .context
-                .dataService
-                .isOfflineTime(serverTime)
-            logger.debug("time is $serverTime market is closed $isClosed")
-            isClosed
-        }
+private fun isMarketClosed(serverTime: Long) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        val isClosed = env
+            .pluginStrategy
+            .context
+            .dataService
+            .isOfflineTime(serverTime)
+        logger.debug("time is $serverTime market is closed $isClosed")
+        isClosed
+    }
 
 private fun createBrokerTimeResult(
     callResult: Int,
     maybeTime: Option<Double> = None
 ) = BrokerTimeResult(callResult, maybeTime)
 
-private fun noOfTradeableInstruments() =
-    ReaderApi
-        .ask<PluginEnvironment>()
-        .map { env ->
-            env
-                .client
-                .subscribedInstruments
-                .stream()
-                .filter { it.isTradable }
-                .mapToInt { 1 }
-                .sum()
-        }
+private fun noOfTradeableInstruments() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .client
+            .subscribedInstruments
+            .stream()
+            .filter { it.isTradable }
+            .mapToInt { 1 }
+            .sum()
+    }
 
-private fun areTradeOrdersAllowed() =
-    ReaderApi
-        .monad<PluginEnvironment>()
-        .binding {
-            if (!isTradingAllowed().bind()) false
-            else noOfTradeableInstruments().bind() > 0
-        }.fix()
+private fun areTradeOrdersAllowed() = ReaderApi
+    .monad<PluginEnvironment>()
+    .binding {
+        if (!isTradingAllowed().bind()) false
+        else noOfTradeableInstruments().bind() > 0
+    }.fix()

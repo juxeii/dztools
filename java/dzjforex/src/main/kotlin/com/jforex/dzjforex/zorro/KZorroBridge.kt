@@ -9,7 +9,7 @@ import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.PluginStrategy
 import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.settings.PluginSettings
-import com.jforex.dzjforex.subscription.BrokerSubscribe
+import com.jforex.dzjforex.subscription.subscribeAsset
 import com.jforex.dzjforex.time.getServerTime
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
@@ -22,14 +22,12 @@ class KZorroBridge {
     private val zCommunication = ZorroCommunication(pluginSettings)
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
     private val environment = PluginEnvironment(client, pluginStrategy)
-    private lateinit var brokerSubscribe: BrokerSubscribe
     private lateinit var brokerAsset: BrokerAsset
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
 
     private fun initComponents() {
         logger.debug("Init components")
-        brokerSubscribe = BrokerSubscribe(client, pluginStrategy.accountInfo)
         brokerAsset = BrokerAsset(pluginStrategy.quoteProvider)
         logger.debug("Init components done")
     }
@@ -77,7 +75,7 @@ class KZorroBridge {
         return brokerTimeResult.callResult
     }
 
-    fun doSubscribeAsset(assetName: String) = brokerSubscribe.subscribe(assetName)
+    fun doSubscribeAsset(assetName: String) = subscribeAsset(assetName).runId(environment)
 
     fun doBrokerAsset(
         assetName: String,

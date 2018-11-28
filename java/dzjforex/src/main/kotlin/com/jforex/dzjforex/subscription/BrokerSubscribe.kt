@@ -1,8 +1,10 @@
 package com.jforex.dzjforex.subscription
 
+import arrow.data.ReaderApi
+import arrow.data.map
+import arrow.data.runId
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.system.IClient
-import com.jforex.dzjforex.account.AccountInfo
+import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
@@ -12,32 +14,28 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-class BrokerSubscribe(
-    private val client: IClient,
-    private val accountInfo: AccountInfo
-)
-{
-    fun subscribe(assetName: String) = instrumentFromAssetName(assetName)
-        .map {
-            logger.debug("Asking Subscribing instrument: $it")
-            it
-        }
-        .map(::instrumentsToSubscribe)
-        .map {
-            logger.debug("Subscribing instruments: $it")
-            client.subscribedInstruments = it
-        }
-        .fold({ ASSET_UNAVAILABLE }) { ASSET_AVAILABLE }
-
-    private fun instrumentsToSubscribe(instrument: Instrument): Set<Instrument>
-    {
-        logger.debug("Account curr: ${accountInfo.accountCurrency}")
-        return InstrumentFactory.fromCombinedCurrencies(
-            instrument.currencies.plus(accountInfo.accountCurrency)
-        )
+internal fun subscribeAsset(assetName: String) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        instrumentFromAssetName(assetName)
+            .map { getInstrumentsToSubscribe(it).runId(env) }
+            .map {
+                logger.debug("Subscribing instruments: $it")
+                env.client.subscribedInstruments = it
+            }
+            .fold({ ASSET_UNAVAILABLE }) { ASSET_AVAILABLE }
     }
 
-    fun subscribedInstruments() = client.subscribedInstruments
+internal fun isInstrumentSubscribed(instrument: Instrument) = getSubscribedInstruments().map { it.contains(instrument) }
 
-    fun isSubscribed(instrument: Instrument) = subscribedInstruments().contains(instrument)
-}
+internal fun getSubscribedInstruments() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.client.subscribedInstruments }
+
+private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        val accountCurrency = env.pluginStrategy.accountInfo.accountCurrency
+        val currencies = instrument.currencies.plus(accountCurrency)
+        InstrumentFactory.fromCombinedCurrencies(currencies)
+    }

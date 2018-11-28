@@ -1,6 +1,8 @@
 package com.jforex.dzjforex.time
 
-import arrow.data.Reader
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import arrow.data.ReaderApi
 import arrow.data.fix
 import arrow.data.map
@@ -17,29 +19,31 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-fun getServerTime(out_ServerTimeToFill: DoubleArray) =
+internal data class BrokerTimeResult(
+    val callResult: Int,
+    val maybeTime: Option<Double>
+)
+
+internal fun getServerTime() =
     ReaderApi
         .monad<PluginEnvironment>()
         .binding {
-            if (!isPluginConnected().bind()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
-            if (!isTradingAllowed().bind()) CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
-            else getWhenConnected(out_ServerTimeToFill).bind()
+            if (!isPluginConnected().bind()) createBrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
+            else if (!areTradeOrdersAllowed().bind()) createBrokerTimeResult(CONNECTION_OK_BUT_TRADING_NOT_ALLOWED)
+            else getWhenConnected().bind()
         }.fix()
 
-internal fun getWhenConnected(out_ServerTimeToFill: DoubleArray): Reader<PluginEnvironment, Int> =
+private fun getWhenConnected() =
     ReaderApi
         .monad<PluginEnvironment>()
         .binding {
             val serverTime = getServerTimeFromContext().bind()
             val isMarketClosed = isMarketClosed(serverTime).bind()
-            if (isMarketClosed) CONNECTION_OK_BUT_MARKET_CLOSED
-            else {
-                fillServerTimeParam(serverTime, out_ServerTimeToFill)
-                CONNECTION_OK
-            }
+            if (isMarketClosed) createBrokerTimeResult(CONNECTION_OK_BUT_MARKET_CLOSED)
+            else createBrokerTimeResult(CONNECTION_OK, Some(toDATEFormatInSeconds(serverTime)))
         }.fix()
 
-internal fun getServerTimeFromContext() =
+private fun getServerTimeFromContext() =
     ReaderApi
         .ask<PluginEnvironment>()
         .map { env ->
@@ -49,7 +53,7 @@ internal fun getServerTimeFromContext() =
                 .time
         }
 
-internal fun isMarketClosed(serverTime: Long) =
+private fun isMarketClosed(serverTime: Long) =
     ReaderApi
         .ask<PluginEnvironment>()
         .map { env ->
@@ -62,10 +66,28 @@ internal fun isMarketClosed(serverTime: Long) =
             isClosed
         }
 
-internal fun fillServerTimeParam(
-    serverTime: Long,
-    out_ServerTimeToFill: DoubleArray
-) {
-    val serverTimeInSeconds = serverTime / 1000L
-    out_ServerTimeToFill[0] = toDATEFormat(serverTimeInSeconds)
-}
+private fun createBrokerTimeResult(
+    callResult: Int,
+    maybeTime: Option<Double> = None
+) = BrokerTimeResult(callResult, maybeTime)
+
+private fun noOfTradeableInstruments() =
+    ReaderApi
+        .ask<PluginEnvironment>()
+        .map { env ->
+            env
+                .client
+                .subscribedInstruments
+                .stream()
+                .filter { it.isTradable }
+                .mapToInt { 1 }
+                .sum()
+        }
+
+private fun areTradeOrdersAllowed() =
+    ReaderApi
+        .monad<PluginEnvironment>()
+        .binding {
+            if (!isTradingAllowed().bind()) false
+            else noOfTradeableInstruments().bind() > 0
+        }.fix()

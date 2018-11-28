@@ -68,7 +68,14 @@ class KZorroBridge {
             .blockingGet()
     }
 
-    fun doBrokerTime(pTimeUTC: DoubleArray) = getServerTime(pTimeUTC).runId(environment)
+    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int {
+        val brokerTimeResult = getServerTime().runId(environment)
+        brokerTimeResult
+            .maybeTime
+            .map { out_ServerTimeToFill[0] = it }
+
+        return brokerTimeResult.callResult
+    }
 
     fun doSubscribeAsset(assetName: String) = brokerSubscribe.subscribe(assetName)
 

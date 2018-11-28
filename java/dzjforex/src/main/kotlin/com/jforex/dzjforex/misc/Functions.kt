@@ -2,6 +2,8 @@ package com.jforex.dzjforex.misc
 
 import arrow.core.None
 import arrow.core.Some
+import arrow.data.ReaderApi
+import arrow.data.map
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
 import com.jforex.kforexutils.client.init
@@ -27,5 +29,22 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
         None
     }, {
         logger.debug("Created instrument of $it!")
-        Some(it
-        ) })
+        Some(
+            it
+        )
+    })
+
+internal fun isPluginConnected() =
+    ReaderApi
+        .ask<PluginEnvironment>()
+        .map { env -> env.client.isConnected }
+
+internal fun isTradingAllowed() =
+    ReaderApi
+        .ask<PluginEnvironment>()
+        .map { env ->
+            env
+                .pluginStrategy
+                .accountInfo
+                .isTradingAllowed()
+        }

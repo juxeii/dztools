@@ -1,10 +1,13 @@
 package com.jforex.dzjforex.subscription
 
 import arrow.data.ReaderApi
+import arrow.data.fix
 import arrow.data.map
 import arrow.data.runId
+import arrow.instances.monad
+import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.account.accountCurrency
+import com.jforex.dzjforex.account.accountInfo
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
@@ -34,9 +37,9 @@ internal fun getSubscribedInstruments() = ReaderApi
     .map { env -> env.client.subscribedInstruments }
 
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        val accountCurrency = accountCurrency().runId(env)
+    .monad<PluginEnvironment>()
+    .binding {
+        val accountCurrency = accountInfo { accountCurrency }.bind()
         val currencies = instrument.currencies.plus(accountCurrency)
         InstrumentFactory.fromCombinedCurrencies(currencies)
-    }
+    }.fix()

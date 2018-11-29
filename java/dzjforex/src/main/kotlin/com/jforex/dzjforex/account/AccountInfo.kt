@@ -1,23 +1,61 @@
 package com.jforex.dzjforex.account
 
+import arrow.data.ReaderApi
+import arrow.data.map
+import arrow.data.runId
+import arrow.instances.monad
+import arrow.typeclasses.binding
 import com.dukascopy.api.IAccount
-import com.jforex.dzjforex.settings.PluginSettings
+import com.jforex.dzjforex.misc.PluginEnvironment
 
-class AccountInfo(
-    private val account: IAccount,
-    private val pluginSettings: PluginSettings
-) : IAccount by account
-{
-    fun lotSize() = pluginSettings.lotSize()
+internal fun lotSize() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.pluginSettings.lotSize() }
 
-    fun lotMargin() = lotSize() / leverage
+internal fun leverage() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.pluginStrategy.account.leverage }
 
-    fun tradeValue() = equity - baseEquity
+internal fun lotMargin() = ReaderApi
+    .monad<PluginEnvironment>()
+    .binding { lotSize().bind() / leverage().bind() }
 
-    fun freeMargin() = creditLine / leverage
+internal fun tradeValue() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map {
+        with(it.pluginStrategy.account) {
+            equity - baseEquity
+        }
+    }
 
-    fun usedMargin() = equity - freeMargin()
+internal fun freeMargin() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map {
+        with(it.pluginStrategy.account) {
+            creditLine / leverage
+        }
+    }
 
-    fun isTradingAllowed() =
-        accountState === IAccount.AccountState.OK || accountState === IAccount.AccountState.OK_NO_MARGIN_CALL
-}
+internal fun accountCurrency() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map {
+        with(it.pluginStrategy.account) {
+            accountCurrency
+        }
+    }
+
+internal fun usedMargin() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map {
+        with(it.pluginStrategy.account) {
+            equity - freeMargin().runId(it)
+        }
+    }
+
+internal fun isTradingAllowedForAccount() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map {
+        with(it.pluginStrategy.account) {
+            accountState === IAccount.AccountState.OK || accountState === IAccount.AccountState.OK_NO_MARGIN_CALL
+        }
+    }

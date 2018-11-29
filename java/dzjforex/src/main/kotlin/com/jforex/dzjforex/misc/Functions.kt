@@ -4,8 +4,10 @@ import arrow.core.None
 import arrow.core.Some
 import arrow.data.ReaderApi
 import arrow.data.map
+import arrow.data.runId
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
+import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.kforexutils.client.init
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import io.reactivex.Single
@@ -38,13 +40,3 @@ internal fun isPluginConnected() =
     ReaderApi
         .ask<PluginEnvironment>()
         .map { env -> env.client.isConnected }
-
-internal fun isTradingAllowed() =
-    ReaderApi
-        .ask<PluginEnvironment>()
-        .map { env ->
-            env
-                .pluginStrategy
-                .accountInfo
-                .isTradingAllowed()
-        }

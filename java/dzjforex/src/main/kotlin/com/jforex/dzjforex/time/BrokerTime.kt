@@ -8,9 +8,9 @@ import arrow.data.fix
 import arrow.data.map
 import arrow.instances.monad
 import arrow.typeclasses.binding
+import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.isPluginConnected
-import com.jforex.dzjforex.misc.isTradingAllowed
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
@@ -82,6 +82,6 @@ private fun noOfTradeableInstruments() = ReaderApi
 private fun areTradeOrdersAllowed() = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        if (!isTradingAllowed().bind()) false
+        if (!isTradingAllowedForAccount().bind()) false
         else noOfTradeableInstruments().bind() > 0
     }.fix()

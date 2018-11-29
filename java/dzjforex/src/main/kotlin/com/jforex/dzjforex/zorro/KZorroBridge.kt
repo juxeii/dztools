@@ -3,8 +3,9 @@ package com.jforex.dzjforex.zorro
 import arrow.data.runId
 import com.jforex.dzjforex.Zorro
 import com.jforex.dzjforex.asset.BrokerAsset
-import com.jforex.dzjforex.login.BrokerLogin
 import com.jforex.dzjforex.login.LoginData
+import com.jforex.dzjforex.login.loginToDukascopy
+import com.jforex.dzjforex.login.logoutFromDukascopy
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.PluginStrategy
 import com.jforex.dzjforex.misc.getClient
@@ -17,11 +18,10 @@ import org.apache.logging.log4j.LogManager
 class KZorroBridge {
     private val client = getClient()
     private val zoro = Zorro()
-    private val brokerLogin = BrokerLogin(client)
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
     private val zCommunication = ZorroCommunication(pluginSettings)
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
-    private val environment = PluginEnvironment(client, pluginStrategy)
+    private val environment = PluginEnvironment(client, pluginStrategy, pluginSettings)
     private lateinit var brokerAsset: BrokerAsset
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
@@ -38,16 +38,14 @@ class KZorroBridge {
         accountType: String,
         out_AccountNames: Array<String>
     ): Int {
-        logger.debug("Login called")
         val loginData = LoginData(
             username,
             password,
             accountType
         )
-        val loginTask = brokerLogin
-            .login(loginData)
+        val loginTask = loginToDukascopy(loginData)
+            .runId(client)
             .map { loginResult ->
-                logger.debug("Login result $loginResult")
                 if (loginResult == LOGIN_OK) {
                     pluginStrategy.start(out_AccountNames)
                     initComponents()
@@ -61,8 +59,8 @@ class KZorroBridge {
     fun doLogout(): Int {
         logger.debug("Logout called")
         pluginStrategy.stop()
-        return brokerLogin
-            .logout()
+        return logoutFromDukascopy()
+            .runId(client)
             .blockingGet()
     }
 

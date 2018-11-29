@@ -4,6 +4,7 @@ import arrow.data.ReaderApi
 import arrow.data.map
 import arrow.data.runId
 import com.dukascopy.api.Instrument
+import com.jforex.dzjforex.account.accountCurrency
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
@@ -35,7 +36,7 @@ internal fun getSubscribedInstruments() = ReaderApi
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
-        val accountCurrency = env.pluginStrategy.accountInfo.accountCurrency
+        val accountCurrency = accountCurrency().runId(env)
         val currencies = instrument.currencies.plus(accountCurrency)
         InstrumentFactory.fromCombinedCurrencies(currencies)
     }

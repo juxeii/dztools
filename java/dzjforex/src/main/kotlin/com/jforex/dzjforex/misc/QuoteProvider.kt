@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.misc
 
 import arrow.data.getOption
+import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
 import com.jforex.kforexutils.misc.KForexUtils
 import com.jforex.kforexutils.price.TickQuote
@@ -22,13 +23,17 @@ class QuoteProvider(private val kForexUtils: KForexUtils)
             })
     }
 
-    private fun tick(instrument: Instrument) = latestTicks
+
+    private fun tick(
+        instrument: Instrument,
+        block: ITick.() -> Unit
+    ) = latestTicks
         .getOption(instrument)
-        .map { it.tick }
+        .map { it.tick.apply(block) }
 
-    fun ask(instrument: Instrument) = tick(instrument).map { it.ask }
+    fun ask(instrument: Instrument) = tick(instrument) { ask }
 
-    fun bid(instrument: Instrument) = tick(instrument).map { it.bid }
+    fun bid(instrument: Instrument) = tick(instrument) { bid }
 
-    fun spread(instrument: Instrument) = tick(instrument).map { it.bid - it.ask }
+    fun spread(instrument: Instrument) = tick(instrument) { bid - ask }
 }

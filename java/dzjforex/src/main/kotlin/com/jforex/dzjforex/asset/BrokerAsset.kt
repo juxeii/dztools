@@ -32,13 +32,5 @@ class BrokerAsset(private val quoteProvider: QuoteProvider)
     )
     {
         logger.debug("Fillin asset params")
-
-        out_AssetParamsToFill[0] = quoteProvider
-            .ask(instrument)
-            .getOrElse { 1.1288 }
-        out_AssetParamsToFill[1] = quoteProvider
-            .spread(instrument)
-            .getOrElse { 0.6 }
-
     }
 }

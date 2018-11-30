@@ -86,7 +86,7 @@ class QuoteProvider(private val kForexUtils: KForexUtils) {
         quote: TickQuote
     ) = latestTicks.putIfAbsent(instrument, quote)
 
-    fun ask(instrument: Instrument):Double = tick(instrument) { ask }
+    fun ask(instrument: Instrument): Double = tick(instrument) { ask }
 
     fun bid(instrument: Instrument) = tick(instrument) { bid }
 

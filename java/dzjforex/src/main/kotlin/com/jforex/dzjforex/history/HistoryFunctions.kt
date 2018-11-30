@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import arrow.data.ReaderApi
 import arrow.data.ReaderT
+import arrow.data.fix
 import arrow.data.map
 import com.dukascopy.api.IHistory
 import com.dukascopy.api.Instrument

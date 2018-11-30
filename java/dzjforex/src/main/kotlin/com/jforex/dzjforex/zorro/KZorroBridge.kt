@@ -1,8 +1,6 @@
 package com.jforex.dzjforex.zorro
 
 import arrow.data.runId
-import arrow.instances.either.monad.map
-import com.dukascopy.api.JFException
 import com.jforex.dzjforex.Zorro
 import com.jforex.dzjforex.asset.getAssetData
 import com.jforex.dzjforex.login.LoginData
@@ -11,11 +9,9 @@ import com.jforex.dzjforex.login.logoutFromDukascopy
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.PluginStrategy
 import com.jforex.dzjforex.misc.getClient
-import com.jforex.dzjforex.misc.waitForFirstQuote
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.subscribeAsset
 import com.jforex.dzjforex.time.getServerTime
-import io.reactivex.Observable
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 
@@ -70,21 +66,8 @@ class KZorroBridge {
     }
 
     fun doSubscribeAsset(assetName: String): Int {
-        if (subscribeAsset(assetName).runId(environment) == SUBSCRIBE_FAIL) return SUBSCRIBE_FAIL
-
-        val waitForQuoteTask = Observable
-            .fromIterable(client.subscribedInstruments)
-            .map { instrument ->
-                waitForFirstQuote(instrument)
-                    .run(environment)
-                    .map { }
-                    .fold({ throw JFException("No quote for $instrument available!") }, { instrument })
-            }
-            .ignoreElements()
-            .toSingleDefault(SUBSCRIBE_OK)
-            .onErrorReturnItem(SUBSCRIBE_FAIL)
-
-        return zCommunication.progressWait(waitForQuoteTask)
+        val subscribeTask = subscribeAsset(assetName).runId(environment)
+        return zCommunication.progressWait(subscribeTask)
     }
 
     fun doBrokerAsset(

@@ -84,4 +84,8 @@ public class ZorroBridge {
     public int doSetOrderText(final String orderText) {
         return 42;
     }
+
+    public static native int jcallback_BrokerError(String errorMsg);
+
+    public static native int jcallback_BrokerProgress(int progress);
 }

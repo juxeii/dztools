@@ -6,7 +6,6 @@ namespace JData
 jobject JDukaZorroBridgeObject;
 
 jclass JDukaZorroBridgeClass;
-jclass JZorroClass;
 jclass ExceptionClass;
 
 JMethodDesc constructor =      { nullptr, "<init>",           "()V" };
@@ -31,7 +30,7 @@ const JNINativeMethod nativesTable[2] { { (char*)"jcallback_BrokerError",    (ch
 
 const char* JVMClassPathOption =  "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.6.jar";
 const char* DukaZorroBridgePath = "com/jforex/dzjforex/ZorroBridge";
-const char* ZorroPath =           "com/jforex/dzjforex/Zorro";
+const char* ZorroPath =           "com/jforex/dzjforex/ZorroBridge";
 const char* ExcPath =             "java/lang/Class";
 
 const std::vector<JMethodDesc*> dukaZorroBridgeMethods = { &constructor,

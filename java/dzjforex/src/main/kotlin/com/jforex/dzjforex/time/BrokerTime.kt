@@ -15,9 +15,6 @@ import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
-import org.apache.logging.log4j.LogManager
-
-private val logger = LogManager.getLogger()
 
 internal data class BrokerTimeResult(
     val callResult: Int,
@@ -53,13 +50,11 @@ private fun getServerTimeFromContext() = ReaderApi
 private fun isMarketClosed(serverTime: Long) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
-        val isClosed = env
+        env
             .pluginStrategy
             .context
             .dataService
             .isOfflineTime(serverTime)
-        logger.debug("time is $serverTime market is closed $isClosed")
-        isClosed
     }
 
 private fun createBrokerTimeResult(
@@ -71,10 +66,11 @@ private fun noOfTradeableInstruments() = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
         env
-            .client
+            .pluginStrategy
+            .context
             .subscribedInstruments
             .stream()
-            .filter { it.isTradable }
+            .filter { env.pluginStrategy.context.engine.isTradable(it) }
             .mapToInt { 1 }
             .sum()
     }

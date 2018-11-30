@@ -4,7 +4,6 @@ import arrow.data.ReaderApi
 import arrow.data.fix
 import arrow.data.map
 import arrow.data.runId
-import arrow.instances.either.monad.map
 import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
@@ -14,8 +13,6 @@ import com.jforex.dzjforex.account.accountInfo
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.misc.waitForFirstQuote
-import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
-import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
@@ -32,9 +29,10 @@ internal fun subscribeAsset(assetName: String) = ReaderApi
         instrumentFromAssetName(assetName)
             .filter(::isForexInstrument)
             .map { getInstrumentsToSubscribe(it).runId(env) }
+            .map { instruments -> instruments.filter { !env.pluginStrategy.quoteProvider.hasTick(it) }.toSet() }
             .map {
                 logger.debug("Subscribing instruments: $it")
-                env.client.subscribedInstruments = it
+                env.pluginStrategy.context.setSubscribedInstruments(it, true)
                 it
             }
             .fold({ Single.just(SUBSCRIBE_FAIL) }) { waitForQuotes(it).runId(env) }
@@ -47,8 +45,7 @@ internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
             .fromIterable(instruments)
             .map { instrument ->
                 waitForFirstQuote(instrument)
-                    .run(env)
-                    .map { }
+                    .runId(env)
                     .fold({ throw JFException("No quote for $instrument available!") }, { instrument })
             }
             .ignoreElements()
@@ -57,7 +54,8 @@ internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
     }
 
 internal fun isForexInstrument(instrument: Instrument) =
-    if (instrument.type != IFinancialInstrument.Type.FOREX) {
+    if (instrument.type != IFinancialInstrument.Type.FOREX)
+    {
         logger.debug("Currently only forex assets are supported and $instrument is not!")
         false
     } else true
@@ -66,7 +64,7 @@ internal fun isInstrumentSubscribed(instrument: Instrument) = getSubscribedInstr
 
 internal fun getSubscribedInstruments() = ReaderApi
     .ask<PluginEnvironment>()
-    .map { env -> env.client.subscribedInstruments }
+    .map { env -> env.pluginStrategy.context.subscribedInstruments }
 
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
     .monad<PluginEnvironment>()

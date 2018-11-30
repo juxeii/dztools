@@ -1,7 +1,6 @@
 package com.jforex.dzjforex.zorro
 
 import arrow.data.runId
-import com.jforex.dzjforex.Zorro
 import com.jforex.dzjforex.asset.getAssetData
 import com.jforex.dzjforex.login.LoginData
 import com.jforex.dzjforex.login.loginToDukascopy
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.LogManager
 
 class KZorroBridge {
     private val client = getClient()
-    private val zoro = Zorro()
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
     private val zCommunication = ZorroCommunication(pluginSettings)
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
@@ -49,7 +47,6 @@ class KZorroBridge {
     }
 
     fun doLogout(): Int {
-        logger.debug("Logout called")
         pluginStrategy.stop()
         return logoutFromDukascopy()
             .runId(client)

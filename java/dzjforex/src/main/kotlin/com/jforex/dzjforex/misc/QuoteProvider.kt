@@ -1,15 +1,13 @@
 package com.jforex.dzjforex.misc
 
-import arrow.core.left
-import arrow.core.right
+import arrow.core.failure
+import arrow.core.success
 import arrow.data.ReaderApi
-import arrow.data.ReaderT
 import arrow.data.map
 import arrow.data.runId
-import arrow.instances.either.monad.map
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.history.IHistoryError
+import com.dukascopy.api.JFException
 import com.jforex.dzjforex.history.latestTick
 import com.jforex.kforexutils.misc.KForexUtils
 import com.jforex.kforexutils.price.TickQuote
@@ -20,34 +18,39 @@ import java.util.concurrent.TimeUnit
 
 private val logger = LogManager.getLogger()
 
-internal fun waitForFirstQuote(instrument: Instrument) = ReaderT { env: PluginEnvironment ->
-    val quoteProvider = env.pluginStrategy.quoteProvider
+internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        val quoteProvider = env.pluginStrategy.quoteProvider
+        historyRetryObservable()
+            .runId(env)
+            .doOnNext { logger.debug("Fetch trigger no $it") }
+            .takeWhile {
+                logger.debug("Trying to fetch latest tick for $instrument, try no: $it")
+                if (quoteProvider.hasTick(instrument))
+                {
+                    logger.debug("Tick for $instrument is available in quoteProvider")
+                    false
+                } else
+                {
+                    logger.debug("Tick for $instrument is not available in quoteProvider!")
+                    latestTick(instrument)
+                        .runId(env)
+                        .map {
+                            logger.debug("Tick for $instrument is available in history")
+                            quoteProvider.store(instrument, it)
+                        }
+                        .fold({
+                            logger.debug("Tick for $instrument is not available in history!")
+                            true
+                        }, { false })
+                }
+            }.blockingSubscribe()
 
-    historyRetryObservable()
-        .runId(env)
-        .takeWhile {
-            logger.debug("Trying to fetch latest tick for $instrument, try no: $it")
-            if (quoteProvider.hasTick(instrument)) {
-                logger.debug("Tick for $instrument is available in quoteProvider")
-                false
-            } else {
-                logger.debug("Tick for $instrument is not available in quoteProvider!")
-                latestTick(instrument)
-                    .run(env)
-                    .map {
-                        logger.debug("Tick for $instrument is available in history")
-                        quoteProvider.store(instrument, it)
-                    }
-                    .fold({
-                        logger.debug("Tick for $instrument is not available in history!")
-                        true
-                    }, { false })
-            }
-        }.blockingSubscribe()
-
-    if (quoteProvider.hasTick(instrument)) Unit.right()
-    else IHistoryError.IHistoryException.left()
-}
+        logger.debug("Done Fetching")
+        if (quoteProvider.hasTick(instrument)) Unit.success()
+        else JFException("Latest tick from history for $instrument returned null!").failure()
+    }
 
 private fun historyRetryObservable() = ReaderApi
     .ask<PluginEnvironment>()
@@ -61,17 +64,16 @@ private fun historyRetryObservable() = ReaderApi
     }
 
 
-class QuoteProvider(private val kForexUtils: KForexUtils) {
+class QuoteProvider(private val kForexUtils: KForexUtils)
+{
     private var latestTicks: MutableMap<Instrument, TickQuote> = mutableMapOf()
     private val logger = LogManager.getLogger(QuoteProvider::class.java)
 
-    init {
+    init
+    {
         kForexUtils
             .tickQuotes
-            .subscribeBy(onNext = {
-                logger.debug("Received tick quote $it")
-                latestTicks[it.instrument] = it
-            })
+            .subscribeBy(onNext = { latestTicks[it.instrument] = it })
     }
 
     private fun <R> tick(
@@ -80,6 +82,8 @@ class QuoteProvider(private val kForexUtils: KForexUtils) {
     ) = latestTicks[instrument]!!.tick.run(block)
 
     fun hasTick(instrument: Instrument) = latestTicks.containsKey(instrument)
+
+    fun noOfInstruments() = latestTicks.size
 
     fun store(
         instrument: Instrument,

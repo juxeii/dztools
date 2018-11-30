@@ -13,6 +13,9 @@ import java.util.SimpleTimeZone
 import com.dukascopy.charts.utils.formatter.DateFormatter.setTimeZone
 import java.text.SimpleDateFormat
 import com.dukascopy.api.Unit
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 object TimeUtil
 {

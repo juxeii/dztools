@@ -3,7 +3,6 @@ package com.jforex.dzjforex.misc
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.IContext
 import com.dukascopy.api.IHistory
-import com.dukascopy.api.Instrument
 import com.dukascopy.api.system.IClient
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.kforexutils.misc.KForexUtils
@@ -31,8 +30,6 @@ class PluginStrategy(
 
     fun start(out_AccountNames: Array<String>)
     {
-        client.subscribedInstruments = setOf(Instrument.EURUSD)
-        logger.debug("Subscribed instruments")
         strategyID = client.startStrategy(infoStrategy)
         logger.debug("started strategy")
         kForexUtils = infoStrategy.kForexUtils

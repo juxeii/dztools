@@ -29,10 +29,7 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
     .fold({
         logger.debug("Cannot create instrument from asset name $assetName!")
         None
-    }, {
-        logger.debug("Created instrument of $it!")
-        Some(it)
-    })
+    }, { Some(it) })
 
 internal fun isPluginConnected() =
     ReaderApi

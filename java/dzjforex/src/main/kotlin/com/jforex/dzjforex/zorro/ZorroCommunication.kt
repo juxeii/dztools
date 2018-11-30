@@ -1,8 +1,8 @@
 package com.jforex.dzjforex.zorro
 
 import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.Zorro.jcallback_BrokerError
-import com.jforex.dzjforex.Zorro.jcallback_BrokerProgress
+import com.jforex.dzjforex.ZorroBridge.jcallback_BrokerError
+import com.jforex.dzjforex.ZorroBridge.jcallback_BrokerProgress
 import com.jforex.dzjforex.settings.PluginSettings
 import io.reactivex.Observable
 import io.reactivex.Single

@@ -17,7 +17,6 @@ namespace JData
 extern jobject JDukaZorroBridgeObject;
 
 extern jclass JDukaZorroBridgeClass;
-extern jclass JZorroClass;
 extern jclass ExceptionClass;
 
 extern JMethodDesc constructor;

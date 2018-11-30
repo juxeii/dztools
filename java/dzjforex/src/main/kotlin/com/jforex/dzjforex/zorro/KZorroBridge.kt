@@ -14,7 +14,8 @@ import com.jforex.dzjforex.time.getServerTime
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 
-class KZorroBridge {
+class KZorroBridge
+{
     private val client = getClient()
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
     private val zCommunication = ZorroCommunication(pluginSettings)
@@ -28,7 +29,8 @@ class KZorroBridge {
         password: String,
         accountType: String,
         out_AccountNames: Array<String>
-    ): Int {
+    ): Int
+    {
         val loginData = LoginData(
             username,
             password,
@@ -37,7 +39,8 @@ class KZorroBridge {
         val loginTask = loginToDukascopy(loginData)
             .runId(client)
             .map { loginResult ->
-                if (loginResult == LOGIN_OK) {
+                if (loginResult == LOGIN_OK)
+                {
                     pluginStrategy.start(out_AccountNames)
                 }
                 loginResult
@@ -46,14 +49,10 @@ class KZorroBridge {
         return zCommunication.progressWait(loginTask)
     }
 
-    fun doLogout(): Int {
-        pluginStrategy.stop()
-        return logoutFromDukascopy()
-            .runId(client)
-            .blockingGet()
-    }
+    fun doLogout() = logoutFromDukascopy().runId(client)
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int {
+    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int
+    {
         val brokerTimeResult = getServerTime().runId(environment)
         brokerTimeResult
             .maybeTime
@@ -62,7 +61,8 @@ class KZorroBridge {
         return brokerTimeResult.callResult
     }
 
-    fun doSubscribeAsset(assetName: String): Int {
+    fun doSubscribeAsset(assetName: String): Int
+    {
         val subscribeTask = subscribeAsset(assetName).runId(environment)
         return zCommunication.progressWait(subscribeTask)
     }
@@ -72,14 +72,16 @@ class KZorroBridge {
         assetParams: DoubleArray
     ) = getAssetData(assetName, assetParams).runId(environment)
 
-    fun doBrokerAccount(accountInfoParams: DoubleArray): Int {
+    fun doBrokerAccount(accountInfoParams: DoubleArray): Int
+    {
         return 42
     }
 
     fun doBrokerTrade(
         orderID: Int,
         tradeParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
@@ -89,21 +91,24 @@ class KZorroBridge {
         slDistance: Double,
         limit: Double,
         tradeParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
     fun doBrokerSell(
         orderID: Int,
         contracts: Int
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
     fun doBrokerStop(
         orderID: Int,
         slPrice: Double
-    ): Int {
+    ): Int
+    {
         return 42
     }
 
@@ -114,7 +119,8 @@ class KZorroBridge {
         periodInMinutes: Int,
         noOfTicks: Int,
         tickParams: DoubleArray
-    ): Int {
+    ): Int
+    {
         return 42
     }
 }

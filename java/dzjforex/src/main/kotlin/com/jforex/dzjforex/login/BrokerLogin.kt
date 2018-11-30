@@ -12,7 +12,6 @@ import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
 import com.jforex.kforexutils.client.logout
-import io.reactivex.Completable
 import io.reactivex.Single
 import org.apache.logging.log4j.LogManager
 
@@ -48,7 +47,6 @@ private fun getLoginType(accountType: String) =
 internal fun logoutFromDukascopy() = ReaderApi
     .ask<IClient>()
     .map { client ->
-        Completable
-            .fromCallable { client.logout() }
-            .toSingleDefault(LOGOUT_OK)
+        client.disconnect()
+        LOGOUT_OK
     }

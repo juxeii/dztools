@@ -15,27 +15,30 @@ import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+import org.apache.logging.log4j.LogManager
+
+private val logger = LogManager.getLogger()
 
 internal data class BrokerTimeResult(
     val callResult: Int,
-    val maybeTime: Option<Double>
+    val maybeTime: Option<Double> = None
 )
 
 internal fun getServerTime() = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        if (!isPluginConnected().bind()) createBrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
-        else if (!areTradeOrdersAllowed().bind()) createBrokerTimeResult(CONNECTION_OK_BUT_TRADING_NOT_ALLOWED)
-        else getWhenConnected().bind()
-    }.fix()
-
-private fun getWhenConnected() = ReaderApi
-    .monad<PluginEnvironment>()
-    .binding {
-        val serverTime = getServerTimeFromContext().bind()
-        val isMarketClosed = isMarketClosed(serverTime).bind()
-        if (isMarketClosed) createBrokerTimeResult(CONNECTION_OK_BUT_MARKET_CLOSED)
-        else createBrokerTimeResult(CONNECTION_OK, Some(toDATEFormatInSeconds(serverTime)))
+        if (!isPluginConnected().bind()) BrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
+        else
+        {
+            val serverTime = getServerTimeFromContext().bind()
+            val serverState = when
+            {
+                isMarketClosed(serverTime).bind() -> CONNECTION_OK_BUT_MARKET_CLOSED
+                !areTradeOrdersAllowed().bind() -> CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+                else -> CONNECTION_OK
+            }
+            BrokerTimeResult(serverState, Some(toDATEFormatInSeconds(serverTime)))
+        }
     }.fix()
 
 private fun getServerTimeFromContext() = ReaderApi
@@ -56,11 +59,6 @@ private fun isMarketClosed(serverTime: Long) = ReaderApi
             .dataService
             .isOfflineTime(serverTime)
     }
-
-private fun createBrokerTimeResult(
-    callResult: Int,
-    maybeTime: Option<Double> = None
-) = BrokerTimeResult(callResult, maybeTime)
 
 private fun noOfTradeableInstruments() = ReaderApi
     .ask<PluginEnvironment>()

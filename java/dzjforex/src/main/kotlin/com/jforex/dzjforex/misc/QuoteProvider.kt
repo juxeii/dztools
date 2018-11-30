@@ -85,6 +85,8 @@ class QuoteProvider(private val kForexUtils: KForexUtils)
 
     fun noOfInstruments() = latestTicks.size
 
+    fun instruments() = latestTicks.keys
+
     fun store(
         instrument: Instrument,
         quote: TickQuote

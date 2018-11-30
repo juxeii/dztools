@@ -31,9 +31,7 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
         None
     }, {
         logger.debug("Created instrument of $it!")
-        Some(
-            it
-        )
+        Some(it)
     })
 
 internal fun isPluginConnected() =

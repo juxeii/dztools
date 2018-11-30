@@ -1,36 +1,39 @@
 package com.jforex.dzjforex.asset
 
-import arrow.core.getOrElse
+import arrow.data.ReaderApi
+import arrow.data.map
 import com.dukascopy.api.Instrument
+import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.QuoteProvider
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 import org.apache.logging.log4j.LogManager
 
-class BrokerAsset(private val quoteProvider: QuoteProvider)
-{
-    private val logger = LogManager.getLogger(BrokerAsset::class.java)
+private val logger = LogManager.getLogger()
 
-    fun get(
-        assetName: String,
-        out_AssetParamsToFill: DoubleArray
-    ): Int
-    {
-        return instrumentFromAssetName(assetName)
-            .map {
-                fillParams(it, out_AssetParamsToFill)
-                it
-            }
+internal fun getAssetData(
+    assetName: String,
+    out_AssetParamsToFill: DoubleArray
+) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        instrumentFromAssetName(assetName)
+            .map { fillAssetParams(it, out_AssetParamsToFill).run(env) }
             .fold({ ASSET_UNAVAILABLE }) { ASSET_AVAILABLE }
     }
 
+private fun fillAssetParams(
+    instrument: Instrument,
+    out_AssetParamsToFill: DoubleArray
+) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        val quoteProvider = env.pluginStrategy.quoteProvider
+        val price = quoteProvider.ask(instrument)
+        val spread = quoteProvider.spread(instrument)
+        logger.debug("Filling asset params, price $price spread $spread")
 
-    private fun fillParams(
-        instrument: Instrument,
-        out_AssetParamsToFill: DoubleArray
-    )
-    {
-        logger.debug("Fillin asset params")
+        out_AssetParamsToFill[0] = price
+        out_AssetParamsToFill[1] = spread
     }
-}

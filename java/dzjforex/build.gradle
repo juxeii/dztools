@@ -6,13 +6,13 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'kotlin'
 
-group= 'com.jforex.dzplugin'
+group = 'com.jforex.dzplugin'
 version = '0.9.6'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 
-description ="""
+description = """
 The Java plugin part for Zorro which lets you trade with Dukascopy
 Project name: ${project.name}
 """
@@ -20,21 +20,22 @@ Project name: ${project.name}
 def pluginFolder = "${buildDir}/Plugin"
 
 repositories {
-   mavenLocal()
-   mavenCentral()
-   maven {
-       url "https://www.dukascopy.com/client/jforexlib/publicrepo"
-   }
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url "https://www.dukascopy.com/client/jforexlib/publicrepo"
+    }
 }
 
 dependencies {
     compile 'com.dukascopy.dds2:DDS2-jClient-JForex:3.4.13'
     compile 'com.jforex:KForexUtils:0.2.0-SNAPSHOT'
+    compile 'com.jakewharton.rxrelay2:rxrelay:2.1.0'
     compile 'org.aeonbits.owner:owner:1.0.10'
 }
 
 gradle.projectsEvaluated {
-   tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
     }
 }
@@ -42,8 +43,8 @@ gradle.projectsEvaluated {
 jar {
     manifest {
         attributes 'Implementation-Title': project.name,
-                   'Implementation-Version': version,
-                   'Class-Path' : ". ${(configurations.runtime.collect { "lib/$it.name" }).join(' ') }"
+                'Implementation-Version': version,
+                'Class-Path': ". ${(configurations.runtime.collect { "lib/$it.name" }).join(' ')}"
     }
     baseName = project.name
 }
@@ -67,7 +68,7 @@ task createPluginFolder(dependsOn: ':jar') {
     delete pluginFolder
     mkdir pluginFolder
 
-    copy{
+    copy {
         from "../../c++/Release/dukascopy.dll"
         into pluginFolder
     }
@@ -76,22 +77,22 @@ task createPluginFolder(dependsOn: ':jar') {
     mkdir dukascopyFolder
     def configFolder = "src/main/config"
 
-    copy{
+    copy {
         from jar
         into dukascopyFolder
     }
 
-    copy{
+    copy {
         from "${configFolder}/log4j2.xml"
         into dukascopyFolder
     }
 
-    copy{
+    copy {
         from "${configFolder}/log4j.properties"
         into dukascopyFolder
     }
 
-    copy{
+    copy {
         from "${configFolder}/Plugin.properties"
         into dukascopyFolder
     }
@@ -99,7 +100,7 @@ task createPluginFolder(dependsOn: ':jar') {
     def libFolder = "${dukascopyFolder}/lib"
     mkdir libFolder
 
-    copy{
+    copy {
         from configurations.runtime
         into libFolder
     }
@@ -112,7 +113,7 @@ task createZip(type: Zip, dependsOn: ':createPluginFolder') {
 
 task copyPluginFolderToZorro(type: Copy, dependsOn: ':createPluginFolder') {
     delete "${zorroPath}/Plugin/dukascopy"
-    
+
     from pluginFolder
     into "${zorroPath}/Plugin"
 }

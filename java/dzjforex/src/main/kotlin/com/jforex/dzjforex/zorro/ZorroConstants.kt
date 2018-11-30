@@ -4,6 +4,9 @@ const val LOGIN_OK = 1
 const val LOGIN_FAIL = 0
 const val LOGOUT_OK = 0
 
+const val SUBSCRIBE_OK = 1
+const val SUBSCRIBE_FAIL = 0
+
 const val ASSET_AVAILABLE = 1
 const val ASSET_UNAVAILABLE = 0
 

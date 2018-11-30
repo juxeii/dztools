@@ -1,17 +1,21 @@
 package com.jforex.dzjforex.zorro
 
 import arrow.data.runId
+import arrow.instances.either.monad.map
+import com.dukascopy.api.JFException
 import com.jforex.dzjforex.Zorro
-import com.jforex.dzjforex.asset.BrokerAsset
+import com.jforex.dzjforex.asset.getAssetData
 import com.jforex.dzjforex.login.LoginData
 import com.jforex.dzjforex.login.loginToDukascopy
 import com.jforex.dzjforex.login.logoutFromDukascopy
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.PluginStrategy
 import com.jforex.dzjforex.misc.getClient
+import com.jforex.dzjforex.misc.waitForFirstQuote
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.subscribeAsset
 import com.jforex.dzjforex.time.getServerTime
+import io.reactivex.Observable
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 
@@ -22,15 +26,8 @@ class KZorroBridge {
     private val zCommunication = ZorroCommunication(pluginSettings)
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
     private val environment = PluginEnvironment(client, pluginStrategy, pluginSettings)
-    private lateinit var brokerAsset: BrokerAsset
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
-
-    private fun initComponents() {
-        logger.debug("Init components")
-        brokerAsset = BrokerAsset(pluginStrategy.quoteProvider)
-        logger.debug("Init components done")
-    }
 
     fun doLogin(
         username: String,
@@ -48,7 +45,6 @@ class KZorroBridge {
             .map { loginResult ->
                 if (loginResult == LOGIN_OK) {
                     pluginStrategy.start(out_AccountNames)
-                    initComponents()
                 }
                 loginResult
             }
@@ -73,12 +69,28 @@ class KZorroBridge {
         return brokerTimeResult.callResult
     }
 
-    fun doSubscribeAsset(assetName: String) = subscribeAsset(assetName).runId(environment)
+    fun doSubscribeAsset(assetName: String): Int {
+        if (subscribeAsset(assetName).runId(environment) == SUBSCRIBE_FAIL) return SUBSCRIBE_FAIL
+
+        val waitForQuoteTask = Observable
+            .fromIterable(client.subscribedInstruments)
+            .map { instrument ->
+                waitForFirstQuote(instrument)
+                    .run(environment)
+                    .map { }
+                    .fold({ throw JFException("No quote for $instrument available!") }, { instrument })
+            }
+            .ignoreElements()
+            .toSingleDefault(SUBSCRIBE_OK)
+            .onErrorReturnItem(SUBSCRIBE_FAIL)
+
+        return zCommunication.progressWait(waitForQuoteTask)
+    }
 
     fun doBrokerAsset(
         assetName: String,
         assetParams: DoubleArray
-    ) = brokerAsset.get(assetName, assetParams)
+    ) = getAssetData(assetName, assetParams).runId(environment)
 
     fun doBrokerAccount(accountInfoParams: DoubleArray): Int {
         return 42

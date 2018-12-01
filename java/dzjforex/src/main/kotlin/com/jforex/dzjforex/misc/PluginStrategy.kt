@@ -29,11 +29,16 @@ class PluginStrategy(
 
     fun start()
     {
+        client.startStrategy(infoStrategy)
         logger.debug("started strategy")
         kForexUtils = infoStrategy.kForexUtils
+        logger.debug("init kfutils")
         context = kForexUtils.context
+        logger.debug("init context")
         account = context.account
+        logger.debug("init account")
         history = context.history
+        logger.debug("init history")
         quoteProvider = QuoteProvider(kForexUtils)
         logger.debug("filled account params")
     }

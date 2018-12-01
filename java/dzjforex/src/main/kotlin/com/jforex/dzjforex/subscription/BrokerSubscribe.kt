@@ -12,22 +12,23 @@ import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.misc.waitForFirstQuote
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
+import com.jforex.dzjforex.zorro.progressWait
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import io.reactivex.Observable
-import io.reactivex.Single
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun subscribeAsset(assetName: String): Reader<PluginEnvironment, Single<Int>> =
+internal fun subscribeAsset(assetName: String): Reader<PluginEnvironment, Int> =
     instrumentFromAssetName(assetName)
         .filter(::isForexInstrument)
-        .fold({ Reader().just(Single.just(SUBSCRIBE_FAIL)) }) { subscribeValidInstrument(it) }
+        .fold({ Reader().just(SUBSCRIBE_FAIL) }) { subscribeValidInstrument(it) }
 
 internal fun subscribeValidInstrument(instrument: Instrument) = getInstrumentsToSubscribe(instrument)
     .flatMap { setSubscribedInstruments(it) }
     .flatMap { waitForQuotes(it) }
+    .flatMap { progressWait(it) }
 
 internal fun instrumentsWithQuotes() = ReaderApi
     .ask<PluginEnvironment>()

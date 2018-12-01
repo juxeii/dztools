@@ -67,8 +67,8 @@ void JNIHandler::initExceptionHandling()
 
 void JNIHandler::registerNatives()
 {
-    JData::JDukaZorroBridgeClass = env->FindClass(JData::ZorroPath);
-    env->RegisterNatives(JData::JDukaZorroBridgeClass, JData::nativesTable, JData::nativesTableSize);
+    JData::JDukaZorroNativesClass = env->FindClass(JData::ZorroNativesPath);
+    env->RegisterNatives(JData::JDukaZorroNativesClass, JData::nativesTable, JData::nativesTableSize);
     checkJNIExcpetion(env);
 }
 

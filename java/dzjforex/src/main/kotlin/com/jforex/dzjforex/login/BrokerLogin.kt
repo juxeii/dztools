@@ -26,9 +26,11 @@ internal fun loginToDukascopy(
 ):Reader<PluginEnvironment, Int> = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
+        logger.debug("Called loginToDukascopy")
         if (isConnected().bind()) LOGIN_OK
         else
         {
+            logger.debug("is connected")
             val credentials = LoginCredentials(username = username, password = password)
             val loginData = LoginData(credentials, accountType)
             val loginType = getLoginType(loginData.accountType)
@@ -43,8 +45,10 @@ internal fun clientLogin(
 ) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
+        logger.debug("clientLogin called")
         env.client
             .login(loginData.credentials, loginType)
+            .doOnSubscribe{ logger.debug("subscribed login")}
             .toSingleDefault(LOGIN_OK)
             .doOnError { logger.debug("Login failed! " + it.message) }
             .onErrorReturnItem(LOGIN_FAIL)
@@ -52,7 +56,9 @@ internal fun clientLogin(
                 if (loginResult == LOGIN_OK)
                 {
                     env.pluginStrategy.start()
+                    logger.debug("after started strategy")
                     out_AccountNamesToFill[0] = env.pluginStrategy.account.accountId
+                    logger.debug("after setting accountname")
                 }
                 loginResult
             }

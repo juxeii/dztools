@@ -31,7 +31,12 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
         None
     }, { Some(it) })
 
-internal fun isPluginConnected() =
+internal fun isConnectedToDukascopy() =
+    ReaderApi
+        .ask<IClient>()
+        .map { it.isConnected }
+
+internal fun isConnected() =
     ReaderApi
         .ask<PluginEnvironment>()
-        .map { env -> env.client.isConnected }
+        .map { it.client.isConnected }

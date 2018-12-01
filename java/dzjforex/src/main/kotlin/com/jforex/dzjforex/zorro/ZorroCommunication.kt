@@ -1,57 +1,41 @@
 package com.jforex.dzjforex.zorro
 
+import arrow.data.Reader
+import arrow.data.ReaderApi
+import arrow.data.map
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.ZorroBridge.jcallback_BrokerError
 import com.jforex.dzjforex.ZorroBridge.jcallback_BrokerProgress
-import com.jforex.dzjforex.settings.PluginSettings
+import com.jforex.dzjforex.misc.PluginEnvironment
+import com.sun.corba.se.impl.activation.ServerMain.logError
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.util.concurrent.TimeUnit
 
+private val logger = LogManager.getLogger()
 
-class ZorroCommunication(pluginSettings: PluginSettings)
-{
-    private val logger = LogManager.getLogger(ZorroCommunication::class.java)
-    private val heartBeat: Observable<Long> = Observable.interval(
-        0,
-        pluginSettings.zorroProgressInterval(),
-        TimeUnit.MILLISECONDS
-    )
-
-    fun <T> progressWait(task: Single<T>): T
-    {
+internal fun <T> progressWait(task: Single<T>): Reader<PluginEnvironment, T> = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
         val stateRelay = BehaviorRelay.create<T>()
         task
             .subscribeOn(Schedulers.io())
             .subscribe { it -> stateRelay.accept(it) }
-        heartBeat
+        Observable.interval(
+            0,
+            env.pluginSettings.zorroProgressInterval(),
+            TimeUnit.MILLISECONDS
+        )
             .takeWhile { !stateRelay.hasValue() }
-            .blockingSubscribe { callProgress(heartBeatIndication) }
+            .blockingSubscribe { jcallback_BrokerProgress(heartBeatIndication) }
 
-        return stateRelay.value!!
+        stateRelay.value!!
     }
 
-    fun callProgress(progress: Int) = jcallback_BrokerProgress(progress)
+internal fun logZorroError(errorMsg: String) = jcallback_BrokerError(errorMsg)
 
-    fun logError(
-        errorMsg: String,
-        logger: Logger
-    ): Int
-    {
-        logger.error(errorMsg)
-        return logError(errorMsg)
-    }
+internal fun logZorroDiagnose(errorMsg: String) = logZorroError("#$errorMsg")
 
-    fun logError(errorMsg: String) = jcallback_BrokerError(errorMsg)
-
-    fun logDiagnose(errorMsg: String) = logError("#$errorMsg")
-
-    fun logPopUp(errorMsg: String) = logError("!$errorMsg")
-
-    fun indicateError() = logError("Severe error occured, check dzplugin.log logfile!")
-
-    fun showError(errorMsg: String) = logError(errorMsg)
-}
+internal fun logZorroPopup(errorMsg: String) = logError("!$errorMsg")

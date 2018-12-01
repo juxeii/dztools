@@ -1,8 +1,5 @@
 package com.jforex.dzjforex.time
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
 import arrow.data.ReaderApi
 import arrow.data.fix
 import arrow.data.map
@@ -10,7 +7,7 @@ import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
-import com.jforex.dzjforex.misc.isPluginConnected
+import com.jforex.dzjforex.misc.isConnected
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
@@ -19,25 +16,20 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal data class BrokerTimeResult(
-    val callResult: Int,
-    val maybeTime: Option<Double> = None
-)
-
-internal fun getServerTime() = ReaderApi
+internal fun getServerTime(out_ServerTimeToFill: DoubleArray) = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        if (!isPluginConnected().bind()) BrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
+        if (!isConnected().bind()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
         else
         {
             val serverTime = getServerTimeFromContext().bind()
-            val serverState = when
+            out_ServerTimeToFill[0] = toDATEFormatInSeconds(serverTime)
+            when
             {
                 isMarketClosed(serverTime).bind() -> CONNECTION_OK_BUT_MARKET_CLOSED
                 !areTradeOrdersAllowed().bind() -> CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
                 else -> CONNECTION_OK
             }
-            BrokerTimeResult(serverState, Some(toDATEFormatInSeconds(serverTime)))
         }
     }.fix()
 

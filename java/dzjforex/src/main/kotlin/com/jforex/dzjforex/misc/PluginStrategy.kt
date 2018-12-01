@@ -15,7 +15,6 @@ class PluginStrategy(
 )
 {
     private val infoStrategy = KForexUtilsStrategy()
-    private var strategyID = 0L
     private lateinit var kForexUtils: KForexUtils
     lateinit var context: IContext
         private set
@@ -28,21 +27,14 @@ class PluginStrategy(
 
     private val logger = LogManager.getLogger(PluginStrategy::class.java)
 
-    fun start(out_AccountNames: Array<String>)
+    fun start()
     {
-        strategyID = client.startStrategy(infoStrategy)
         logger.debug("started strategy")
         kForexUtils = infoStrategy.kForexUtils
         context = kForexUtils.context
         account = context.account
         history = context.history
         quoteProvider = QuoteProvider(kForexUtils)
-        out_AccountNames[0] = account.accountId
         logger.debug("filled account params")
-    }
-
-    fun stop()
-    {
-        client.stopStrategy(strategyID)
     }
 }

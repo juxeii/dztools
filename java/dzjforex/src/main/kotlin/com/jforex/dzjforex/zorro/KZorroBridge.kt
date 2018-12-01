@@ -2,7 +2,6 @@ package com.jforex.dzjforex.zorro
 
 import arrow.data.runId
 import com.jforex.dzjforex.asset.getAssetData
-import com.jforex.dzjforex.login.LoginData
 import com.jforex.dzjforex.login.loginToDukascopy
 import com.jforex.dzjforex.login.logoutFromDukascopy
 import com.jforex.dzjforex.misc.PluginEnvironment
@@ -18,66 +17,44 @@ class KZorroBridge
 {
     private val client = getClient()
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
-    private val zCommunication = ZorroCommunication(pluginSettings)
     private val pluginStrategy = PluginStrategy(client, pluginSettings)
     private val environment = PluginEnvironment(client, pluginStrategy, pluginSettings)
 
     private val logger = LogManager.getLogger(KZorroBridge::class.java)
 
-    fun doLogin(
+    fun login(
         username: String,
         password: String,
         accountType: String,
-        out_AccountNames: Array<String>
-    ): Int
-    {
-        val loginData = LoginData(
-            username,
-            password,
-            accountType
-        )
-        val loginTask = loginToDukascopy(loginData)
-            .runId(client)
-            .map { loginResult ->
-                if (loginResult == LOGIN_OK)
-                {
-                    pluginStrategy.start(out_AccountNames)
-                }
-                loginResult
-            }
+        out_AccountNamesToFill: Array<String>
+    ) = loginToDukascopy(
+        username = username,
+        password = password,
+        accountType = accountType,
+        out_AccountNamesToFill = out_AccountNamesToFill
+    ).runId(environment)
 
-        return zCommunication.progressWait(loginTask)
-    }
+    fun logout() = logoutFromDukascopy().runId(environment)
 
-    fun doLogout() = logoutFromDukascopy().runId(client)
+    fun brokerTime(out_ServerTimeToFill: DoubleArray) = getServerTime(out_ServerTimeToFill).runId(environment)
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int
-    {
-        val brokerTimeResult = getServerTime().runId(environment)
-        brokerTimeResult
-            .maybeTime
-            .map { out_ServerTimeToFill[0] = it }
-
-        return brokerTimeResult.callResult
-    }
-
-    fun doSubscribeAsset(assetName: String): Int
+    fun subscribe(assetName: String): Int
     {
         val subscribeTask = subscribeAsset(assetName).runId(environment)
-        return zCommunication.progressWait(subscribeTask)
+        return progressWait(subscribeTask).runId(environment)
     }
 
-    fun doBrokerAsset(
+    fun brokerAsset(
         assetName: String,
         assetParams: DoubleArray
     ) = getAssetData(assetName, assetParams).runId(environment)
 
-    fun doBrokerAccount(accountInfoParams: DoubleArray): Int
+    fun brokerAccount(accountInfoParams: DoubleArray): Int
     {
         return 42
     }
 
-    fun doBrokerTrade(
+    fun brokerTrade(
         orderID: Int,
         tradeParams: DoubleArray
     ): Int
@@ -85,7 +62,7 @@ class KZorroBridge
         return 42
     }
 
-    fun doBrokerBuy2(
+    fun brokerBuy(
         assetName: String,
         contracts: Int,
         slDistance: Double,
@@ -96,7 +73,7 @@ class KZorroBridge
         return 42
     }
 
-    fun doBrokerSell(
+    fun brokerSell(
         orderID: Int,
         contracts: Int
     ): Int
@@ -104,7 +81,7 @@ class KZorroBridge
         return 42
     }
 
-    fun doBrokerStop(
+    fun brokerStop(
         orderID: Int,
         slPrice: Double
     ): Int
@@ -112,7 +89,7 @@ class KZorroBridge
         return 42
     }
 
-    fun doBrokerHistory2(
+    fun brokerHistory(
         assetName: String,
         utcStartDate: Double,
         utcEndDate: Double,

@@ -13,36 +13,36 @@ public class ZorroBridge {
                        final String password,
                        final String accountType,
                        final String Accounts[]) {
-        return kBridge.doLogin(username,
+        return kBridge.login(username,
                 password,
                 accountType,
                 Accounts);
     }
 
     public int doLogout() {
-        return kBridge.doLogout();
+        return kBridge.logout();
     }
 
     public int doBrokerTime(final double pTimeUTC[]) {
-        return kBridge.doBrokerTime(pTimeUTC);
+        return kBridge.brokerTime(pTimeUTC);
     }
 
     public int doSubscribeAsset(final String assetName) {
-        return kBridge.doSubscribeAsset(assetName);
+        return kBridge.subscribe(assetName);
     }
 
     public int doBrokerAsset(final String assetName,
                              final double assetParams[]) {
-        return kBridge.doBrokerAsset(assetName, assetParams);
+        return kBridge.brokerAsset(assetName, assetParams);
     }
 
     public int doBrokerAccount(final double accountInfoParams[]) {
-        return kBridge.doBrokerAccount(accountInfoParams);
+        return kBridge.brokerAccount(accountInfoParams);
     }
 
     public int doBrokerTrade(final int orderID,
                              final double tradeParams[]) {
-        return kBridge.doBrokerTrade(orderID, tradeParams);
+        return kBridge.brokerTrade(orderID, tradeParams);
     }
 
     public int doBrokerBuy2(final String assetName,
@@ -50,7 +50,7 @@ public class ZorroBridge {
                             final double slDistance,
                             final double limit,
                             final double tradeParams[]) {
-        return kBridge.doBrokerBuy2(assetName,
+        return kBridge.brokerBuy(assetName,
                 contracts,
                 slDistance,
                 limit,
@@ -59,12 +59,12 @@ public class ZorroBridge {
 
     public int doBrokerSell(final int orderID,
                             final int contracts) {
-        return kBridge.doBrokerSell(orderID, contracts);
+        return kBridge.brokerSell(orderID, contracts);
     }
 
     public int doBrokerStop(final int orderID,
                             final double slPrice) {
-        return kBridge.doBrokerStop(orderID, slPrice);
+        return kBridge.brokerStop(orderID, slPrice);
     }
 
     public int doBrokerHistory2(final String assetName,
@@ -73,7 +73,7 @@ public class ZorroBridge {
                                 final int periodInMinutes,
                                 final int noOfTicks,
                                 final double tickParams[]) {
-        return kBridge.doBrokerHistory2(assetName,
+        return kBridge.brokerHistory(assetName,
                 utcStartDate,
                 utcEndDate,
                 periodInMinutes,

@@ -4,7 +4,6 @@ import arrow.data.ReaderApi
 import arrow.data.map
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.PluginEnvironment
-import com.jforex.dzjforex.misc.QuoteProvider
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
@@ -32,7 +31,6 @@ private fun fillAssetParams(
         val quoteProvider = env.pluginStrategy.quoteProvider
         val price = quoteProvider.ask(instrument)
         val spread = quoteProvider.spread(instrument)
-        logger.debug("Filling asset params, price $price spread $spread")
 
         out_AssetParamsToFill[0] = price
         out_AssetParamsToFill[1] = spread

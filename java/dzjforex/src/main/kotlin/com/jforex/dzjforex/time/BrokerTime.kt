@@ -8,6 +8,7 @@ import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.getClient
+import com.jforex.dzjforex.misc.getContext
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
@@ -22,7 +23,7 @@ internal fun getServerTime(out_ServerTimeToFill: DoubleArray) = ReaderApi
         if (!getClient { isConnected }.bind()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
         else
         {
-            val serverTime = getServerTimeFromContext().bind()
+            val serverTime = getContext { time }.bind()
             out_ServerTimeToFill[0] = toDATEFormatInSeconds(serverTime)
             when
             {
@@ -33,24 +34,7 @@ internal fun getServerTime(out_ServerTimeToFill: DoubleArray) = ReaderApi
         }
     }.fix()
 
-private fun getServerTimeFromContext() = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
-            .context
-            .time
-    }
-
-private fun isMarketClosed(serverTime: Long) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
-            .context
-            .dataService
-            .isOfflineTime(serverTime)
-    }
+private fun isMarketClosed(serverTime: Long) = getContext { dataService.isOfflineTime(serverTime) }
 
 private fun noOfTradeableInstruments() = ReaderApi
     .ask<PluginEnvironment>()

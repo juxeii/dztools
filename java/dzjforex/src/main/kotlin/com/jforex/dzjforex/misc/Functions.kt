@@ -5,6 +5,8 @@ import arrow.core.Some
 import arrow.data.ReaderApi
 import arrow.data.map
 import com.dukascopy.api.IAccount
+import com.dukascopy.api.IContext
+import com.dukascopy.api.IHistory
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
 import com.jforex.kforexutils.client.init
@@ -33,12 +35,34 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
 
 internal fun <R> getClient(block: IClient.() -> R) = ReaderApi
     .ask<PluginEnvironment>()
-    .map { env -> env.client.run(block) }
+    .map { env ->
+        env
+            .client
+            .run(block)
+    }
+
+internal fun <R> getContext(block: IContext.() -> R) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .pluginStrategy
+            .context
+            .run(block)
+    }
 
 internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi.ask<PluginEnvironment>()
     .map { env ->
         env
             .pluginStrategy
             .account
+            .run(block)
+    }
+
+internal fun <R> getHistory(block: IHistory.() -> R) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .pluginStrategy
+            .history
             .run(block)
     }

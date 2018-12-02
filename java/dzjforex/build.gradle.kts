@@ -80,6 +80,7 @@ tasks.create("createPluginFolder") {
 tasks.register<Copy>("copyPluginFolderToZorro") {
     outputs.upToDateWhen{ false }
     dependsOn("createPluginFolder")
+    FileUtils.deleteDirectory(zorroDukascopyFolder)
     from(pluginFolder)
     into("${zorroPath}/Plugin")
 }

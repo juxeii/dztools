@@ -7,15 +7,7 @@ import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.dukascopy.api.IAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
-
-internal fun <R> accountInfo(block: IAccount.() -> R) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
-            .account
-            .run(block)
-    }
+import com.jforex.dzjforex.misc.getAccount
 
 internal fun lotSize() = ReaderApi
     .ask<PluginEnvironment>()
@@ -25,20 +17,20 @@ internal fun lotMargin() = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
         val lotSize = lotSize().bind()
-        val leverage = accountInfo { leverage }.bind()
+        val leverage = getAccount { leverage }.bind()
         lotSize / leverage
     }.fix()
 
 internal fun freeMargin() = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        val creditLine = accountInfo { creditLine }.bind()
-        val leverage = accountInfo { leverage }.bind()
+        val creditLine = getAccount { creditLine }.bind()
+        val leverage = getAccount { leverage }.bind()
         creditLine / leverage
     }.fix()
 
-internal fun tradeValue() = accountInfo { equity - baseEquity }
+internal fun tradeValue() = getAccount { equity - baseEquity }
 
-internal fun isTradingAllowedForAccount() = accountInfo {
+internal fun isTradingAllowedForAccount() = getAccount {
     accountState == IAccount.AccountState.OK || accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
 }

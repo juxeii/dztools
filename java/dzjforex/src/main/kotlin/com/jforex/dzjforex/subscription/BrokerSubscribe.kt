@@ -6,7 +6,7 @@ import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.instrument.IFinancialInstrument
-import com.jforex.dzjforex.account.accountInfo
+import com.jforex.dzjforex.misc.getAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.instrumentFromAssetName
 import com.jforex.dzjforex.misc.waitForFirstQuote
@@ -87,7 +87,7 @@ internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        val accountCurrency = accountInfo { accountCurrency }.bind()
+        val accountCurrency = getAccount { accountCurrency }.bind()
         val currencies = instrument.currencies.plus(accountCurrency)
         InstrumentFactory.fromCombinedCurrencies(currencies) - instrumentsWithQuotes().bind()
     }.fix()

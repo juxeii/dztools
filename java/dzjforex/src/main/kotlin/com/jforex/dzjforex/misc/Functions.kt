@@ -4,10 +4,9 @@ import arrow.core.None
 import arrow.core.Some
 import arrow.data.ReaderApi
 import arrow.data.map
-import arrow.data.runId
+import com.dukascopy.api.IAccount
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
-import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.kforexutils.client.init
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import io.reactivex.Single
@@ -15,7 +14,8 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun getClient(): IClient {
+internal fun getClient(): IClient
+{
     var client = Single
         .fromCallable { ClientFactory.getDefaultInstance() }
         .doOnError { logger.debug("Error retrieving IClient instance! " + it.message) }
@@ -31,12 +31,14 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
         None
     }, { Some(it) })
 
-internal fun isConnectedToDukascopy() =
-    ReaderApi
-        .ask<IClient>()
-        .map { it.isConnected }
+internal fun <R> getClient(block: IClient.() -> R) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.client.run(block) }
 
-internal fun isConnected() =
-    ReaderApi
-        .ask<PluginEnvironment>()
-        .map { it.client.isConnected }
+internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi.ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .pluginStrategy
+            .account
+            .run(block)
+    }

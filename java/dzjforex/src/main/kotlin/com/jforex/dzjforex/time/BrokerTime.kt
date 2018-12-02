@@ -7,7 +7,7 @@ import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.isTradingAllowedForAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
-import com.jforex.dzjforex.misc.isConnected
+import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
@@ -19,7 +19,7 @@ private val logger = LogManager.getLogger()
 internal fun getServerTime(out_ServerTimeToFill: DoubleArray) = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        if (!isConnected().bind()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
+        if (!getClient { isConnected }.bind()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
         else
         {
             val serverTime = getServerTimeFromContext().bind()

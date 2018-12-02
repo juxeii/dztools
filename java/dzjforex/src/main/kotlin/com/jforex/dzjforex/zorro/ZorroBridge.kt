@@ -41,12 +41,19 @@ class ZorroBridge
         password: String,
         accountType: String,
         out_AccountNamesToFill: Array<String>
-    ) = loginToDukascopy(
-        username = username,
-        password = password,
-        accountType = accountType,
-        out_AccountNamesToFill = out_AccountNamesToFill
-    ).runId(environment)
+    ): Int
+    {
+        val loginResult = loginToDukascopy(
+            username = username,
+            password = password,
+            accountType = accountType
+        ).runId(environment)
+
+        loginResult
+            .maybeAccountName
+            .map { out_AccountNamesToFill[0] = it }
+        return loginResult.callResult
+    }
 
     fun doLogout() = logoutFromDukascopy().runId(environment)
 

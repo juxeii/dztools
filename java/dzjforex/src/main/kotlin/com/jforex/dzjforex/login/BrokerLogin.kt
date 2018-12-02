@@ -1,8 +1,13 @@
 package com.jforex.dzjforex.login
 
-import arrow.data.*
+import arrow.core.toOption
+import arrow.data.Reader
+import arrow.data.ReaderApi
+import arrow.data.fix
+import arrow.data.map
 import arrow.instances.monad
 import arrow.typeclasses.binding
+import com.jforex.dzjforex.account.accountInfo
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.isConnected
 import com.jforex.dzjforex.zorro.*
@@ -21,55 +26,55 @@ internal data class LoginData(
 internal fun loginToDukascopy(
     username: String,
     password: String,
-    accountType: String,
-    out_AccountNamesToFill: Array<String>
-):Reader<PluginEnvironment, Int> = ReaderApi
+    accountType: String
+): Reader<PluginEnvironment, BrokerLoginResult> = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
-        logger.debug("Called loginToDukascopy")
-        if (isConnected().bind()) LOGIN_OK
+        if (isConnected().bind()) BrokerLoginResult(LOGIN_OK)
         else
         {
-            logger.debug("is connected")
-            val credentials = LoginCredentials(username = username, password = password)
-            val loginData = LoginData(credentials, accountType)
-            val loginType = getLoginType(loginData.accountType)
-            clientLogin(loginData, loginType, out_AccountNamesToFill).bind()
+            val callResult = clientLogin(username, password, accountType).bind()
+            val accountName = accountInfo { accountId }.bind().toOption()
+            BrokerLoginResult(callResult, accountName)
         }
     }.fix()
 
 internal fun clientLogin(
+    username: String,
+    password: String,
+    accountType: String
+) = ReaderApi
+    .monad<PluginEnvironment>()
+    .binding {
+        val credentials = LoginCredentials(username = username, password = password)
+        val loginData = LoginData(credentials, accountType)
+        val loginType = getLoginType(loginData.accountType)
+        val loginTask = createLoginTask(loginData, loginType).bind()
+        progressWait(loginTask).bind()
+    }
+
+internal fun getLoginType(accountType: String) =
+    if (accountType == realLoginType) LoginType.LIVE
+    else LoginType.DEMO
+
+internal fun createLoginTask(
     loginData: LoginData,
-    loginType: LoginType,
-    out_AccountNamesToFill: Array<String>
+    loginType: LoginType
 ) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
-        logger.debug("clientLogin called")
         env.client
             .login(loginData.credentials, loginType)
-            .doOnSubscribe{ logger.debug("subscribed login")}
             .toSingleDefault(LOGIN_OK)
             .doOnError { logger.debug("Login failed! " + it.message) }
             .onErrorReturnItem(LOGIN_FAIL)
             .map { loginResult ->
-                if (loginResult == LOGIN_OK)
-                {
-                    env.pluginStrategy.start()
-                    logger.debug("after started strategy")
-                    out_AccountNamesToFill[0] = env.pluginStrategy.account.accountId
-                    logger.debug("after setting accountname")
-                }
+                if (loginResult == LOGIN_OK) env.pluginStrategy.start()
                 loginResult
             }
     }
-    .flatMap { progressWait(it) }
 
-fun getLoginType(accountType: String) =
-    if (accountType == realLoginType) LoginType.LIVE
-    else LoginType.DEMO
-
-fun logoutFromDukascopy() = ReaderApi
+internal fun logoutFromDukascopy() = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
         env.client.disconnect()

@@ -31,15 +31,10 @@ class PluginStrategy(
     {
         client.startStrategy(infoStrategy)
         logger.debug("started strategy")
-        kForexUtils = infoStrategy.kForexUtils
-        logger.debug("init kfutils")
+        kForexUtils = infoStrategy.kForexUtilsSingle().blockingFirst()
         context = kForexUtils.context
-        logger.debug("init context")
         account = context.account
-        logger.debug("init account")
         history = context.history
-        logger.debug("init history")
         quoteProvider = QuoteProvider(kForexUtils)
-        logger.debug("filled account params")
     }
 }

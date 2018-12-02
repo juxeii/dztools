@@ -1,14 +1,15 @@
 package com.jforex.dzjforex.login
 
-import arrow.core.toOption
+import arrow.core.None
+import arrow.core.Some
 import arrow.data.Reader
 import arrow.data.ReaderApi
 import arrow.data.fix
 import arrow.data.map
 import arrow.instances.monad
 import arrow.typeclasses.binding
-import com.jforex.dzjforex.misc.getAccount
 import com.jforex.dzjforex.misc.PluginEnvironment
+import com.jforex.dzjforex.misc.getAccount
 import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.zorro.*
 import com.jforex.kforexutils.authentification.LoginCredentials
@@ -29,8 +30,12 @@ internal fun loginToDukascopy(
         else
         {
             val callResult = clientLogin(username, password, accountType).bind()
-            val accountName = getAccount { accountId }.bind().toOption()
-            BrokerLoginResult(callResult, accountName)
+            val maybeAccountName = if (callResult == LOGIN_OK)
+            {
+                startStrategy().bind()
+                Some(getAccount { accountId }.bind())
+            } else None
+            BrokerLoginResult(callResult, maybeAccountName)
         }
     }.fix()
 
@@ -51,18 +56,22 @@ internal fun getLoginType(accountType: String) =
     if (accountType == realLoginType) LoginType.LIVE
     else LoginType.DEMO
 
+internal fun startStrategy() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env.pluginStrategy.start()
+    }
+
 internal fun createLoginTask(
     loginCredentials: LoginCredentials,
     loginType: LoginType
 ) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
-        env.client
+        env
+            .client
             .login(loginCredentials, loginType)
-            .toSingle {
-                env.pluginStrategy.start()
-                LOGIN_OK
-            }
+            .toSingleDefault(LOGIN_OK)
             .doOnError { logger.debug("Login failed! " + it.message) }
             .onErrorReturnItem(LOGIN_FAIL)
     }

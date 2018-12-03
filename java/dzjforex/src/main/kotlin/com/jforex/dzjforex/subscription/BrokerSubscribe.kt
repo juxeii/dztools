@@ -6,10 +6,7 @@ import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.instrument.IFinancialInstrument
-import com.jforex.dzjforex.misc.getAccount
-import com.jforex.dzjforex.misc.PluginEnvironment
-import com.jforex.dzjforex.misc.instrumentFromAssetName
-import com.jforex.dzjforex.misc.waitForFirstQuote
+import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.dzjforex.zorro.progressWait
@@ -29,15 +26,6 @@ internal fun subscribeValidInstrument(instrument: Instrument) = getInstrumentsTo
     .flatMap { setSubscribedInstruments(it) }
     .flatMap { waitForQuotes(it) }
     .flatMap { progressWait(it) }
-
-internal fun instrumentsWithQuotes() = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
-            .quoteProvider
-            .instruments()
-    }
 
 internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
     .ask<PluginEnvironment>()
@@ -83,11 +71,10 @@ internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
         instruments
     }
 
-
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
     .monad<PluginEnvironment>()
     .binding {
         val accountCurrency = getAccount { accountCurrency }.bind()
         val currencies = instrument.currencies.plus(accountCurrency)
-        InstrumentFactory.fromCombinedCurrencies(currencies) - instrumentsWithQuotes().bind()
+        InstrumentFactory.fromCombinedCurrencies(currencies) - quotesInstruments().bind()
     }.fix()

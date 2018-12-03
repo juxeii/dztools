@@ -10,6 +10,7 @@ import com.jforex.dzjforex.login.loginToDukascopy
 import com.jforex.dzjforex.login.logoutFromDukascopy
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.PluginStrategy
+import com.jforex.dzjforex.misc.Quotes
 import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.subscribeAsset

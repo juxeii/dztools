@@ -2,15 +2,13 @@ package com.jforex.dzjforex.login
 
 import arrow.core.None
 import arrow.core.Some
-import arrow.data.Reader
-import arrow.data.ReaderApi
-import arrow.data.fix
-import arrow.data.map
+import arrow.data.*
 import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.jforex.dzjforex.misc.PluginEnvironment
 import com.jforex.dzjforex.misc.getAccount
 import com.jforex.dzjforex.misc.getClient
+import com.jforex.dzjforex.misc.subscribeQuotes
 import com.jforex.dzjforex.zorro.*
 import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
@@ -60,6 +58,8 @@ internal fun startStrategy() = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
         env.pluginStrategy.start()
+        logger.debug("Subscribing quotes")
+        subscribeQuotes().runId(env)
     }
 
 internal fun createLoginTask(

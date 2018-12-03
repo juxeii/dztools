@@ -2,14 +2,12 @@ package com.jforex.dzjforex.misc
 
 import arrow.core.failure
 import arrow.core.success
-import arrow.data.ReaderApi
-import arrow.data.map
-import arrow.data.runId
+import arrow.core.toT
+import arrow.data.*
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.jforex.dzjforex.history.latestTick
-import com.jforex.kforexutils.misc.KForexUtils
 import com.jforex.kforexutils.price.TickQuote
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.subscribeBy
@@ -18,16 +16,17 @@ import java.util.concurrent.TimeUnit
 
 private val logger = LogManager.getLogger()
 
+typealias Quotes = Map<Instrument, TickQuote>
+
 internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
     .ask<PluginEnvironment>()
     .map { env ->
-        val quoteProvider = env.pluginStrategy.quoteProvider
         historyRetryObservable()
             .runId(env)
             .doOnNext { logger.debug("Fetch trigger no $it") }
             .takeWhile {
                 logger.debug("Trying to fetch latest tick for $instrument, try no: $it")
-                if (quoteProvider.hasTick(instrument))
+                if (hasTick(instrument).runId(env))
                 {
                     logger.debug("Tick for $instrument is available in quoteProvider")
                     false
@@ -38,7 +37,7 @@ internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
                         .runId(env)
                         .map {
                             logger.debug("Tick for $instrument is available in history")
-                            quoteProvider.store(instrument, it)
+                            storeQuote(it).runId(env)
                         }
                         .fold({
                             logger.debug("Tick for $instrument is not available in history!")
@@ -48,7 +47,7 @@ internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
             }.blockingSubscribe()
 
         logger.debug("Done Fetching")
-        if (quoteProvider.hasTick(instrument)) Unit.success()
+        if (hasTick(instrument).runId(env)) Unit.success()
         else JFException("Latest tick from history for $instrument returned null!").failure()
     }
 
@@ -63,38 +62,46 @@ private fun historyRetryObservable() = ReaderApi
             ).take(env.pluginSettings.historyAccessRetries())
     }
 
-
-class QuoteProvider(private val kForexUtils: KForexUtils)
-{
-    private var latestTicks: MutableMap<Instrument, TickQuote> = mutableMapOf()
-    private val logger = LogManager.getLogger(QuoteProvider::class.java)
-
-    init
-    {
-        kForexUtils
+internal fun subscribeQuotes() = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env ->
+        env
+            .pluginStrategy
+            .kForexUtils
             .tickQuotes
-            .subscribeBy(onNext = { latestTicks[it.instrument] = it })
+            .subscribeBy(onNext = {
+                env.quotes = saveQuote(it).runS(env.quotes)
+            })
     }
 
-    private fun <R> tick(
-        instrument: Instrument,
-        block: ITick.() -> R
-    ) = latestTicks[instrument]!!.tick.run(block)
-
-    fun hasTick(instrument: Instrument) = latestTicks.containsKey(instrument)
-
-    fun noOfInstruments() = latestTicks.size
-
-    fun instruments() = latestTicks.keys
-
-    fun store(
-        instrument: Instrument,
-        quote: TickQuote
-    ) = latestTicks.putIfAbsent(instrument, quote)
-
-    fun ask(instrument: Instrument): Double = tick(instrument) { ask }
-
-    fun bid(instrument: Instrument) = tick(instrument) { bid }
-
-    fun spread(instrument: Instrument) = tick(instrument) { bid - ask }
+private fun saveQuote(quote: TickQuote) = State<Quotes, Unit> {
+    val res = it.plus(Pair(quote.instrument, quote)) toT Unit
+    res
 }
+
+internal fun <R> getTick(
+    instrument: Instrument,
+    block: ITick.() -> R
+) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.quotes[instrument]!!.tick.run(block) }
+
+internal fun <R> getQuotes(block: Quotes.() -> R) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.quotes.run(block) }
+
+internal fun hasTick(instrument: Instrument) = getQuotes { containsKey(instrument) }
+
+internal fun noOfInstruments() = getQuotes { size }
+
+internal fun quotesInstruments() = getQuotes { keys }
+
+internal fun storeQuote(quote: TickQuote) = ReaderApi
+    .ask<PluginEnvironment>()
+    .map { env -> env.quotes = saveQuote(quote).runS(env.quotes) }
+
+internal fun getAsk(instrument: Instrument) = getTick(instrument) { ask }
+
+internal fun getBid(instrument: Instrument) = getTick(instrument) { bid }
+
+internal fun getSpread(instrument: Instrument) = getTick(instrument) { bid - ask }

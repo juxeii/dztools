@@ -8,5 +8,6 @@ data class PluginEnvironment(
     val client: IClient,
     val pluginStrategy: PluginStrategy,
     val pluginSettings: PluginSettings,
-    val natives: ZorroNatives
+    val natives: ZorroNatives,
+    var quotes: Quotes = emptyMap()
 )

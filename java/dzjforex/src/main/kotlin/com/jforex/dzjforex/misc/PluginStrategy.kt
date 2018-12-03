@@ -15,10 +15,9 @@ class PluginStrategy(
 )
 {
     private val infoStrategy = KForexUtilsStrategy()
-    private lateinit var kForexUtils: KForexUtils
-    lateinit var context: IContext
+    lateinit var kForexUtils: KForexUtils
         private set
-    lateinit var quoteProvider: QuoteProvider
+    lateinit var context: IContext
         private set
     lateinit var account: IAccount
         private set
@@ -35,6 +34,5 @@ class PluginStrategy(
         context = kForexUtils.context
         account = context.account
         history = context.history
-        quoteProvider = QuoteProvider(kForexUtils)
     }
 }

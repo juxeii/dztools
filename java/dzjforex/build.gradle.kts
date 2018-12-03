@@ -1,8 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.codehaus.plexus.util.FileUtils
-import org.jetbrains.kotlin.contracts.model.structure.UNKNOWN_COMPUTATION.type
-import sun.tools.jar.resources.jar
-
 group = "com.jforex.dzplugin"
 version = "0.9.6"
 
@@ -15,7 +10,6 @@ plugins {
     kotlin("jvm") version "1.3.10"
     jacoco
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version "4.0.1"
 }
 
 repositories {
@@ -58,7 +52,7 @@ tasks.create("createPluginFolder") {
 
     val dukascopyFolder = "${pluginFolder}/dukascopy"
     val configFolder = "src/main/config"
-    FileUtils.deleteDirectory(pluginFolder)
+    File(pluginFolder).deleteRecursively()
     copy {
         from("../../c++/Release/dukascopy.dll")
         into(pluginFolder)
@@ -80,7 +74,7 @@ tasks.create("createPluginFolder") {
 tasks.register<Copy>("copyPluginFolderToZorro") {
     outputs.upToDateWhen{ false }
     dependsOn("createPluginFolder")
-    FileUtils.deleteDirectory(zorroDukascopyFolder)
+    File(zorroDukascopyFolder).deleteRecursively()
     from(pluginFolder)
     into("${zorroPath}/Plugin")
 }

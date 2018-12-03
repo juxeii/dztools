@@ -42,7 +42,7 @@ tasks.withType<Jar> {
     manifest.attributes.apply {
         put("Implementation-Title", "${project.name}")
         put("Implementation-Version", "$version")
-        put("Class-Path", ". ${configurations.runtime.map { "lib/${it.name}" }.joinToString(separator = " ")}")
+        put("Class-Path", ". ${configurations.runtime.get().map { "lib/${it.name}"  }.joinToString(separator = " ")}")
     }
 }
 

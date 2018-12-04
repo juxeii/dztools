@@ -13,28 +13,28 @@ import com.jforex.dzjforex.zorro.progressWait
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import io.reactivex.Observable
+import io.reactivex.Single
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun subscribeAsset(assetName: String): Reader<PluginEnvironment, Int> =
+internal fun getSubscribeTask(assetName: String): Reader<PluginConfigExt, Single<Int>> =
     instrumentFromAssetName(assetName)
         .filter(::isForexInstrument)
-        .fold({ Reader().just(SUBSCRIBE_FAIL) }) { subscribeValidInstrument(it) }
+        .fold({ Reader().just(Single.just(SUBSCRIBE_FAIL)) }) { subscribeValidInstrument(it) }
 
 internal fun subscribeValidInstrument(instrument: Instrument) = getInstrumentsToSubscribe(instrument)
     .flatMap { setSubscribedInstruments(it) }
     .flatMap { waitForQuotes(it) }
-    .flatMap { progressWait(it) }
 
 internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
+    .ask<PluginConfigExt>()
+    .map { config ->
         Observable
             .fromIterable(instruments)
             .map { instrument ->
                 waitForFirstQuote(instrument)
-                    .runId(env)
+                    .runId(config)
                     .fold({ throw JFException("No quote for $instrument available!") }, { instrument })
             }
             .ignoreElements()
@@ -52,27 +52,27 @@ internal fun isForexInstrument(instrument: Instrument) =
 internal fun isInstrumentSubscribed(instrument: Instrument) = getSubscribedInstruments().map { it.contains(instrument) }
 
 internal fun getSubscribedInstruments() = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
+    .ask<PluginConfigExt>()
+    .map { config ->
+        config
+            .kForexUtils
             .context
             .subscribedInstruments
     }
 
 internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
+    .ask<PluginConfigExt>()
+    .map { config ->
         logger.debug("Subscribing instruments: $instruments")
-        env
-            .pluginStrategy
+        config
+            .kForexUtils
             .context
             .setSubscribedInstruments(instruments, true)
         instruments
     }
 
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
-    .monad<PluginEnvironment>()
+    .monad<PluginConfigExt>()
     .binding {
         val accountCurrency = getAccount { accountCurrency }.bind()
         val currencies = instrument.currencies.plus(accountCurrency)

@@ -34,7 +34,7 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
     }, { Some(it) })
 
 internal fun <R> getClient(block: IClient.() -> R) = ReaderApi
-    .ask<PluginEnvironment>()
+    .ask<PluginConfig>()
     .map { env ->
         env
             .client
@@ -42,27 +42,30 @@ internal fun <R> getClient(block: IClient.() -> R) = ReaderApi
     }
 
 internal fun <R> getContext(block: IContext.() -> R) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
+    .ask<PluginConfigExt>()
+    .map { config ->
+        config
+            .kForexUtils
             .context
             .run(block)
     }
 
-internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi.ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
+internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi
+    .ask<PluginConfigExt>()
+    .map { config ->
+        config
+            .kForexUtils
+            .context
             .account
             .run(block)
     }
 
 internal fun <R> getHistory(block: IHistory.() -> R) = ReaderApi
-    .ask<PluginEnvironment>()
-    .map { env ->
-        env
-            .pluginStrategy
+    .ask<PluginConfigExt>()
+    .map { config ->
+        config
+            .kForexUtils
+            .context
             .history
             .run(block)
     }

@@ -9,7 +9,6 @@ import com.dukascopy.api.instrument.IFinancialInstrument
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
-import com.jforex.dzjforex.zorro.progressWait
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import io.reactivex.Observable
@@ -18,7 +17,7 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun getSubscribeTask(assetName: String): Reader<PluginConfigExt, Single<Int>> =
+internal fun getSubscribeTask(assetName: String): Reader<PluginConfig, Single<Int>> =
     instrumentFromAssetName(assetName)
         .filter(::isForexInstrument)
         .fold({ Reader().just(Single.just(SUBSCRIBE_FAIL)) }) { subscribeValidInstrument(it) }
@@ -28,7 +27,7 @@ internal fun subscribeValidInstrument(instrument: Instrument) = getInstrumentsTo
     .flatMap { waitForQuotes(it) }
 
 internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         Observable
             .fromIterable(instruments)
@@ -52,7 +51,7 @@ internal fun isForexInstrument(instrument: Instrument) =
 internal fun isInstrumentSubscribed(instrument: Instrument) = getSubscribedInstruments().map { it.contains(instrument) }
 
 internal fun getSubscribedInstruments() = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         config
             .kForexUtils
@@ -61,7 +60,7 @@ internal fun getSubscribedInstruments() = ReaderApi
     }
 
 internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         logger.debug("Subscribing instruments: $instruments")
         config
@@ -72,7 +71,7 @@ internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
     }
 
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
-    .monad<PluginConfigExt>()
+    .monad<PluginConfig>()
     .binding {
         val accountCurrency = getAccount { accountCurrency }.bind()
         val currencies = instrument.currencies.plus(accountCurrency)

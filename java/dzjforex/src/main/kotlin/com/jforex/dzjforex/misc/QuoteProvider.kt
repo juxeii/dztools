@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 private val logger = LogManager.getLogger()
 
 internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         historyRetryObservable()
             .runId(config)
@@ -51,14 +51,14 @@ internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
     }
 
 private fun historyRetryObservable() = ReaderApi
-    .ask<PluginConfigExt>()
-    .map { env ->
+    .ask<PluginConfig>()
+    .map { config ->
         Observable
             .interval(
                 0,
-                env.pluginConfig.pluginSettings.historyAccessRetryDelay(),
+                config.pluginSettings.historyAccessRetryDelay(),
                 TimeUnit.MILLISECONDS
-            ).take(env.pluginConfig.pluginSettings.historyAccessRetries())
+            ).take(config.pluginSettings.historyAccessRetries())
     }
 
 internal fun saveQuote(quote: TickQuote) = State<Quotes, Unit> {
@@ -70,11 +70,11 @@ internal fun <R> getTick(
     instrument: Instrument,
     block: ITick.() -> R
 ) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { env -> env.quotes[instrument]!!.tick.run(block) }
 
 internal fun <R> getQuotes(block: Quotes.() -> R) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { env -> env.quotes.run(block) }
 
 internal fun hasTick(instrument: Instrument) = getQuotes { containsKey(instrument) }

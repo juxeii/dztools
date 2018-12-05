@@ -1,16 +1,18 @@
 package com.jforex.dzjforex.zorro
 
-import arrow.data.*
+import arrow.data.runId
+import arrow.data.runS
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.asset.getAssetParams
-import com.jforex.dzjforex.login.getLoginTask
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.getSubscribeTask
-import com.jforex.dzjforex.time.getConnectionState
-import com.jforex.dzjforex.time.getServerTime
-import com.jforex.dzjforex.time.toDATEFormatInSeconds
+import com.jforex.dzjforex.time.getBrokerTimeResult
+import com.jforex.kforexutils.authentification.LoginCredentials
+import com.jforex.kforexutils.authentification.LoginType
+import com.jforex.kforexutils.client.login
+import com.jforex.kforexutils.misc.KForexUtils
 import com.jforex.kforexutils.price.TickQuote
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
 import io.reactivex.Observable
@@ -29,13 +31,10 @@ class ZorroBridge {
     private val client = getClient()
     private val natives = ZorroNatives()
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
-    private val pluginConfig = PluginConfig(
-        client = client,
-        pluginSettings = pluginSettings,
-        natives = natives
-    )
+    private val infoStrategy = KForexUtilsStrategy()
     private var quotes: Quotes = emptyMap()
-    private lateinit var pluginConfigExt: PluginConfigExt
+    private lateinit var kForexUtils: KForexUtils
+    private lateinit var pluginConfig: PluginConfig
 
     fun doLogin(
         username: String,
@@ -45,30 +44,44 @@ class ZorroBridge {
     ): Int {
         if (client.isConnected) return LOGIN_OK
 
-        val loginResult = getLoginTask(
-            username = username,
-            password = password,
-            accountType = accountType
-        ).flatMap(::progressWait).runId(pluginConfig)
+        val loginCredentials = LoginCredentials(username = username, password = password)
+        val loginType = if (accountType == realLoginType) LoginType.LIVE
+        else LoginType.DEMO
 
-        if (loginResult == LOGIN_OK) {
-            initStrategy()
-            out_AccountNamesToFill[0] = getAccount { accountId }.runId(pluginConfigExt)
-        }
-        return loginResult
+        val loginTask = client
+            .login(loginCredentials, loginType)
+            .toSingle {
+                initStrategy()
+                out_AccountNamesToFill[0] = getAccount { accountId }.runId(pluginConfig)
+                LOGIN_OK
+            }
+            .doOnError { logger.debug("Login failed! " + it.message) }
+            .onErrorReturnItem(LOGIN_FAIL)
+
+        return progressWait(loginTask)
     }
 
     private fun initStrategy() {
-        val infoStrategy = KForexUtilsStrategy()
         client.startStrategy(infoStrategy)
         logger.debug("started strategy")
         val kForexUtils = infoStrategy.kForexUtilsSingle().blockingFirst()
         kForexUtils
             .tickQuotes
-            .subscribeBy(onNext = { quotes = saveQuote(it).runS(quotes) })
+            .subscribeBy(onNext = {
+                logger.debug("Quotes before $quotes")
+                quotes = saveQuote(it).runS(quotes)
+                logger.debug("Quotes after $quotes")
+                renewExtConfig()
+            })
 
-        pluginConfigExt = PluginConfigExt(
-            pluginConfig = pluginConfig,
+        renewExtConfig()
+    }
+
+    private fun renewExtConfig() {
+        pluginConfig = PluginConfig(
+            client = client,
+            pluginSettings = pluginSettings,
+            natives = natives,
             infoStrategy = infoStrategy,
             kForexUtils = kForexUtils,
             quotes = quotes
@@ -80,25 +93,25 @@ class ZorroBridge {
         return LOGOUT_OK
     }
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray) = if (!client.isConnected) CONNECTION_LOST_NEW_LOGIN_REQUIRED
-    else getServerTime()
-        .map { serverTime ->
-            out_ServerTimeToFill[0] = toDATEFormatInSeconds(serverTime)
-            serverTime
-        }
-        .flatMap(::getConnectionState)
-        .runId(newConfigExt())
+    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int {
+        val brokerTimeResult = getBrokerTimeResult().runId(pluginConfig)
+        brokerTimeResult
+            .maybeServerTime
+            .map { out_ServerTimeToFill[0] = it }
+
+        return brokerTimeResult.connectionState
+    }
 
     fun doSubscribeAsset(assetName: String): Int {
-        val subscribeTask = getSubscribeTask(assetName).runId(newConfigExt())
-        return progressWait(subscribeTask).runId(pluginConfig)
+        val subscribeTask = getSubscribeTask(assetName).runId(pluginConfig)
+        return progressWait(subscribeTask)
     }
 
     fun doBrokerAsset(
         assetName: String,
         out_AssetParamsToFill: DoubleArray
     ) = instrumentFromAssetName(assetName)
-        .map { getAssetParams(it).runId(newConfigExt()) }
+        .map { getAssetParams(it).runId(pluginConfig) }
         .fold({ ASSET_UNAVAILABLE }) {
             out_AssetParamsToFill[0] = it.price
             out_AssetParamsToFill[1] = it.spread
@@ -155,23 +168,19 @@ class ZorroBridge {
         return 42
     }
 
-    private fun newConfigExt() = pluginConfigExt.copy(quotes = quotes)
-}
-
-internal fun <T> progressWait(task: Single<T>) = ReaderApi
-    .ask<PluginConfig>()
-    .map { config ->
+    internal fun <T> progressWait(task: Single<T>): T {
         val stateRelay = BehaviorRelay.create<T>()
         task
             .subscribeOn(Schedulers.io())
             .subscribe { it -> stateRelay.accept(it) }
         Observable.interval(
             0,
-            config.pluginSettings.zorroProgressInterval(),
+            pluginSettings.zorroProgressInterval(),
             TimeUnit.MILLISECONDS
         )
             .takeWhile { !stateRelay.hasValue() }
-            .blockingSubscribe { config.natives.jcallback_BrokerProgress(heartBeatIndication) }
+            .blockingSubscribe { natives.jcallback_BrokerProgress(heartBeatIndication) }
 
-        stateRelay.value!!
+       return stateRelay.value!!
     }
+}

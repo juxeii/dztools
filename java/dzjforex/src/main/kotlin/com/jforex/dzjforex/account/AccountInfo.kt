@@ -7,15 +7,14 @@ import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.dukascopy.api.IAccount
 import com.jforex.dzjforex.misc.PluginConfig
-import com.jforex.dzjforex.misc.PluginConfigExt
 import com.jforex.dzjforex.misc.getAccount
 
 internal fun lotSize() = ReaderApi
-    .ask<PluginConfigExt>()
-    .map { env -> env.pluginConfig.pluginSettings.lotSize() }
+    .ask<PluginConfig>()
+    .map { config -> config.pluginSettings.lotSize() }
 
 internal fun lotMargin() = ReaderApi
-    .monad<PluginConfigExt>()
+    .monad<PluginConfig>()
     .binding {
         val lotSize = lotSize().bind()
         val leverage = getAccount { leverage }.bind()
@@ -23,7 +22,7 @@ internal fun lotMargin() = ReaderApi
     }.fix()
 
 internal fun freeMargin() = ReaderApi
-    .monad<PluginConfigExt>()
+    .monad<PluginConfig>()
     .binding {
         val creditLine = getAccount { creditLine }.bind()
         val leverage = getAccount { leverage }.bind()

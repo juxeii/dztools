@@ -16,8 +16,7 @@ import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun getClient(): IClient
-{
+internal fun getClient(): IClient {
     var client = Single
         .fromCallable { ClientFactory.getDefaultInstance() }
         .doOnError { logger.debug("Error retrieving IClient instance! " + it.message) }
@@ -35,14 +34,14 @@ internal fun instrumentFromAssetName(assetName: String) = InstrumentFactory
 
 internal fun <R> getClient(block: IClient.() -> R) = ReaderApi
     .ask<PluginConfig>()
-    .map { env ->
-        env
+    .map { config ->
+        config
             .client
             .run(block)
     }
 
 internal fun <R> getContext(block: IContext.() -> R) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         config
             .kForexUtils
@@ -51,7 +50,7 @@ internal fun <R> getContext(block: IContext.() -> R) = ReaderApi
     }
 
 internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         config
             .kForexUtils
@@ -61,7 +60,7 @@ internal fun <R> getAccount(block: IAccount.() -> R) = ReaderApi
     }
 
 internal fun <R> getHistory(block: IHistory.() -> R) = ReaderApi
-    .ask<PluginConfigExt>()
+    .ask<PluginConfig>()
     .map { config ->
         config
             .kForexUtils

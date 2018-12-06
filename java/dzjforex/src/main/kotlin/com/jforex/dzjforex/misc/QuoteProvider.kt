@@ -53,12 +53,11 @@ internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
 private fun historyRetryObservable() = ReaderApi
     .ask<PluginConfig>()
     .map { config ->
-        Observable
-            .interval(
-                0,
-                config.pluginSettings.historyAccessRetryDelay(),
-                TimeUnit.MILLISECONDS
-            ).take(config.pluginSettings.historyAccessRetries())
+        Observable.interval(
+            0,
+            config.pluginSettings.historyAccessRetryDelay(),
+            TimeUnit.MILLISECONDS
+        ).take(config.pluginSettings.historyAccessRetries())
     }
 
 internal fun saveQuote(quote: TickQuote) = State<Quotes, Unit> {

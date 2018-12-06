@@ -48,16 +48,7 @@ internal fun isForexInstrument(instrument: Instrument) =
         false
     } else true
 
-internal fun isInstrumentSubscribed(instrument: Instrument) = getSubscribedInstruments().map { it.contains(instrument) }
-
-internal fun getSubscribedInstruments() = ReaderApi
-    .ask<PluginConfig>()
-    .map { config ->
-        config
-            .kForexUtils
-            .context
-            .subscribedInstruments
-    }
+internal fun getSubscribedInstruments() = getContext { subscribedInstruments }
 
 internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
     .ask<PluginConfig>()

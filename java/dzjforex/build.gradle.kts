@@ -14,7 +14,8 @@ plugins {
 
 repositories {
     mavenLocal()
-    jcenter()
+    mavenCentral()
+    //jcenter()
     maven(url = "https://www.dukascopy.com/client/jforexlib/publicrepo")
 }
 

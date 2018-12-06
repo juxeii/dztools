@@ -1,5 +1,6 @@
 package com.jforex.dzjforex.subscription
 
+import arrow.core.Try
 import arrow.data.*
 import arrow.instances.monad
 import arrow.typeclasses.binding
@@ -7,38 +8,51 @@ import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.instrument.IFinancialInstrument
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
-import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
+import com.jforex.kforexutils.price.TickQuote
 import io.reactivex.Observable
-import io.reactivex.Single
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun getSubscribeTask(assetName: String): Reader<PluginConfig, Single<Int>> =
-    instrumentFromAssetName(assetName)
-        .filter(::isForexInstrument)
-        .fold({ Reader().just(Single.just(SUBSCRIBE_FAIL)) }) { subscribeValidInstrument(it) }
+internal fun subscribeInstrument(assetName: String): Reader<PluginConfig, Try<Set<Instrument>>> = ReaderApi
+    .monad<PluginConfig>()
+    .binding {
+        getInstrumentsToSubscribe(assetName)
+            .bind()
+            .map {
+                subscribeInstruments(it).bind()
+                it
+            }
+    }.fix()
 
-internal fun subscribeValidInstrument(instrument: Instrument) = getInstrumentsToSubscribe(instrument)
-    .flatMap { setSubscribedInstruments(it) }
-    .flatMap { waitForQuotes(it) }
+internal fun getInstrumentsToSubscribe(assetName: String): Reader<PluginConfig, Try<Set<Instrument>>> = ReaderApi
+    .ask<PluginConfig>()
+    .map { config -> forexInstrumentFromAssetName(assetName).map { getInstrumentsToSubscribe(it).runId(config) } }
 
-internal fun waitForQuotes(instruments: Set<Instrument>) = ReaderApi
+internal fun subscribeInstruments(instrumentsToSubscribe: Set<Instrument>): Reader<PluginConfig, Unit> = ReaderApi
+    .monad<PluginConfig>()
+    .binding {
+        val subscribedInstruments = getSubscribedInstruments().bind()
+        val resultingInstruments = subscribedInstruments + instrumentsToSubscribe
+        getContext { setSubscribedInstruments(resultingInstruments, true) }.bind()
+    }.fix()
+
+internal fun getInitialQuotes(instruments: Set<Instrument>): Reader<PluginConfig, Try<List<TickQuote>>> = ReaderApi
     .ask<PluginConfig>()
     .map { config ->
-        Observable
-            .fromIterable(instruments)
-            .map { instrument ->
-                waitForFirstQuote(instrument)
-                    .runId(config)
-                    .fold({ throw JFException("No quote for $instrument available!") }, { instrument })
-            }
-            .ignoreElements()
-            .toSingleDefault(SUBSCRIBE_OK)
-            .onErrorReturnItem(SUBSCRIBE_FAIL)
+        Try {
+            Observable
+                .fromIterable(instruments)
+                .map { instrument ->
+                    waitForFirstQuote(instrument)
+                        .runId(config)
+                        .fold({ throw JFException("No quote for $instrument available!") }, { it })
+                }
+                .toList()
+                .blockingGet()
+        }
     }
 
 internal fun isForexInstrument(instrument: Instrument) =
@@ -50,21 +64,18 @@ internal fun isForexInstrument(instrument: Instrument) =
 
 internal fun getSubscribedInstruments() = getContext { subscribedInstruments }
 
-internal fun setSubscribedInstruments(instruments: Set<Instrument>) = ReaderApi
-    .ask<PluginConfig>()
-    .map { config ->
-        logger.debug("Subscribing instruments: $instruments")
-        config
-            .kForexUtils
-            .context
-            .setSubscribedInstruments(instruments, true)
-        instruments
-    }
-
 private fun getInstrumentsToSubscribe(instrument: Instrument) = ReaderApi
     .monad<PluginConfig>()
     .binding {
+        val instrumentWithCrosses = getInstrumentWithCrosses(instrument).bind()
+        val subscribedInstruments = getSubscribedInstruments().bind()
+        instrumentWithCrosses - subscribedInstruments
+    }.fix()
+
+private fun getInstrumentWithCrosses(instrument: Instrument) = ReaderApi
+    .monad<PluginConfig>()
+    .binding {
         val accountCurrency = getAccount { accountCurrency }.bind()
-        val currencies = instrument.currencies.plus(accountCurrency)
-        InstrumentFactory.fromCombinedCurrencies(currencies) - quotesInstruments().bind()
+        val currencies = instrument.currencies + accountCurrency
+        InstrumentFactory.fromCombinedCurrencies(currencies)
     }.fix()

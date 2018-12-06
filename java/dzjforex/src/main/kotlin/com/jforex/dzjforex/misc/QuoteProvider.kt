@@ -1,15 +1,9 @@
 package com.jforex.dzjforex.misc
 
-import arrow.core.failure
-import arrow.core.success
-import arrow.core.toT
-import arrow.data.ReaderApi
-import arrow.data.State
-import arrow.data.map
-import arrow.data.runId
+import arrow.core.*
+import arrow.data.*
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.JFException
 import com.jforex.dzjforex.history.latestTick
 import com.jforex.dzjforex.zorro.Quotes
 import com.jforex.kforexutils.price.TickQuote
@@ -19,45 +13,40 @@ import java.util.concurrent.TimeUnit
 
 private val logger = LogManager.getLogger()
 
-internal fun waitForFirstQuote(instrument: Instrument) = ReaderApi
+internal fun waitForFirstQuote(instrument: Instrument): Reader<PluginConfig, Try<TickQuote>> = ReaderApi
     .ask<PluginConfig>()
     .map { config ->
-        historyRetryObservable()
-            .runId(config)
-            .doOnNext { logger.debug("Fetch trigger no $it") }
-            .takeWhile {
-                logger.debug("Trying to fetch latest tick for $instrument, try no: $it")
-                if (hasTick(instrument).runId(config)) {
-                    logger.debug("Tick for $instrument is available in quoteProvider")
-                    false
-                } else {
-                    logger.debug("Tick for $instrument is not available in quoteProvider!")
-                    latestTick(instrument)
-                        .runId(config)
-                        .map { quote ->
-                            logger.debug("Tick for $instrument is available in history")
-                            config.infoStrategy.onTick(instrument, quote.tick)
-                        }
-                        .fold({
-                            logger.debug("Tick for $instrument is not available in history!")
-                            true
-                        }, { false })
-                }
-            }.blockingSubscribe()
-
-        logger.debug("Done Fetching")
-        if (hasTick(instrument).runId(config)) Unit.success()
-        else JFException("Latest tick from history for $instrument returned null!").failure()
+        if (hasQuote(instrument).runId(config))
+        {
+            logger.debug("Tick for $instrument is available in quoteProvider")
+            getQuote(instrument).runId(config).success()
+        } else
+        {
+            logger.debug("Tick for $instrument is not available in quoteProvider!")
+            latestQuoteFromHistory(instrument)
+                .runId(config)
+                .fold({
+                    logger.debug("Tick for $instrument is not available in history!")
+                    Failure(it)
+                }, {
+                    logger.debug("Tick for $instrument is available in history")
+                    it.success()
+                })
+        }
     }
 
-private fun historyRetryObservable() = ReaderApi
+private fun latestQuoteFromHistory(instrument: Instrument): Reader<PluginConfig, Try<TickQuote>> = ReaderApi
     .ask<PluginConfig>()
     .map { config ->
         Observable.interval(
             0,
             config.pluginSettings.historyAccessRetryDelay(),
             TimeUnit.MILLISECONDS
-        ).take(config.pluginSettings.historyAccessRetries())
+        )
+            .take(config.pluginSettings.historyAccessRetries())
+            .map { latestTick(instrument).runId(config) }
+            .takeUntil { it.isSuccess() }
+            .blockingFirst()
     }
 
 internal fun saveQuote(quote: TickQuote) = State<Quotes, Unit> {
@@ -72,11 +61,15 @@ internal fun <R> getTick(
     .ask<PluginConfig>()
     .map { env -> env.quotes[instrument]!!.tick.run(block) }
 
+internal fun getQuote(instrument: Instrument): Reader<PluginConfig, TickQuote> = ReaderApi
+    .ask<PluginConfig>()
+    .map { env -> env.quotes[instrument]!! }
+
 internal fun <R> getQuotes(block: Quotes.() -> R) = ReaderApi
     .ask<PluginConfig>()
     .map { env -> env.quotes.run(block) }
 
-internal fun hasTick(instrument: Instrument) = getQuotes { containsKey(instrument) }
+internal fun hasQuote(instrument: Instrument) = getQuotes { containsKey(instrument) }
 
 internal fun noOfInstruments() = getQuotes { size }
 

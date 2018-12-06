@@ -30,7 +30,8 @@ internal fun getBrokerTimeResult() = ReaderApi
     .monad<PluginConfig>()
     .binding {
         if (!getClient { isConnected }.bind()) BrokerTimeResult(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
-        else {
+        else
+        {
             val serverTime = getServerTime().bind()
             val serverTimeInDateFormat = toDATEFormatInSeconds(serverTime)
             val connectionState = getConnectionState(serverTime).bind()
@@ -38,10 +39,7 @@ internal fun getBrokerTimeResult() = ReaderApi
         }
     }.fix()
 
-internal fun getServerTime() = getContext {
-    logger.debug("Server time is $time")
-    time
-}
+internal fun getServerTime() = getContext { time }
 
 internal fun isMarketClosed(serverTime: Long) = getContext { dataService.isOfflineTime(serverTime) }
 
@@ -67,7 +65,8 @@ internal fun noOfTradeableInstruments() = ReaderApi
 internal fun getConnectionState(serverTime: Long) = ReaderApi
     .monad<PluginConfig>()
     .binding {
-        when {
+        when
+        {
             isMarketClosed(serverTime).bind() -> CONNECTION_OK_BUT_MARKET_CLOSED
             !areTradeOrdersAllowed().bind() -> CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
             else -> CONNECTION_OK

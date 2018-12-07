@@ -5,8 +5,7 @@ import arrow.core.Option
 import arrow.core.some
 import arrow.data.ReaderApi
 import arrow.data.fix
-import arrow.data.map
-import arrow.data.runId
+import arrow.data.flatMap
 import arrow.instances.monad
 import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.isTradingAllowedForAccount
@@ -47,19 +46,17 @@ internal fun areTradeOrdersAllowed() = ReaderApi
     .monad<PluginConfig>()
     .binding {
         if (!isTradingAllowedForAccount().bind()) false
-        else noOfTradeableInstruments().bind() > 0
+        else hasTradeableInstrument().bind()
     }.fix()
 
-internal fun noOfTradeableInstruments() = ReaderApi
+internal fun hasTradeableInstrument() = ReaderApi
     .ask<PluginConfig>()
-    .map { config ->
+    .flatMap {
         getContext {
             subscribedInstruments
                 .stream()
-                .filter { getContext { engine.isTradable(it) }.runId(config) }
-                .mapToInt { 1 }
-                .sum()
-        }.runId(config)
+                .anyMatch { this.engine.isTradable(it) }
+        }
     }
 
 internal fun getConnectionState(serverTime: Long) = ReaderApi

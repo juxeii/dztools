@@ -4,11 +4,11 @@ import com.sun.corba.se.impl.activation.ServerMain
 
 class ZorroNatives
 {
-    fun logZorroError(errorMsg: String) = jcallback_BrokerError(errorMsg)
+    fun showInZorroWindow(errorMsg: String) = jcallback_BrokerError(errorMsg)
 
-    fun logZorroDiagnose(errorMsg: String) = logZorroError("#$errorMsg")
+    fun logToZorroFile(errorMsg: String) = showInZorroWindow("#$errorMsg")
 
-    fun logZorroPopup(errorMsg: String) = ServerMain.logError("!$errorMsg")
+    fun zorroPopup(errorMsg: String) = ServerMain.logError("!$errorMsg")
 
     external fun jcallback_BrokerError(errorMsg: String): Int
 

@@ -1,32 +1,27 @@
 package com.jforex.dzjforex.zorro
 
-import arrow.core.*
-import arrow.data.*
-import arrow.instances.TryMonadErrorInstance
-import arrow.instances.TryMonadInstance
-import arrow.instances.`try`.applicative.just
-import arrow.instances.statet.applicative.just
+import arrow.core.Eval
+import arrow.data.runId
+import arrow.data.runS
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.asset.getAssetParams
+import com.jforex.dzjforex.login.login
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.subscription.getInitialQuotes
 import com.jforex.dzjforex.subscription.subscribeInstrument
 import com.jforex.dzjforex.time.getBrokerTimeResult
-import com.jforex.kforexutils.authentification.LoginCredentials
-import com.jforex.kforexutils.authentification.LoginType
-import com.jforex.kforexutils.client.login
 import com.jforex.kforexutils.misc.KForexUtils
 import com.jforex.kforexutils.price.TickQuote
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
-import io.reactivex.Observable
 import io.reactivex.rxkotlin.subscribeBy
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
-import java.util.concurrent.TimeUnit
 
 private val logger = LogManager.getLogger()
 
@@ -50,24 +45,19 @@ class ZorroBridge
     ): Int
     {
         if (client.isConnected) return LOGIN_OK
-
-        val loginCredentials = LoginCredentials(username = username, password = password)
-        val loginType = if (accountType == realLoginType) LoginType.LIVE
-        else LoginType.DEMO
-
-        val loginTask = {
-            client
-                .login(loginCredentials, loginType)
-                .toSingle {
+        val loginTask = Eval.later {
+            login(
+                username = username,
+                password = password,
+                accountType = accountType
+            )
+                .runId(client)
+                .fold({ LOGIN_FAIL }) {
                     initStrategy()
                     out_AccountNamesToFill[0] = getAccount { accountId }.runId(pluginConfig)
                     LOGIN_OK
                 }
-                .doOnError { logger.debug("Login failed! " + it.message) }
-                .onErrorReturnItem(LOGIN_FAIL)
-                .blockingGet()
         }
-
         return progressWait(loginTask)
     }
 
@@ -116,10 +106,13 @@ class ZorroBridge
 
     fun doSubscribeAsset(assetName: String): Int
     {
-        val subscribeTask = {
+        val subscribeTask = Eval.later {
             subscribeInstrument(assetName)
                 .runId(pluginConfig)
-                .flatMap { getInitialQuotes(it).runId(pluginConfig) }
+                .flatMap {
+                    natives.showInZorroWindow("Waiting for initial quotes...")
+                    getInitialQuotes(it).runId(pluginConfig)
+                }
                 .map { quotes -> quotes.forEach { infoStrategy.onTick(it.instrument, it.tick) } }
                 .fold({ SUBSCRIBE_FAIL }) { SUBSCRIBE_OK }
         }
@@ -194,18 +187,17 @@ class ZorroBridge
         return 42
     }
 
-    internal fun <T> progressWait(task: () -> T): T
+    private fun <T> progressWait(task: Eval<T>): T
     {
         val stateRelay = BehaviorRelay.create<T>()
-        GlobalScope.launch { stateRelay.accept(task()) }
-        Observable.interval(
-            0,
-            pluginSettings.zorroProgressInterval(),
-            TimeUnit.MILLISECONDS
-        )
-            .takeWhile { !stateRelay.hasValue() }
-            .blockingSubscribe { natives.jcallback_BrokerProgress(heartBeatIndication) }
-
+        GlobalScope.launch { stateRelay.accept(task.value()) }
+        runBlocking {
+            while (!stateRelay.hasValue())
+            {
+                natives.jcallback_BrokerProgress(heartBeatIndication)
+                delay(pluginSettings.zorroProgressInterval())
+            }
+        }
         return stateRelay.value!!
     }
 }

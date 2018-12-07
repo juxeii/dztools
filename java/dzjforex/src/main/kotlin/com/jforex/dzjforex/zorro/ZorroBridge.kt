@@ -1,8 +1,16 @@
 package com.jforex.dzjforex.zorro
 
 import arrow.core.Eval
+import arrow.core.ForTry
+import arrow.core.Try
+import arrow.core.fix
+import arrow.data.ReaderT
+import arrow.data.fix
 import arrow.data.runId
 import arrow.data.runS
+import arrow.instances.`try`.monad.monad
+import arrow.instances.kleisli.monad.monad
+import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.asset.getAssetParams
@@ -107,13 +115,15 @@ class ZorroBridge
     fun doSubscribeAsset(assetName: String): Int
     {
         val subscribeTask = Eval.later {
-            subscribeInstrument(assetName)
-                .runId(pluginConfig)
-                .flatMap {
-                    natives.showInZorroWindow("Waiting for initial quotes...")
-                    getInitialQuotes(it).runId(pluginConfig)
-                }
-                .map { quotes -> quotes.forEach { infoStrategy.onTick(it.instrument, it.tick) } }
+            ReaderT.monad<ForTry, PluginConfig>(Try.monad()).binding {
+                val subscribedInstruments = subscribeInstrument(assetName).bind()
+                natives.showInZorroWindow("Waiting for initial quotes of $subscribedInstruments")
+                val initialQuotes = getInitialQuotes(subscribedInstruments).bind()
+                initialQuotes.forEach { infoStrategy.onTick(it.instrument, it.tick) }
+            }
+                .fix()
+                .run(pluginConfig)
+                .fix()
                 .fold({ SUBSCRIBE_FAIL }) { SUBSCRIBE_OK }
         }
         return progressWait(subscribeTask)

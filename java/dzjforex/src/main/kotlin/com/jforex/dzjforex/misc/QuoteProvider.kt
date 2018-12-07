@@ -1,6 +1,9 @@
 package com.jforex.dzjforex.misc
 
-import arrow.core.*
+import arrow.core.Failure
+import arrow.core.Try
+import arrow.core.success
+import arrow.core.toT
 import arrow.data.*
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument

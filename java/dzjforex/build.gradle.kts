@@ -7,7 +7,7 @@ Project name: ${project.name}
 """
 
 plugins {
-    kotlin("jvm") version "1.3.10"
+    kotlin("jvm") version "1.3.11"
     jacoco
     `maven-publish`
 }

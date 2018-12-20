@@ -1,25 +1,39 @@
 package com.jforex.dzjforex.asset
 
-import arrow.data.ReaderApi
-import arrow.data.fix
-import arrow.instances.monad
-import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.misc.PluginConfig
-import com.jforex.dzjforex.misc.getAsk
-import com.jforex.dzjforex.misc.getSpread
+import com.jforex.dzjforex.misc.QuoteProviderDependencies
+import com.jforex.dzjforex.misc.QuotesApi.getAsk
+import com.jforex.dzjforex.misc.QuotesApi.getSpread
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-internal fun getAssetParams(instrument: Instrument) = ReaderApi
-    .monad<PluginConfig>()
-    .binding {
-        val price = getAsk(instrument).bind()
-        val spread = getSpread(instrument).bind()
+data class AssetParams(val price: Double, val spread: Double)
 
-        AssetParams(
-            price = price,
-            spread = spread
-        )
-    }.fix()
+interface BrokerAssetDependencies : QuoteProviderDependencies
+{
+    val instrument: Instrument
+
+    companion object
+    {
+        operator fun invoke(
+            instrument: Instrument,
+            quoteProviderDependencies: QuoteProviderDependencies
+        ): BrokerAssetDependencies =
+            object : BrokerAssetDependencies, QuoteProviderDependencies by quoteProviderDependencies
+            {
+                override val instrument = instrument
+            }
+    }
+}
+
+object BrokerAssetApi
+{
+    fun BrokerAssetDependencies.getAssetParams(): AssetParams
+    {
+        val ask = getAsk(instrument)
+        val spread = getSpread(instrument)
+
+        return AssetParams(price = ask, spread = spread)
+    }
+}

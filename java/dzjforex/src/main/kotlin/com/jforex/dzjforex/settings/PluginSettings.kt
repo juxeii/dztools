@@ -2,6 +2,20 @@ package com.jforex.dzjforex.settings
 
 import org.aeonbits.owner.Config
 
+interface SettingsDependencies
+{
+    val pluginSettings: PluginSettings
+
+    companion object
+    {
+        operator fun invoke(pluginSettings: PluginSettings): SettingsDependencies =
+            object : SettingsDependencies
+            {
+                override val pluginSettings = pluginSettings
+            }
+    }
+}
+
 @Config.Sources(
     "file:./Plugin/dukascopy/Plugin.properties",
     "classpath:Plugin.properties"
@@ -36,3 +50,4 @@ interface PluginSettings : Config
     @Config.DefaultValue("1000")
     fun historyAccessRetryDelay(): Long
 }
+

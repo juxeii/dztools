@@ -1,14 +1,30 @@
 package com.jforex.dzjforex.account
 
-import arrow.data.ReaderApi
-import arrow.data.fix
-import arrow.data.map
-import arrow.instances.monad
-import arrow.typeclasses.binding
 import com.dukascopy.api.IAccount
-import com.jforex.dzjforex.misc.PluginConfig
-import com.jforex.dzjforex.misc.getAccount
+import com.jforex.dzjforex.settings.SettingsDependencies
 
+interface AccountDependencies : SettingsDependencies
+{
+    val account: IAccount
+
+    companion object
+    {
+        operator fun invoke(account: IAccount, settingsDependencies: SettingsDependencies): AccountDependencies =
+            object : AccountDependencies, SettingsDependencies by settingsDependencies
+            {
+                override val account = account
+            }
+    }
+}
+
+object AccountApi
+{
+    fun AccountDependencies.isTradingAllowedForAccount() =
+        account.accountState == IAccount.AccountState.OK ||
+                account.accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
+}
+
+/*
 internal fun lotSize() = ReaderApi
     .ask<PluginConfig>()
     .map { config -> config.pluginSettings.lotSize() }
@@ -33,4 +49,4 @@ internal fun tradeValue() = getAccount { equity - baseEquity }
 
 internal fun isTradingAllowedForAccount() = getAccount {
     accountState == IAccount.AccountState.OK || accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
-}
+}*/

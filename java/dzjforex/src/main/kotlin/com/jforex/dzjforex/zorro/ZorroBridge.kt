@@ -1,49 +1,71 @@
 package com.jforex.dzjforex.zorro
 
-import arrow.core.Eval
 import arrow.core.ForTry
 import arrow.core.Try
 import arrow.core.fix
-import arrow.data.ReaderT
-import arrow.data.fix
-import arrow.data.runId
 import arrow.data.runS
-import arrow.instances.`try`.monad.monad
-import arrow.instances.kleisli.monad.monad
-import arrow.typeclasses.binding
+import arrow.effects.DeferredK
+import arrow.effects.IO
+import arrow.effects.fix
+import arrow.effects.instances.io.applicativeError.handleError
+import arrow.effects.instances.io.monad.flatMap
+import arrow.effects.instances.io.monadDefer.monadDefer
+import arrow.effects.instances.io.monadError.monadError
+import arrow.instances.`try`.monadError.monadError
 import com.dukascopy.api.Instrument
-import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.asset.getAssetParams
-import com.jforex.dzjforex.login.login
+import com.jforex.dzjforex.account.AccountDependencies
+import com.jforex.dzjforex.asset.BrokerAssetApi.getAssetParams
+import com.jforex.dzjforex.asset.BrokerAssetDependencies
+import com.jforex.dzjforex.history.HistoryDependencies
+import com.jforex.dzjforex.init.StrategyInitApi.start
+import com.jforex.dzjforex.init.StrategyInitDependencies
+import com.jforex.dzjforex.init.account
+import com.jforex.dzjforex.init.context
+import com.jforex.dzjforex.init.quotes
+import com.jforex.dzjforex.login.LoginApi.login
+import com.jforex.dzjforex.login.LoginDependencies
 import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.ProgressWaitApi.wait
 import com.jforex.dzjforex.settings.PluginSettings
-import com.jforex.dzjforex.subscription.getInitialQuotes
-import com.jforex.dzjforex.subscription.subscribeInstrument
-import com.jforex.dzjforex.time.getBrokerTimeResult
-import com.jforex.kforexutils.misc.KForexUtils
+import com.jforex.dzjforex.settings.SettingsDependencies
+import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
+import com.jforex.dzjforex.subscription.BrokerSubscribeApi.waitForLatestQuotes
+import com.jforex.dzjforex.subscription.BrokerSubscribeDependencies
+import com.jforex.dzjforex.time.BrokerTimeApi.getBrokerTimeResult
+import com.jforex.dzjforex.time.BrokerTimeDependencies
 import com.jforex.kforexutils.price.TickQuote
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
-import io.reactivex.rxkotlin.subscribeBy
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
-typealias Quotes = Map<Instrument, TickQuote>
+fun saveQuote(quote: TickQuote)
+{
+    quotes = updateQuotes(quote).runS(quotes)
+}
 
 class ZorroBridge
 {
-    private val client = getClient()
     private val natives = ZorroNatives()
+    private val client = getClient()
     private val pluginSettings = ConfigFactory.create(PluginSettings::class.java)
-    private val infoStrategy = KForexUtilsStrategy()
-    private var quotes: Quotes = emptyMap()
-    private lateinit var kForexUtils: KForexUtils
-    private lateinit var pluginConfig: PluginConfig
+    private val settingsApi = SettingsDependencies(pluginSettings)
+    private val progressWaitApi = ProgressWaitDependencies(pluginSettings, natives)
+    private val loginApi = LoginDependencies(IO.monadDefer(), client)
+    private val strategyInitApi = StrategyInitDependencies(IO.monadError(), client, KForexUtilsStrategy())
+    private lateinit var contextApi: ContextDependencies
+    private lateinit var accountApi: AccountDependencies
+    private lateinit var historyApi: HistoryDependencies<ForTry>
+    private lateinit var brokerTimeApi: BrokerTimeDependencies<ForTry>
+
+    private fun createQuoteProviderApi() = QuoteProviderDependencies(quotes)
+
+    private fun createBrokerSubscribeApi(): BrokerSubscribeDependencies<ForTry> =
+        BrokerSubscribeDependencies(historyApi, contextApi, accountApi, createQuoteProviderApi())
+
+    private fun createBrokerAssetApi(instrument: Instrument): BrokerAssetDependencies =
+        BrokerAssetDependencies(instrument, createQuoteProviderApi())
 
     fun doLogin(
         username: String,
@@ -53,47 +75,27 @@ class ZorroBridge
     ): Int
     {
         if (client.isConnected) return LOGIN_OK
-        val loginTask = Eval.later {
-            login(
-                username = username,
-                password = password,
-                accountType = accountType
-            )
-                .runId(client)
-                .fold({ LOGIN_FAIL }) {
-                    initStrategy()
-                    out_AccountNamesToFill[0] = getAccount { accountId }.runId(pluginConfig)
+
+        val loginTask = DeferredK {
+            loginApi
+                .login(username, password, accountType)
+                .flatMap { strategyInitApi.start() }
+                .map {
+                    out_AccountNamesToFill[0] = account.accountId
+                    contextApi = ContextDependencies(context)
+                    accountApi = AccountDependencies(account, settingsApi)
+                    historyApi = HistoryDependencies(context.history, settingsApi, Try.monadError())
+                    brokerTimeApi = BrokerTimeDependencies(Try.monadError(), accountApi, context)
                     LOGIN_OK
                 }
+                .handleError {
+                    logger.debug("Login failed! $it")
+                    LOGIN_FAIL
+                }
+                .fix()
+                .unsafeRunSync()
         }
-        return progressWait(loginTask)
-    }
-
-    private fun initStrategy()
-    {
-        client.startStrategy(infoStrategy)
-        logger.debug("started strategy")
-        kForexUtils = infoStrategy.kForexUtilsSingle().blockingFirst()
-        kForexUtils
-            .tickQuotes
-            .subscribeBy(onNext = {
-                quotes = saveQuote(it).runS(quotes)
-                renewExtConfig()
-            })
-
-        renewExtConfig()
-    }
-
-    private fun renewExtConfig()
-    {
-        pluginConfig = PluginConfig(
-            client = client,
-            pluginSettings = pluginSettings,
-            natives = natives,
-            infoStrategy = infoStrategy,
-            kForexUtils = kForexUtils,
-            quotes = quotes
-        )
+        return progressWaitApi.wait(loginTask)
     }
 
     fun doLogout(): Int
@@ -104,41 +106,44 @@ class ZorroBridge
 
     fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int
     {
-        val brokerTimeResult = getBrokerTimeResult().runId(pluginConfig)
-        brokerTimeResult
-            .maybeServerTime
-            .map { out_ServerTimeToFill[0] = it }
+        if (!client.isConnected) return CONNECTION_LOST_NEW_LOGIN_REQUIRED
 
-        return brokerTimeResult.connectionState
+        brokerTimeApi
+            .getBrokerTimeResult()
+            .fix()
+            .fold({
+                logger.debug("Error fetching broker time! $it")
+                return CONNECTION_OK_BUT_MARKET_CLOSED
+            }) { brokerTimeResult ->
+                out_ServerTimeToFill[0] = brokerTimeResult.serverTime
+                return brokerTimeResult.connectionState
+            }
     }
 
     fun doSubscribeAsset(assetName: String): Int
     {
-        val subscribeTask = Eval.later {
-            ReaderT.monad<ForTry, PluginConfig>(Try.monad()).binding {
-                val subscribedInstruments = subscribeInstrument(assetName).bind()
-                natives.showInZorroWindow("Waiting for initial quotes of $subscribedInstruments")
-                val initialQuotes = getInitialQuotes(subscribedInstruments).bind()
-                initialQuotes.forEach { infoStrategy.onTick(it.instrument, it.tick) }
+        val subscribeTask = DeferredK {
+            createBrokerSubscribeApi().run {
+                subscribeInstrument(assetName)
+                    .flatMap { waitForLatestQuotes(it) }
+                    .map { latestQuotes -> latestQuotes.forEach { quote -> saveQuote(quote) } }
+                    .fix()
+                    .fold({ SUBSCRIBE_FAIL }) { SUBSCRIBE_OK }
             }
-                .fix()
-                .run(pluginConfig)
-                .fix()
-                .fold({ SUBSCRIBE_FAIL }) { SUBSCRIBE_OK }
         }
-        return progressWait(subscribeTask)
+        return progressWaitApi.wait(subscribeTask)
     }
 
     fun doBrokerAsset(
         assetName: String,
         out_AssetParamsToFill: DoubleArray
     ) = instrumentFromAssetName(assetName)
-        .map { getAssetParams(it).runId(pluginConfig) }
-        .fold({ ASSET_UNAVAILABLE }) {
-            out_AssetParamsToFill[0] = it.price
-            out_AssetParamsToFill[1] = it.spread
-            ASSET_AVAILABLE
+        .map { instrument -> createBrokerAssetApi(instrument).getAssetParams() }
+        .map { assetParams ->
+            out_AssetParamsToFill[0] = assetParams.price
+            out_AssetParamsToFill[1] = assetParams.spread
         }
+        .fold({ ASSET_UNAVAILABLE }) { ASSET_AVAILABLE }
 
     fun doBrokerAccount(accountInfoParams: DoubleArray): Int
     {
@@ -195,19 +200,5 @@ class ZorroBridge
     fun doSetOrderText(orderText: String): Int
     {
         return 42
-    }
-
-    private fun <T> progressWait(task: Eval<T>): T
-    {
-        val stateRelay = BehaviorRelay.create<T>()
-        GlobalScope.launch { stateRelay.accept(task.value()) }
-        runBlocking {
-            while (!stateRelay.hasValue())
-            {
-                natives.jcallback_BrokerProgress(heartBeatIndication)
-                delay(pluginSettings.zorroProgressInterval())
-            }
-        }
-        return stateRelay.value!!
     }
 }

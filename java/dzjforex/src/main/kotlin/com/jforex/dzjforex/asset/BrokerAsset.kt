@@ -4,11 +4,15 @@ import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.QuoteProviderDependencies
 import com.jforex.dzjforex.misc.QuotesApi.getAsk
 import com.jforex.dzjforex.misc.QuotesApi.getSpread
+import com.jforex.dzjforex.misc.createQuoteProviderApi
 import org.apache.logging.log4j.LogManager
 
 private val logger = LogManager.getLogger()
 
 data class AssetParams(val price: Double, val spread: Double)
+
+fun createBrokerAssetApi(instrument: Instrument): BrokerAssetDependencies =
+    BrokerAssetDependencies(instrument, createQuoteProviderApi())
 
 interface BrokerAssetDependencies : QuoteProviderDependencies
 {

@@ -1,25 +1,13 @@
 package com.jforex.dzjforex.account
 
 import com.dukascopy.api.IAccount
-import com.jforex.dzjforex.settings.SettingsDependencies
-
-interface AccountDependencies : SettingsDependencies
-{
-    val account: IAccount
-
-    companion object
-    {
-        operator fun invoke(account: IAccount, settingsDependencies: SettingsDependencies): AccountDependencies =
-            object : AccountDependencies, SettingsDependencies by settingsDependencies
-            {
-                override val account = account
-            }
-    }
-}
+import com.dukascopy.api.IContext
+import com.jforex.dzjforex.misc.ContextDependencies
+import com.jforex.dzjforex.misc.contextApi
 
 object AccountApi
 {
-    fun AccountDependencies.isTradingAllowedForAccount() =
+    fun ContextDependencies.isTradingAllowedForAccount() =
         account.accountState == IAccount.AccountState.OK ||
                 account.accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
 }

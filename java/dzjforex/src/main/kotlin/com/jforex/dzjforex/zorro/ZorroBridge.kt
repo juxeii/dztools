@@ -1,23 +1,24 @@
 package com.jforex.dzjforex.zorro
 
-import arrow.core.fix
 import arrow.effects.DeferredK
 import arrow.effects.fix
-import com.dukascopy.api.system.IClient
+import com.jforex.dzjforex.account.BrokerAccountApi.create
+import com.jforex.dzjforex.account.brokerAccountApi
 import com.jforex.dzjforex.asset.BrokerAssetApi.create
 import com.jforex.dzjforex.asset.createBrokerAssetApi
+import com.jforex.dzjforex.buy.BrokerBuyApi.create
+import com.jforex.dzjforex.buy.brokerBuyApi
 import com.jforex.dzjforex.login.LoginApi.create
 import com.jforex.dzjforex.login.LoginApi.logout
 import com.jforex.dzjforex.login.loginApi
 import com.jforex.dzjforex.misc.PluginApi.progressWait
-import com.jforex.dzjforex.misc.getClient
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
 import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.create
 import com.jforex.dzjforex.time.brokerTimeApi
-
-val client: IClient = getClient()
+import com.jforex.dzjforex.trade.BrokerTradeApi.create
+import com.jforex.dzjforex.trade.createBrokerTradeApi
 
 class ZorroBridge
 {
@@ -51,7 +52,7 @@ class ZorroBridge
             createBrokerSubscribeApi().run {
                 subscribeInstrument(assetName)
                     .fix()
-                    .fold({ SUBSCRIBE_FAIL }) { SUBSCRIBE_OK }
+                    .unsafeRunSync()
             }
         }
         return pluginApi.progressWait(subscribeTask)
@@ -63,18 +64,20 @@ class ZorroBridge
             .fix()
             .unsafeRunSync()
 
-    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray): Int
-    {
-        return 42
-    }
+    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray) =
+        brokerAccountApi
+            .create(out_AccountInfoToFill)
+            .fix()
+            .unsafeRunSync()
 
     fun doBrokerTrade(
-        orderID: Int,
+        orderId: Int,
         out_TradeInfoToFill: DoubleArray
-    ): Int
-    {
-        return 42
-    }
+    ) =
+        createBrokerTradeApi()
+            .create(orderId, out_TradeInfoToFill)
+            .fix()
+            .unsafeRunSync()
 
     fun doBrokerBuy2(
         assetName: String,
@@ -84,7 +87,13 @@ class ZorroBridge
         out_TradeInfoToFill: DoubleArray
     ): Int
     {
-        return 42
+        val buyTask = DeferredK {
+            brokerBuyApi
+                .create(assetName, contracts, slDistance, limit, out_TradeInfoToFill)
+                .fix()
+                .unsafeRunSync()
+        }
+        return pluginApi.progressWait(buyTask)
     }
 
     fun doBrokerSell(

@@ -2,6 +2,7 @@ package com.jforex.dzjforex.misc
 
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.IContext
+import com.dukascopy.api.IEngine
 import com.dukascopy.api.IHistory
 
 lateinit var contextApi: ContextDependencies
@@ -14,6 +15,7 @@ fun initContextApi(context: IContext)
 interface ContextDependencies
 {
     val context: IContext
+    val engine: IEngine
     val account: IAccount
     val history: IHistory
 
@@ -23,6 +25,7 @@ interface ContextDependencies
             object : ContextDependencies
             {
                 override val context = context
+                override val engine = context.engine
                 override val account = context.account
                 override val history = context.history
             }

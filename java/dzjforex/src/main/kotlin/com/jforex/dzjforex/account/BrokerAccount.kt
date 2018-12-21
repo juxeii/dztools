@@ -1,40 +1,49 @@
 package com.jforex.dzjforex.account
 
-import com.dukascopy.api.IAccount
-import com.dukascopy.api.IContext
-import com.jforex.dzjforex.misc.ContextDependencies
+import arrow.Kind
+import arrow.effects.ForIO
+import arrow.effects.IO
+import arrow.effects.instances.io.monadError.monadError
+import arrow.typeclasses.ApplicativeError
+import com.jforex.dzjforex.account.AccountApi.baseEquity
+import com.jforex.dzjforex.account.AccountApi.tradeValue
+import com.jforex.dzjforex.account.AccountApi.usedMargin
 import com.jforex.dzjforex.misc.contextApi
+import com.jforex.dzjforex.misc.pluginApi
+import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
+import com.jforex.dzjforex.zorro.ACCOUNT_UNAVAILABLE
 
-object AccountApi
+lateinit var brokerAccountApi: BrokerAccountDependencies<ForIO>
+
+fun initBrokerAccountApi()
 {
-    fun ContextDependencies.isTradingAllowedForAccount() =
-        account.accountState == IAccount.AccountState.OK ||
-                account.accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
+    brokerAccountApi = BrokerAccountDependencies(accountApi, IO.monadError())
 }
 
-/*
-internal fun lotSize() = ReaderApi
-    .ask<PluginConfig>()
-    .map { config -> config.pluginSettings.lotSize() }
+interface BrokerAccountDependencies<F> : AccountDependencies, ApplicativeError<F, Throwable>
+{
+    companion object
+    {
+        operator fun <F> invoke(
+            accountDependencies: AccountDependencies,
+            AE: ApplicativeError<F, Throwable>
+        ): BrokerAccountDependencies<F> =
+            object : BrokerAccountDependencies<F>,
+                AccountDependencies by accountDependencies,
+                ApplicativeError<F, Throwable> by AE
+            {}
+    }
+}
 
-internal fun lotMargin() = ReaderApi
-    .monad<PluginConfig>()
-    .binding {
-        val lotSize = lotSize().bind()
-        val leverage = getAccount { leverage }.bind()
-        lotSize / leverage
-    }.fix()
-
-internal fun freeMargin() = ReaderApi
-    .monad<PluginConfig>()
-    .binding {
-        val creditLine = getAccount { creditLine }.bind()
-        val leverage = getAccount { leverage }.bind()
-        creditLine / leverage
-    }.fix()
-
-internal fun tradeValue() = getAccount { equity - baseEquity }
-
-internal fun isTradingAllowedForAccount() = getAccount {
-    accountState == IAccount.AccountState.OK || accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
-}*/
+object BrokerAccountApi
+{
+    fun <F> BrokerAccountDependencies<F>.create(out_AccountInfoToFill: DoubleArray):Kind<F, Int> = catch {
+        if(!account.isConnected) ACCOUNT_UNAVAILABLE
+        else{
+            out_AccountInfoToFill[0] = baseEquity()
+            out_AccountInfoToFill[1] = tradeValue()
+            out_AccountInfoToFill[2] = usedMargin()
+            ACCOUNT_AVAILABLE
+        }
+    }
+}

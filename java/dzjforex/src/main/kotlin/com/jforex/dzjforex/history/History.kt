@@ -3,6 +3,9 @@ package com.jforex.dzjforex.history
 import arrow.Kind
 import arrow.core.ForTry
 import arrow.core.Try
+import arrow.effects.ForIO
+import arrow.effects.IO
+import arrow.effects.instances.io.monadError.monadError
 import arrow.instances.`try`.monadError.monadError
 import arrow.typeclasses.MonadError
 import com.dukascopy.api.Instrument
@@ -16,11 +19,11 @@ import com.jforex.kforexutils.price.TickQuote
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
-lateinit var historyApi: HistoryDependencies<ForTry>
+lateinit var historyApi: HistoryDependencies<ForIO>
 
 fun initHistoryApi()
 {
-    historyApi = HistoryDependencies(pluginApi, contextApi, Try.monadError())
+    historyApi = HistoryDependencies(pluginApi, contextApi, IO.monadError())
 }
 
 interface HistoryDependencies<F> : PluginDependencies, ContextDependencies, MonadError<F, Throwable>

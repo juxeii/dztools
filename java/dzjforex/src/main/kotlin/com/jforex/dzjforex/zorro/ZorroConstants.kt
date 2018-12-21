@@ -15,6 +15,12 @@ const val CONNECTION_OK_BUT_MARKET_CLOSED = 1
 const val CONNECTION_OK_BUT_TRADING_NOT_ALLOWED = 1
 const val CONNECTION_OK = 2
 
+const val ACCOUNT_UNAVAILABLE = 0
+const val ACCOUNT_AVAILABLE = 1
+
+const val BROKER_BUY_FAIL = 0
+const val BROKER_BUY_OPPOSITE_CLOSE = 1
+
 const val heartBeatIndication  = 1
 const val demoLoginType = "Demo"
 const val realLoginType = "Real"

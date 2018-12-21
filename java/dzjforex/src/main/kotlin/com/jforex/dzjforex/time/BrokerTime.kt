@@ -6,13 +6,16 @@ import arrow.effects.IO
 import arrow.effects.instances.io.monad.monad
 import arrow.typeclasses.Monad
 import arrow.typeclasses.binding
-import com.jforex.dzjforex.account.AccountApi.isTradingAllowedForAccount
+import com.jforex.dzjforex.account.AccountDependencies
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginDependencies
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.pluginApi
-import com.jforex.dzjforex.zorro.*
-import org.apache.logging.log4j.LogManager
+import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
+import com.jforex.dzjforex.zorro.CONNECTION_OK
+import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
+import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+import com.jforex.dzjforex.account.AccountApi.isTradingAllowed
 
 lateinit var brokerTimeApi: BrokerTimeDependencies<ForIO>
 
@@ -21,7 +24,10 @@ fun initBrokerTimeApi()
     brokerTimeApi = BrokerTimeDependencies(pluginApi, contextApi, IO.monad())
 }
 
-interface BrokerTimeDependencies<F> : PluginDependencies, ContextDependencies, Monad<F>
+interface BrokerTimeDependencies<F> : PluginDependencies,
+    ContextDependencies,
+    AccountDependencies,
+    Monad<F>
 {
     companion object
     {
@@ -57,7 +63,7 @@ object BrokerTimeApi
 
     fun <F> BrokerTimeDependencies<F>.areTradeOrdersAllowed(): Kind<F, Boolean> =
         binding {
-            if (!isTradingAllowedForAccount()) false
+            if (!isTradingAllowed()) false
             else hasTradeableInstrument().bind()
         }
 

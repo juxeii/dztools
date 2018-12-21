@@ -15,8 +15,8 @@ interface InstrumentFunc<F> : MonadError<F, Throwable>
 {
     companion object
     {
-        operator fun <F> invoke(M: MonadError<F, Throwable>): InstrumentFunc<F> =
-            object : InstrumentFunc<F>, MonadError<F, Throwable> by M
+        operator fun <F> invoke(ME: MonadError<F, Throwable>): InstrumentFunc<F> =
+            object : InstrumentFunc<F>, MonadError<F, Throwable> by ME
             {}
     }
 }

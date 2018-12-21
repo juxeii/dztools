@@ -1,7 +1,7 @@
 package com.jforex.dzjforex.subscription
 
 import arrow.Kind
-import arrow.core.ForTry
+import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.HistoryApi.waitForLatestQuote
@@ -11,6 +11,8 @@ import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.forexInstrumentFromAssetName
 import com.jforex.dzjforex.misc.QuotesApi.getQuote
 import com.jforex.dzjforex.misc.QuotesApi.hasQuote
+import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
+import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import com.jforex.kforexutils.price.TickQuote
@@ -19,7 +21,7 @@ import org.apache.logging.log4j.Logger
 
 private val logger: Logger = LogManager.getLogger()
 
-fun createBrokerSubscribeApi(): BrokerSubscribeDependencies<ForTry> =
+fun createBrokerSubscribeApi(): BrokerSubscribeDependencies<ForIO> =
     BrokerSubscribeDependencies(historyApi, createQuoteProviderApi())
 
 interface BrokerSubscribeDependencies<F> : HistoryDependencies<F>,
@@ -42,14 +44,15 @@ interface BrokerSubscribeDependencies<F> : HistoryDependencies<F>,
 
 object BrokerSubscribeApi
 {
-    fun <F> BrokerSubscribeDependencies<F>.subscribeInstrument(assetName: String): Kind<F, Unit> =
+    fun <F> BrokerSubscribeDependencies<F>.subscribeInstrument(assetName: String): Kind<F, Int> =
         binding {
             val instrument = forexInstrumentFromAssetName(assetName).bind()
             val instrumentsToSubscribe = getInstrumentsToSubscribe(instrument).bind()
             subscribeAllInstruments(instrumentsToSubscribe).bind()
             val latestQuotes = waitForLatestQuotes(instrumentsToSubscribe).bind()
             latestQuotes.forEach { quote -> saveQuote(quote) }
-        }
+            SUBSCRIBE_OK
+        }.handleError { SUBSCRIBE_FAIL }
 
     fun <F> BrokerSubscribeDependencies<F>.getInstrumentWithCrosses(instrument: Instrument): Kind<F, Set<Instrument>>
     {

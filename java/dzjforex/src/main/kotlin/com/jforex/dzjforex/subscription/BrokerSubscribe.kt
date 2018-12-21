@@ -4,29 +4,28 @@ import arrow.Kind
 import arrow.core.ForTry
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.JFException
 import com.jforex.dzjforex.history.HistoryApi.waitForLatestQuote
 import com.jforex.dzjforex.history.HistoryDependencies
 import com.jforex.dzjforex.history.historyApi
-import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.QuoteProviderDependencies
+import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.InstrumentApi.forexInstrumentFromAssetName
 import com.jforex.dzjforex.misc.QuotesApi.getQuote
 import com.jforex.dzjforex.misc.QuotesApi.hasQuote
-import com.jforex.dzjforex.misc.createQuoteProviderApi
-import com.jforex.dzjforex.misc.forexInstrumentFromAssetName
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import com.jforex.kforexutils.price.TickQuote
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
-private val logger = LogManager.getLogger()
+private val logger: Logger = LogManager.getLogger()
 
 fun createBrokerSubscribeApi(): BrokerSubscribeDependencies<ForTry> =
     BrokerSubscribeDependencies(historyApi, createQuoteProviderApi())
 
 interface BrokerSubscribeDependencies<F> : HistoryDependencies<F>,
     ContextDependencies,
-    QuoteProviderDependencies
+    QuoteProviderDependencies,
+    InstrumentFunc<F>
 {
     companion object
     {
@@ -43,17 +42,13 @@ interface BrokerSubscribeDependencies<F> : HistoryDependencies<F>,
 
 object BrokerSubscribeApi
 {
-    fun <F> BrokerSubscribeDependencies<F>.subscribeInstrument(assetName: String): Kind<F, Set<Instrument>> =
+    fun <F> BrokerSubscribeDependencies<F>.subscribeInstrument(assetName: String): Kind<F, Unit> =
         binding {
-            forexInstrumentFromAssetName(assetName)
-                .fold({
-                    raiseError<JFException>(it)
-                    emptySet<Instrument>()
-                }) {
-                    val instrumentsToSubscribe = getInstrumentsToSubscribe(it).bind()
-                    subscribeAllInstruments(instrumentsToSubscribe).bind()
-                    instrumentsToSubscribe
-                }
+            val instrument = forexInstrumentFromAssetName(assetName).bind()
+            val instrumentsToSubscribe = getInstrumentsToSubscribe(instrument).bind()
+            subscribeAllInstruments(instrumentsToSubscribe).bind()
+            val latestQuotes = waitForLatestQuotes(instrumentsToSubscribe).bind()
+            latestQuotes.forEach { quote -> saveQuote(quote) }
         }
 
     fun <F> BrokerSubscribeDependencies<F>.getInstrumentWithCrosses(instrument: Instrument): Kind<F, Set<Instrument>>

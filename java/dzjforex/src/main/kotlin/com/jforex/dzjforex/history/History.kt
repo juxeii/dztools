@@ -3,24 +3,18 @@ package com.jforex.dzjforex.history
 import arrow.Kind
 import arrow.core.ForTry
 import arrow.core.Try
-import arrow.core.fix
 import arrow.instances.`try`.monadError.monadError
 import arrow.typeclasses.MonadError
-import com.dukascopy.api.IContext
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginDependencies
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.pluginApi
-import com.jforex.dzjforex.time.initBrokerTimeApi
 import com.jforex.kforexutils.history.latestQuote
 import com.jforex.kforexutils.price.TickQuote
 import io.reactivex.Observable
-import org.apache.logging.log4j.LogManager
 import java.util.concurrent.TimeUnit
-
-private val logger = LogManager.getLogger()
 
 lateinit var historyApi: HistoryDependencies<ForTry>
 
@@ -57,7 +51,7 @@ object HistoryApi
                 TimeUnit.MILLISECONDS
             )
                 .take(pluginSettings.historyAccessRetries())
-                .map { history.latestQuote(instrument, Try.monadError()).fix() }
+                .map { history.latestQuote(instrument) }
                 .takeUntil { it.isSuccess() }
                 .map {
                     it.fold({ error ->

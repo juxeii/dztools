@@ -14,8 +14,6 @@ import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.zorro.*
 import org.apache.logging.log4j.LogManager
 
-private val logger = LogManager.getLogger()
-
 lateinit var brokerTimeApi: BrokerTimeDependencies<ForIO>
 
 fun initBrokerTimeApi()

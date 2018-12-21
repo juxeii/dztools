@@ -5,13 +5,10 @@ import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.kforexutils.price.TickQuote
 import org.apache.logging.log4j.LogManager
 
-private val logger = LogManager.getLogger()
-
 typealias Quotes = Map<Instrument, TickQuote>
+val quotesRelay: BehaviorRelay<Quotes> = BehaviorRelay.createDefault(emptyMap())
 
 fun createQuoteProviderApi() = QuoteProviderDependencies(getQuotes())
-
-val quotesRelay: BehaviorRelay<Quotes> = BehaviorRelay.createDefault(emptyMap())
 
 fun saveQuote(quote: TickQuote)
 {

@@ -73,4 +73,6 @@ object PluginApi
     }
 
     fun PluginDependencies.contractsToAmount(contracts: Int) = Math.abs(contracts) / pluginSettings.lotScale()
+
+    fun PluginDependencies.amountToContracts(amount: Double) = (amount * pluginSettings.lotScale()).toInt()
 }

@@ -33,6 +33,7 @@ extern JMethodDesc doBrokerStop;
 extern JMethodDesc doBrokerSell;
 extern JMethodDesc doBrokerHistory2;
 extern JMethodDesc doSetOrderText;
+extern JMethodDesc doSetLimitPrice;
 
 extern JMethodDesc excGetMessage;
 extern JMethodDesc excGetName;

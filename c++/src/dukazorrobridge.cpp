@@ -6,6 +6,7 @@
 #define GET_MINLOT 23 // Minimum permitted amount of a lot.
 #define GET_TYPE 50
 #define SET_ORDERTEXT 131 // Order comment for trades
+#define SET_LIMIT 135 // set limit price for entry limit orders
 
 int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
@@ -210,6 +211,11 @@ BrokerCommand(int nCommand,
     {
         std::string orderText{ reinterpret_cast<char*>(dwParameter) };
         return dllCallHandler.SetOrderText(orderText.c_str());
+    }
+    case SET_LIMIT:
+    {
+        double limitPrice = *reinterpret_cast<double*>(dwParameter);
+        return dllCallHandler.SetLimitPrice(limitPrice);
     }
     default:
         {

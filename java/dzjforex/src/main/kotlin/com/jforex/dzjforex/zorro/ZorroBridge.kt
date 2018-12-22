@@ -14,7 +14,9 @@ import com.jforex.dzjforex.login.loginApi
 import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.sell.BrokerSellApi.create
+import com.jforex.dzjforex.stop.BrokerStopApi.create
 import com.jforex.dzjforex.sell.brokerSellApi
+import com.jforex.dzjforex.stop.brokerStopApi
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
 import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.create
@@ -110,11 +112,17 @@ class ZorroBridge
     }
 
     fun doBrokerStop(
-        orderID: Int,
+        orderId: Int,
         slPrice: Double
     ): Int
     {
-        return 42
+        val stopTask = DeferredK {
+            brokerStopApi
+                .create(orderId, slPrice)
+                .fix()
+                .unsafeRunSync()
+        }
+        return pluginApi.progressWait(stopTask)
     }
 
     fun doBrokerHistory2(
@@ -130,6 +138,11 @@ class ZorroBridge
     }
 
     fun doSetOrderText(orderText: String): Int
+    {
+        return 42
+    }
+
+    fun doSetLimitPrice(limitPrice: Double): Int
     {
         return 42
     }

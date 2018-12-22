@@ -19,11 +19,18 @@ const val ACCOUNT_UNAVAILABLE = 0
 const val ACCOUNT_AVAILABLE = 1
 
 const val BROKER_BUY_FAIL = 0
+const val BROKER_BUY_TIMEOUT = -2
 const val BROKER_BUY_OPPOSITE_CLOSE = 1
 
 const val BROKER_SELL_FAIL = 0
 
+const val ADJUST_SL_FAIL = 0
+const val ADJUST_SL_OK = 1
+
 const val UNKNOWN_ORDER_ID = 0
+
+const val BROKER_COMMAND_FAIL = 0
+const val BROKER_COMMAND_OK = 1
 
 const val heartBeatIndication  = 1
 const val demoLoginType = "Demo"

@@ -45,11 +45,11 @@ object AccountApi
 
     fun AccountDependencies.lotMargin() = lotSize() / leverage()
 
-    fun AccountDependencies.usedMargin() = equity() - freeMargin()
-
     fun AccountDependencies.tradeValue() = equity() - baseEquity()
 
     fun AccountDependencies.freeMargin() = account.creditLine / leverage()
+
+    fun AccountDependencies.isNFAAccount() = account.isGlobal
 
     fun AccountDependencies.pipCost(instrument: Instrument) = context
         .utils

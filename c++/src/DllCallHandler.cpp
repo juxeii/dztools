@@ -325,3 +325,11 @@ DllCallHandler::SetOrderText(const char *orderText)
 
     return res;
 }
+
+int
+DllCallHandler::SetLimitPrice(const double limitPrice)
+{
+    return (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+        JData::doSetLimitPrice.methodID,
+        limitPrice);
+}

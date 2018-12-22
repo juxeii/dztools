@@ -22,6 +22,7 @@ JMethodDesc doBrokerStop =     { nullptr, "doBrokerStop",     "(ID)I" };
 JMethodDesc doBrokerSell =     { nullptr, "doBrokerSell",     "(II)I" };
 JMethodDesc doBrokerHistory2 = { nullptr, "doBrokerHistory2", "(Ljava/lang/String;DDII[D)I" };
 JMethodDesc doSetOrderText=    { nullptr, "doSetOrderText",   "(Ljava/lang/String;)I" };
+JMethodDesc doSetLimitPrice =  { nullptr, "doSetLimitPrice",   "(D)I" };
 
 JMethodDesc excGetMessage=     { nullptr, "getMessage",       "()Ljava/lang/String;" };
 JMethodDesc excGetName=        { nullptr, "getName",          "()Ljava/lang/String;" };
@@ -46,7 +47,8 @@ const std::vector<JMethodDesc*> dukaZorroBridgeMethods = { &constructor,
                                                            &doBrokerStop,
                                                            &doBrokerSell,
                                                            &doBrokerHistory2,
-                                                           &doSetOrderText};
+                                                           &doSetOrderText,
+                                                           &doSetLimitPrice };
 
 const int nativesTableSize = sizeof(nativesTable) / sizeof(nativesTable[0]);
 

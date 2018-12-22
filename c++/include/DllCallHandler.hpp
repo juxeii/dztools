@@ -76,6 +76,9 @@ public:
     int
     SetOrderText(const char *orderText);
 
+    int
+    SetLimitPrice(const double limitPrice);
+
 private:
     JNIHandler jniHandler;
     JNIEnv *env;

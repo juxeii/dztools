@@ -12,6 +12,7 @@ import com.jforex.dzjforex.history.initHistoryApi
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.order.initOrderRepositoryApi
 import com.jforex.dzjforex.sell.initBrokerSellApi
+import com.jforex.dzjforex.stop.initBrokerStopApi
 import com.jforex.dzjforex.time.initBrokerTimeApi
 import com.jforex.dzjforex.zorro.LOGIN_FAIL
 import com.jforex.dzjforex.zorro.LOGIN_OK
@@ -81,6 +82,7 @@ object LoginApi
         initBrokerBuyApi()
         initOrderRepositoryApi()
         initBrokerSellApi()
+        initBrokerStopApi()
     }
 
     fun getLoginType(accountType: String) =

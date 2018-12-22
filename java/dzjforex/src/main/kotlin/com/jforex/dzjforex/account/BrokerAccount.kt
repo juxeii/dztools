@@ -7,7 +7,6 @@ import arrow.effects.instances.io.monadError.monadError
 import arrow.typeclasses.ApplicativeError
 import com.jforex.dzjforex.account.AccountApi.baseEquity
 import com.jforex.dzjforex.account.AccountApi.tradeValue
-import com.jforex.dzjforex.account.AccountApi.usedMargin
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
@@ -42,7 +41,7 @@ object BrokerAccountApi
         else{
             out_AccountInfoToFill[0] = baseEquity()
             out_AccountInfoToFill[1] = tradeValue()
-            out_AccountInfoToFill[2] = usedMargin()
+            out_AccountInfoToFill[2] = account.usedMargin
             ACCOUNT_AVAILABLE
         }
     }

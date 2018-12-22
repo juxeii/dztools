@@ -20,6 +20,10 @@ interface PluginSettings : Config
     @Config.DefaultValue("250")
     fun zorroProgressInterval(): Long
 
+    @Config.Key("order.labelprefix")
+    @Config.DefaultValue("zorro")
+    fun labelPrefix(): String
+
     @Config.Key("order.lotsize")
     @Config.DefaultValue("1000")
     fun lotSize(): Double

@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.sell
+package com.jforex.dzjforex.stop
 
 import arrow.Kind
 import arrow.effects.ForIO
@@ -8,25 +8,24 @@ import arrow.typeclasses.MonadError
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.PluginDependencies
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
-import com.jforex.dzjforex.order.zorroId
-import com.jforex.dzjforex.zorro.BROKER_SELL_FAIL
+import com.jforex.dzjforex.zorro.ADJUST_SL_FAIL
+import com.jforex.dzjforex.zorro.ADJUST_SL_OK
 import com.jforex.kforexutils.order.event.OrderEvent
 import com.jforex.kforexutils.order.event.OrderEventType
-import com.jforex.kforexutils.order.extension.close
+import com.jforex.kforexutils.order.extension.setSL
 
-lateinit var brokerSellApi: BrokerSellDependencies<ForIO>
+lateinit var brokerStopApi: BrokerStopDependencies<ForIO>
 
-fun initBrokerSellApi()
+fun initBrokerStopApi()
 {
-    brokerSellApi = BrokerSellDependencies(pluginApi, contextApi, IO.monadError())
+    brokerStopApi = BrokerStopDependencies(pluginApi, contextApi, IO.monadError())
 }
 
-interface BrokerSellDependencies<F> : PluginDependencies,
+interface BrokerStopDependencies<F> : PluginDependencies,
     ContextDependencies,
     MonadError<F, Throwable>
 {
@@ -36,8 +35,8 @@ interface BrokerSellDependencies<F> : PluginDependencies,
             pluginDependencies: PluginDependencies,
             contextDependencies: ContextDependencies,
             ME: MonadError<F, Throwable>
-        ): BrokerSellDependencies<F> =
-            object : BrokerSellDependencies<F>,
+        ): BrokerStopDependencies<F> =
+            object : BrokerStopDependencies<F>,
                 PluginDependencies by pluginDependencies,
                 ContextDependencies by contextDependencies,
                 MonadError<F, Throwable> by ME
@@ -45,24 +44,22 @@ interface BrokerSellDependencies<F> : PluginDependencies,
     }
 }
 
-object BrokerSellApi
+object BrokerStopApi
 {
-    fun <F> BrokerSellDependencies<F>.create(orderId: Int, contracts: Int): Kind<F, Int> =
+    fun <F> BrokerStopDependencies<F>.create(orderId: Int, slPrice: Double): Kind<F, Int> =
         bindingCatch {
             getOrderForId(orderId)
-                .map { order -> closeOrder(order, contractsToAmount(contracts)).bind() }
-                .fold({ BROKER_SELL_FAIL })
+                .map { order -> setSLPrice(order, slPrice).bind() }
+                .fold({ ADJUST_SL_FAIL })
                 { orderEvent ->
-                    if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
-                        orderEvent.order.zorroId()
-                    else BROKER_SELL_FAIL
+                    if (orderEvent.type == OrderEventType.CHANGED_SL) ADJUST_SL_OK else ADJUST_SL_FAIL
                 }
         }
 
-    fun <F> BrokerSellDependencies<F>.closeOrder(order: IOrder, amount: Double): Kind<F, OrderEvent> =
+    fun <F> BrokerStopDependencies<F>.setSLPrice(order: IOrder, slPrice: Double): Kind<F, OrderEvent> =
         catch {
             order
-                .close(amount = amount) {}
+                .setSL(slPrice = slPrice) {}
                 .blockingLast()
         }
 }

@@ -13,6 +13,8 @@ import com.jforex.dzjforex.login.LoginApi.logout
 import com.jforex.dzjforex.login.loginApi
 import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.misc.pluginApi
+import com.jforex.dzjforex.sell.BrokerSellApi.create
+import com.jforex.dzjforex.sell.brokerSellApi
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
 import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.create
@@ -70,10 +72,7 @@ class ZorroBridge
             .fix()
             .unsafeRunSync()
 
-    fun doBrokerTrade(
-        orderId: Int,
-        out_TradeInfoToFill: DoubleArray
-    ) =
+    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
         createBrokerTradeApi()
             .create(orderId, out_TradeInfoToFill)
             .fix()
@@ -97,11 +96,17 @@ class ZorroBridge
     }
 
     fun doBrokerSell(
-        orderID: Int,
+        orderId: Int,
         contracts: Int
     ): Int
     {
-        return 42
+        val sellTask = DeferredK {
+            brokerSellApi
+                .create(orderId, contracts)
+                .fix()
+                .unsafeRunSync()
+        }
+        return pluginApi.progressWait(sellTask)
     }
 
     fun doBrokerStop(

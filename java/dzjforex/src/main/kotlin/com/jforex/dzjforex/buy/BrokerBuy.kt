@@ -12,6 +12,7 @@ import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.order.storeOrder
+import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.kforexutils.engine.submit
 import com.jforex.kforexutils.order.event.OrderEventType
@@ -55,28 +56,20 @@ object BrokerBuyApi
     ): Kind<F, Int> =
         bindingCatch {
             val instrument = fromAssetName(assetName).bind()
-            logger.debug("Starting to submit!")
-            val order: IOrder = engine
+            val order = engine
                 .submit(
                     label = "ZorroTest",
                     instrument = instrument,
                     orderCommand = IEngine.OrderCommand.BUY,
                     amount = contractsToAmount(contracts)
-                ) {
-                    onStart = { logger.debug("Starting to submit!") }
-                }
-                .timeout(30, TimeUnit.SECONDS)
-                .takeUntil { it.type == OrderEventType.FULLY_FILLED }
+                )
+                .timeout(pluginSettings.maxSecondsForOrderFill(), TimeUnit.SECONDS)
                 .map { it.order }
-                .blockingFirst()
+                .blockingLast()
 
             storeOrder(order)
-
             out_TradeInfoToFill[0] = order.openPrice
 
-            order.id.toInt()
-        }.handleError {
-            logger.debug("Zefix!! $it")
-            BROKER_BUY_FAIL
-        }
+            order.zorroId()
+        }.handleError { BROKER_BUY_FAIL }
 }

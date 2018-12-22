@@ -28,6 +28,10 @@ interface PluginSettings : Config
     @Config.DefaultValue("1000000")
     fun lotScale(): Double
 
+    @Config.Key("order.trade.maxwait")
+    @Config.DefaultValue("30")
+    fun maxSecondsForOrderFill(): Long
+
     @Config.Key("history.access.retries")
     @Config.DefaultValue("10")
     fun historyAccessRetries(): Long

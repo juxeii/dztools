@@ -1,8 +1,10 @@
 package com.jforex.dzjforex.zorro
 
+import arrow.core.some
 import arrow.effects.DeferredK
 import arrow.effects.fix
 import com.jforex.dzjforex.account.BrokerAccountApi.create
+import com.jforex.dzjforex.account.accountApi
 import com.jforex.dzjforex.account.brokerAccountApi
 import com.jforex.dzjforex.asset.BrokerAssetApi.create
 import com.jforex.dzjforex.asset.createBrokerAssetApi
@@ -12,10 +14,12 @@ import com.jforex.dzjforex.login.LoginApi.create
 import com.jforex.dzjforex.login.LoginApi.logout
 import com.jforex.dzjforex.login.loginApi
 import com.jforex.dzjforex.misc.PluginApi.progressWait
+import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.sell.BrokerSellApi.create
-import com.jforex.dzjforex.stop.BrokerStopApi.create
+import com.jforex.dzjforex.sell.bcLimitPrice
 import com.jforex.dzjforex.sell.brokerSellApi
+import com.jforex.dzjforex.stop.BrokerStopApi.create
 import com.jforex.dzjforex.stop.brokerStopApi
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
 import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
@@ -23,6 +27,10 @@ import com.jforex.dzjforex.time.BrokerTimeApi.create
 import com.jforex.dzjforex.time.brokerTimeApi
 import com.jforex.dzjforex.trade.BrokerTradeApi.create
 import com.jforex.dzjforex.trade.createBrokerTradeApi
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.charset.Charset
+
 
 class ZorroBridge
 {
@@ -137,13 +145,42 @@ class ZorroBridge
         return 42
     }
 
-    fun doSetOrderText(orderText: String): Int
+    fun brokerCommandStringReturn(string: String, bytes: ByteArray): Double
     {
-        return 42
+        val buf = ByteBuffer.wrap(bytes)
+        val bytes = string.toByteArray(Charset.forName("UTF-8"))
+        buf.put(bytes)
+        buf.putInt(0)
+        buf.flip()
+        return BROKER_COMMAND_OK
     }
 
-    fun doSetLimitPrice(limitPrice: Double): Int
-    {
-        return 42
-    }
+    fun brokerCommandGetDouble(bytes: ByteArray) =
+        ByteBuffer
+            .wrap(bytes)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .double
+
+    fun doBrokerCommand(commandId: Int, bytes: ByteArray): Double =
+        when (commandId)
+        {
+            SET_ORDERTEXT ->
+            {
+                val orderText = String(bytes)
+                logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
+                BROKER_COMMAND_OK
+            }
+            SET_LIMIT ->
+            {
+                val limitPrice = brokerCommandGetDouble(bytes)
+                bcLimitPrice.accept(limitPrice.some())
+                logger.debug("doBrokerCommand SET_LIMIT called with limitPrice $limitPrice")
+                BROKER_COMMAND_OK
+            }
+            GET_ACCOUNT ->{
+                logger.debug("doBrokerCommand GET_ACCOUNT called")
+                brokerCommandStringReturn(accountApi.account.accountId, bytes)
+            }
+            else -> BROKER_COMMAND_UNAVAILABLE
+        }
 }

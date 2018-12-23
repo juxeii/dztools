@@ -312,24 +312,34 @@ DllCallHandler::BrokerSell(const int nTradeID,
                                          nAmount);
 }
 
-int
-DllCallHandler::SetOrderText(const char *orderText)
+var
+DllCallHandler::BrokerCommand(int command,
+                              void* data,
+                              int size)
 {
-    jstring jOrderText = env->NewStringUTF(orderText);
+    jbyteArray byteArray = env->NewByteArray(size);
+    void *temp = env->GetPrimitiveArrayCritical((jarray)byteArray, 0);
+    memcpy(temp, data, size);
+    env->ReleasePrimitiveArrayCritical(byteArray, temp, 0);
 
-    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                     JData::doSetOrderText.methodID,
-                                     jOrderText);
+    jint res = (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+        JData::doBrokerCommand.methodID,
+        command,
+        byteArray);
 
-    env->DeleteLocalRef(jOrderText);
+    switch (command)
+    {
+    case GET_ACCOUNT:
+    {
+        jbyte* elements = env->GetByteArrayElements(byteArray, NULL);
+        memcpy((char*)data, elements, size);
+        env->ReleaseByteArrayElements(byteArray, elements, JNI_ABORT);
+    }
+    default:
+    {}
+    }
+
+    env->DeleteLocalRef(byteArray);
 
     return res;
-}
-
-int
-DllCallHandler::SetLimitPrice(const double limitPrice)
-{
-    return (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::doSetLimitPrice.methodID,
-        limitPrice);
 }

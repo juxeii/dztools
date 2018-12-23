@@ -73,11 +73,10 @@ public:
     BrokerSell(const int nTradeID,
                const int nAmount);
 
-    int
-    SetOrderText(const char *orderText);
-
-    int
-    SetLimitPrice(const double limitPrice);
+    var
+    BrokerCommand(int command,
+                  void* data,
+                  int size);
 
 private:
     JNIHandler jniHandler;

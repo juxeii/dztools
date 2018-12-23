@@ -29,9 +29,12 @@ const val ADJUST_SL_OK = 1
 
 const val UNKNOWN_ORDER_ID = 0
 
-const val BROKER_COMMAND_FAIL = 0
-const val BROKER_COMMAND_OK = 1
-
 const val heartBeatIndication  = 1
 const val demoLoginType = "Demo"
 const val realLoginType = "Real"
+
+const val BROKER_COMMAND_OK = 1.0
+const val BROKER_COMMAND_UNAVAILABLE = 0.0
+const val GET_ACCOUNT = 54
+const val SET_ORDERTEXT = 131
+const val SET_LIMIT = 135

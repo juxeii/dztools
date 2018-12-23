@@ -3,10 +3,6 @@
 #include <string>
 
 #define DLLFUNC extern "C" __declspec(dllexport)
-#define GET_MINLOT 23 // Minimum permitted amount of a lot.
-#define GET_TYPE 50
-#define SET_ORDERTEXT 131 // Order comment for trades
-#define SET_LIMIT 135 // set limit price for entry limit orders
 
 int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
@@ -183,20 +179,6 @@ BrokerTrade(int nTradeID,
                                       pProfit);
 }
 
-DLLFUNC int
-BrokerStop(int nTradeID,
-           double dStop)
-{
-    return dllCallHandler.BrokerStop(nTradeID, dStop);
-}
-
-DLLFUNC int
-BrokerSell(int nTradeID,
-           int nAmount)
-{
-    return dllCallHandler.BrokerSell(nTradeID, nAmount);
-}
-
 DLLFUNC var
 BrokerCommand(int nCommand,
               DWORD dwParameter)
@@ -207,20 +189,20 @@ BrokerCommand(int nCommand,
         return 1000;
     case GET_TYPE:
         return 1;
+    case GET_ACCOUNT:
     case SET_ORDERTEXT:
     {
-        std::string orderText{ reinterpret_cast<char*>(dwParameter) };
-        return dllCallHandler.SetOrderText(orderText.c_str());
+        char* text = reinterpret_cast<char*>(dwParameter);
+        return dllCallHandler.BrokerCommand(nCommand, text, strlen(text));
     }
     case SET_LIMIT:
     {
-        double limitPrice = *reinterpret_cast<double*>(dwParameter);
-        return dllCallHandler.SetLimitPrice(limitPrice);
+        double* pValue = reinterpret_cast<double*>(dwParameter);
+        return dllCallHandler.BrokerCommand(nCommand, pValue, 8);
     }
     default:
         {
-           
+        return 0.0;
         }
     }
-    return 0.0;
 }

@@ -23,6 +23,7 @@ const val BROKER_BUY_TIMEOUT = -2
 const val BROKER_BUY_OPPOSITE_CLOSE = 1
 
 const val BROKER_SELL_FAIL = 0
+const val BROKER_ORDER_NOT_YET_FILLED = 0
 
 const val ADJUST_SL_FAIL = 0
 const val ADJUST_SL_OK = 1

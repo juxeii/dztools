@@ -12,9 +12,11 @@ import com.jforex.dzjforex.misc.PluginApi.amountToContracts
 import com.jforex.dzjforex.misc.QuotesApi.getAsk
 import com.jforex.dzjforex.misc.QuotesApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
+import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.UNKNOWN_ORDER_ID
 import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.order.extension.isFilled
+import com.jforex.kforexutils.order.extension.isOpened
 
 fun createBrokerTradeApi(): BrokerTradeDependencies<ForIO> =
     BrokerTradeDependencies(pluginApi, contextApi, createQuoteProviderApi(), IO.monadError())
@@ -75,6 +77,7 @@ object BrokerTradeApi
         return when
         {
             order.isFilled -> contracts
+            order.isOpened -> BROKER_ORDER_NOT_YET_FILLED
             order.isClosed -> -contracts
             else -> UNKNOWN_ORDER_ID
         }

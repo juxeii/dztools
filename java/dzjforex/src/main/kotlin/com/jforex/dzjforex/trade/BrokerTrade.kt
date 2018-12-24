@@ -54,7 +54,13 @@ object BrokerTradeApi
                 out_TradeInfoToFill[2] = 0.0 //Rollover not supported
                 out_TradeInfoToFill[3] = order.profitLossInAccountCurrency
                 createReturnValue(order)
-            }.fold({ UNKNOWN_ORDER_ID }) { returnValue -> returnValue }
+            }.fold({
+                logger.debug("BrokerTrade: Id $orderId not found!")
+                UNKNOWN_ORDER_ID
+            }) {returnValue->
+                logger.debug("BrokerTrade successful. returnValue $returnValue")
+                    returnValue
+            }
     }
 
     fun <F> BrokerTradeDependencies<F>.quoteForOrder(order: IOrder): Double

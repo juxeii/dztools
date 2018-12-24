@@ -14,7 +14,6 @@ import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.QuotesApi.getAsk
 import com.jforex.dzjforex.misc.QuotesApi.getBid
-import com.jforex.dzjforex.order.storeOrder
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
@@ -81,7 +80,7 @@ object BrokerBuyApi
             limitPrice = limitPrice
         )
             .flatMap { submitOrder(it) }
-            .flatMap { processOrderAndGetResult(it, slDistance, out_TradeInfoToFill) }
+            .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0, out_TradeInfoToFill) }
             .handleError { error ->
                 if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
             }
@@ -97,7 +96,7 @@ object BrokerBuyApi
         val isLimitOrder = limitPrice != 0.0
         val orderCommand = createOrderCommand(contracts, isLimitOrder)
         val amount = contractsToAmount(contracts)
-        val price = if (isLimitOrder) limitPrice else 0.0
+        val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
 
         BuyParameter(
@@ -106,7 +105,7 @@ object BrokerBuyApi
             orderCommand = orderCommand,
             amount = amount,
             slPrice = slPrice,
-            price = price
+            price = roundedLimitPrice
         )
     }
 
@@ -121,7 +120,10 @@ object BrokerBuyApi
                     stopLossPrice = buyParameter.slPrice,
                     price = buyParameter.price
                 )
-                .filter { it.type == OrderEventType.FULLY_FILLED }
+                .filter {
+                    if (buyParameter.price != 0.0) it.type == OrderEventType.SUBMIT_OK
+                    else it.type == OrderEventType.FULLY_FILLED
+                }
                 .timeout(pluginSettings.maxSecondsForOrderFill(), TimeUnit.SECONDS)
                 .map { it.order }
                 .blockingFirst()
@@ -138,6 +140,9 @@ object BrokerBuyApi
             contracts < 0 && !isLimitOrder -> IEngine.OrderCommand.SELL
             else -> IEngine.OrderCommand.SELLLIMIT
         }
+
+    fun createLimitPrice(instrument: Instrument, limitPrice: Double) =
+        if (limitPrice != 0.0) Price(instrument, limitPrice).toDouble() else 0.0
 
     fun <F> BrokerBuyDependencies<F>.createSLPrice(
         slDistance: Double,
@@ -161,12 +166,13 @@ object BrokerBuyApi
     fun <F> BrokerBuyDependencies<F>.processOrderAndGetResult(
         order: IOrder,
         slDistance: Double,
+        isLimitOrder: Boolean,
         out_TradeInfoToFill: DoubleArray
     ): Kind<F, Int> =
         catch {
-            if (order.state == IOrder.State.FILLED)
+            if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
             {
-                storeOrder(order)
+                logger.debug("BrokerBuy: order $order")
                 out_TradeInfoToFill[0] = order.openPrice
                 if (slDistance == -1.0) BROKER_BUY_OPPOSITE_CLOSE else order.zorroId()
             } else BROKER_BUY_FAIL

@@ -148,8 +148,8 @@ class ZorroBridge
     fun brokerCommandStringReturn(string: String, bytes: ByteArray): Double
     {
         val buf = ByteBuffer.wrap(bytes)
-        val bytes = string.toByteArray(Charset.forName("UTF-8"))
-        buf.put(bytes)
+        val stringAsBytes = string.toByteArray(Charset.forName("UTF-8"))
+        buf.put(stringAsBytes)
         buf.putInt(0)
         buf.flip()
         return BROKER_COMMAND_OK

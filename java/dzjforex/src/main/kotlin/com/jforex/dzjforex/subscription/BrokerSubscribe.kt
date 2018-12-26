@@ -5,12 +5,14 @@ import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.HistoryApi.waitForLatestQuote
-import com.jforex.dzjforex.history.HistoryDependencies
 import com.jforex.dzjforex.history.historyApi
-import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.InstrumentApi.forexInstrumentFromAssetName
+import com.jforex.dzjforex.misc.QuoteProviderDependencies
 import com.jforex.dzjforex.misc.QuotesApi.getQuote
 import com.jforex.dzjforex.misc.QuotesApi.hasQuote
+import com.jforex.dzjforex.misc.createQuoteProviderApi
+import com.jforex.dzjforex.misc.saveQuote
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
@@ -24,19 +26,17 @@ private val logger: Logger = LogManager.getLogger()
 fun createBrokerSubscribeApi(): BrokerSubscribeDependencies<ForIO> =
     BrokerSubscribeDependencies(historyApi, createQuoteProviderApi())
 
-interface BrokerSubscribeDependencies<F> : HistoryDependencies<F>,
-    ContextDependencies,
-    QuoteProviderDependencies,
-    InstrumentFunc<F>
+interface BrokerSubscribeDependencies<F> : ContextDependencies<F>,
+    QuoteProviderDependencies
 {
     companion object
     {
         operator fun <F> invoke(
-            historyDeps: HistoryDependencies<F>,
+            contextDependencies: ContextDependencies<F>,
             quoteProviderDependencies: QuoteProviderDependencies
         ): BrokerSubscribeDependencies<F> =
             object : BrokerSubscribeDependencies<F>,
-                HistoryDependencies<F> by historyDeps,
+                ContextDependencies<F> by contextDependencies,
                 QuoteProviderDependencies by quoteProviderDependencies
             {}
     }
@@ -48,8 +48,8 @@ object BrokerSubscribeApi
         binding {
             val instrument = forexInstrumentFromAssetName(assetName).bind()
             val instrumentsToSubscribe = getInstrumentsToSubscribe(instrument).bind()
-            subscribeAllInstruments(instrumentsToSubscribe).bind()
-            val latestQuotes = waitForLatestQuotes(instrumentsToSubscribe).bind()
+            val resultingInstruments = subscribeAllInstruments(instrumentsToSubscribe).bind()
+            val latestQuotes = waitForLatestQuotes(resultingInstruments).bind()
             latestQuotes.forEach { quote -> saveQuote(quote) }
             SUBSCRIBE_OK
         }.handleError { SUBSCRIBE_FAIL }
@@ -69,10 +69,11 @@ object BrokerSubscribeApi
         }
 
     fun <F> BrokerSubscribeDependencies<F>.subscribeAllInstruments(instrumentsToSubscribe: Set<Instrument>)
-            : Kind<F, Unit> = binding {
+            : Kind<F, Set<Instrument>> = binding {
         val subscribedInstruments = getSubscribedInstruments()
         val resultingInstruments = subscribedInstruments + instrumentsToSubscribe
-        setSubscribedInstruments(instrumentsToSubscribe)
+        setSubscribedInstruments(resultingInstruments)
+        resultingInstruments
     }
 
     fun <F> BrokerSubscribeDependencies<F>.waitForLatestQuotes(instruments: Set<Instrument>): Kind<F, List<TickQuote>> =
@@ -92,9 +93,9 @@ object BrokerSubscribeApi
             quotes
         }
 
-    fun ContextDependencies.getSubscribedInstruments() = context.subscribedInstruments
+    fun <F> BrokerSubscribeDependencies<F>.getSubscribedInstruments() = context.subscribedInstruments
 
-    fun ContextDependencies.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>)
+    fun <F> BrokerSubscribeDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>)
     {
         context.setSubscribedInstruments(instrumentsToSubscribe, true)
     }

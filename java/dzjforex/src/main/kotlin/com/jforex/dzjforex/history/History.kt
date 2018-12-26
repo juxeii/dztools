@@ -10,42 +10,22 @@ import arrow.instances.`try`.monadError.monadError
 import arrow.typeclasses.MonadError
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
-import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.PluginDependencies
-import com.jforex.dzjforex.misc.contextApi
-import com.jforex.dzjforex.misc.pluginApi
+import com.jforex.dzjforex.misc.*
 import com.jforex.kforexutils.history.latestQuote
 import com.jforex.kforexutils.price.TickQuote
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
-lateinit var historyApi: HistoryDependencies<ForIO>
+lateinit var historyApi: ContextDependencies<ForIO>
 
 fun initHistoryApi()
 {
-    historyApi = HistoryDependencies(pluginApi, contextApi, IO.monadError())
-}
-
-interface HistoryDependencies<F> : PluginDependencies, ContextDependencies, MonadError<F, Throwable>
-{
-    companion object
-    {
-        operator fun <F> invoke(
-            pluginDependencies: PluginDependencies,
-            contextDependencies: ContextDependencies,
-            ME: MonadError<F, Throwable>
-        ): HistoryDependencies<F> =
-            object : HistoryDependencies<F>,
-                PluginDependencies by pluginDependencies,
-                ContextDependencies by contextDependencies,
-                MonadError<F, Throwable> by ME
-            {}
-    }
+    historyApi = createContextApi(contextApi.context, IO.monadError())
 }
 
 object HistoryApi
 {
-    fun <F> HistoryDependencies<F>.waitForLatestQuote(instrument: Instrument): Kind<F, TickQuote>
+    fun <F> ContextDependencies<F>.waitForLatestQuote(instrument: Instrument): Kind<F, TickQuote>
     {
         return catch {
             Observable.interval(

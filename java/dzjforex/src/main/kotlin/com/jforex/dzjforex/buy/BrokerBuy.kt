@@ -1,6 +1,8 @@
 package com.jforex.dzjforex.buy
 
 import arrow.Kind
+import arrow.core.None
+import arrow.core.Option
 import arrow.effects.ForIO
 import arrow.effects.IO
 import arrow.effects.instances.io.monadError.monadError
@@ -9,6 +11,7 @@ import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
+import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
@@ -29,8 +32,11 @@ lateinit var brokerBuyApi: BrokerBuyDependencies<ForIO>
 
 fun initBrokerBuyApi()
 {
-    brokerBuyApi = BrokerBuyDependencies(pluginApi, contextApi, createQuoteProviderApi(), IO.monadError())
+    brokerBuyApi = BrokerBuyDependencies(contextApi, createQuoteProviderApi())
 }
+
+val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
+fun resetBCOrderText() = bcOrderText.accept(None)
 
 data class BuyParameter(
     val label: String,
@@ -38,28 +44,22 @@ data class BuyParameter(
     val orderCommand: IEngine.OrderCommand,
     val amount: Double,
     val slPrice: Double,
-    val price: Double
+    val price: Double,
+    val comment: String
 )
 
-interface BrokerBuyDependencies<F> : PluginDependencies,
-    ContextDependencies,
-    QuoteProviderDependencies,
-    InstrumentFunc<F>,
-    MonadError<F, Throwable>
+interface BrokerBuyDependencies<F> : ContextDependencies<F>,
+    QuoteProviderDependencies
 {
     companion object
     {
         operator fun <F> invoke(
-            pluginDependencies: PluginDependencies,
-            contextDependencies: ContextDependencies,
-            quoteProviderDependencies: QuoteProviderDependencies,
-            ME: MonadError<F, Throwable>
+            contextDependencies: ContextDependencies<F>,
+            quoteProviderDependencies: QuoteProviderDependencies
         ): BrokerBuyDependencies<F> =
             object : BrokerBuyDependencies<F>,
-                PluginDependencies by pluginDependencies,
-                ContextDependencies by contextDependencies,
-                QuoteProviderDependencies by quoteProviderDependencies,
-                MonadError<F, Throwable> by ME
+                ContextDependencies<F> by contextDependencies,
+                QuoteProviderDependencies by quoteProviderDependencies
             {}
     }
 }
@@ -98,6 +98,7 @@ object BrokerBuyApi
         val amount = contractsToAmount(contracts)
         val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
+        val comment = bcOrderText.value!!.fold({ "" }) { it }
 
         BuyParameter(
             label = label,
@@ -105,7 +106,8 @@ object BrokerBuyApi
             orderCommand = orderCommand,
             amount = amount,
             slPrice = slPrice,
-            price = roundedLimitPrice
+            price = roundedLimitPrice,
+            comment = comment
         )
     }
 
@@ -118,7 +120,8 @@ object BrokerBuyApi
                     orderCommand = buyParameter.orderCommand,
                     amount = buyParameter.amount,
                     stopLossPrice = buyParameter.slPrice,
-                    price = buyParameter.price
+                    price = buyParameter.price,
+                    comment = buyParameter.comment
                 )
                 .filter {
                     if (buyParameter.price != 0.0) it.type == OrderEventType.SUBMIT_OK
@@ -170,6 +173,7 @@ object BrokerBuyApi
         out_TradeInfoToFill: DoubleArray
     ): Kind<F, Int> =
         catch {
+            resetBCOrderText()
             if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
             {
                 logger.debug("BrokerBuy: order $order")

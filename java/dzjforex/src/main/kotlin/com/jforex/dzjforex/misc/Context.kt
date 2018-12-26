@@ -1,18 +1,24 @@
 package com.jforex.dzjforex.misc
 
+import arrow.effects.ForIO
+import arrow.effects.IO
+import arrow.effects.instances.io.monadError.monadError
+import arrow.typeclasses.MonadError
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.IContext
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IHistory
 
-lateinit var contextApi: ContextDependencies
+lateinit var contextApi: ContextDependencies<ForIO>
 
 fun initContextApi(context: IContext)
 {
-    contextApi = ContextDependencies(context)
+    contextApi = ContextDependencies(context, pluginApi, IO.monadError())
 }
 
-interface ContextDependencies
+fun <F> createContextApi(context: IContext, ME: MonadError<F, Throwable>) = ContextDependencies(context, pluginApi, ME)
+
+interface ContextDependencies<F> : PluginDependencies, MonadError<F, Throwable>
 {
     val context: IContext
     val engine: IEngine
@@ -21,8 +27,14 @@ interface ContextDependencies
 
     companion object
     {
-        operator fun invoke(context: IContext): ContextDependencies =
-            object : ContextDependencies
+        operator fun <F> invoke(
+            context: IContext,
+            pluginDependencies: PluginDependencies,
+            ME: MonadError<F, Throwable>
+        ): ContextDependencies<F> =
+            object : ContextDependencies<F>,
+                PluginDependencies by pluginDependencies,
+                MonadError<F, Throwable> by ME
             {
                 override val context = context
                 override val engine = context.engine

@@ -1,61 +1,55 @@
 package com.jforex.dzjforex.account
 
-import arrow.typeclasses.ApplicativeError
+import arrow.effects.ForIO
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.account.AccountApi.leverage
+import com.dukascopy.api.JFException
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.PluginDependencies
 import com.jforex.dzjforex.misc.contextApi
-import com.jforex.dzjforex.misc.pluginApi
+import com.jforex.dzjforex.order.OrderRepositoryApi.getZorroOrders
+import com.jforex.kforexutils.misc.toAmount
 
-lateinit var accountApi: AccountDependencies
+lateinit var accountApi: ContextDependencies<ForIO>
 
 fun initAccountApi()
 {
-    accountApi = AccountDependencies(pluginApi, contextApi)
-}
-
-interface AccountDependencies : PluginDependencies, ContextDependencies
-{
-    companion object
-    {
-        operator fun invoke(
-            pluginDependencies: PluginDependencies,
-            contextDependencies: ContextDependencies
-        ): AccountDependencies =
-            object : AccountDependencies,
-                PluginDependencies by pluginDependencies,
-                ContextDependencies by contextDependencies
-            {}
-    }
+    accountApi = contextApi
 }
 
 object AccountApi
 {
-    fun AccountDependencies.leverage() = account.leverage
+    fun <F> ContextDependencies<F>.leverage() = account.leverage
 
-    fun AccountDependencies.equity() = account.equity
+    fun <F> ContextDependencies<F>.equity() = account.equity
 
-    fun AccountDependencies.baseEquity() = account.baseEquity
+    fun <F> ContextDependencies<F>.baseEquity() = account.baseEquity
 
-    fun AccountDependencies.state() = account.accountState
+    fun <F> ContextDependencies<F>.state(): IAccount.AccountState = account.accountState
 
-    fun AccountDependencies.lotSize() = pluginSettings.lotSize()
+    fun <F> ContextDependencies<F>.lotSize() = pluginSettings.lotSize()
 
-    fun AccountDependencies.lotMargin() = lotSize() / leverage()
+    fun <F> ContextDependencies<F>.lotMargin() = lotSize() / leverage()
 
-    fun AccountDependencies.tradeValue() = equity() - baseEquity()
+    //fun ContextDependencies.tradeValue() = equity() - baseEquity()
 
-    fun AccountDependencies.freeMargin() = account.creditLine / leverage()
+    fun <F> ContextDependencies<F>.tradeValue(): Double =
+        getZorroOrders().map { orders ->
+            orders
+                .stream()
+                .mapToDouble { it.profitLossInAccountCurrency }
+                .sum()
+                .toAmount()
+        }.fold({ throw(JFException("Could not calculate trade value! ${it.message}")) }) { it }
 
-    fun AccountDependencies.isNFAAccount() = account.isGlobal
+    fun <F> ContextDependencies<F>.freeMargin() = account.creditLine / leverage()
 
-    fun AccountDependencies.pipCost(instrument: Instrument) = context
+    fun <F> ContextDependencies<F>.isNFAAccount() = account.isGlobal
+
+    fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = context
         .utils
         .convertPipToCurrency(instrument, account.accountCurrency) * lotSize()
 
-    fun AccountDependencies.isTradingAllowed() =
+    fun <F> ContextDependencies<F>.isTradingAllowed() =
         state() == IAccount.AccountState.OK || state() == IAccount.AccountState.OK_NO_MARGIN_CALL
 
 }

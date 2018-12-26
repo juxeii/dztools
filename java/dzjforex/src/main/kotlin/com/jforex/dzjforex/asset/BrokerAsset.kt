@@ -8,33 +8,27 @@ import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.account.AccountApi.lotSize
 import com.jforex.dzjforex.account.AccountApi.pipCost
-import com.jforex.dzjforex.account.AccountDependencies
 import com.jforex.dzjforex.account.accountApi
+import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.InstrumentFunc
-import com.jforex.dzjforex.misc.QuoteProviderDependencies
 import com.jforex.dzjforex.misc.QuotesApi.getAsk
 import com.jforex.dzjforex.misc.QuotesApi.getSpread
-import com.jforex.dzjforex.misc.createQuoteProviderApi
-import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 
-fun createBrokerAssetApi() = BrokerAssetDependencies(createQuoteProviderApi(), accountApi, IO.monadError())
+fun createBrokerAssetApi() = BrokerAssetDependencies(contextApi, createQuoteProviderApi())
 
-interface BrokerAssetDependencies<F> : QuoteProviderDependencies, AccountDependencies, InstrumentFunc<F>
+interface BrokerAssetDependencies<F> : ContextDependencies<F>, QuoteProviderDependencies
 {
     companion object
     {
         operator fun <F> invoke(
-            quoteProviderDependencies: QuoteProviderDependencies,
-            accountDependencies: AccountDependencies,
-            ME: MonadError<F, Throwable>
+            ContextDependencies: ContextDependencies<F>,
+            quoteProviderDependencies: QuoteProviderDependencies
         ): BrokerAssetDependencies<F> =
             object : BrokerAssetDependencies<F>,
-                QuoteProviderDependencies by quoteProviderDependencies,
-                AccountDependencies by accountDependencies,
-                MonadError<F, Throwable> by ME
+                ContextDependencies<F> by ContextDependencies,
+                QuoteProviderDependencies by quoteProviderDependencies
             {}
     }
 }

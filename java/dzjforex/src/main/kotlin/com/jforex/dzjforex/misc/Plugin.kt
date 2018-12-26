@@ -54,6 +54,8 @@ interface PluginDependencies
 
 object PluginApi
 {
+    fun PluginDependencies.isConnected() = client.isConnected
+
     fun <T> PluginDependencies.progressWait(task: DeferredK<T>): T
     {
         val resultRelay = BehaviorRelay.create<T>()

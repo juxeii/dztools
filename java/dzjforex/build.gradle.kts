@@ -75,6 +75,8 @@ tasks.create("createPluginFolder") {
 
 tasks.register<Copy>("copyPluginFolderToZorro") {
     outputs.upToDateWhen{ false }
+    File("${buildDir}/libs/${jarFileName}.jar").deleteRecursively()
+
     dependsOn("createPluginFolder")
     File(zorroDukascopyFolder).deleteRecursively()
     from(pluginFolder)

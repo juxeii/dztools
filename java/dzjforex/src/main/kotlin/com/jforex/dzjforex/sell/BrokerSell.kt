@@ -21,38 +21,12 @@ import com.jforex.kforexutils.order.extension.close
 import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.settings.TradingSettings
 
-lateinit var brokerSellApi: BrokerSellDependencies<ForIO>
-
-fun initBrokerSellApi()
-{
-    brokerSellApi = BrokerSellDependencies(pluginApi, contextApi, IO.monadError())
-}
-
 val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
 fun resetBCLimitPrice() = bcLimitPrice.accept(None)
 
-interface BrokerSellDependencies<F> : PluginDependencies,
-    ContextDependencies,
-    MonadError<F, Throwable>
-{
-    companion object
-    {
-        operator fun <F> invoke(
-            pluginDependencies: PluginDependencies,
-            contextDependencies: ContextDependencies,
-            ME: MonadError<F, Throwable>
-        ): BrokerSellDependencies<F> =
-            object : BrokerSellDependencies<F>,
-                PluginDependencies by pluginDependencies,
-                ContextDependencies by contextDependencies,
-                MonadError<F, Throwable> by ME
-            {}
-    }
-}
-
 object BrokerSellApi
 {
-    fun <F> BrokerSellDependencies<F>.create(orderId: Int, contracts: Int): Kind<F, Int> =
+    fun <F> ContextDependencies<F>.brokerSell(orderId: Int, contracts: Int): Kind<F, Int> =
         bindingCatch {
             getOrderForId(orderId)
                 .map { order -> closeOrder(order, contractsToAmount(contracts)).bind() }
@@ -66,7 +40,7 @@ object BrokerSellApi
                 }
         }
 
-    fun <F> BrokerSellDependencies<F>.closeOrder(order: IOrder, amount: Double): Kind<F, OrderEvent> =
+    fun <F> ContextDependencies<F>.closeOrder(order: IOrder, amount: Double): Kind<F, OrderEvent> =
         catch {
             order
                 .close(amount = amount, price = getPreferredPrice(order), slippage = getSlippage()) {}

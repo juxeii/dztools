@@ -6,14 +6,10 @@ import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
 import arrow.typeclasses.bindingCatch
 import com.jforex.dzjforex.account.initAccountApi
-import com.jforex.dzjforex.account.initBrokerAccountApi
 import com.jforex.dzjforex.buy.initBrokerBuyApi
 import com.jforex.dzjforex.history.initHistoryApi
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.order.initOrderRepositoryApi
-import com.jforex.dzjforex.sell.initBrokerSellApi
-import com.jforex.dzjforex.stop.initBrokerStopApi
-import com.jforex.dzjforex.time.initBrokerTimeApi
 import com.jforex.dzjforex.zorro.LOGIN_FAIL
 import com.jforex.dzjforex.zorro.LOGIN_OK
 import com.jforex.dzjforex.zorro.LOGOUT_OK
@@ -76,13 +72,9 @@ object LoginApi
             .subscribeBy(onNext = { saveQuote(it) })
         initContextApi(kForexUtils.context)
         initHistoryApi()
-        initBrokerTimeApi()
         initAccountApi()
-        initBrokerAccountApi()
         initBrokerBuyApi()
         initOrderRepositoryApi()
-        initBrokerSellApi()
-        initBrokerStopApi()
     }
 
     fun getLoginType(accountType: String) =

@@ -2,15 +2,12 @@ package com.jforex.dzjforex.trade
 
 import arrow.Kind
 import arrow.effects.ForIO
-import arrow.effects.IO
-import arrow.effects.instances.io.monadError.monadError
-import arrow.typeclasses.MonadError
 import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.PluginApi.amountToContracts
-import com.jforex.dzjforex.misc.QuotesApi.getAsk
-import com.jforex.dzjforex.misc.QuotesApi.getBid
+import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
+import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.UNKNOWN_ORDER_ID
@@ -49,9 +46,14 @@ object BrokerTradeApi
         getOrderForId(orderId)
             .map { order ->
                 out_TradeInfoToFill[0] = order.openPrice
-                out_TradeInfoToFill[1] = quoteForOrder(order);
+                out_TradeInfoToFill[1] = quoteForOrder(order)
                 out_TradeInfoToFill[2] = rollOverValue
                 out_TradeInfoToFill[3] = order.profitLossInAccountCurrency.toAmount()
+
+                logger.debug("BrokerTrade: open price ${order.openPrice} " +
+                        "pClose ${quoteForOrder(order)} " +
+                        "rollOver $rollOverValue pProfit" +
+                        " ${order.profitLossInAccountCurrency.toAmount()}")
                 createReturnValue(order)
             }.fold({
                 logger.debug("BrokerTrade: Id $orderId not found!")

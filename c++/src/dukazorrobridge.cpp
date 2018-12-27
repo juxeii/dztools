@@ -179,6 +179,20 @@ BrokerTrade(int nTradeID,
                                       pProfit);
 }
 
+DLLFUNC int
+BrokerStop(int nTradeID,
+           double dStop)
+{
+    return dllCallHandler.BrokerStop(nTradeID, dStop);
+}
+
+DLLFUNC int
+BrokerSell(int nTradeID,
+           int nAmount)
+{
+    return dllCallHandler.BrokerSell(nTradeID, nAmount);
+}
+
 DLLFUNC var
 BrokerCommand(int nCommand,
               DWORD dwParameter)

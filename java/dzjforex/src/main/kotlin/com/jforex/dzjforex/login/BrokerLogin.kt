@@ -5,10 +5,8 @@ import arrow.effects.IO
 import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
 import arrow.typeclasses.bindingCatch
-import com.jforex.dzjforex.account.initAccountApi
-import com.jforex.dzjforex.buy.initBrokerBuyApi
-import com.jforex.dzjforex.history.initHistoryApi
 import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.PluginApi.isConnected
 import com.jforex.dzjforex.order.initOrderRepositoryApi
 import com.jforex.dzjforex.zorro.LOGIN_FAIL
 import com.jforex.dzjforex.zorro.LOGIN_OK
@@ -17,6 +15,8 @@ import com.jforex.dzjforex.zorro.realLoginType
 import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
+import com.jforex.kforexutils.misc.initKForexUtils
+import com.jforex.kforexutils.misc.kForexUtils
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
 import io.reactivex.rxkotlin.subscribeBy
 
@@ -40,7 +40,7 @@ object LoginApi
         accountType: String,
         out_AccountNamesToFill: Array<String>
     ): Kind<F, Int> = bindingCatch {
-        if (!client.isConnected)
+        if (!isConnected())
         {
             connect(username, password, accountType).bind()
             initComponents().bind()
@@ -66,24 +66,19 @@ object LoginApi
     fun <F> LoginDependencies<F>.initComponents(): Kind<F, Unit> = catch {
         val strategy = KForexUtilsStrategy()
         client.startStrategy(strategy)
-        val kForexUtils = strategy.kForexUtilsSingle().blockingFirst()
         kForexUtils
             .tickQuotes
             .subscribeBy(onNext = { saveQuote(it) })
         initContextApi(kForexUtils.context)
-        initHistoryApi()
-        initAccountApi()
-        initBrokerBuyApi()
         initOrderRepositoryApi()
     }
 
-    fun getLoginType(accountType: String) =
+    private fun getLoginType(accountType: String) =
         if (accountType == realLoginType) LoginType.LIVE
         else LoginType.DEMO
 
-    fun <F> LoginDependencies<F>.logout(): Int
-    {
+    fun <F> LoginDependencies<F>.logout(): Kind<F, Int> = catch {
         client.disconnect()
-        return LOGOUT_OK
+        LOGOUT_OK
     }
 }

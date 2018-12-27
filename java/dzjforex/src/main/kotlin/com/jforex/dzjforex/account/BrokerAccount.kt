@@ -2,7 +2,6 @@ package com.jforex.dzjforex.account
 
 import arrow.Kind
 import com.jforex.dzjforex.account.AccountApi.baseEquity
-import com.jforex.dzjforex.account.AccountApi.tradeValue
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
 import com.jforex.dzjforex.zorro.ACCOUNT_UNAVAILABLE
@@ -19,4 +18,16 @@ object BrokerAccountApi
             ACCOUNT_AVAILABLE
         }
     }
+
+    /*fun <F> ContextDependencies<F>.tradeValue(): Double =
+        getZorroOrders().map { orders ->
+            orders
+                .stream()
+                .mapToDouble { it.profitLossInAccountCurrency }
+                .sum()
+                .toAmount()
+        }.fold({ throw(JFException("Could not calculate trade value! ${it.message}")) }) { it }*/
+
+    fun <F> ContextDependencies<F>.tradeValue(): Double =
+        account.equity - account.baseEquity
 }

@@ -16,6 +16,10 @@ import kotlinx.coroutines.runBlocking
 import org.aeonbits.owner.ConfigFactory
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.io.PrintWriter
+import java.io.StringWriter
+
+
 
 val logger: Logger = LogManager.getLogger()
 val pluginApi = PluginDependencies(getClient(), ConfigFactory.create(PluginSettings::class.java), ZorroNatives())
@@ -29,6 +33,17 @@ fun getClient(): IClient =
             client.init()
             client
         }
+
+fun printStackTrace(it: Throwable){
+    val ex = Exception(it)
+    val writer = StringWriter()
+    val printWriter = PrintWriter(writer)
+    ex.printStackTrace(printWriter)
+    printWriter.flush()
+
+    val stackTrace = writer.toString()
+    logger.debug("stackTrace: $stackTrace")
+}
 
 interface PluginDependencies
 {

@@ -18,6 +18,9 @@ fun initContextApi(context: IContext)
 
 fun <F> createContextApi(context: IContext, ME: MonadError<F, Throwable>) = ContextDependencies(context, pluginApi, ME)
 
+fun <F> createQuoteApi(context: IContext, ME: MonadError<F, Throwable>) =
+    QuoteDependencies(createContextApi(context, ME), createQuoteProviderApi())
+
 interface ContextDependencies<F> : PluginDependencies, MonadError<F, Throwable>
 {
     val context: IContext
@@ -41,5 +44,20 @@ interface ContextDependencies<F> : PluginDependencies, MonadError<F, Throwable>
                 override val account = context.account
                 override val history = context.history
             }
+    }
+}
+
+interface QuoteDependencies<F> : ContextDependencies<F>, QuoteProviderDependencies
+{
+    companion object
+    {
+        operator fun <F> invoke(
+            contextDependencies: ContextDependencies<F>,
+            quoteProviderDependencies: QuoteProviderDependencies
+        ): QuoteDependencies<F> =
+            object : QuoteDependencies<F>,
+                ContextDependencies<F> by contextDependencies,
+                QuoteProviderDependencies by quoteProviderDependencies
+            {}
     }
 }

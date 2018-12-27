@@ -3,61 +3,74 @@ package com.jforex.dzjforex.sell
 import arrow.Kind
 import arrow.core.None
 import arrow.core.Option
-import arrow.effects.ForIO
-import arrow.effects.IO
-import arrow.effects.instances.io.monadError.monadError
-import arrow.typeclasses.MonadError
+import arrow.core.some
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IOrder
+import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
+import com.jforex.dzjforex.misc.logger
+import com.jforex.dzjforex.misc.printStackTrace
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_SELL_FAIL
+import com.jforex.kforexutils.misc.asPrice
 import com.jforex.kforexutils.order.event.OrderEvent
 import com.jforex.kforexutils.order.event.OrderEventType
 import com.jforex.kforexutils.order.extension.close
-import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.settings.TradingSettings
-
-val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
-fun resetBCLimitPrice() = bcLimitPrice.accept(None)
 
 object BrokerSellApi
 {
+    private val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
+
+    private data class CloseParams(val price: Double, val slippage: Double)
+
     fun <F> ContextDependencies<F>.brokerSell(orderId: Int, contracts: Int): Kind<F, Int> =
         bindingCatch {
             getOrderForId(orderId)
-                .map { order -> closeOrder(order, contractsToAmount(contracts)).bind() }
-                .fold({ BROKER_SELL_FAIL })
-                { orderEvent ->
-                    if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
-                    {
-                        resetBCLimitPrice()
-                        orderEvent.order.zorroId()
-                    } else BROKER_SELL_FAIL
-                }
+                .map { order -> closeOrder(order, createCloseParams(order.instrument), contracts).bind() }
+                .fold({ BROKER_SELL_FAIL }) { orderEvent -> processCloseResult(orderEvent) }
+        }.handleError {
+            logger.debug("BrokerSell failed! ${printStackTrace(it)}")
+            BROKER_SELL_FAIL
         }
 
-    fun <F> ContextDependencies<F>.closeOrder(order: IOrder, amount: Double): Kind<F, OrderEvent> =
-        catch {
-            order
-                .close(amount = amount, price = getPreferredPrice(order), slippage = getSlippage()) {}
-                .blockingLast()
+    private fun <F> ContextDependencies<F>.closeOrder(
+        order: IOrder,
+        closeParams: CloseParams,
+        contracts: Int
+    ): Kind<F, OrderEvent> = just(order
+        .close(
+            amount = contractsToAmount(contracts),
+            price = closeParams.price,
+            slippage = closeParams.slippage
+        ) {}
+        .blockingLast())
+
+    private fun createCloseParams(instrument: Instrument) =
+        maybeLimitPrice().fold(
+            {
+                CloseParams(
+                    price = TradingSettings.noPreferredClosePrice,
+                    slippage = TradingSettings.defaultCloseSlippage
+                )
+            })
+        { limitPrice ->
+            CloseParams(
+                price = limitPrice.asPrice(instrument),
+                slippage = TradingSettings.noCloseSlippage
+            )
         }
 
-    fun getPreferredPrice(order: IOrder) =
-        bcLimitPrice
-            .value!!
-            .fold({ 0.0 })
-            { limitPrice ->
-                logger.debug("Limit price $limitPrice for BrokerSell is used")
-                Price(order.instrument, limitPrice).toDouble()
-            }
 
-    fun getSlippage() =
-        bcLimitPrice
-            .value!!
-            .fold({ TradingSettings.defaultCloseSlippage }) { Double.NaN }
+    private fun processCloseResult(orderEvent: OrderEvent): Int =
+        if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
+            orderEvent.order.zorroId()
+        else BROKER_SELL_FAIL
+
+    private fun maybeLimitPrice() = bcLimitPrice.value!!
+
+    fun setLmitPrice(limit: Double) = bcLimitPrice.accept(limit.some())
 }

@@ -1,15 +1,14 @@
 package com.jforex.dzjforex.zorro
 
-import arrow.core.some
 import arrow.effects.DeferredK
 import arrow.effects.fix
 import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
-import com.jforex.dzjforex.account.accountApi
-import com.jforex.dzjforex.asset.BrokerAssetApi.create
+import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.asset.createBrokerAssetApi
-import com.jforex.dzjforex.buy.BrokerBuyApi.create
-import com.jforex.dzjforex.buy.bcOrderText
-import com.jforex.dzjforex.buy.brokerBuyApi
+import com.jforex.dzjforex.buy.BrokerBuyApi
+import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
+import com.jforex.dzjforex.buy.createBrokerBuyApi
+import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.login.LoginApi.create
 import com.jforex.dzjforex.login.LoginApi.logout
 import com.jforex.dzjforex.login.loginApi
@@ -18,7 +17,7 @@ import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.pluginApi
-import com.jforex.dzjforex.sell.bcLimitPrice
+import com.jforex.dzjforex.sell.BrokerSellApi
 import com.jforex.dzjforex.sell.BrokerSellApi.brokerSell
 import com.jforex.dzjforex.stop.BrokerStopApi.setSL
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
@@ -29,7 +28,6 @@ import com.jforex.dzjforex.trade.createBrokerTradeApi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.Charset
-import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 
 class ZorroBridge
 {
@@ -49,13 +47,20 @@ class ZorroBridge
         return pluginApi.progressWait(loginTask)
     }
 
-    fun doLogout() = loginApi.logout()
+    fun doLogout() =
+        loginApi
+            .logout()
+            .fix()
+            .unsafeRunSync()
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray) =
-        contextApi
+    fun doBrokerTime(out_ServerTimeToFill: DoubleArray):Int {
+        val result =  contextApi
             .brokerTime(out_ServerTimeToFill)
             .fix()
             .unsafeRunSync()
+        logger.debug("doBrokerTime result is $result")
+        return result
+    }
 
     fun doSubscribeAsset(assetName: String): Int
     {
@@ -66,26 +71,43 @@ class ZorroBridge
                     .unsafeRunSync()
             }
         }
-        return pluginApi.progressWait(subscribeTask)
+        val result= pluginApi.progressWait(subscribeTask)
+        logger.debug("doSubscribeAsset result is $result")
+        return result
     }
 
-    fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray) =
-        createBrokerAssetApi()
-            .create(assetName, out_AssetParamsToFill)
+    fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray): Int
+    {
+        val result = createBrokerAssetApi()
+            .brokerAsset(assetName, out_AssetParamsToFill)
             .fix()
             .unsafeRunSync()
+        logger.debug("doBrokerAsset result is $result")
+        return result
+    }
 
-    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray) =
-        contextApi
+
+    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray): Int
+    {
+        val result = contextApi
             .brokerAccount(out_AccountInfoToFill)
             .fix()
             .unsafeRunSync()
+        logger.debug("doBrokerAccount result is $result")
+        return result
+    }
 
-    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
-        createBrokerTradeApi()
+
+    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray): Int
+    {
+        val tradeResult = createBrokerTradeApi()
             .create(orderId, out_TradeInfoToFill)
             .fix()
             .unsafeRunSync()
+        logger.debug("doBrokerTrade result is $tradeResult")
+        return tradeResult
+    }
+
 
     fun doBrokerBuy2(
         assetName: String,
@@ -96,12 +118,14 @@ class ZorroBridge
     ): Int
     {
         val buyTask = DeferredK {
-            brokerBuyApi
-                .create(assetName, contracts, slDistance, limit, out_TradeInfoToFill)
+            createBrokerBuyApi()
+                .brokerBuy(assetName, contracts, slDistance, limit, out_TradeInfoToFill)
                 .fix()
                 .unsafeRunSync()
         }
-        return pluginApi.progressWait(buyTask)
+        val buyResult = pluginApi.progressWait(buyTask)
+        logger.debug("doBrokerBuy2 result is $buyResult")
+        return buyResult
     }
 
     fun doBrokerSell(
@@ -109,7 +133,6 @@ class ZorroBridge
         contracts: Int
     ): Int
     {
-        logger.debug("BrokerSell called id $orderId contracts $contracts")
         val sellTask = DeferredK {
             contextApi
                 .brokerSell(orderId, contracts)
@@ -142,7 +165,6 @@ class ZorroBridge
         out_TickInfoToFill: DoubleArray
     ): Int
     {
-        logger.debug("doBrokerHistory2 called")
         val historyTask = DeferredK {
             contextApi
                 .brokerHistory(assetName, utcStartDate, utcEndDate, periodInMinutes, noOfTicks, out_TickInfoToFill)
@@ -176,21 +198,21 @@ class ZorroBridge
             SET_ORDERTEXT ->
             {
                 val orderText = String(bytes)
-                bcOrderText.accept(orderText.some())
+                BrokerBuyApi.setOrderText(orderText)
                 logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
                 BROKER_COMMAND_OK
             }
             SET_LIMIT ->
             {
                 val limitPrice = brokerCommandGetDouble(bytes)
-                bcLimitPrice.accept(limitPrice.some())
+                BrokerSellApi.setLmitPrice(limitPrice)
                 logger.debug("doBrokerCommand SET_LIMIT called with limitPrice $limitPrice")
                 BROKER_COMMAND_OK
             }
             GET_ACCOUNT ->
             {
                 logger.debug("doBrokerCommand GET_ACCOUNT called")
-                brokerCommandStringReturn(accountApi.account.accountId, bytes)
+                brokerCommandStringReturn(contextApi.account.accountId, bytes)
             }
             else -> BROKER_COMMAND_UNAVAILABLE
         }

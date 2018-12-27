@@ -3,9 +3,9 @@ package com.jforex.dzjforex.misc
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.kforexutils.price.TickQuote
-import org.apache.logging.log4j.LogManager
 
 typealias Quotes = Map<Instrument, TickQuote>
+
 val quotesRelay: BehaviorRelay<Quotes> = BehaviorRelay.createDefault(emptyMap())
 
 fun createQuoteProviderApi() = QuoteProviderDependencies(getQuotes())
@@ -33,7 +33,7 @@ interface QuoteProviderDependencies
     }
 }
 
-object QuotesApi
+object QuotesProviderApi
 {
 
     fun QuoteProviderDependencies.hasQuote(instrument: Instrument) = quotes.containsKey(instrument)
@@ -46,5 +46,5 @@ object QuotesApi
 
     fun QuoteProviderDependencies.getBid(instrument: Instrument) = getTick(instrument).bid
 
-    fun QuoteProviderDependencies.getSpread(instrument: Instrument) = getBid(instrument) - getAsk(instrument)
+    fun QuoteProviderDependencies.getSpread(instrument: Instrument) = getAsk(instrument) - getBid(instrument)
 }

@@ -8,12 +8,13 @@ import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+import com.jforex.dzjforex.misc.PluginApi.isConnected
 
 object BrokerTimeApi
 {
     fun <F> ContextDependencies<F>.brokerTime(out_ServerTimeToFill: DoubleArray): Kind<F, Int> =
         binding {
-            if (client.isConnected) CONNECTION_LOST_NEW_LOGIN_REQUIRED
+            if (!isConnected()) CONNECTION_LOST_NEW_LOGIN_REQUIRED
 
             val serverTime = getServerTime().bind()
             val serverTimeInDateFormat = toDATEFormat(serverTime)

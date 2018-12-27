@@ -9,13 +9,6 @@ import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.order.OrderRepositoryApi.getZorroOrders
 import com.jforex.kforexutils.misc.toAmount
 
-lateinit var accountApi: ContextDependencies<ForIO>
-
-fun initAccountApi()
-{
-    accountApi = contextApi
-}
-
 object AccountApi
 {
     fun <F> ContextDependencies<F>.leverage() = account.leverage
@@ -30,20 +23,7 @@ object AccountApi
 
     fun <F> ContextDependencies<F>.lotMargin() = lotSize() / leverage()
 
-    //fun ContextDependencies.tradeValue() = equity() - baseEquity()
-
-    fun <F> ContextDependencies<F>.tradeValue(): Double =
-        getZorroOrders().map { orders ->
-            orders
-                .stream()
-                .mapToDouble { it.profitLossInAccountCurrency }
-                .sum()
-                .toAmount()
-        }.fold({ throw(JFException("Could not calculate trade value! ${it.message}")) }) { it }
-
     fun <F> ContextDependencies<F>.freeMargin() = account.creditLine / leverage()
-
-    fun <F> ContextDependencies<F>.isNFAAccount() = account.isGlobal
 
     fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = context
         .utils

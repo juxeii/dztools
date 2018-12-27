@@ -3,20 +3,20 @@ package com.jforex.dzjforex.buy
 import arrow.Kind
 import arrow.core.None
 import arrow.core.Option
-import arrow.effects.ForIO
-import arrow.effects.IO
-import arrow.effects.instances.io.monadError.monadError
-import arrow.typeclasses.MonadError
+import arrow.core.some
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
-import com.jforex.dzjforex.misc.QuotesApi.getAsk
-import com.jforex.dzjforex.misc.QuotesApi.getBid
+import com.jforex.dzjforex.misc.QuoteDependencies
+import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
+import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
+import com.jforex.dzjforex.misc.contextApi
+import com.jforex.dzjforex.misc.createQuoteProviderApi
+import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
@@ -25,48 +25,29 @@ import com.jforex.kforexutils.engine.submit
 import com.jforex.kforexutils.order.event.OrderEventType
 import com.jforex.kforexutils.price.Pips
 import com.jforex.kforexutils.price.Price
+import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-lateinit var brokerBuyApi: BrokerBuyDependencies<ForIO>
-
-fun initBrokerBuyApi()
-{
-    brokerBuyApi = BrokerBuyDependencies(contextApi, createQuoteProviderApi())
-}
-
-val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
-fun resetBCOrderText() = bcOrderText.accept(None)
-
-data class BuyParameter(
-    val label: String,
-    val instrument: Instrument,
-    val orderCommand: IEngine.OrderCommand,
-    val amount: Double,
-    val slPrice: Double,
-    val price: Double,
-    val comment: String
-)
-
-interface BrokerBuyDependencies<F> : ContextDependencies<F>,
-    QuoteProviderDependencies
-{
-    companion object
-    {
-        operator fun <F> invoke(
-            contextDependencies: ContextDependencies<F>,
-            quoteProviderDependencies: QuoteProviderDependencies
-        ): BrokerBuyDependencies<F> =
-            object : BrokerBuyDependencies<F>,
-                ContextDependencies<F> by contextDependencies,
-                QuoteProviderDependencies by quoteProviderDependencies
-            {}
-    }
-}
+fun createBrokerBuyApi() = QuoteDependencies(contextApi, createQuoteProviderApi())
 
 object BrokerBuyApi
 {
-    fun <F> BrokerBuyDependencies<F>.create(
+    private val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
+
+    private data class BuyParameter(
+        val label: String,
+        val instrument: Instrument,
+        val orderCommand: IEngine.OrderCommand,
+        val amount: Double,
+        val slPrice: Double,
+        val price: Double,
+        val comment: String
+    )
+
+    fun setOrderText(orderText: String) = bcOrderText.accept(orderText.some())
+
+    fun <F> QuoteDependencies<F>.brokerBuy(
         assetName: String,
         contracts: Int,
         slDistance: Double,
@@ -82,10 +63,11 @@ object BrokerBuyApi
             .flatMap { submitOrder(it) }
             .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0, out_TradeInfoToFill) }
             .handleError { error ->
+                logger.debug("BrokerBuy failed ${error.message}")
                 if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
             }
 
-    fun <F> BrokerBuyDependencies<F>.createBuyParameter(
+    private fun <F> QuoteDependencies<F>.createBuyParameter(
         assetName: String,
         contracts: Int,
         slDistance: Double,
@@ -111,7 +93,7 @@ object BrokerBuyApi
         )
     }
 
-    fun <F> BrokerBuyDependencies<F>.submitOrder(buyParameter: BuyParameter): Kind<F, IOrder> =
+    private fun <F> QuoteDependencies<F>.submitOrder(buyParameter: BuyParameter): Kind<F, IOrder> =
         catch {
             engine
                 .submit(
@@ -132,7 +114,7 @@ object BrokerBuyApi
                 .blockingFirst()
         }
 
-    fun <F> BrokerBuyDependencies<F>.createLabel(): Kind<F, String> =
+    fun <F> QuoteDependencies<F>.createLabel(): Kind<F, String> =
         just(pluginSettings.labelPrefix() + System.currentTimeMillis().toString())
 
     fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand =
@@ -147,14 +129,14 @@ object BrokerBuyApi
     fun createLimitPrice(instrument: Instrument, limitPrice: Double) =
         if (limitPrice != 0.0) Price(instrument, limitPrice).toDouble() else 0.0
 
-    fun <F> BrokerBuyDependencies<F>.createSLPrice(
+    fun <F> QuoteDependencies<F>.createSLPrice(
         slDistance: Double,
         instrument: Instrument,
         orderCommand: IEngine.OrderCommand,
         limitPrice: Double
     ): Double
     {
-        if (slDistance <= 0) return 0.0
+        if (slDistance <= 0) return TradingSettings.noSLPrice
         val openPrice = if (limitPrice != 0.0) Price(instrument, limitPrice)
         else Price(
             instrument,
@@ -166,17 +148,15 @@ object BrokerBuyApi
         return slPrice.toDouble()
     }
 
-    fun <F> BrokerBuyDependencies<F>.processOrderAndGetResult(
+    fun <F> QuoteDependencies<F>.processOrderAndGetResult(
         order: IOrder,
         slDistance: Double,
         isLimitOrder: Boolean,
         out_TradeInfoToFill: DoubleArray
     ): Kind<F, Int> =
         catch {
-            resetBCOrderText()
             if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
             {
-                logger.debug("BrokerBuy: order $order")
                 out_TradeInfoToFill[0] = order.openPrice
                 if (slDistance == -1.0) BROKER_BUY_OPPOSITE_CLOSE else order.zorroId()
             } else BROKER_BUY_FAIL

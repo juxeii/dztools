@@ -2,6 +2,7 @@ package com.jforex.dzjforex.misc
 
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
+import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.price.TickQuote
 
 typealias Quotes = Map<Instrument, TickQuote>
@@ -46,5 +47,6 @@ object QuotesProviderApi
 
     fun QuoteProviderDependencies.getBid(instrument: Instrument) = getTick(instrument).bid
 
-    fun QuoteProviderDependencies.getSpread(instrument: Instrument) = getAsk(instrument) - getBid(instrument)
+    fun QuoteProviderDependencies.getSpread(instrument: Instrument) =
+        Price(instrument, getAsk(instrument) - getBid(instrument)).toDouble()
 }

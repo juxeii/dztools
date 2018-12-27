@@ -16,15 +16,5 @@ object InstrumentApi
     fun <F> ContextDependencies<F>.fromAssetName(assetName: String): Kind<F, Instrument> =
         InstrumentFactory
             .fromName(assetName)
-            .fromOption { JFException("Cannot brokerTime instrument from asset name $assetName!") }
-
-    fun <F> ContextDependencies<F>.forexInstrumentFromAssetName(assetName: String): Kind<F, Instrument> =
-        bindingCatch {
-            val instrument = fromAssetName(assetName).bind()
-            if (instrument.type != IFinancialInstrument.Type.FOREX)
-            {
-                raiseError<JFException>(JFException("Asset $assetName is not a Forex instrument!"))
-            }
-            instrument
-        }
+            .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
 }

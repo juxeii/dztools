@@ -5,8 +5,6 @@
 #include <jni.h>
 #include "trading.h"
 
-#define GET_MINLOT 23 // Minimum permitted amount of a lot.
-#define GET_TYPE 50
 #define GET_ACCOUNT 54
 #define SET_ORDERTEXT 131 // Order comment for trades
 #define SET_LIMIT 135 // set limit price for entry limit orders

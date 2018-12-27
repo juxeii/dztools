@@ -29,9 +29,9 @@ object BrokerSellApi
 
     fun <F> ContextDependencies<F>.brokerSell(orderId: Int, contracts: Int): Kind<F, Int> =
         bindingCatch {
-            getOrderForId(orderId)
-                .map { order -> closeOrder(order, createCloseParams(order.instrument), contracts).bind() }
-                .fold({ BROKER_SELL_FAIL }) { orderEvent -> processCloseResult(orderEvent) }
+            val order = getOrderForId(orderId).bind()
+            val orderEvent = closeOrder(order, createCloseParams(order.instrument), contracts).bind()
+            processCloseResult(orderEvent)
         }.handleError {
             logger.debug("BrokerSell failed! ${printStackTrace(it)}")
             BROKER_SELL_FAIL

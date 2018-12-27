@@ -11,7 +11,7 @@ import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.BarFetchApi.fetchBars
 import com.jforex.dzjforex.history.TickFetchApi.fetchTicks
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.InstrumentApi.forexInstrumentFromAssetName
+import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.isConnected
 import com.jforex.dzjforex.time.formatUnixTime
 import com.jforex.dzjforex.time.toDATEFormat
@@ -43,7 +43,7 @@ object BrokerHistoryApi
             if (!isConnected()) BROKER_HISTORY_UNAVAILABLE
             else
             {
-                val instrument = forexInstrumentFromAssetName(assetName).bind()
+                val instrument = fromAssetName(assetName).bind()
                 val startTime = toLongFormat(utcStartDate)
                 val endTime = toLongFormat(utcEndDate)
 

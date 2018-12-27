@@ -43,23 +43,19 @@ object BrokerTradeApi
         orderId: Int,
         out_TradeInfoToFill: DoubleArray
     ): Kind<F, Int> = binding {
-        getOrderForId(orderId)
-            .map { order ->
-                out_TradeInfoToFill[0] = order.openPrice
-                out_TradeInfoToFill[1] = quoteForOrder(order)
-                out_TradeInfoToFill[2] = rollOverValue
-                out_TradeInfoToFill[3] = order.profitLossInAccountCurrency.toAmount()
-
-                logger.debug("BrokerTrade: open price ${order.openPrice} " +
-                        "pClose ${quoteForOrder(order)} " +
-                        "rollOver $rollOverValue pProfit" +
-                        " ${order.profitLossInAccountCurrency.toAmount()}")
-                createReturnValue(order)
-            }.fold({
-                logger.debug("BrokerTrade: Id $orderId not found!")
-                UNKNOWN_ORDER_ID
-            }) {returnValue-> returnValue }
-    }
+        val order = getOrderForId(orderId).bind()
+        out_TradeInfoToFill[0] = order.openPrice
+        out_TradeInfoToFill[1] = quoteForOrder(order)
+        out_TradeInfoToFill[2] = rollOverValue
+        out_TradeInfoToFill[3] = order.profitLossInAccountCurrency.toAmount()
+        logger.debug(
+            "BrokerTrade: open price ${order.openPrice} " +
+                    "pClose ${quoteForOrder(order)} " +
+                    "rollOver $rollOverValue pProfit" +
+                    " ${order.profitLossInAccountCurrency.toAmount()}"
+        )
+        createReturnValue(order)
+    }.handleError { UNKNOWN_ORDER_ID }
 
     fun <F> BrokerTradeDependencies<F>.quoteForOrder(order: IOrder): Double
     {

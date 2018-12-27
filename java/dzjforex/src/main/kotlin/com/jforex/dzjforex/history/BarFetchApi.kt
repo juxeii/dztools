@@ -74,18 +74,6 @@ object BarFetchApi
         noOfBars: Int,
         endTime: Long
     ): Kind<F, List<IBar>> = catch {
-
-        val to = history.getBar(
-            Instrument.EURUSD,
-            Period.ONE_MIN,
-            OfferSide.ASK, 1
-        ).time
-        logger.debug(
-            "Starting to fetch bars from history...noOfBars $noOfBars endTime ${formatUnixTime(endTime)} to time ${formatUnixTime(
-                to
-            )}"
-        )
-
         history.getBars(
             instrument,
             period,

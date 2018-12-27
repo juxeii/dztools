@@ -8,7 +8,7 @@ import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.HistoryApi.waitForLatestQuote
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.InstrumentApi.forexInstrumentFromAssetName
+import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.QuotesProviderApi.getQuote
 import com.jforex.dzjforex.misc.QuotesProviderApi.hasQuote
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
@@ -23,10 +23,14 @@ object BrokerSubscribeApi
 {
     fun <F> QuoteDependencies<F>.subscribeInstrument(assetName: String): Kind<F, Int> =
         binding {
-            val instrument = forexInstrumentFromAssetName(assetName).bind()
+            val instrument = fromAssetName(assetName).bind()
+            logger.debug("BrokerSubscribe $instrument pC ${instrument.primaryJFCurrency}" +
+                    " sC ${instrument.secondaryJFCurrency} minLot ${instrument.minTradeAmount}" +
+                    " type ${instrument.type} pipValue ${instrument.pipValue}")
             val instrumentsToSubscribe = getInstrumentsToSubscribe(instrument).bind()
-            val resultingInstruments = subscribeAllInstruments(instrumentsToSubscribe).bind()
-            val latestQuotes = waitForLatestQuotes(resultingInstruments).bind()
+            subscribeAllInstruments(instrumentsToSubscribe).bind()
+            logger.debug("BrokerSubscribe instrumentsToSubscribe $instrumentsToSubscribe")
+            val latestQuotes = waitForLatestQuotes(instrumentsToSubscribe).bind()
             latestQuotes.forEach { quote -> saveQuote(quote) }
             SUBSCRIBE_OK
         }.handleError { SUBSCRIBE_FAIL }
@@ -46,11 +50,10 @@ object BrokerSubscribeApi
         }
 
     fun <F> QuoteDependencies<F>.subscribeAllInstruments(instrumentsToSubscribe: Set<Instrument>)
-            : Kind<F, Set<Instrument>> = binding {
+            : Kind<F, Unit> = binding {
         val subscribedInstruments = getSubscribedInstruments()
         val resultingInstruments = subscribedInstruments + instrumentsToSubscribe
         setSubscribedInstruments(resultingInstruments).bind()
-        resultingInstruments
     }
 
     fun <F> QuoteDependencies<F>.waitForLatestQuotes(instruments: Set<Instrument>): Kind<F, List<TickQuote>> =

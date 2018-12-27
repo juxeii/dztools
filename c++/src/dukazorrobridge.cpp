@@ -199,10 +199,6 @@ BrokerCommand(int nCommand,
 {
     switch (nCommand)
     {
-    case GET_MINLOT:
-        return 1000;
-    case GET_TYPE:
-        return 1;
     case GET_ACCOUNT:
     case SET_ORDERTEXT:
     {

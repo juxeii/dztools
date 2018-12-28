@@ -5,6 +5,7 @@ import arrow.effects.DeferredK
 import arrow.effects.ForIO
 import arrow.effects.fix
 import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
+import com.jforex.dzjforex.account.BrokerAccountSuccess
 import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.buy.BrokerBuyApi
@@ -45,7 +46,7 @@ class ZorroBridge
         if (brokerTimeResult is BrokerTimeSuccess)
         {
             val iTimeUTC = 0
-            out_ServerTimeToFill[iTimeUTC] = brokerTimeResult.data.serverTime
+            out_ServerTimeToFill[iTimeUTC] = brokerTimeResult.serverTime
         }
         return brokerTimeResult.returnCode
     }
@@ -56,7 +57,22 @@ class ZorroBridge
     fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray) =
         runDirect(createBrokerAssetApi().brokerAsset(assetName, out_AssetParamsToFill))
 
-    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray) = runDirect(contextApi.brokerAccount(out_AccountInfoToFill))
+    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray) : Int
+    {
+        val brokerAccountResult = runDirect(contextApi.brokerAccount())
+        if (brokerAccountResult is BrokerAccountSuccess)
+        {
+            val iBalance = 0
+            val iTradeVal = 1
+            val iMarginVal = 2
+            with(brokerAccountResult.data){
+                out_AccountInfoToFill[iBalance] = balance
+                out_AccountInfoToFill[iTradeVal] = tradeVal
+                out_AccountInfoToFill[iMarginVal] = marginVal
+            }
+        }
+        return brokerAccountResult.returnCode
+    }
 
     fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
         runDirect(createBrokerTradeApi().brokerTrade(orderId, out_TradeInfoToFill))

@@ -6,24 +6,24 @@ import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
 import com.jforex.dzjforex.zorro.ACCOUNT_UNAVAILABLE
 
-object BrokerAccountApi
-{
-    fun <F> ContextDependencies<F>.brokerAccount(out_AccountInfoToFill: DoubleArray): Kind<F, Int> = bindingCatch {
-        if (!account.isConnected) ACCOUNT_UNAVAILABLE
-        else
-        {
-            fillAccountValues(out_AccountInfoToFill).bind()
-            ACCOUNT_AVAILABLE
+data class BrokerAccountData(val balance: Double, val tradeVal: Double, val marginVal: Double)
+sealed class BrokerAccountResult(val returnCode: Int) {
+    data class Failure(val code: Int) : BrokerAccountResult(code)
+    data class Success(val code: Int, val data: BrokerAccountData) : BrokerAccountResult(code)
+}
+typealias BrokerAccountFailure = BrokerAccountResult.Failure
+typealias BrokerAccountSuccess = BrokerAccountResult.Success
+
+object BrokerAccountApi {
+    fun <F> ContextDependencies<F>.brokerAccount(): Kind<F, BrokerAccountResult> = invoke {
+        if (!account.isConnected) BrokerAccountFailure(ACCOUNT_UNAVAILABLE)
+        else {
+            val accountData = BrokerAccountData(
+                balance = account.baseEquity,
+                tradeVal = account.equity - account.baseEquity,
+                marginVal = account.usedMargin
+            )
+            BrokerAccountSuccess(ACCOUNT_AVAILABLE, accountData)
         }
-    }
-
-    fun <F> ContextDependencies<F>.fillAccountValues(out_AccountInfoToFill: DoubleArray): Kind<F, Unit> = catch {
-        val iBalance = 0
-        val iTradeVal = 1
-        val iMarginVal = 2
-
-        out_AccountInfoToFill[iBalance] = account.baseEquity
-        out_AccountInfoToFill[iTradeVal] = account.equity - account.baseEquity
-        out_AccountInfoToFill[iMarginVal] = account.usedMargin
     }
 }

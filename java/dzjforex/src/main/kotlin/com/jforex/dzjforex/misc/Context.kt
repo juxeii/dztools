@@ -3,7 +3,9 @@ package com.jforex.dzjforex.misc
 import arrow.Kind
 import arrow.effects.ForIO
 import arrow.effects.IO
+import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.instances.io.monadError.monadError
+import arrow.effects.typeclasses.MonadDefer
 import arrow.typeclasses.MonadError
 import com.dukascopy.api.*
 
@@ -11,15 +13,15 @@ lateinit var contextApi: ContextDependencies<ForIO>
 
 fun initContextApi(context: IContext)
 {
-    contextApi = ContextDependencies(context, pluginApi, IO.monadError())
+    contextApi = ContextDependencies(context, pluginApi, IO.monadDefer())
 }
 
-fun <F> createContextApi(context: IContext, ME: MonadError<F, Throwable>) = ContextDependencies(context, pluginApi, ME)
+fun <F> createContextApi(context: IContext, MD: MonadDefer<F>) = ContextDependencies(context, pluginApi, MD)
 
-fun <F> createQuoteApi(context: IContext, ME: MonadError<F, Throwable>) =
-    QuoteDependencies(createContextApi(context, ME), createQuoteProviderApi())
+fun <F> createQuoteApi(context: IContext, MD: MonadDefer<F>) =
+    QuoteDependencies(createContextApi(context, MD), createQuoteProviderApi())
 
-interface ContextDependencies<F> : PluginDependencies, MonadError<F, Throwable>
+interface ContextDependencies<F> : PluginDependencies, MonadDefer<F>
 {
     val context: IContext
     val engine: IEngine
@@ -31,11 +33,11 @@ interface ContextDependencies<F> : PluginDependencies, MonadError<F, Throwable>
         operator fun <F> invoke(
             context: IContext,
             pluginDependencies: PluginDependencies,
-            ME: MonadError<F, Throwable>
+            MD: MonadDefer<F>
         ): ContextDependencies<F> =
             object : ContextDependencies<F>,
                 PluginDependencies by pluginDependencies,
-                MonadError<F, Throwable> by ME
+                MonadDefer<F> by MD
             {
                 override val context = context
                 override val engine = context.engine

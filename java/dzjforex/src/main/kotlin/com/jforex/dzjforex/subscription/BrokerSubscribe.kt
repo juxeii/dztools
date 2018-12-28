@@ -3,6 +3,7 @@ package com.jforex.dzjforex.subscription
 import arrow.Kind
 import arrow.effects.ForIO
 import arrow.effects.IO
+import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.instances.io.monadError.monadError
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
@@ -18,7 +19,7 @@ import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
 import com.jforex.kforexutils.price.TickQuote
 
-fun createBrokerSubscribeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context, IO.monadError())
+fun createBrokerSubscribeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context, IO.monadDefer())
 
 object BrokerSubscribeApi
 {

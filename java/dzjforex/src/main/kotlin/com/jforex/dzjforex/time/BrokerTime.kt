@@ -12,11 +12,10 @@ import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
 
-data class BrokerTimeData(val serverTime: Double)
 sealed class BrokerTimeResult(val returnCode: Int)
 {
     data class Failure(val code: Int) : BrokerTimeResult(code)
-    data class Success(val code: Int, val data: BrokerTimeData) : BrokerTimeResult(code)
+    data class Success(val code: Int, val serverTime: Double) : BrokerTimeResult(code)
 }
 typealias BrokerTimeFailure = BrokerTimeResult.Failure
 typealias BrokerTimeSuccess = BrokerTimeResult.Success
@@ -29,7 +28,7 @@ object BrokerTimeApi
         {
             val serverTime = getServerTime().bind()
             val serverTimeInDateFormat = toDATEFormat(serverTime)
-            BrokerTimeSuccess(getConnectionState(serverTime).bind(), BrokerTimeData(serverTimeInDateFormat))
+            BrokerTimeSuccess(getConnectionState(serverTime).bind(), serverTimeInDateFormat)
         }
     }
 

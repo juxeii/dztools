@@ -6,6 +6,7 @@ import arrow.effects.IO
 import arrow.effects.instances.io.monadError.monadError
 import arrow.typeclasses.binding
 import com.dukascopy.api.Instrument
+import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.history.HistoryApi.waitForLatestQuote
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
@@ -45,13 +46,13 @@ object BrokerSubscribeApi
     fun <F> QuoteDependencies<F>.getInstrumentsToSubscribe(instrument: Instrument): Kind<F, Set<Instrument>> =
         binding {
             val instrumentWithCrosses = getInstrumentWithCrosses(instrument).bind()
-            val subscribedInstruments = getSubscribedInstruments()
+            val subscribedInstruments = getSubscribedInstruments().bind()
             instrumentWithCrosses - subscribedInstruments
         }
 
     fun <F> QuoteDependencies<F>.subscribeAllInstruments(instrumentsToSubscribe: Set<Instrument>)
             : Kind<F, Unit> = binding {
-        val subscribedInstruments = getSubscribedInstruments()
+        val subscribedInstruments = getSubscribedInstruments().bind()
         val resultingInstruments = subscribedInstruments + instrumentsToSubscribe
         setSubscribedInstruments(resultingInstruments).bind()
     }
@@ -72,8 +73,6 @@ object BrokerSubscribeApi
             }
             quotes
         }
-
-    fun <F> QuoteDependencies<F>.getSubscribedInstruments() = context.subscribedInstruments
 
     fun <F> QuoteDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>): Kind<F, Unit> =
         just(context.setSubscribedInstruments(instrumentsToSubscribe, true))

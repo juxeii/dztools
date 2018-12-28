@@ -16,19 +16,13 @@ object AccountApi
 
     fun <F> ContextDependencies<F>.equity() = account.equity
 
-    fun <F> ContextDependencies<F>.baseEquity() = account.baseEquity
-
     fun <F> ContextDependencies<F>.state(): IAccount.AccountState = account.accountState
-
-    fun <F> ContextDependencies<F>.lotSize() = pluginSettings.lotSize()
-
-    fun <F> ContextDependencies<F>.lotMargin() = lotSize() / leverage()
 
     fun <F> ContextDependencies<F>.freeMargin() = account.creditLine / leverage()
 
     fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = context
         .utils
-        .convertPipToCurrency(instrument, account.accountCurrency) * lotSize()
+        .convertPipToCurrency(instrument, account.accountCurrency) * instrument.minTradeAmount
         .asPrice(instrument)
 
     fun <F> ContextDependencies<F>.isTradingAllowed() =

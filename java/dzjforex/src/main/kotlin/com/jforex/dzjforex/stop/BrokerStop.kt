@@ -19,7 +19,7 @@ import com.jforex.kforexutils.order.extension.setSL
 
 object BrokerStopApi
 {
-    fun <F> ContextDependencies<F>.setSL(orderId: Int, slPrice: Double): Kind<F, Int> =
+    fun <F> ContextDependencies<F>.brokerStop(orderId: Int, slPrice: Double): Kind<F, Int> =
         bindingCatch {
             val order =  getOrderForId(orderId).bind()
             val orderEvent = setSLPrice(order, slPrice).bind()

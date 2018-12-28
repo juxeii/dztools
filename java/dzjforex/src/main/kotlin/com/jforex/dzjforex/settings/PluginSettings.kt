@@ -24,10 +24,6 @@ interface PluginSettings : Config
     @Config.DefaultValue("zorro")
     fun labelPrefix(): String
 
-    @Config.Key("order.lotsize")
-    @Config.DefaultValue("1000")
-    fun lotSize(): Double
-
     @Config.Key("order.lotscale")
     @Config.DefaultValue("1000000")
     fun lotScale(): Double

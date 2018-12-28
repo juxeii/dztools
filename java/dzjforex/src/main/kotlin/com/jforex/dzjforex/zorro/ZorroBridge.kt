@@ -1,6 +1,8 @@
 package com.jforex.dzjforex.zorro
 
+import arrow.Kind
 import arrow.effects.DeferredK
+import arrow.effects.ForIO
 import arrow.effects.fix
 import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
 import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
@@ -19,11 +21,12 @@ import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.pluginApi
 import com.jforex.dzjforex.sell.BrokerSellApi
 import com.jforex.dzjforex.sell.BrokerSellApi.brokerSell
-import com.jforex.dzjforex.stop.BrokerStopApi.setSL
+import com.jforex.dzjforex.stop.BrokerStopApi.brokerStop
 import com.jforex.dzjforex.subscription.BrokerSubscribeApi.subscribeInstrument
 import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
-import com.jforex.dzjforex.trade.BrokerTradeApi.create
+import com.jforex.dzjforex.time.BrokerTimeSuccess
+import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 import com.jforex.dzjforex.trade.createBrokerTradeApi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -31,83 +34,32 @@ import java.nio.charset.Charset
 
 class ZorroBridge
 {
-    fun doLogin(
-        username: String,
-        password: String,
-        accountType: String,
-        out_AccountNamesToFill: Array<String>
-    ): Int
+    fun doLogin(username: String, password: String, accountType: String, out_AccountNamesToFill: Array<String>) =
+        runWithProgress(loginApi.create(username, password, accountType, out_AccountNamesToFill))
+
+    fun doLogout() = runDirect(loginApi.logout())
+
+    fun doBrokerTime(out_ServerTimeToFill: DoubleArray): Int
     {
-        val loginTask = DeferredK {
-            loginApi
-                .create(username, password, accountType, out_AccountNamesToFill)
-                .fix()
-                .unsafeRunSync()
+        val brokerTimeResult = runDirect(contextApi.brokerTime())
+        if (brokerTimeResult is BrokerTimeSuccess)
+        {
+            val iTimeUTC = 0
+            out_ServerTimeToFill[iTimeUTC] = brokerTimeResult.data.serverTime
         }
-        return pluginApi.progressWait(loginTask)
+        return brokerTimeResult.returnCode
     }
 
-    fun doLogout() =
-        loginApi
-            .logout()
-            .fix()
-            .unsafeRunSync()
+    fun doSubscribeAsset(assetName: String) =
+        runWithProgress(createBrokerSubscribeApi().run { subscribeInstrument(assetName) })
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray):Int {
-        val result =  contextApi
-            .brokerTime(out_ServerTimeToFill)
-            .fix()
-            .unsafeRunSync()
-        logger.debug("doBrokerTime result is $result")
-        return result
-    }
+    fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray) =
+        runDirect(createBrokerAssetApi().brokerAsset(assetName, out_AssetParamsToFill))
 
-    fun doSubscribeAsset(assetName: String): Int
-    {
-        val subscribeTask = DeferredK {
-            createBrokerSubscribeApi().run {
-                subscribeInstrument(assetName)
-                    .fix()
-                    .unsafeRunSync()
-            }
-        }
-        val result= pluginApi.progressWait(subscribeTask)
-        logger.debug("doSubscribeAsset result is $result")
-        return result
-    }
+    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray) = runDirect(contextApi.brokerAccount(out_AccountInfoToFill))
 
-    fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray): Int
-    {
-        val result = createBrokerAssetApi()
-            .brokerAsset(assetName, out_AssetParamsToFill)
-            .fix()
-            .unsafeRunSync()
-        logger.debug("doBrokerAsset result is $result")
-        return result
-    }
-
-
-    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray): Int
-    {
-        val result = contextApi
-            .brokerAccount(out_AccountInfoToFill)
-            .fix()
-            .unsafeRunSync()
-        logger.debug("doBrokerAccount result is $result")
-        return result
-    }
-
-
-    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray): Int
-    {
-        val tradeResult = createBrokerTradeApi()
-            .create(orderId, out_TradeInfoToFill)
-            .fix()
-            .unsafeRunSync()
-        logger.debug("doBrokerTrade result is $tradeResult")
-        return tradeResult
-    }
-
+    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
+        runDirect(createBrokerTradeApi().brokerTrade(orderId, out_TradeInfoToFill))
 
     fun doBrokerBuy2(
         assetName: String,
@@ -115,46 +67,19 @@ class ZorroBridge
         slDistance: Double,
         limit: Double,
         out_TradeInfoToFill: DoubleArray
-    ): Int
-    {
-        val buyTask = DeferredK {
-            createBrokerBuyApi()
-                .brokerBuy(assetName, contracts, slDistance, limit, out_TradeInfoToFill)
-                .fix()
-                .unsafeRunSync()
-        }
-        val buyResult = pluginApi.progressWait(buyTask)
-        logger.debug("doBrokerBuy2 result is $buyResult")
-        return buyResult
-    }
+    ) = runWithProgress(
+        createBrokerBuyApi().brokerBuy(
+            assetName,
+            contracts,
+            slDistance,
+            limit,
+            out_TradeInfoToFill
+        )
+    )
 
-    fun doBrokerSell(
-        orderId: Int,
-        contracts: Int
-    ): Int
-    {
-        val sellTask = DeferredK {
-            contextApi
-                .brokerSell(orderId, contracts)
-                .fix()
-                .unsafeRunSync()
-        }
-        return pluginApi.progressWait(sellTask)
-    }
+    fun doBrokerSell(orderId: Int, contracts: Int) = runWithProgress(contextApi.brokerSell(orderId, contracts))
 
-    fun doBrokerStop(
-        orderId: Int,
-        slPrice: Double
-    ): Int
-    {
-        val stopTask = DeferredK {
-            contextApi
-                .setSL(orderId, slPrice)
-                .fix()
-                .unsafeRunSync()
-        }
-        return pluginApi.progressWait(stopTask)
-    }
+    fun doBrokerStop(orderId: Int, slPrice: Double) = runWithProgress(contextApi.brokerStop(orderId, slPrice))
 
     fun doBrokerHistory2(
         assetName: String,
@@ -163,16 +88,20 @@ class ZorroBridge
         periodInMinutes: Int,
         noOfTicks: Int,
         out_TickInfoToFill: DoubleArray
-    ): Int
-    {
-        val historyTask = DeferredK {
-            contextApi
-                .brokerHistory(assetName, utcStartDate, utcEndDate, periodInMinutes, noOfTicks, out_TickInfoToFill)
-                .fix()
-                .unsafeRunSync()
-        }
-        return pluginApi.progressWait(historyTask)
-    }
+    ) = runWithProgress(
+        contextApi.brokerHistory(
+            assetName,
+            utcStartDate,
+            utcEndDate,
+            periodInMinutes,
+            noOfTicks,
+            out_TickInfoToFill
+        )
+    )
+
+    private fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
+
+    private fun runWithProgress(kind: Kind<ForIO, Int>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
     private fun brokerCommandStringReturn(string: String, bytes: ByteArray): Double
     {

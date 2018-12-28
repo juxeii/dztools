@@ -1,13 +1,11 @@
 package com.jforex.dzjforex.misc
 
+import arrow.Kind
 import arrow.effects.ForIO
 import arrow.effects.IO
 import arrow.effects.instances.io.monadError.monadError
 import arrow.typeclasses.MonadError
-import com.dukascopy.api.IAccount
-import com.dukascopy.api.IContext
-import com.dukascopy.api.IEngine
-import com.dukascopy.api.IHistory
+import com.dukascopy.api.*
 
 lateinit var contextApi: ContextDependencies<ForIO>
 
@@ -60,4 +58,10 @@ interface QuoteDependencies<F> : ContextDependencies<F>, QuoteProviderDependenci
                 QuoteProviderDependencies by quoteProviderDependencies
             {}
     }
+}
+
+object ContextApi
+{
+    fun <F> ContextDependencies<F>.getSubscribedInstruments(): Kind<F, Set<Instrument>> =
+        just(context.subscribedInstruments)
 }

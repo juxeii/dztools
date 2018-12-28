@@ -39,7 +39,7 @@ object BrokerTradeApi
 {
     const val rollOverValue = 0.0
 
-    fun <F> BrokerTradeDependencies<F>.create(
+    fun <F> BrokerTradeDependencies<F>.brokerTrade(
         orderId: Int,
         out_TradeInfoToFill: DoubleArray
     ): Kind<F, Int> = binding {

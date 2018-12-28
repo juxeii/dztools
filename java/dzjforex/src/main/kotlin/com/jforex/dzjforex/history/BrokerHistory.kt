@@ -84,7 +84,7 @@ object BrokerHistoryApi
         noOfTicks: Int
     ): Kind<F, Int> = catch {
         val data = fillParams.data
-        val noOfTicks = Observable
+        val noOfFilledTicks = Observable
             .fromIterable(data.asReversed())
             .zipWith(Observable.range(0, data.size))
             .takeUntil { fillParams.endCondition(it.first) || it.second == noOfTicks}
@@ -93,6 +93,6 @@ object BrokerHistoryApi
             }
             .blockingLast()+1
         logger.debug("Finally fetched $noOfTicks ticks")
-        noOfTicks
+        noOfFilledTicks
     }
 }

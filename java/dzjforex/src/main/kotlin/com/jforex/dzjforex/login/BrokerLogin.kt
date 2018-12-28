@@ -48,7 +48,7 @@ object LoginApi
         }
         LOGIN_OK
     }.handleError {
-        logger.debug("Login failed! $it")
+        logger.debug("Login failed! $it Stack: ${printStackTrace(it)}")
         LOGIN_FAIL
     }
 

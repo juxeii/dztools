@@ -1,14 +1,8 @@
 package com.jforex.dzjforex.misc
 
 import arrow.Kind
-import arrow.core.Failure
-import arrow.core.Try
-import arrow.instances.`try`.monadError.monadError
-import arrow.typeclasses.MonadError
-import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
-import com.dukascopy.api.instrument.IFinancialInstrument
 import com.jforex.kforexutils.instrument.InstrumentFactory
 
 object InstrumentApi
@@ -17,4 +11,7 @@ object InstrumentApi
         InstrumentFactory
             .fromName(assetName)
             .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
+
+    fun <F> ContextDependencies<F>.isTradeable(instrument: Instrument): Kind<F, Boolean> =
+        just(context.engine.isTradable(instrument))
 }

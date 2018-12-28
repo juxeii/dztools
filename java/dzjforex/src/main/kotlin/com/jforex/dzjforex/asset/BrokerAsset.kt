@@ -3,7 +3,6 @@ package com.jforex.dzjforex.asset
 import arrow.Kind
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.account.AccountApi.lotSize
 import com.jforex.dzjforex.account.AccountApi.pipCost
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName

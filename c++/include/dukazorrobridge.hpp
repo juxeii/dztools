@@ -2,17 +2,18 @@
 #define DUKAZORROBRIDGE_HPP
 
 #include <windows.h>
+#include <iostream>
+#include <sstream>
 #include <jni.h>
 #include "trading.h"
+#include "PatchValue.hpp"
 
-#define GET_ACCOUNT 54
-#define SET_ORDERTEXT 131 // Order comment for trades
-#define SET_LIMIT 135 // set limit price for entry limit orders
-
-typedef double DATE;
 typedef jlong DukaTime;
 
 static const int PLUGIN_VERSION = 2u;
+
+static int bcPatch = 0;
+bool isPatchValueActive(PatchValue pv);
 
 extern int
 (__cdecl *BrokerError)(const char *message);

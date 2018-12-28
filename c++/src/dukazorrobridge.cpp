@@ -2,6 +2,7 @@
 #include "DllCallHandler.hpp"
 #include <string>
 
+
 #define DLLFUNC extern "C" __declspec(dllexport)
 
 int
@@ -197,8 +198,15 @@ DLLFUNC var
 BrokerCommand(int nCommand,
               DWORD dwParameter)
 {
+    double dummy = 42.0;
     switch (nCommand)
     {
+    case GET_TIME:
+        return dllCallHandler.BrokerCommand(nCommand, &dummy, 8);
+    case GET_DIGITS:
+    case GET_TRADEALLOWED:
+    case GET_MINLOT:
+    case GET_MAXLOT:
     case GET_ACCOUNT:
     case SET_ORDERTEXT:
     {
@@ -209,6 +217,11 @@ BrokerCommand(int nCommand,
     {
         double* pValue = reinterpret_cast<double*>(dwParameter);
         return dllCallHandler.BrokerCommand(nCommand, pValue, 8);
+    }
+    case SET_PATCH:
+    {
+        bcPatch = static_cast<int>(dwParameter);
+        return 1;
     }
     default:
         {

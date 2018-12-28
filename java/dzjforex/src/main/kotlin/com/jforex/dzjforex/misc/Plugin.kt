@@ -1,12 +1,16 @@
 package com.jforex.dzjforex.misc
 
+import arrow.Kind
 import arrow.core.Try
 import arrow.effects.DeferredK
+import arrow.effects.ForIO
+import arrow.effects.fix
 import arrow.effects.unsafeRunAsync
 import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
 import com.jakewharton.rxrelay2.BehaviorRelay
+import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.zorro.ZorroNatives
 import com.jforex.dzjforex.zorro.heartBeatIndication
@@ -18,8 +22,6 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.PrintWriter
 import java.io.StringWriter
-
-
 
 val logger: Logger = LogManager.getLogger()
 val pluginApi = PluginDependencies(getClient(), ConfigFactory.create(PluginSettings::class.java), ZorroNatives())
@@ -44,6 +46,10 @@ fun printStackTrace(it: Throwable){
     val stackTrace = writer.toString()
     logger.debug("stackTrace: $stackTrace")
 }
+
+fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
+
+fun runWithProgress(kind: Kind<ForIO, Int>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
 interface PluginDependencies
 {

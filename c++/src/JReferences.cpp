@@ -1,4 +1,5 @@
 #include "JReferences.hpp"
+#include "PatchValue.hpp"
 
 namespace JData
 {

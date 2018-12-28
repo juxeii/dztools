@@ -2,6 +2,12 @@
 #include "JNIHandler.hpp"
 #include "JReferences.hpp"
 #include <cstring>
+#include <bitset>
+
+bool isPatchValueActive(PatchValue pv) {
+    std::bitset<32> bitset(bcPatch);
+    return bitset.test(pv);
+}
 
 int
 DllCallHandler::BrokerLogin(const char *User,
@@ -81,7 +87,7 @@ DllCallHandler::BrokerTime(DATE *pTimeUTC)
     if (pTimeUTC)
     {
         jdouble *utcTime = env->GetDoubleArrayElements(utcTimeArray, 0);
-        *pTimeUTC = utcTime[0];
+        if (!isPatchValueActive(PatchValue::SERVER_TIME)) *pTimeUTC = utcTime[0];
         env->ReleaseDoubleArrayElements(utcTimeArray, utcTime, 0);
     }
     env->DeleteLocalRef((jobject) utcTimeArray);
@@ -137,10 +143,8 @@ DllCallHandler::BrokerAsset(char* Asset,
         *pLotAmount = assetParams[5];
     if (pMarginCost)
         *pMarginCost = assetParams[6];
-    if (pRollLong)
-        *pRollLong = assetParams[7];
-    if (pRollShort)
-        *pRollShort = assetParams[8];
+    if (pRollLong) //not supported
+    if (pRollShort)  //not supported
 
     env->DeleteLocalRef(jAsset);
     env->ReleaseDoubleArrayElements(jAssetParamsArray, assetParams, 0);
@@ -211,10 +215,12 @@ DllCallHandler::BrokerAccount(const char *Account,
                                              jAccountParamsArray);
     jdouble *accountParams = env->GetDoubleArrayElements(jAccountParamsArray, 0);
 
-    if (pBalance)
-        *pBalance = accountParams[0];
-    if (pTradeVal)
-        *pTradeVal = accountParams[1];
+    if (pBalance) {
+        if(!isPatchValueActive(PatchValue::BALANCE_EQUITY)) *pBalance = accountParams[0];
+    }
+    if (pTradeVal) {
+        if (!isPatchValueActive(PatchValue::TRADE_PROFIT_OPEN)) *pTradeVal = accountParams[1];
+    }
     if (pMarginVal)
         *pMarginVal = accountParams[2];
 
@@ -279,8 +285,8 @@ DllCallHandler::BrokerTrade(const int nTradeID,
             *pOpen = orderParams[0];
         if (pClose)
             *pClose = orderParams[1];
-        if (pRoll)
-            *pRoll = orderParams[2];
+        if (pRoll) 
+            //not supported
         if (pProfit)
             *pProfit = orderParams[3];
     }

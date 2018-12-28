@@ -38,6 +38,12 @@ const val realLoginType = "Real"
 
 const val BROKER_COMMAND_OK = 1.0
 const val BROKER_COMMAND_UNAVAILABLE = 0.0
+const val BROKER_COMMAND_ERROR = 0.0
+const val GET_TIME = 5
+const val GET_DIGITS = 12
+const val GET_TRADEALLOWED = 22
+const val GET_MINLOT = 23
+const val GET_MAXLOT = 25
 const val GET_ACCOUNT = 54
 const val SET_ORDERTEXT = 131
 const val SET_LIMIT = 135

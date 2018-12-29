@@ -22,7 +22,7 @@ JMethodDesc doBrokerTrade =    { nullptr, "doBrokerTrade",    "(I[D)I" };
 JMethodDesc doBrokerStop =     { nullptr, "doBrokerStop",     "(ID)I" };
 JMethodDesc doBrokerSell =     { nullptr, "doBrokerSell",     "(II)I" };
 JMethodDesc doBrokerHistory2 = { nullptr, "doBrokerHistory2", "(Ljava/lang/String;DDII[D)I" };
-JMethodDesc doBrokerCommand =  { nullptr, "doBrokerCommand",   "(I[B)D" };
+JMethodDesc doBrokerCommand =  { nullptr, "doBrokerCommand",   "(I[B[D)V" };
 
 JMethodDesc excGetMessage=     { nullptr, "getMessage",       "()Ljava/lang/String;" };
 JMethodDesc excGetName=        { nullptr, "getName",          "()Ljava/lang/String;" };

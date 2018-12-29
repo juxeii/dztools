@@ -8,10 +8,11 @@ import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
+import com.jforex.dzjforex.command.getBcSlippage
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.logger
-import com.jforex.dzjforex.misc.printStackTrace
+import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_SELL_FAIL
@@ -33,7 +34,7 @@ object BrokerSellApi
             val orderEvent = closeOrder(order, createCloseParams(order.instrument), contracts).bind()
             processCloseResult(orderEvent)
         }.handleError {
-            logger.debug("BrokerSell failed! ${printStackTrace(it)}")
+            logger.debug("BrokerSell failed! ${getStackTrace(it)}")
             BROKER_SELL_FAIL
         }
 
@@ -54,16 +55,15 @@ object BrokerSellApi
             {
                 CloseParams(
                     price = TradingSettings.noPreferredClosePrice,
-                    slippage = TradingSettings.defaultCloseSlippage
+                    slippage = getBcSlippage()
                 )
             })
         { limitPrice ->
             CloseParams(
                 price = limitPrice.asPrice(instrument),
-                slippage = TradingSettings.noCloseSlippage
+                slippage = getBcSlippage()
             )
         }
-
 
     private fun processCloseResult(orderEvent: OrderEvent): Int =
         if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)

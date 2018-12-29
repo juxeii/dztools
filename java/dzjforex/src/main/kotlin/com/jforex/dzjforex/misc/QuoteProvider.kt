@@ -36,7 +36,6 @@ interface QuoteProviderDependencies
 
 object QuotesProviderApi
 {
-
     fun QuoteProviderDependencies.hasQuote(instrument: Instrument) = quotes.containsKey(instrument)
 
     fun QuoteProviderDependencies.getQuote(instrument: Instrument) = quotes[instrument]!!

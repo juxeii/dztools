@@ -2,26 +2,21 @@ package com.jforex.dzjforex.misc
 
 import arrow.Kind
 import arrow.effects.ForIO
-import arrow.effects.IO
-import arrow.effects.instances.io.monadDefer.monadDefer
-import arrow.effects.instances.io.monadError.monadError
-import arrow.effects.typeclasses.MonadDefer
-import arrow.typeclasses.MonadError
 import com.dukascopy.api.*
 
 lateinit var contextApi: ContextDependencies<ForIO>
 
 fun initContextApi(context: IContext)
 {
-    contextApi = ContextDependencies(context, pluginApi, IO.monadDefer())
+    contextApi = ContextDependencies(context, pluginApi)
 }
 
-fun <F> createContextApi(context: IContext, MD: MonadDefer<F>) = ContextDependencies(context, pluginApi, MD)
+fun createContextApi(context: IContext) = ContextDependencies(context, pluginApi)
 
-fun <F> createQuoteApi(context: IContext, MD: MonadDefer<F>) =
-    QuoteDependencies(createContextApi(context, MD), createQuoteProviderApi())
+fun createQuoteApi(context: IContext) =
+    QuoteDependencies(createContextApi(context), createQuoteProviderApi())
 
-interface ContextDependencies<F> : PluginDependencies, MonadDefer<F>
+interface ContextDependencies<F> : PluginDependencies<F>
 {
     val context: IContext
     val engine: IEngine
@@ -32,12 +27,10 @@ interface ContextDependencies<F> : PluginDependencies, MonadDefer<F>
     {
         operator fun <F> invoke(
             context: IContext,
-            pluginDependencies: PluginDependencies,
-            MD: MonadDefer<F>
+            pluginDependencies: PluginDependencies<F>
         ): ContextDependencies<F> =
             object : ContextDependencies<F>,
-                PluginDependencies by pluginDependencies,
-                MonadDefer<F> by MD
+                PluginDependencies<F> by pluginDependencies
             {
                 override val context = context
                 override val engine = context.engine
@@ -65,5 +58,5 @@ interface QuoteDependencies<F> : ContextDependencies<F>, QuoteProviderDependenci
 object ContextApi
 {
     fun <F> ContextDependencies<F>.getSubscribedInstruments(): Kind<F, Set<Instrument>> =
-        just(context.subscribedInstruments)
+        invoke { context.subscribedInstruments }
 }

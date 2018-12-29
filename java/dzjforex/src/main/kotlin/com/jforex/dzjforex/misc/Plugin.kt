@@ -2,10 +2,9 @@ package com.jforex.dzjforex.misc
 
 import arrow.Kind
 import arrow.core.Try
-import arrow.effects.DeferredK
-import arrow.effects.ForIO
-import arrow.effects.fix
-import arrow.effects.unsafeRunAsync
+import arrow.effects.*
+import arrow.effects.instances.io.monadDefer.monadDefer
+import arrow.effects.typeclasses.MonadDefer
 import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
@@ -24,7 +23,12 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 val logger: Logger = LogManager.getLogger()
-val pluginApi = PluginDependencies(getClient(), ConfigFactory.create(PluginSettings::class.java), ZorroNatives())
+val pluginApi = PluginDependencies(
+    getClient(),
+    ConfigFactory.create(PluginSettings::class.java),
+    ZorroNatives(),
+    IO.monadDefer()
+)
 
 fun getClient(): IClient =
     Try { ClientFactory.getDefaultInstance() }
@@ -36,22 +40,22 @@ fun getClient(): IClient =
             client
         }
 
-fun printStackTrace(it: Throwable){
+fun getStackTrace(it: Throwable):String
+{
     val ex = Exception(it)
     val writer = StringWriter()
     val printWriter = PrintWriter(writer)
     ex.printStackTrace(printWriter)
     printWriter.flush()
 
-    val stackTrace = writer.toString()
-    logger.debug("stackTrace: $stackTrace")
+    return writer.toString()
 }
 
 fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
 
-fun runWithProgress(kind: Kind<ForIO, Int>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
+fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
-interface PluginDependencies
+interface PluginDependencies<F> : MonadDefer<F>
 {
     val client: IClient
     val pluginSettings: PluginSettings
@@ -59,12 +63,13 @@ interface PluginDependencies
 
     companion object
     {
-        operator fun invoke(
+        operator fun <F> invoke(
             client: IClient,
             pluginSettings: PluginSettings,
-            natives: ZorroNatives
-        ): PluginDependencies =
-            object : PluginDependencies
+            natives: ZorroNatives,
+            MD: MonadDefer<F>
+        ): PluginDependencies<F> =
+            object : PluginDependencies<F>, MonadDefer<F> by MD
             {
                 override val client = client
                 override val pluginSettings = pluginSettings
@@ -75,9 +80,9 @@ interface PluginDependencies
 
 object PluginApi
 {
-    fun PluginDependencies.isConnected() = client.isConnected
+    fun <F> PluginDependencies<F>.isConnected() = invoke { client.isConnected }
 
-    fun <T> PluginDependencies.progressWait(task: DeferredK<T>): T
+    fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T
     {
         val resultRelay = BehaviorRelay.create<T>()
         task.unsafeRunAsync { result ->
@@ -95,7 +100,7 @@ object PluginApi
         return resultRelay.value!!
     }
 
-    fun PluginDependencies.contractsToAmount(contracts: Int) = Math.abs(contracts) / pluginSettings.lotScale()
+    fun <F> PluginDependencies<F>.contractsToAmount(contracts: Int) = Math.abs(contracts) / pluginSettings.lotScale()
 
-    fun PluginDependencies.amountToContracts(amount: Double) = (amount * pluginSettings.lotScale()).toInt()
+    fun <F> PluginDependencies<F>.amountToContracts(amount: Double) = (amount * pluginSettings.lotScale()).toInt()
 }

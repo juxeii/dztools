@@ -328,10 +328,15 @@ DllCallHandler::BrokerCommand(int command,
     memcpy(temp, data, size);
     env->ReleasePrimitiveArrayCritical(byteArray, temp, 0);
 
-    jint res = (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+    jdoubleArray returnValueArray = env->NewDoubleArray(1);
+
+    env->CallObjectMethod(JData::JDukaZorroBridgeObject,
         JData::doBrokerCommand.methodID,
         command,
-        byteArray);
+        byteArray,
+        returnValueArray);
+    jdouble *returnValue = env->GetDoubleArrayElements(returnValueArray, 0);
+    double res = (double)returnValue[0];
 
     switch (command)
     {
@@ -346,6 +351,10 @@ DllCallHandler::BrokerCommand(int command,
     }
 
     env->DeleteLocalRef(byteArray);
+    env->ReleaseDoubleArrayElements(returnValueArray,
+        returnValue,
+        0);
+    env->DeleteLocalRef((jobject)returnValueArray);
 
     return res;
 }

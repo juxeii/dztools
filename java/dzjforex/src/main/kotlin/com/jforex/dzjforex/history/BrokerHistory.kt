@@ -40,7 +40,7 @@ object BrokerHistoryApi
         out_TickInfoToFill: DoubleArray
     ): Kind<F, Int> =
         bindingCatch {
-            if (!isConnected()) BROKER_HISTORY_UNAVAILABLE
+            if (!isConnected().bind()) BROKER_HISTORY_UNAVAILABLE
             else
             {
                 val instrument = fromAssetName(assetName).bind()

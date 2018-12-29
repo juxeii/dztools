@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.apache.ivy.osgi.util.ZipUtil.zip
+
 group = "com.jforex.dzplugin"
 version = "0.9.6"
 
@@ -29,7 +31,9 @@ dependencies {
 
 val jarFileName = "${project.name}-$version"
 val zorroPath: String by project
-val pluginFolder = "${buildDir}/Plugin"
+val deployFolder = "${buildDir}/zorro"
+val historyFolder = "${deployFolder}/History"
+val pluginFolder = "${deployFolder}/Plugin"
 val zorroDukascopyFolder = "${zorroPath}/Plugin/dukascopy"
 
 tasks.withType<Jar> {
@@ -43,12 +47,14 @@ tasks.withType<Jar> {
 }
 
 tasks.register<Zip>("createDeployZip") {
-    dependsOn("createPluginFolder")
+    dependsOn("jar")
+    dependsOn("createZorroFolders")
     baseName = project.name
-    from(pluginFolder)
+
+    from(deployFolder)
 }
 
-tasks.create("createPluginFolder") {
+tasks.create("createZorroFolders") {
     outputs.upToDateWhen{ false }
     dependsOn("jar")
 
@@ -64,21 +70,35 @@ tasks.create("createPluginFolder") {
         into(dukascopyFolder)
     }
     copy {
-        from("${configFolder}/.")
+        from("${configFolder}/."){
+            exclude ("AssetsDukascopy.csv", "zorroDukascopy.bat")
+        }
         into(dukascopyFolder)
     }
     copy {
         from(configurations.runtime)
         into("${dukascopyFolder}/lib")
     }
+
+    File(historyFolder).deleteRecursively()
+    copy {
+        from("${configFolder}/AssetsDukascopy.csv")
+        into(historyFolder)
+    }
+
+    copy {
+        from("${configFolder}/zorroDukascopy.bat")
+        into(deployFolder)
+    }
 }
 
-tasks.register<Copy>("copyPluginFolderToZorro") {
+tasks.register<Copy>("copyFoldersToZorro") {
     outputs.upToDateWhen{ false }
-    File("${buildDir}/libs/${jarFileName}.jar").deleteRecursively()
 
-    dependsOn("createPluginFolder")
+    dependsOn("createZorroFolders")
     File(zorroDukascopyFolder).deleteRecursively()
-    from(pluginFolder)
-    into("${zorroPath}/Plugin")
+    copy {
+        from(deployFolder)
+        into("${zorroPath}")
+    }
 }

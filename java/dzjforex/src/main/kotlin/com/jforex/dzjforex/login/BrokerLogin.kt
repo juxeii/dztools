@@ -1,9 +1,6 @@
 package com.jforex.dzjforex.login
 
 import arrow.Kind
-import arrow.effects.IO
-import arrow.effects.instances.io.monadDefer.monadDefer
-import arrow.effects.typeclasses.MonadDefer
 import arrow.typeclasses.bindingCatch
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.PluginApi.isConnected
@@ -15,44 +12,25 @@ import com.jforex.dzjforex.zorro.realLoginType
 import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
-import com.jforex.kforexutils.misc.initKForexUtils
 import com.jforex.kforexutils.misc.kForexUtils
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
 import io.reactivex.rxkotlin.subscribeBy
 
-val loginApi = LoginDependencies(pluginApi, IO.monadDefer())
-
-interface LoginDependencies<F> : PluginDependencies, MonadDefer<F>
-{
-    companion object
-    {
-        operator fun <F> invoke(pluginDependencies: PluginDependencies, MD: MonadDefer<F>): LoginDependencies<F> =
-            object : LoginDependencies<F>, MonadDefer<F> by MD, PluginDependencies by pluginDependencies
-            {}
-    }
-}
-
 object LoginApi
 {
-    fun <F> LoginDependencies<F>.create(
+    fun <F> PluginDependencies<F>.brokerLogin(
         username: String,
         password: String,
-        accountType: String,
-        out_AccountNamesToFill: Array<String>
+        accountType: String
     ): Kind<F, Int> = bindingCatch {
-        if (!isConnected())
-        {
-            connect(username, password, accountType).bind()
-            initComponents().bind()
-            out_AccountNamesToFill[0] = contextApi.account.accountId
-        }
+        if (!isConnected().bind()) connect(username, password, accountType).bind()
         LOGIN_OK
-    }.handleError {
-        logger.debug("Login failed! $it Stack: ${printStackTrace(it)}")
+    }.handleError { loginError ->
+        logger.debug("Login failed! Error: $loginError Stack trace: ${getStackTrace(loginError)}")
         LOGIN_FAIL
     }
 
-    private fun <F> LoginDependencies<F>.connect(
+    private fun <F> PluginDependencies<F>.connect(
         username: String,
         password: String,
         accountType: String
@@ -63,21 +41,11 @@ object LoginApi
         return client.login(loginCredentials, loginType, this)
     }
 
-    fun <F> LoginDependencies<F>.initComponents(): Kind<F, Unit> = catch {
-        val strategy = KForexUtilsStrategy()
-        client.startStrategy(strategy)
-        kForexUtils
-            .tickQuotes
-            .subscribeBy(onNext = { saveQuote(it) })
-        initContextApi(kForexUtils.context)
-        initOrderRepositoryApi()
-    }
-
     private fun getLoginType(accountType: String) =
         if (accountType == realLoginType) LoginType.LIVE
         else LoginType.DEMO
 
-    fun <F> LoginDependencies<F>.logout(): Kind<F, Int> = catch {
+    fun <F> PluginDependencies<F>.logout(): Kind<F, Int> = invoke {
         client.disconnect()
         LOGOUT_OK
     }

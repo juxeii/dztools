@@ -23,7 +23,7 @@ typealias BrokerTimeSuccess = BrokerTimeResult.Success
 object BrokerTimeApi
 {
     fun <F> ContextDependencies<F>.brokerTime(): Kind<F, BrokerTimeResult> = binding {
-        if (!isConnected()) BrokerTimeFailure(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
+        if (!isConnected().bind()) BrokerTimeFailure(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
         else
         {
             val serverTime = getServerTime().bind()
@@ -32,7 +32,7 @@ object BrokerTimeApi
         }
     }
 
-    fun <F> ContextDependencies<F>.getServerTime(): Kind<F, Long> = just(context.time)
+    fun <F> ContextDependencies<F>.getServerTime(): Kind<F, Long> = invoke { context.time }
 
     fun <F> ContextDependencies<F>.getConnectionState(serverTime: Long): Kind<F, Int> =
         binding {
@@ -45,11 +45,11 @@ object BrokerTimeApi
         }
 
     fun <F> ContextDependencies<F>.isMarketClosed(serverTime: Long): Kind<F, Boolean> =
-        just(
+        invoke {
             context
                 .dataService
                 .isOfflineTime(serverTime)
-        )
+        }
 
     fun <F> ContextDependencies<F>.areTradeOrdersAllowed(): Kind<F, Boolean> =
         binding {

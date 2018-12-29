@@ -1,8 +1,10 @@
 package com.jforex.dzjforex.command
 
+import arrow.effects.fix
 import arrow.effects.instances.io.applicativeError.handleError
 import arrow.effects.instances.io.monad.map
 import com.dukascopy.api.Instrument
+import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.buy.BrokerBuyApi
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.contextApi
@@ -13,22 +15,31 @@ import com.jforex.dzjforex.sell.BrokerSellApi
 import com.jforex.dzjforex.time.toDATEFormat
 import com.jforex.dzjforex.zorro.*
 import com.jforex.kforexutils.instrument.noOfDecimalPlaces
+import com.jforex.kforexutils.price.Pips
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.Charset
+import com.jforex.dzjforex.asset.BrokerAssetApi.getMarginCost
+import com.jforex.dzjforex.asset.createBrokerAssetApi
 
 typealias CommandCall = (ByteArray) -> Double
 
 val commandbyId = mapOf<Int, CommandCall>(
     SET_ORDERTEXT to ::setOrderText,
     SET_LIMIT to ::setLimit,
+    SET_SLIPPAGE to ::setSlippage,
     GET_ACCOUNT to ::getAccount,
     GET_TIME to ::getTime,
     GET_DIGITS to ::getDigits,
     GET_TRADEALLOWED to ::getTradeAllowed,
     GET_MINLOT to ::getMinLot,
-    GET_MAXLOT to ::getMaxLot
+    GET_MAXLOT to ::getMaxLot,
+    GET_MAXTICKS to ::getMaxTicks,
+    GET_MARGININIT to ::getMarginInit
 )
+
+val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
+fun getBcSlippage()= bcSlippage.value!!.toDouble()
 
 fun brokerCommandStringReturn(string: String, bytes: ByteArray): Double
 {
@@ -58,6 +69,13 @@ fun brokerCommandGetSymbolData(
         .map(dataProvider)
         .handleError { BROKER_COMMAND_ERROR })
 
+fun setSlippage(bytes: ByteArray): Double
+{
+    val slippage = Pips(brokerCommandGetInt(bytes).toDouble())
+    bcSlippage.accept(slippage)
+    return BROKER_COMMAND_OK
+}
+
 fun setLimit(bytes: ByteArray): Double
 {
     val limitPrice = brokerCommandGetDouble(bytes)
@@ -70,6 +88,12 @@ fun getAccount(bytes: ByteArray): Double
 {
     logger.debug("doBrokerCommand GET_ACCOUNT called")
     return brokerCommandStringReturn(contextApi.account.accountId, bytes)
+}
+
+fun getMaxTicks(bytes: ByteArray): Double
+{
+    logger.debug("doBrokerCommand GET_MAXTICKS called")
+    return 1500.0
 }
 
 fun getTime(bytes: ByteArray): Double
@@ -109,6 +133,13 @@ fun getMaxLot(bytes: ByteArray): Double
     val symbol = String(bytes)
     logger.debug("doBrokerCommand GET_MAXLOT called for symbol $symbol")
     return brokerCommandGetSymbolData(bytes) { it.maxTradeAmount }
+}
+
+fun getMarginInit(bytes: ByteArray): Double
+{
+    val symbol = String(bytes)
+    logger.debug("doBrokerCommand GET_MARGININIT called for symbol $symbol")
+    return brokerCommandGetSymbolData(bytes) { runDirect(createBrokerAssetApi().getMarginCost(it)) }
 }
 
 fun setOrderText(bytes: ByteArray): Double

@@ -201,12 +201,23 @@ BrokerCommand(int nCommand,
     double dummy = 42.0;
     switch (nCommand)
     {
+    case GET_MAXREQUESTS:
+        return 0;
+    case GET_PRICETYPE:
+        return 1;
+    case GET_LOCK:
+        return -1;
     case GET_TIME:
-        return dllCallHandler.BrokerCommand(nCommand, &dummy, 8);
+    case GET_MAXTICKS:
+    {
+       return dllCallHandler.BrokerCommand(nCommand, &dummy, 8);
+    }
+        
     case GET_DIGITS:
     case GET_TRADEALLOWED:
     case GET_MINLOT:
     case GET_MAXLOT:
+    case GET_MARGININIT:
     case GET_ACCOUNT:
     case SET_ORDERTEXT:
     {
@@ -222,6 +233,11 @@ BrokerCommand(int nCommand,
     {
         bcPatch = static_cast<int>(dwParameter);
         return 1;
+    }
+    case SET_SLIPPAGE:
+    {
+        int slippage = static_cast<int>(dwParameter);
+        return dllCallHandler.BrokerCommand(nCommand, &slippage, 8);
     }
     default:
         {

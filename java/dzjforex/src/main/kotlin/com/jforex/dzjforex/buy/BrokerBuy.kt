@@ -9,6 +9,8 @@ import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
+import com.jforex.dzjforex.command.bcSlippage
+import com.jforex.dzjforex.command.getBcSlippage
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.QuoteDependencies
@@ -42,6 +44,7 @@ object BrokerBuyApi
         val amount: Double,
         val slPrice: Double,
         val price: Double,
+        val slippage: Double,
         val comment: String
     )
 
@@ -80,6 +83,7 @@ object BrokerBuyApi
         val amount = contractsToAmount(contracts)
         val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
+        val slippage = getBcSlippage()
         val comment = bcOrderText.value!!.fold({ "" }) { it }
 
         BuyParameter(
@@ -89,6 +93,7 @@ object BrokerBuyApi
             amount = amount,
             slPrice = slPrice,
             price = roundedLimitPrice,
+            slippage = slippage,
             comment = comment
         )
     }
@@ -103,6 +108,7 @@ object BrokerBuyApi
                     amount = buyParameter.amount,
                     stopLossPrice = buyParameter.slPrice,
                     price = buyParameter.price,
+                    slippage = buyParameter.slippage,
                     comment = buyParameter.comment
                 )
                 .filter {

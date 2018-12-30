@@ -254,8 +254,7 @@ DllCallHandler::BrokerBuy2(char* Asset,
 
     if (pPrice)
         *pPrice = tradeParams[0];
-    if (pFill)
-        *pFill = tradeParams[1];
+    if (pFill) //not supported
 
     env->DeleteLocalRef(jAsset);
     env->ReleaseDoubleArrayElements(jTradeParamsArray, tradeParams, 0);

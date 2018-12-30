@@ -17,8 +17,8 @@ object BrokerInitApi
             .flatMap { subscribeToTicks() }
             .flatMap { initApis() }
             .map { BROKER_INIT_OK }
-            .handleError { initError ->
-                logger.error("Initialization failed! Error: $initError Stack trace: ${getStackTrace(initError)}")
+            .handleError { error ->
+                logger.error("BrokerInit failed! Error: $error Stack trace: ${getStackTrace(error)}")
                 BROKER_INIT_FAIL
             }
 

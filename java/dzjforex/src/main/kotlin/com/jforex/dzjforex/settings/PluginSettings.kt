@@ -39,5 +39,9 @@ interface PluginSettings : Config
     @Config.Key("plugin.waitfortradeableinstrument")
     @Config.DefaultValue("true")
     fun waitForTradeableInstrument(): Boolean
+
+    @Config.Key("plugin.maxticks")
+    @Config.DefaultValue("1500")
+    fun maxTicks(): Int
 }
 

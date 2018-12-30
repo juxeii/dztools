@@ -27,8 +27,7 @@ object BrokerTimeApi
         else
         {
             val serverTime = getServerTime().bind()
-            val serverTimeInDateFormat = toDATEFormat(serverTime)
-            BrokerTimeSuccess(getConnectionState(serverTime).bind(), serverTimeInDateFormat)
+            BrokerTimeSuccess(getConnectionState(serverTime).bind(), serverTime.toUTCTime())
         }
     }
 

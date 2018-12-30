@@ -7,7 +7,7 @@ import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.BrokerHistoryApi.fillData
 import com.jforex.dzjforex.history.BrokerHistoryApi.sizeOfT6Struct
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.time.toDATEFormat
+import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.kforexutils.price.Price
 
 object TickFetchApi
@@ -49,7 +49,7 @@ object TickFetchApi
     {
         val startIndex = tickIndex * sizeOfT6Struct
         val ask = tick.ask
-        val utcTime = toDATEFormat(tick.time)
+        val utcTime = tick.time.toUTCTime()
         val spread = Price(instrument, tick.bid - tick.ask).toDouble()
         val volume = tick.askVolume
 

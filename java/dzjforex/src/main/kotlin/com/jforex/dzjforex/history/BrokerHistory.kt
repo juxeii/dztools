@@ -13,9 +13,8 @@ import com.jforex.dzjforex.history.TickFetchApi.fetchTicks
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.isConnected
-import com.jforex.dzjforex.time.formatUnixTime
-import com.jforex.dzjforex.time.toDATEFormat
-import com.jforex.dzjforex.time.toLongFormat
+import com.jforex.dzjforex.time.asUnixTimeFormat
+import com.jforex.dzjforex.time.toUnixTime
 import com.jforex.dzjforex.zorro.BROKER_HISTORY_UNAVAILABLE
 import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
@@ -44,13 +43,13 @@ object BrokerHistoryApi
             else
             {
                 val instrument = fromAssetName(assetName).bind()
-                val startTime = toLongFormat(utcStartDate)
-                val endTime = toLongFormat(utcEndDate)
+                val startTime = utcStartDate.toUnixTime()
+                val endTime = utcEndDate.toUnixTime()
 
                 logger.debug("Broker history called: " +
                         "instrument $instrument ," +
-                        "startTime ${formatUnixTime(startTime)} ,"+
-                        "endTime ${formatUnixTime(endTime)} ,"
+                        "startTime ${startTime.asUnixTimeFormat()} ,"+
+                        "endTime ${endTime.asUnixTimeFormat()} ,"
                 )
 
                 if (periodInMinutes == 0)

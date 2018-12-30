@@ -4,17 +4,17 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-fun toDATEFormat(timeInMs: Long) = (timeInMs / 1000) / (24.0 * 60.0 * 60.0) + 25569.0
+fun Long.toUTCTime() = (this / 1000) / (24.0 * 60.0 * 60.0) + 25569.0
 
-fun toLongFormat(date: Double) = ((date - 25569.0) * 24.0 * 60.0 * 60.0 * 1000).toLong()
-
-fun formatUnixTime(unixTime: Long): String
+fun Long.asUnixTimeFormat(): String
 {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     return Instant
-        .ofEpochMilli(unixTime)
+        .ofEpochMilli(this)
         .atZone(ZoneId.systemDefault())
-        .format(formatter);
+        .format(formatter)
 }
 
-fun formatUTCTime(date: Double) = formatUnixTime(toLongFormat(date))
+fun Double.toUnixTime() = ((this - 25569.0) * 24.0 * 60.0 * 60.0 * 1000).toLong()
+
+fun Double.asUTCTimeFormat() = this.toUnixTime().asUnixTimeFormat()

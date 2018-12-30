@@ -1,5 +1,7 @@
 package com.jforex.dzjforex.zorro
 
+import arrow.effects.IO
+import arrow.effects.instances.io.monad.monad
 import com.jforex.dzjforex.account.AccountApi.accountName
 import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
 import com.jforex.dzjforex.account.BrokerAccountSuccess
@@ -9,7 +11,17 @@ import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
 import com.jforex.dzjforex.buy.BrokerBuySuccess
 import com.jforex.dzjforex.buy.createBrokerBuyApi
-import com.jforex.dzjforex.command.commandbyId
+import com.jforex.dzjforex.command.BrokerCommandApi.setOrderText
+import com.jforex.dzjforex.command.BrokerCommandApi.setSlippage
+import com.jforex.dzjforex.command.BrokerCommandApi.setLimit
+import com.jforex.dzjforex.command.BrokerCommandApi.getAccount
+import com.jforex.dzjforex.command.BrokerCommandApi.getDigits
+import com.jforex.dzjforex.command.BrokerCommandApi.getMarginInit
+import com.jforex.dzjforex.command.BrokerCommandApi.getMaxLot
+import com.jforex.dzjforex.command.BrokerCommandApi.getMinLot
+import com.jforex.dzjforex.command.BrokerCommandApi.getTime
+import com.jforex.dzjforex.command.BrokerCommandApi.getTradeAllowed
+import com.jforex.dzjforex.command.BrokerCommandApi.getMaxTicks
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.init.BrokerInitApi.brokerInit
 import com.jforex.dzjforex.login.LoginApi.brokerLogin
@@ -107,7 +119,7 @@ class ZorroBridge
         return brokerAccountResult.returnCode
     }
 
-    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray):Int
+    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray): Int
     {
         val brokerTradeResult = runDirect(createBrokerTradeApi().brokerTrade(orderId))
         if (brokerTradeResult is BrokerTradeSuccess)
@@ -130,13 +142,16 @@ class ZorroBridge
         slDistance: Double,
         limit: Double,
         out_BuyInfoToFill: DoubleArray
-    ):Int
+    ): Int
     {
-        val brokerBuyResult = runWithProgress(createBrokerBuyApi().brokerBuy(
-            assetName,
-            contracts,
-            slDistance,
-            limit))
+        val brokerBuyResult = runWithProgress(
+            createBrokerBuyApi().brokerBuy(
+                assetName,
+                contracts,
+                slDistance,
+                limit
+            )
+        )
         if (brokerBuyResult is BrokerBuySuccess)
         {
             val iPrice = 0
@@ -169,9 +184,23 @@ class ZorroBridge
 
     fun doBrokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
     {
-        val result = if (!pluginApi.client.isConnected) BROKER_COMMAND_UNAVAILABLE
-        else commandbyId.getOrDefault(commandId) { _ -> BROKER_COMMAND_UNAVAILABLE }(bytes)
-
-        out_CommandResultToFill[0] = result
+        val commandCall = with(contextApi){
+            when (commandId)
+            {
+                SET_ORDERTEXT -> setOrderText(bytes)
+                SET_SLIPPAGE -> setSlippage(bytes)
+                SET_LIMIT -> setLimit(bytes)
+                GET_ACCOUNT -> getAccount(bytes)
+                GET_DIGITS -> getDigits(bytes)
+                GET_MAXLOT -> getMaxLot(bytes)
+                GET_MINLOT -> getMinLot(bytes)
+                GET_MARGININIT -> getMarginInit(bytes)
+                GET_TIME -> createQuoteApi(context).getTime()
+                GET_TRADEALLOWED -> getTradeAllowed(bytes)
+                GET_MAXTICKS -> getMaxTicks()
+                else -> IO.monad().just(BROKER_COMMAND_UNAVAILABLE)
+            }
+        }
+        out_CommandResultToFill[0] = runDirect(commandCall)
     }
 }

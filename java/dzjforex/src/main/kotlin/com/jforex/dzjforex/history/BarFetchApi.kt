@@ -9,9 +9,8 @@ import com.jforex.dzjforex.history.BrokerHistoryApi.fillData
 import com.jforex.dzjforex.history.BrokerHistoryApi.sizeOfT6Struct
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.logger
-import com.jforex.dzjforex.time.formatUTCTime
-import com.jforex.dzjforex.time.formatUnixTime
-import com.jforex.dzjforex.time.toDATEFormat
+import com.jforex.dzjforex.time.asUnixTimeFormat
+import com.jforex.dzjforex.time.toUTCTime
 
 object BarFetchApi
 {
@@ -33,8 +32,8 @@ object BarFetchApi
                 "Broker history for bars called: " +
                         "period $period ," +
                         "noOfTicks $noOfTicks ," +
-                        "startBarTime ${formatUnixTime(startBarTime)} ," +
-                        "endBarTime ${formatUnixTime(endBarTime)} ," +
+                        "startBarTime ${startBarTime.asUnixTimeFormat()} ," +
+                        "endBarTime ${endBarTime.asUnixTimeFormat()} ," +
                         //"fetchedBars $fetchedBars"+
                         "fetched ${fetchedBars.size} bars"
             )
@@ -58,9 +57,9 @@ object BarFetchApi
         val barStartForEndTime = DataCacheUtils.getCandleStartFast(period, endTime)
         logger.debug(
             "getLatesBarTime called: " +
-                    " endTime ${formatUnixTime(endTime)} ," +
-                    " latestBarTime ${formatUnixTime(latestBarTime)} ," +
-                    " barStartForEndTime ${formatUnixTime(barStartForEndTime)}"
+                    " endTime ${endTime.asUnixTimeFormat()} ," +
+                    " latestBarTime ${latestBarTime.asUnixTimeFormat()} ," +
+                    " barStartForEndTime ${barStartForEndTime.asUnixTimeFormat()}"
         )
         minOf(latestBarTime, barStartForEndTime)
     }
@@ -97,7 +96,7 @@ object BarFetchApi
         val close = bar.close
         val high = bar.high
         val low = bar.low
-        val utcTime:Double = toDATEFormat(bar.time)
+        val utcTime:Double = bar.time.toUTCTime()
         val spread = 0.0
         val volume = bar.volume
 

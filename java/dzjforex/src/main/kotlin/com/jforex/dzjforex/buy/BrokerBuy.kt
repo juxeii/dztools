@@ -1,24 +1,17 @@
 package com.jforex.dzjforex.buy
 
 import arrow.Kind
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.some
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
-import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.command.bcSlippage
 import com.jforex.dzjforex.command.getBcSlippage
+import com.jforex.dzjforex.command.maybeBcOrderText
+import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
-import com.jforex.dzjforex.misc.QuoteDependencies
 import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
-import com.jforex.dzjforex.misc.contextApi
-import com.jforex.dzjforex.misc.createQuoteProviderApi
-import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
@@ -31,12 +24,18 @@ import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+sealed class BrokerBuyResult(val returnCode: Int)
+{
+    data class Failure(val code: Int) : BrokerBuyResult(code)
+    data class Success(val code: Int, val price: Double) : BrokerBuyResult(code)
+}
+typealias BrokerBuyFailure = BrokerBuyResult.Failure
+typealias BrokerBuySuccess = BrokerBuyResult.Success
+
 fun createBrokerBuyApi() = QuoteDependencies(contextApi, createQuoteProviderApi())
 
 object BrokerBuyApi
 {
-    private val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
-
     private data class BuyParameter(
         val label: String,
         val instrument: Instrument,
@@ -48,15 +47,12 @@ object BrokerBuyApi
         val comment: String
     )
 
-    fun setOrderText(orderText: String) = bcOrderText.accept(orderText.some())
-
     fun <F> QuoteDependencies<F>.brokerBuy(
         assetName: String,
         contracts: Int,
         slDistance: Double,
-        limitPrice: Double,
-        out_TradeInfoToFill: DoubleArray
-    ): Kind<F, Int> =
+        limitPrice: Double
+    ): Kind<F, BrokerBuyResult> =
         createBuyParameter(
             assetName = assetName,
             contracts = contracts,
@@ -64,10 +60,11 @@ object BrokerBuyApi
             limitPrice = limitPrice
         )
             .flatMap { submitOrder(it) }
-            .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0, out_TradeInfoToFill) }
+            .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0) }
             .handleError { error ->
-                logger.debug("BrokerBuy failed ${error.message}")
-                if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
+                logger.error("BrokerBuy failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                val errorCode = if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
+                BrokerBuyFailure(errorCode)
             }
 
     private fun <F> QuoteDependencies<F>.createBuyParameter(
@@ -84,7 +81,7 @@ object BrokerBuyApi
         val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
         val slippage = getBcSlippage()
-        val comment = bcOrderText.value!!.fold({ "" }) { it }
+        val comment = maybeBcOrderText().fold({ "" }) { it }
 
         BuyParameter(
             label = label,
@@ -157,14 +154,13 @@ object BrokerBuyApi
     fun <F> QuoteDependencies<F>.processOrderAndGetResult(
         order: IOrder,
         slDistance: Double,
-        isLimitOrder: Boolean,
-        out_TradeInfoToFill: DoubleArray
-    ): Kind<F, Int> =
+        isLimitOrder: Boolean
+    ): Kind<F, BrokerBuyResult> =
         catch {
-            if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
+            val returnCode = if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
             {
-                out_TradeInfoToFill[0] = order.openPrice
                 if (slDistance == -1.0) BROKER_BUY_OPPOSITE_CLOSE else order.zorroId()
             } else BROKER_BUY_FAIL
+            BrokerBuySuccess(returnCode, order.openPrice)
         }
 }

@@ -18,7 +18,7 @@ object BrokerInitApi
             .flatMap { initApis() }
             .map { BROKER_INIT_OK }
             .handleError { initError ->
-                logger.debug("Initialization failed! Error: $initError Stack trace: ${getStackTrace(initError)}")
+                logger.error("Initialization failed! Error: $initError Stack trace: ${getStackTrace(initError)}")
                 BROKER_INIT_FAIL
             }
 

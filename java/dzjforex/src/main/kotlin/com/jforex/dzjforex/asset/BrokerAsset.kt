@@ -24,7 +24,6 @@ data class BrokerAssetData(
     val lotAmount: Double,
     val marginCost: Double
 )
-
 sealed class BrokerAssetResult(val returnCode: Int)
 {
     data class Failure(val code: Int) : BrokerAssetResult(code)
@@ -42,11 +41,11 @@ object BrokerAssetApi
             .flatMap { instrument -> createAssetData(instrument) }
             .map { assetData -> BrokerAssetSuccess(ASSET_AVAILABLE, assetData) }
             .handleError { error ->
-                logger.debug("BrokerAsset failed! Error: ${error} Stack trace: ${getStackTrace(error)}")
+                logger.error("BrokerAsset failed! Error: $error Stack trace: ${getStackTrace(error)}")
                 BrokerAssetFailure(ASSET_UNAVAILABLE)
             }
 
-    private fun <F> QuoteDependencies<F>.createAssetData(instrument: Instrument): Kind<F, BrokerAssetData> =
+    fun <F> QuoteDependencies<F>.createAssetData(instrument: Instrument): Kind<F, BrokerAssetData> =
         bindingCatch {
             val tick = getTick(instrument)
             val assetData = BrokerAssetData(

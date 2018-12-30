@@ -27,16 +27,19 @@ const val BROKER_BUY_OPPOSITE_CLOSE = 1
 const val BROKER_SELL_FAIL = 0
 const val BROKER_ORDER_NOT_YET_FILLED = 0
 
+const val BROKER_TRADE_FAIL = 0
+
 const val BROKER_HISTORY_UNAVAILABLE = 0
 
-const val ADJUST_SL_FAIL = 0
-const val ADJUST_SL_OK = 1
+const val BROKER_ADJUST_SL_FAIL = 0
+const val BROKER_ADJUST_SL_OK = 1
 
 const val UNKNOWN_ORDER_ID = 0
 
 const val heartBeatIndication = 1
 const val demoLoginType = "Demo"
 const val realLoginType = "Real"
+const val lotScale = 1000000.0
 
 const val BROKER_COMMAND_OK = 1.0
 const val BROKER_COMMAND_UNAVAILABLE = 0.0

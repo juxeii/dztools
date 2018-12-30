@@ -26,7 +26,7 @@ object LoginApi
         if (!isConnected().bind()) connect(username, password, accountType).bind()
         LOGIN_OK
     }.handleError { loginError ->
-        logger.debug("Login failed! Error: $loginError Stack trace: ${getStackTrace(loginError)}")
+        logger.error("Login failed! Error: $loginError Stack trace: ${getStackTrace(loginError)}")
         LOGIN_FAIL
     }
 

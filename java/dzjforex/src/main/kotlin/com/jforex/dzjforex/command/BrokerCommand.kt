@@ -1,17 +1,19 @@
 package com.jforex.dzjforex.command
 
-import arrow.effects.fix
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.some
 import arrow.effects.instances.io.applicativeError.handleError
 import arrow.effects.instances.io.monad.map
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
-import com.jforex.dzjforex.buy.BrokerBuyApi
+import com.jforex.dzjforex.asset.BrokerAssetApi.getMarginCost
+import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.createQuoteProviderApi
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.runDirect
-import com.jforex.dzjforex.sell.BrokerSellApi
 import com.jforex.dzjforex.time.toDATEFormat
 import com.jforex.dzjforex.zorro.*
 import com.jforex.kforexutils.instrument.noOfDecimalPlaces
@@ -19,10 +21,17 @@ import com.jforex.kforexutils.price.Pips
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.Charset
-import com.jforex.dzjforex.asset.BrokerAssetApi.getMarginCost
-import com.jforex.dzjforex.asset.createBrokerAssetApi
 
 typealias CommandCall = (ByteArray) -> Double
+
+val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
+fun getBcSlippage() = bcSlippage.value!!.toDouble()
+
+val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
+fun maybeBcLimitPrice() = bcLimitPrice.value!!
+
+val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
+fun maybeBcOrderText() = bcOrderText.value!!
 
 val commandbyId = mapOf<Int, CommandCall>(
     SET_ORDERTEXT to ::setOrderText,
@@ -37,9 +46,6 @@ val commandbyId = mapOf<Int, CommandCall>(
     GET_MAXTICKS to ::getMaxTicks,
     GET_MARGININIT to ::getMarginInit
 )
-
-val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
-fun getBcSlippage()= bcSlippage.value!!.toDouble()
 
 fun brokerCommandStringReturn(string: String, bytes: ByteArray): Double
 {
@@ -79,7 +85,7 @@ fun setSlippage(bytes: ByteArray): Double
 fun setLimit(bytes: ByteArray): Double
 {
     val limitPrice = brokerCommandGetDouble(bytes)
-    BrokerSellApi.setLmitPrice(limitPrice)
+    bcLimitPrice.accept(limitPrice.some())
     logger.debug("doBrokerCommand SET_LIMIT called with limitPrice $limitPrice")
     return BROKER_COMMAND_OK
 }
@@ -145,7 +151,7 @@ fun getMarginInit(bytes: ByteArray): Double
 fun setOrderText(bytes: ByteArray): Double
 {
     val orderText = String(bytes)
-    BrokerBuyApi.setOrderText(orderText)
+    bcOrderText.accept(orderText.some())
     logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
     return BROKER_COMMAND_OK
 }

@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.trade
 
 import arrow.Kind
+import arrow.core.Tuple2
 import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
@@ -10,68 +11,71 @@ import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
-import com.jforex.dzjforex.zorro.UNKNOWN_ORDER_ID
-import com.jforex.kforexutils.misc.toAmount
+import com.jforex.dzjforex.zorro.BROKER_TRADE_FAIL
 import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.order.extension.isFilled
 import com.jforex.kforexutils.order.extension.isOpened
 
-fun createBrokerTradeApi(): BrokerTradeDependencies<ForIO> =
-    BrokerTradeDependencies(contextApi, createQuoteProviderApi())
+data class BrokerTradeData(
+    val open: Double,
+    val close: Double,
+    val profit: Double
+)
 
-interface BrokerTradeDependencies<F> : ContextDependencies<F>,
-    QuoteProviderDependencies
+sealed class BrokerTradeResult(val returnCode: Int)
 {
-    companion object
-    {
-        operator fun <F> invoke(
-            contextDependencies: ContextDependencies<F>,
-            quoteProviderDependencies: QuoteProviderDependencies
-        ): BrokerTradeDependencies<F> =
-            object : BrokerTradeDependencies<F>,
-                ContextDependencies<F> by contextDependencies,
-                QuoteProviderDependencies by quoteProviderDependencies
-            {}
-    }
+    data class Failure(val code: Int) : BrokerTradeResult(code)
+    data class Success(val code: Int, val data: BrokerTradeData) : BrokerTradeResult(code)
 }
+typealias BrokerTradeFailure = BrokerTradeResult.Failure
+typealias BrokerTradeSuccess = BrokerTradeResult.Success
+
+fun createBrokerTradeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context)
 
 object BrokerTradeApi
 {
-    const val rollOverValue = 0.0
+    fun <F> QuoteDependencies<F>.brokerTrade(orderId: Int): Kind<F, BrokerTradeResult> =
+        getOrderForId(orderId)
+            .flatMap { order ->
+                binding {
+                    val tradeData = createTradeData(order).bind()
+                    val returnCode = createReturnValue(order).bind()
+                    BrokerTradeSuccess(returnCode, tradeData)
+                }
+            }
+            .handleError { error ->
+                logger.error("BrokerTrade failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                BrokerTradeFailure(BROKER_TRADE_FAIL)
+            }
 
-    fun <F> BrokerTradeDependencies<F>.brokerTrade(
-        orderId: Int,
-        out_TradeInfoToFill: DoubleArray
-    ): Kind<F, Int> = binding {
-        val order = getOrderForId(orderId).bind()
-        out_TradeInfoToFill[0] = order.openPrice
-        out_TradeInfoToFill[1] = quoteForOrder(order)
-        out_TradeInfoToFill[2] = rollOverValue
-        out_TradeInfoToFill[3] = order.profitLossInAccountCurrency.toAmount()
-        logger.debug(
-            "BrokerTrade: open price ${order.openPrice} " +
-                    "pClose ${quoteForOrder(order)} " +
-                    "rollOver $rollOverValue pProfit" +
-                    " ${order.profitLossInAccountCurrency.toAmount()}"
-        )
-        createReturnValue(order)
-    }.handleError { UNKNOWN_ORDER_ID }
-
-    fun <F> BrokerTradeDependencies<F>.quoteForOrder(order: IOrder): Double
-    {
-        val instrument = order.instrument
-        return if (order.isLong) getBid(instrument) else getAsk(instrument)
-    }
-
-    fun <F> BrokerTradeDependencies<F>.createReturnValue(order: IOrder): Int
-    {
-        val contracts = amountToContracts(order.amount)
-        return when
-        {
-            order.isFilled -> contracts
-            order.isOpened -> BROKER_ORDER_NOT_YET_FILLED
-            order.isClosed -> -contracts
-            else -> UNKNOWN_ORDER_ID
+    fun <F> QuoteDependencies<F>.createTradeData(order: IOrder): Kind<F, BrokerTradeData> =
+        binding {
+            val tradeData = BrokerTradeData(
+                open = order.openPrice,
+                close = quoteForOrder(order).bind(),
+                profit = order.profitLossInAccountCurrency
+            )
+            logger.debug("${order.instrument} TradeData: $tradeData OrderData $order")
+            tradeData
         }
-    }
+
+    fun <F> QuoteDependencies<F>.quoteForOrder(order: IOrder): Kind<F, Double> =
+        invoke {
+            val instrument = order.instrument
+            if (order.isLong) getBid(instrument) else getAsk(instrument)
+        }
+
+    fun <F> QuoteDependencies<F>.createReturnValue(order: IOrder): Kind<F, Int> =
+        invoke {
+            with(order) {
+                val contracts = amountToContracts(amount)
+                when
+                {
+                    isFilled -> contracts
+                    isOpened -> BROKER_ORDER_NOT_YET_FILLED
+                    isClosed -> -contracts
+                    else -> BROKER_TRADE_FAIL
+                }
+            }
+        }
 }

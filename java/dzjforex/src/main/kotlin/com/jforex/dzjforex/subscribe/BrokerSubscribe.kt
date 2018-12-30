@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.subscription
+package com.jforex.dzjforex.subscribe
 
 import arrow.Kind
 import arrow.effects.ForIO
@@ -13,7 +13,6 @@ import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
-import com.jforex.kforexutils.price.TickQuote
 
 fun createBrokerSubscribeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context)
 
@@ -29,7 +28,7 @@ object BrokerSubscribeApi
             .flatMap { waitForLatestQuotes() }
             .map { SUBSCRIBE_OK }
             .handleError { error ->
-                logger.debug("BrokerSubscribe failed! Error: ${error} Stack trace: ${getStackTrace(error)}")
+                logger.debug("BrokerSubscribe failed! Error: $error Stack trace: ${getStackTrace(error)}")
                 SUBSCRIBE_FAIL
             }
 

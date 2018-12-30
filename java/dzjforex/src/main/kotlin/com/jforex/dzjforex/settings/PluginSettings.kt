@@ -24,10 +24,6 @@ interface PluginSettings : Config
     @Config.DefaultValue("zorro")
     fun labelPrefix(): String
 
-    @Config.Key("order.lotscale")
-    @Config.DefaultValue("1000000")
-    fun lotScale(): Double
-
     @Config.Key("order.trade.maxwait")
     @Config.DefaultValue("30")
     fun maxSecondsForOrderFill(): Long

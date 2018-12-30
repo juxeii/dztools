@@ -7,6 +7,7 @@ import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.asset.BrokerAssetSuccess
 import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
+import com.jforex.dzjforex.buy.BrokerBuySuccess
 import com.jforex.dzjforex.buy.createBrokerBuyApi
 import com.jforex.dzjforex.command.commandbyId
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
@@ -16,11 +17,12 @@ import com.jforex.dzjforex.login.LoginApi.logout
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.sell.BrokerSellApi.brokerSell
 import com.jforex.dzjforex.stop.BrokerStopApi.brokerStop
-import com.jforex.dzjforex.subscription.BrokerSubscribeApi.brokerSubscribe
-import com.jforex.dzjforex.subscription.createBrokerSubscribeApi
+import com.jforex.dzjforex.subscribe.BrokerSubscribeApi.brokerSubscribe
+import com.jforex.dzjforex.subscribe.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
 import com.jforex.dzjforex.time.BrokerTimeSuccess
 import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
+import com.jforex.dzjforex.trade.BrokerTradeSuccess
 import com.jforex.dzjforex.trade.createBrokerTradeApi
 
 class ZorroBridge
@@ -32,22 +34,18 @@ class ZorroBridge
         out_AccountNamesToFill: Array<String>
     ): Int
     {
-        logger.debug("Called login")
         val brokerLoginResult = runWithProgress(pluginApi.brokerLogin(username, password, accountType))
         return if (brokerLoginResult == LOGIN_FAIL) BROKER_INIT_FAIL else doInit(out_AccountNamesToFill)
     }
 
     private fun doInit(out_AccountNamesToFill: Array<String>): Int
     {
-        logger.debug("Called init")
         val brokerInitResult = runDirect(pluginApi.brokerInit())
-        logger.debug("Called init 2")
         if (brokerInitResult == BROKER_INIT_OK)
         {
-            logger.debug("Called init OK")
             val iAccountNames = 0
             out_AccountNamesToFill[iAccountNames] = runDirect(contextApi.accountName())
-        } else logger.debug("Called init fail!")
+        }
         return brokerInitResult
     }
 
@@ -109,24 +107,43 @@ class ZorroBridge
         return brokerAccountResult.returnCode
     }
 
-    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
-        runDirect(createBrokerTradeApi().brokerTrade(orderId, out_TradeInfoToFill))
+    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray):Int
+    {
+        val brokerTradeResult = runDirect(createBrokerTradeApi().brokerTrade(orderId))
+        if (brokerTradeResult is BrokerTradeSuccess)
+        {
+            val iOpen = 0
+            val iClose = 1
+            val iProfit = 3
+            with(brokerTradeResult.data) {
+                out_TradeInfoToFill[iOpen] = open
+                out_TradeInfoToFill[iClose] = close
+                out_TradeInfoToFill[iProfit] = profit
+            }
+        }
+        return brokerTradeResult.returnCode
+    }
 
     fun doBrokerBuy2(
         assetName: String,
         contracts: Int,
         slDistance: Double,
         limit: Double,
-        out_TradeInfoToFill: DoubleArray
-    ) = runWithProgress(
-        createBrokerBuyApi().brokerBuy(
+        out_BuyInfoToFill: DoubleArray
+    ):Int
+    {
+        val brokerBuyResult = runWithProgress(createBrokerBuyApi().brokerBuy(
             assetName,
             contracts,
             slDistance,
-            limit,
-            out_TradeInfoToFill
-        )
-    )
+            limit))
+        if (brokerBuyResult is BrokerBuySuccess)
+        {
+            val iPrice = 0
+            out_BuyInfoToFill[iPrice] = brokerBuyResult.price
+        }
+        return brokerBuyResult.returnCode
+    }
 
     fun doBrokerSell(orderId: Int, contracts: Int) = runWithProgress(contextApi.brokerSell(orderId, contracts))
 
@@ -150,12 +167,11 @@ class ZorroBridge
         )
     )
 
-    fun doBrokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray): Unit
+    fun doBrokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
     {
         val result = if (!pluginApi.client.isConnected) BROKER_COMMAND_UNAVAILABLE
         else commandbyId.getOrDefault(commandId) { _ -> BROKER_COMMAND_UNAVAILABLE }(bytes)
 
         out_CommandResultToFill[0] = result
     }
-
 }

@@ -13,6 +13,7 @@ import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.zorro.ZorroNatives
 import com.jforex.dzjforex.zorro.heartBeatIndication
+import com.jforex.dzjforex.zorro.lotScale
 import com.jforex.kforexutils.client.init
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -100,7 +101,7 @@ object PluginApi
         return resultRelay.value!!
     }
 
-    fun <F> PluginDependencies<F>.contractsToAmount(contracts: Int) = Math.abs(contracts) / pluginSettings.lotScale()
+    fun contractsToAmount(contracts: Int) = Math.abs(contracts) / lotScale
 
-    fun <F> PluginDependencies<F>.amountToContracts(amount: Double) = (amount * pluginSettings.lotScale()).toInt()
+    fun amountToContracts(amount: Double) = (amount * lotScale).toInt()
 }

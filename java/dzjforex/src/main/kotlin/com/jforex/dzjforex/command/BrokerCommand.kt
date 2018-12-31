@@ -31,8 +31,8 @@ fun getBcSlippage() = bcSlippage.value!!.toDouble()
 val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
 fun maybeBcLimitPrice() = bcLimitPrice.value!!
 
-val bcOrderText: BehaviorRelay<Option<String>> = BehaviorRelay.createDefault(None)
-fun maybeBcOrderText() = bcOrderText.value!!
+val bcOrderText: BehaviorRelay<String> = BehaviorRelay.createDefault("")
+fun getBcOrderText() = bcOrderText.value!!
 
 object BrokerCommandApi
 {
@@ -81,7 +81,7 @@ object BrokerCommandApi
 
     fun <F> ContextDependencies<F>.setOrderText(bytes: ByteArray): Kind<F, Double> = invoke {
         val orderText = String(bytes)
-        bcOrderText.accept(orderText.some())
+        bcOrderText.accept(orderText)
         logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
         BROKER_COMMAND_OK
     }

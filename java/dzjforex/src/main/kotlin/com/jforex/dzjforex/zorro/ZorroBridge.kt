@@ -11,17 +11,19 @@ import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
 import com.jforex.dzjforex.buy.BrokerBuySuccess
 import com.jforex.dzjforex.buy.createBrokerBuyApi
-import com.jforex.dzjforex.command.BrokerCommandApi.setOrderText
-import com.jforex.dzjforex.command.BrokerCommandApi.setSlippage
-import com.jforex.dzjforex.command.BrokerCommandApi.setLimit
 import com.jforex.dzjforex.command.BrokerCommandApi.getAccount
 import com.jforex.dzjforex.command.BrokerCommandApi.getDigits
 import com.jforex.dzjforex.command.BrokerCommandApi.getMarginInit
 import com.jforex.dzjforex.command.BrokerCommandApi.getMaxLot
+import com.jforex.dzjforex.command.BrokerCommandApi.getMaxTicks
 import com.jforex.dzjforex.command.BrokerCommandApi.getMinLot
 import com.jforex.dzjforex.command.BrokerCommandApi.getTime
 import com.jforex.dzjforex.command.BrokerCommandApi.getTradeAllowed
-import com.jforex.dzjforex.command.BrokerCommandApi.getMaxTicks
+import com.jforex.dzjforex.command.BrokerCommandApi.setLimit
+import com.jforex.dzjforex.command.BrokerCommandApi.setOrderText
+import com.jforex.dzjforex.command.BrokerCommandApi.setSlippage
+import com.jforex.dzjforex.command.getBcOrderText
+import com.jforex.dzjforex.command.getBcSlippage
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.init.BrokerInitApi.brokerInit
 import com.jforex.dzjforex.login.LoginApi.brokerLogin
@@ -140,16 +142,18 @@ class ZorroBridge
         assetName: String,
         contracts: Int,
         slDistance: Double,
-        limit: Double,
+        limitPrice: Double,
         out_BuyInfoToFill: DoubleArray
     ): Int
     {
         val brokerBuyResult = runWithProgress(
             createBrokerBuyApi().brokerBuy(
-                assetName,
-                contracts,
-                slDistance,
-                limit
+                assetName = assetName,
+                contracts = contracts,
+                slDistance = slDistance,
+                limitPrice = limitPrice,
+                slippage = getBcSlippage(),
+                orderText = getBcOrderText()
             )
         )
         if (brokerBuyResult is BrokerBuySuccess)
@@ -160,9 +164,15 @@ class ZorroBridge
         return brokerBuyResult.returnCode
     }
 
-    fun doBrokerSell(orderId: Int, contracts: Int) = runWithProgress(contextApi.brokerSell(orderId, contracts))
+    fun doBrokerSell(orderId: Int, contracts: Int):Int{
+        logger.debug("doBrokerSell called id $orderId")
+        return runWithProgress(contextApi.brokerSell(orderId, contracts))
+    }
 
-    fun doBrokerStop(orderId: Int, slPrice: Double) = runWithProgress(contextApi.brokerStop(orderId, slPrice))
+    fun doBrokerStop(orderId: Int, slPrice: Double):Int{
+        logger.debug("doBrokerStop called")
+        return runWithProgress(contextApi.brokerStop(orderId, slPrice))
+    }
 
     fun doBrokerHistory2(
         assetName: String,
@@ -184,7 +194,7 @@ class ZorroBridge
 
     fun doBrokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
     {
-        val commandCall = with(contextApi){
+        val commandCall = with(contextApi) {
             when (commandId)
             {
                 SET_ORDERTEXT -> setOrderText(bytes)

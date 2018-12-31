@@ -11,6 +11,9 @@ object InstrumentApi {
             .fromName(assetName)
             .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
 
-    fun <F> ContextDependencies<F>.isTradeable(instrument: Instrument): Kind<F, Boolean> =
-        invoke { context.engine.isTradable(instrument) }
+    fun <F> ContextDependencies<F>.fromAssetNameTradeable(assetName: String): Kind<F, Instrument> =
+        fromAssetName(assetName).map {instrument->
+            if(!instrument.isTradable) throw AssetNotTradeableException(instrument)
+            instrument
+        }
 }

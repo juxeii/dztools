@@ -5,7 +5,6 @@ import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.AccountApi.isTradingAllowed
 import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.isTradeable
 import com.jforex.dzjforex.misc.PluginApi.isConnected
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
@@ -60,6 +59,6 @@ object BrokerTimeApi
         binding {
             getSubscribedInstruments()
                 .bind()
-                .any { instrument -> isTradeable(instrument).bind() }
+                .any { instrument -> instrument.isTradable }
         }
 }

@@ -1,6 +1,7 @@
 package com.jforex.dzjforex.sell
 
 import arrow.Kind
+import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.command.getBcSlippage
@@ -16,6 +17,7 @@ import com.jforex.kforexutils.misc.asPrice
 import com.jforex.kforexutils.order.event.OrderEvent
 import com.jforex.kforexutils.order.event.OrderEventType
 import com.jforex.kforexutils.order.extension.close
+import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.settings.TradingSettings
 
 object BrokerSellApi
@@ -28,14 +30,24 @@ object BrokerSellApi
     )
 
     fun <F> ContextDependencies<F>.brokerSell(orderId: Int, contracts: Int): Kind<F, Int> =
-        getOrderForId(orderId)
-            .flatMap { order -> createCloseParams(order, contracts) }
-            .flatMap { closeParams -> closeOrder(closeParams) }
-            .map { orderEvent -> processOrderEventAndGetResult(orderEvent) }
-            .handleError { error ->
-                logger.error("BrokerSell failed! Error: $error Stack trace: ${getStackTrace(error)}")
-                BROKER_SELL_FAIL
+        binding{
+            val order = getOrderForId(orderId).bind()
+            if(order.isClosed) {
+                logger.warn("BrokerSell Trying to close already closed order! $order state ${order.state}")
+                order.zorroId()
             }
+            else{
+                logger.debug("BrokerSell called orderId $orderId contracts $contracts order $order")
+                val closeParams=createCloseParams(order, contracts).bind()
+                logger.debug("BrokerSell closeParams $closeParams")
+                val orderEvent=closeOrder(closeParams).bind()
+                logger.debug("BrokerSell orderEvent $orderEvent")
+                processOrderEventAndGetResult(orderEvent)
+            }
+        } .handleError { error ->
+            logger.error("BrokerSell failed! Error: ${error.message} Stack trace: ${getStackTrace(error)}")
+            BROKER_SELL_FAIL
+        }
 
     private fun <F> ContextDependencies<F>.closeOrder(closeParams: CloseParams): Kind<F, OrderEvent> =
         invoke {

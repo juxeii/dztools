@@ -32,7 +32,7 @@ object HistoryApi
                 .blockingFirst()
         }
 
-    private fun <F> ContextDependencies<F>.getRetryInterval(): Kind<F, Observable<Long>> =
+    fun <F> ContextDependencies<F>.getRetryInterval(): Kind<F, Observable<Long>> =
         just(
             Observable.interval(
                 0,

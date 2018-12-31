@@ -15,11 +15,14 @@ object BrokerStopApi
 {
     fun <F> ContextDependencies<F>.brokerStop(orderId: Int, slPrice: Double): Kind<F, Int> =
         bindingCatch {
+            logger.debug("BrokerStop called orderId $orderId slPrice $slPrice")
             val order =  getOrderForId(orderId).bind()
+            logger.debug("BrokerStop order $order")
             val orderEvent = setSLPrice(order, slPrice).bind()
+            logger.debug("BrokerStop orderEvent $orderEvent")
             if (orderEvent.type == OrderEventType.CHANGED_SL) BROKER_ADJUST_SL_OK else BROKER_ADJUST_SL_FAIL
         }.handleError { error ->
-            logger.error("BrokerStop failed! Error: $error Stack trace: ${getStackTrace(error)}")
+            logger.error("BrokerStop failed! Error: ${error.message} Stack trace: ${getStackTrace(error)}")
             BROKER_ADJUST_SL_FAIL
         }
 

@@ -1,14 +1,17 @@
 package com.jforex.dzjforex.buy
 
 import arrow.Kind
-import arrow.typeclasses.bindingCatch
+import arrow.core.Option
+import arrow.typeclasses.ApplicativeError
+import arrow.typeclasses.binding
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.command.getBcSlippage
-import com.jforex.dzjforex.command.maybeBcOrderText
+import com.dukascopy.api.JFException
+import com.dukascopy.api.impl.connect.JForexAPI.submitOrder
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
+import com.jforex.dzjforex.misc.InstrumentApi.fromAssetNameTradeable
 import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
@@ -34,6 +37,19 @@ typealias BrokerBuySuccess = BrokerBuyResult.Success
 
 fun createBrokerBuyApi() = QuoteDependencies(contextApi, createQuoteProviderApi())
 
+class LocalDataSource<F>(A: ApplicativeError<F, Throwable>) : ApplicativeError<F, Throwable> by A
+{
+
+    private val localCache: Map<Int, List<Double>> =
+        mapOf(1 to listOf(3.0))
+
+    fun allTasksByUser(user: Int): Kind<F, List<Double>> =
+        Option.fromNullable(localCache[user]).fold(
+            { raiseError(JFException("")) },
+            { just(it) }
+        )
+}
+
 object BrokerBuyApi
 {
     private data class BuyParameter(
@@ -51,40 +67,51 @@ object BrokerBuyApi
         assetName: String,
         contracts: Int,
         slDistance: Double,
-        limitPrice: Double
+        limitPrice: Double,
+        slippage: Double,
+        orderText: String
     ): Kind<F, BrokerBuyResult> =
-        createBuyParameter(
-            assetName = assetName,
-            contracts = contracts,
-            slDistance = slDistance,
-            limitPrice = limitPrice
-        )
+        fromAssetNameTradeable(assetName)
+            .flatMap { instrument ->
+                createBuyParameter(
+                    instrument = instrument,
+                    contracts = contracts,
+                    slDistance = slDistance,
+                    limitPrice = limitPrice,
+                    slippage = slippage,
+                    orderText = orderText
+                )
+            }
             .flatMap {
                 logger.debug("Called BrokerBuy: assetName $assetName contracts $contracts slDistance $slDistance limitPrice $limitPrice isTradeable ${it.instrument.isTradable}")
                 submitOrder(it)
             }
             .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0) }
             .handleError { error ->
-                logger.error("BrokerBuy failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                when (error)
+                {
+                    is AssetNotTradeableException -> natives.jcallback_BrokerError("Asset $assetName currently not tradeable!")
+                    is TimeoutException -> natives.jcallback_BrokerError("BrokerBuy timeout!")
+                    else -> logger.error("BrokerBuy failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                }
                 val errorCode = if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
                 BrokerBuyFailure(errorCode)
             }
 
     private fun <F> QuoteDependencies<F>.createBuyParameter(
-        assetName: String,
+        instrument: Instrument,
         contracts: Int,
         slDistance: Double,
-        limitPrice: Double
-    ): Kind<F, BuyParameter> = bindingCatch {
-        val instrument = fromAssetName(assetName).bind()
+        limitPrice: Double,
+        slippage: Double,
+        orderText: String
+    ): Kind<F, BuyParameter> = binding {
         val label = createLabel().bind()
         val isLimitOrder = limitPrice != 0.0
         val orderCommand = createOrderCommand(contracts, isLimitOrder)
         val amount = contractsToAmount(contracts)
         val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
-        val slippage = getBcSlippage()
-        val comment = maybeBcOrderText().fold({ "" }) { it }
 
         val buyParameter = BuyParameter(
             label = label,
@@ -94,7 +121,7 @@ object BrokerBuyApi
             slPrice = slPrice,
             price = roundedLimitPrice,
             slippage = slippage,
-            comment = comment
+            comment = orderText
         )
         logger.debug("BuyParameter: $buyParameter")
         buyParameter

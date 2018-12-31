@@ -5,6 +5,7 @@ import arrow.core.Try
 import arrow.effects.*
 import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
+import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
@@ -41,7 +42,7 @@ fun getClient(): IClient =
             client
         }
 
-fun getStackTrace(it: Throwable):String
+fun getStackTrace(it: Throwable): String
 {
     val ex = Exception(it)
     val writer = StringWriter()
@@ -55,6 +56,12 @@ fun getStackTrace(it: Throwable):String
 fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
 
 fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
+
+sealed class PluginException() : Throwable()
+{
+    data class AssetNotTradeable(val instrument: Instrument) : PluginException()
+}
+typealias AssetNotTradeableException = PluginException.AssetNotTradeable
 
 interface PluginDependencies<F> : MonadDefer<F>
 {

@@ -40,7 +40,9 @@ object BrokerTradeApi
                 binding {
                     val tradeData = createTradeData(order).bind()
                     val returnCode = createReturnValue(order).bind()
-                    BrokerTradeSuccess(returnCode, tradeData)
+                    val result=BrokerTradeSuccess(returnCode, tradeData)
+                    logger.debug("BrokerTradeSuccess $result order state ${order.state}")
+                    result
                 }
             }
             .handleError { error ->
@@ -55,7 +57,7 @@ object BrokerTradeApi
                 close = quoteForOrder(order).bind(),
                 profit = order.profitLossInAccountCurrency
             )
-            logger.debug("${order.instrument} TradeData: $tradeData OrderData $order")
+            logger.debug("${order.instrument} TradeData: $tradeData OrderData $order order state ${order.state}")
             tradeData
         }
 

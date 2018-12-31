@@ -5,7 +5,6 @@ import com.dukascopy.api.Instrument
 import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.kforexutils.misc.asCost
-import com.jforex.kforexutils.misc.asPrice
 
 object AccountApi
 {
@@ -23,10 +22,13 @@ object AccountApi
 
     fun <F> ContextDependencies<F>.freeMargin() = account.creditLine / leverage()
 
-    fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = context
-        .utils
-        .convertPipToCurrency(instrument, account.accountCurrency, OfferSide.ASK) * instrument.minTradeAmount
-        .asCost()
+    fun <F> ContextDependencies<F>.pipCost(instrument: Instrument): Double
+    {
+        val pipCost = context
+            .utils
+            .convertPipToCurrency(instrument, account.accountCurrency, OfferSide.ASK) * instrument.minTradeAmount
+        return pipCost.asCost()
+    }
 
     fun <F> ContextDependencies<F>.isTradingAllowed() =
         state() == IAccount.AccountState.OK || state() == IAccount.AccountState.OK_NO_MARGIN_CALL

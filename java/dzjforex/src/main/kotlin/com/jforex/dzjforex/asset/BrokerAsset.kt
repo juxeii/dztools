@@ -14,6 +14,8 @@ import com.jforex.dzjforex.misc.QuotesProviderApi.getTick
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 import com.jforex.kforexutils.instrument.InstrumentFactory
+import com.jforex.kforexutils.misc.asCost
+import com.jforex.kforexutils.misc.toAmount
 
 data class BrokerAssetData(
     val price: Double,
@@ -70,6 +72,6 @@ object BrokerAssetApi
 
     fun <F> QuoteDependencies<F>.getMarginCost(instrument: Instrument): Kind<F, Double> = bindingCatch {
         val rateToAccountCurrency = getRateToAccountCurrency(instrument).bind()
-        rateToAccountCurrency * (instrument.minTradeAmount / account.leverage)
+        (rateToAccountCurrency * (instrument.minTradeAmount / account.leverage)).asCost()
     }
 }

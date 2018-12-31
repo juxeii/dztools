@@ -26,7 +26,7 @@ interface PluginSettings : Config
 
     @Config.Key("order.trade.maxwait")
     @Config.DefaultValue("30")
-    fun maxSecondsForOrderFill(): Long
+    fun maxSecondsForOrderBuy(): Long
 
     @Config.Key("history.access.retries")
     @Config.DefaultValue("10")

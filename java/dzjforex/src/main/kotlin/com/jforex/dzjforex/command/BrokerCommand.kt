@@ -66,7 +66,7 @@ object BrokerCommandApi
         .handleError { BROKER_COMMAND_ERROR }
 
     fun <F> ContextDependencies<F>.setSlippage(bytes: ByteArray): Kind<F, Double> = bindingCatch {
-        val slippage = Pips(brokerCommandGetDouble(bytes).bind())
+        val slippage = Pips(brokerCommandGetInt(bytes).bind().toDouble())
         bcSlippage.accept(slippage)
         logger.debug("doBrokerCommand SET_SLIPPAGE called with slippage $slippage")
         BROKER_COMMAND_OK

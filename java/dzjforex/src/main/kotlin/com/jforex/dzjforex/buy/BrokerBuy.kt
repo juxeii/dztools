@@ -17,8 +17,8 @@ import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
 import com.jforex.dzjforex.zorro.BROKER_BUY_TIMEOUT
 import com.jforex.kforexutils.engine.submit
+import com.jforex.kforexutils.misc.asPrice
 import com.jforex.kforexutils.order.event.OrderEventType
-import com.jforex.kforexutils.price.Pips
 import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
@@ -59,7 +59,10 @@ object BrokerBuyApi
             slDistance = slDistance,
             limitPrice = limitPrice
         )
-            .flatMap { submitOrder(it) }
+            .flatMap {
+                logger.debug("Called BrokerBuy: assetName $assetName contracts $contracts slDistance $slDistance limitPrice $limitPrice isTradeable ${it.instrument.isTradable}")
+                submitOrder(it)
+            }
             .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0) }
             .handleError { error ->
                 logger.error("BrokerBuy failed! Error: $error Stack trace: ${getStackTrace(error)}")
@@ -83,7 +86,7 @@ object BrokerBuyApi
         val slippage = getBcSlippage()
         val comment = maybeBcOrderText().fold({ "" }) { it }
 
-        BuyParameter(
+        val buyParameter = BuyParameter(
             label = label,
             instrument = instrument,
             orderCommand = orderCommand,
@@ -93,6 +96,8 @@ object BrokerBuyApi
             slippage = slippage,
             comment = comment
         )
+        logger.debug("BuyParameter: $buyParameter")
+        buyParameter
     }
 
     private fun <F> QuoteDependencies<F>.submitOrder(buyParameter: BuyParameter): Kind<F, IOrder> =
@@ -112,7 +117,7 @@ object BrokerBuyApi
                     if (buyParameter.price != 0.0) it.type == OrderEventType.SUBMIT_OK
                     else it.type == OrderEventType.FULLY_FILLED
                 }
-                .timeout(pluginSettings.maxSecondsForOrderFill(), TimeUnit.SECONDS)
+                .timeout(pluginSettings.maxSecondsForOrderBuy(), TimeUnit.SECONDS)
                 .map { it.order }
                 .blockingFirst()
         }
@@ -140,15 +145,11 @@ object BrokerBuyApi
     ): Double
     {
         if (slDistance <= 0) return TradingSettings.noSLPrice
-        val openPrice = if (limitPrice != 0.0) Price(instrument, limitPrice)
-        else Price(
-            instrument,
-            if (orderCommand == IEngine.OrderCommand.BUY) getBid(instrument) else getAsk(instrument)
-        )
-        val pipDistance = Pips(slDistance)
-        val slPrice = if (orderCommand == IEngine.OrderCommand.BUY) openPrice - pipDistance
-        else openPrice + pipDistance
-        return slPrice.toDouble()
+        val openPrice = if (limitPrice != 0.0) limitPrice
+        else if (orderCommand == IEngine.OrderCommand.BUY) getAsk(instrument) else getBid(instrument)
+        val slPrice = if (orderCommand == IEngine.OrderCommand.BUY) openPrice - slDistance
+        else openPrice + slDistance
+        return slPrice.asPrice(instrument)
     }
 
     fun <F> QuoteDependencies<F>.processOrderAndGetResult(

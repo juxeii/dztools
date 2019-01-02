@@ -18,7 +18,7 @@ fun createQuoteApi(context: IContext) =
 
 interface ContextDependencies<F> : PluginDependencies<F>
 {
-    val context: IContext
+    val jfContext: IContext
     val engine: IEngine
     val account: IAccount
     val history: IHistory
@@ -32,7 +32,7 @@ interface ContextDependencies<F> : PluginDependencies<F>
             object : ContextDependencies<F>,
                 PluginDependencies<F> by pluginDependencies
             {
-                override val context = context
+                override val jfContext = context
                 override val engine = context.engine
                 override val account = context.account
                 override val history = context.history
@@ -58,5 +58,10 @@ interface QuoteDependencies<F> : ContextDependencies<F>, QuoteProviderDependenci
 object ContextApi
 {
     fun <F> ContextDependencies<F>.getSubscribedInstruments(): Kind<F, Set<Instrument>> =
-        invoke { context.subscribedInstruments }
+        invoke { jfContext.subscribedInstruments }
+
+    fun <F> ContextDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>): Kind<F, Unit> =
+        getSubscribedInstruments().map { subscribedInstruments ->
+            jfContext.setSubscribedInstruments(subscribedInstruments + instrumentsToSubscribe, false)
+        }
 }

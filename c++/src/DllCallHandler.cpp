@@ -164,7 +164,7 @@ DllCallHandler::BrokerHistory2(const char *Asset,
     const int t6StructSize = 7;
     jstring jAsset = env->NewStringUTF(Asset);
     int tickArrayLength = nTicks * t6StructSize;
-    jfloatArray jTicksArray = env->NewFloatArray(tickArrayLength);
+    jdoubleArray jTicksArray = env->NewDoubleArray(tickArrayLength);
 
     jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
                                              JData::doBrokerHistory2.methodID,
@@ -174,7 +174,7 @@ DllCallHandler::BrokerHistory2(const char *Asset,
                                              nTickMinutes,
                                              nTicks,
                                              jTicksArray);
-    jfloat *ticksParams = env->GetFloatArrayElements(jTicksArray, 0u);
+    jdouble *ticksParams = env->GetDoubleArrayElements(jTicksArray, 0u);
 
     for (int i = 0; i < nTicks; ++i)
     {
@@ -191,7 +191,7 @@ DllCallHandler::BrokerHistory2(const char *Asset,
             break;
     }
     env->DeleteLocalRef(jAsset);
-    env->ReleaseFloatArrayElements(jTicksArray, ticksParams, 0u);
+    env->ReleaseDoubleArrayElements(jTicksArray, ticksParams, 0u);
     env->DeleteLocalRef((jobject) jTicksArray);
 
     return res;

@@ -24,6 +24,7 @@ import com.jforex.dzjforex.command.BrokerCommandApi.setOrderText
 import com.jforex.dzjforex.command.BrokerCommandApi.setSlippage
 import com.jforex.dzjforex.command.getBcOrderText
 import com.jforex.dzjforex.command.getBcSlippage
+import com.jforex.dzjforex.command.maybeBcLimitPrice
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.init.BrokerInitApi.brokerInit
 import com.jforex.dzjforex.login.LoginApi.brokerLogin
@@ -71,7 +72,7 @@ class ZorroBridge
         if (brokerTimeResult is BrokerTimeSuccess)
         {
             val iTimeUTC = 0
-            out_ServerTimeToFill[iTimeUTC] = brokerTimeResult.serverTime
+            out_ServerTimeToFill[iTimeUTC] = brokerTimeResult.serverTimeUTC
         }
         return brokerTimeResult.returnCode
     }
@@ -166,7 +167,7 @@ class ZorroBridge
 
     fun doBrokerSell(orderId: Int, contracts: Int):Int{
         logger.debug("doBrokerSell called id $orderId")
-        return runWithProgress(contextApi.brokerSell(orderId, contracts))
+        return runWithProgress(contextApi.brokerSell(orderId, contracts, maybeBcLimitPrice(), getBcSlippage()))
     }
 
     fun doBrokerStop(orderId: Int, slPrice: Double):Int{
@@ -205,7 +206,7 @@ class ZorroBridge
                 GET_MAXLOT -> getMaxLot(bytes)
                 GET_MINLOT -> getMinLot(bytes)
                 GET_MARGININIT -> getMarginInit(bytes)
-                GET_TIME -> createQuoteApi(context).getTime()
+                GET_TIME -> createQuoteApi(jfContext).getTime()
                 GET_TRADEALLOWED -> getTradeAllowed(bytes)
                 GET_MAXTICKS -> getMaxTicks()
                 else -> IO.monad().just(BROKER_COMMAND_UNAVAILABLE)

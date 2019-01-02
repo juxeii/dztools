@@ -36,6 +36,10 @@ interface PluginSettings : Config
     @Config.DefaultValue("1000")
     fun historyAccessRetryDelay(): Long
 
+    @Config.Key("history.tickfetchmillis")
+    @Config.DefaultValue("1800000")
+    fun tickfetchmillis(): Long
+
     @Config.Key("plugin.waitfortradeableinstrument")
     @Config.DefaultValue("true")
     fun waitForTradeableInstrument(): Boolean

@@ -3,19 +3,15 @@ package com.jforex.dzjforex.asset
 import arrow.Kind
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.JFException
 import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.account.AccountApi.pipCost
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getSpread
 import com.jforex.dzjforex.misc.QuotesProviderApi.getTick
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
-import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.misc.asCost
-import com.jforex.kforexutils.misc.toAmount
 
 data class BrokerAssetData(
     val price: Double,
@@ -55,7 +51,7 @@ object BrokerAssetApi
                 spread = getSpread(instrument),
                 volume = tick.askVolume,
                 pip = instrument.pipValue,
-                pipCost = pipCost(instrument),
+                pipCost = pipCost(instrument).bind(),
                 lotAmount = instrument.minTradeAmount,
                 marginCost = getMarginCost(instrument).bind()
             )
@@ -65,7 +61,7 @@ object BrokerAssetApi
 
     fun <F> QuoteDependencies<F>.getRateToAccountCurrency(instrument: Instrument): Kind<F, Double> = invoke {
         if (instrument.primaryJFCurrency == account.accountCurrency) 1.0
-        else context
+        else jfContext
             .utils
             .getRate(instrument.primaryJFCurrency, account.accountCurrency, OfferSide.ASK)
     }

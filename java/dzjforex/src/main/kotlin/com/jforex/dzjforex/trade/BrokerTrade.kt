@@ -1,12 +1,10 @@
 package com.jforex.dzjforex.trade
 
 import arrow.Kind
-import arrow.core.Tuple2
 import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.PluginApi.amountToContracts
 import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
@@ -30,7 +28,7 @@ sealed class BrokerTradeResult(val returnCode: Int)
 typealias BrokerTradeFailure = BrokerTradeResult.Failure
 typealias BrokerTradeSuccess = BrokerTradeResult.Success
 
-fun createBrokerTradeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context)
+fun createBrokerTradeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.jfContext)
 
 object BrokerTradeApi
 {
@@ -40,13 +38,17 @@ object BrokerTradeApi
                 binding {
                     val tradeData = createTradeData(order).bind()
                     val returnCode = createReturnValue(order).bind()
-                    val result=BrokerTradeSuccess(returnCode, tradeData)
-                    logger.debug("BrokerTradeSuccess $result order state ${order.state}")
-                    result
+                    BrokerTradeSuccess(returnCode, tradeData)
                 }
             }
             .handleError { error ->
-                logger.error("BrokerTrade failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                when (error)
+                {
+                    is OrderIdNotFoundException ->
+                        natives.jcallback_BrokerError("BrokerTrade: order id ${error.orderId} not found!")
+                    else ->
+                        logger.error("BrokerTrade failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                }
                 BrokerTradeFailure(BROKER_TRADE_FAIL)
             }
 
@@ -57,7 +59,7 @@ object BrokerTradeApi
                 close = quoteForOrder(order).bind(),
                 profit = order.profitLossInAccountCurrency
             )
-            logger.debug("${order.instrument} TradeData: $tradeData OrderData $order order state ${order.state}")
+            logger.debug("TradeData: $tradeData OrderData $order order state ${order.state}")
             tradeData
         }
 
@@ -70,7 +72,7 @@ object BrokerTradeApi
     fun <F> QuoteDependencies<F>.createReturnValue(order: IOrder): Kind<F, Int> =
         invoke {
             with(order) {
-                val contracts = amountToContracts(amount)
+                val contracts = amount.toContracts()
                 when
                 {
                     isFilled -> contracts

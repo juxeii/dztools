@@ -1,18 +1,18 @@
 package com.jforex.dzjforex.order
 
 import arrow.Kind
-import arrow.core.None
 import arrow.core.Option
 import arrow.core.Try
-import arrow.core.orElse
 import arrow.effects.ForIO
+import arrow.effects.instances.io.monad.flatMap
 import com.dukascopy.api.IOrder
-import com.dukascopy.api.JFException
 import com.jforex.dzjforex.misc.ContextDependencies
+import com.jforex.dzjforex.misc.InstrumentApi.filterTradeable
+import com.jforex.dzjforex.misc.OrderIdNotFoundException
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.logger
-import io.reactivex.Observable
-import java.util.concurrent.TimeUnit
+import com.jforex.dzjforex.order.OrderRepositoryApi.filterTradeableOrder
+import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 
 typealias OrderId = Int
 
@@ -28,60 +28,41 @@ fun IOrder.zorroId() = id.toInt()
 object OrderRepositoryApi
 {
     fun <F> ContextDependencies<F>.getOrderForId(orderId: OrderId): Kind<F, IOrder> =
-        getOrderForIdInOpenOrders(orderId)
-            .orElse { getOrderForIdInHistoryOrders(orderId) }
-            .fromOption { JFException("Order id $orderId not found") }
+        getOrderForIdInOpenOrders(orderId).handleErrorWith { getOrderForIdInHistoryOrders(orderId) }
 
-    fun <F> ContextDependencies<F>.getOrderForIdInOpenOrders(orderId: OrderId): Option<IOrder>
+    fun <F> ContextDependencies<F>.getTradeableOrderForId(orderId: OrderId): Kind<F, IOrder> =
+        getOrderForId(orderId).flatMap { order -> filterTradeableOrder(order) }
+
+    fun <F> ContextDependencies<F>.getOrderForIdInOpenOrders(orderId: OrderId): Kind<F, IOrder>
     {
-        logger.debug("Seeking orderID $orderId")
-        return getOpenOrders()
-            .map { openOrders ->
-                logger.debug("Found open orders $openOrders")
-                filterOrderId(orderId, openOrders)
-            }
-            .fold({
-                logger.debug("open orders failed with ${it.message}")
-                None
-            }, {
-                logger.debug("open orders found order $it")
-                it
-            })
+        logger.debug("Seeking orderID $orderId in open orders")
+        return getOpenOrders().flatMap { openOrders -> filterOrderId(orderId, openOrders) }
     }
 
-    fun <F> ContextDependencies<F>.getOrderForIdInHistoryOrders(orderId: OrderId): Option<IOrder> =
+    fun <F> ContextDependencies<F>.getOrderForIdInHistoryOrders(orderId: OrderId): Kind<F, IOrder> =
         Try {
             logger.debug("Seeking orderId $orderId in history orders orderId.toString() ${orderId.toString()}")
-            Observable.interval(
-                0,
-                pluginSettings.historyAccessRetryDelay(),
-                TimeUnit.MILLISECONDS
-            )
-                .take(pluginSettings.historyAccessRetries())
-                .map {
-                    logger.debug("Seeking orderId TRY $it")
-                    val order = history.getHistoricalOrderById(orderId.toString())
-                    logger.debug("Seeking TRY $it found $order")
-                    Option.fromNullable(order)
-                }
-                .filter {
-                    !it.isEmpty()
-                }
-                .doOnError {
-                    logger.debug("Error in seeking order id ${it.message}")
-                }
-                .blockingFirst()
+            val order = history.getHistoricalOrderById(orderId.toString())
+            if (order == null)
+            {
+                logger.debug("No order for id $orderId in history!")
+                throw OrderIdNotFoundException(orderId)
+            }
+            logger.debug("Found orderId $orderId in history!")
+            order
+        }.fromTry { it }
 
+    fun <F> ContextDependencies<F>.getOpenOrders(): Kind<F, List<IOrder>> = Try { engine.orders }.fromTry { it }
 
-            //history.getHistoricalOrderById(orderId.toString())
-        }.fold({ None }, { it })
+    fun <F> ContextDependencies<F>.filterOrderId(orderId: OrderId, orders: List<IOrder>): Kind<F, IOrder> =
+        Option
+            .fromNullable(orders.firstOrNull { order -> order.zorroId() == orderId })
+            .fold({ raiseError(OrderIdNotFoundException(orderId)) }) { just(it) }
 
-    fun <F> ContextDependencies<F>.getOpenOrders(): Try<List<IOrder>> = Try { engine.orders }
+    /*fun <F> ContextDependencies<F>.getZorroOrders(): Try<List<IOrder>> =
+        getOpenOrders().map { orders -> orders.filter { it.label.startsWith(pluginSettings.labelPrefix()) } }*/
 
-    fun filterOrderId(orderId: OrderId, orders: List<IOrder>): Option<IOrder> =
-        Option.fromNullable(orders.firstOrNull { order -> order.zorroId() == orderId })
-
-    fun <F> ContextDependencies<F>.getZorroOrders(): Try<List<IOrder>> =
-        getOpenOrders().map { orders -> orders.filter { it.label.startsWith(pluginSettings.labelPrefix()) } }
+    fun <F> ContextDependencies<F>.filterTradeableOrder(order: IOrder): Kind<F, IOrder> =
+        filterTradeable(order.instrument).map { order }
 }
 

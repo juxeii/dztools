@@ -13,15 +13,16 @@ import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL
 import com.jforex.dzjforex.zorro.SUBSCRIBE_OK
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import com.jforex.kforexutils.instrument.currencies
+import com.jforex.dzjforex.misc.ContextApi.setSubscribedInstruments
 
-fun createBrokerSubscribeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.context)
+fun createBrokerSubscribeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.jfContext)
 
 object BrokerSubscribeApi
 {
     fun <F> QuoteDependencies<F>.brokerSubscribe(assetName: String): Kind<F, Int> =
         fromAssetName(assetName)
             .flatMap { instrument ->
-                logger.debug("Subscribed are ${context.subscribedInstruments}")
+                logger.debug("Subscribed are ${jfContext.subscribedInstruments}")
                 getInstrumentWithCrosses(instrument)
             }
             .flatMap { instrumentsToSubscribe -> setSubscribedInstruments(instrumentsToSubscribe) }
@@ -51,11 +52,5 @@ object BrokerSubscribeApi
                         saveQuote(quoteFromHistory)
                     }
                 }
-        }
-
-    fun <F> QuoteDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>): Kind<F, Unit> =
-        invoke {
-            val subscribedInstruments = context.subscribedInstruments
-            context.setSubscribedInstruments(subscribedInstruments + instrumentsToSubscribe, false)
         }
 }

@@ -1,4 +1,6 @@
 import org.gradle.internal.impldep.org.apache.ivy.osgi.util.ZipUtil.zip
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.internal.jvm.Jvm
 
 group = "com.jforex.dzplugin"
 version = "0.9.6"
@@ -10,7 +12,6 @@ Project name: ${project.name}
 
 plugins {
     kotlin("jvm") version "1.3.11"
-    jacoco
     `maven-publish`
 }
 
@@ -21,12 +22,15 @@ repositories {
     maven(url = "https://www.dukascopy.com/client/jforexlib/publicrepo")
 }
 
-val arrowVersion = "0.8.1"
 dependencies {
     compile(kotlin("stdlib-jdk8"))
     compile("com.dukascopy.dds2:DDS2-jClient-JForex:3.4.13")
     compile("com.jforex:KForexUtils:0.2.0-SNAPSHOT")
     compile("org.aeonbits.owner:owner:1.0.10")
+
+    testCompile("io.kotlintest:kotlintest-runner-junit5:3.1.11")
+    testCompile("io.mockk:mockk:1.8.13")
+    testImplementation(files(Jvm.current().toolsJar))
 }
 
 val jarFileName = "${project.name}-$version"
@@ -35,6 +39,14 @@ val deployFolder = "${buildDir}/zorro"
 val historyFolder = "${deployFolder}/History"
 val pluginFolder = "${deployFolder}/Plugin"
 val zorroDukascopyFolder = "${zorroPath}/Plugin/dukascopy"
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
 
 tasks.withType<Jar> {
     baseName = project.name

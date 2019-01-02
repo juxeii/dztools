@@ -33,14 +33,14 @@ val pluginApi = PluginDependencies(
 )
 
 fun getClient(): IClient =
-    Try { ClientFactory.getDefaultInstance() }
-        .fold({
-            logger.debug("Error retrieving IClient instance! ${it.message}")
-            throw(JFException("Error retrieving IClient instance! ${it.message}"))
-        }) { client ->
-            client.init()
-            client
-        }
+    Try {
+        val client = ClientFactory.getDefaultInstance()
+        client.init()
+        client
+    }.fold({
+        logger.error("Error retrieving IClient instance! ${it.message}")
+        throw(JFException("Error retrieving IClient instance! ${it.message}"))
+    }) { it }
 
 fun getStackTrace(it: Throwable): String
 {
@@ -57,17 +57,28 @@ fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
 
 fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
+fun Int.toAmount() = Math.abs(this) / lotScale
+
+fun Double.toContracts() = (this * lotScale).toInt()
+
 sealed class PluginException() : Throwable()
 {
     data class AssetNotTradeable(val instrument: Instrument) : PluginException()
+    data class OrderIdNotFound(val orderId: Int) : PluginException()
 }
 typealias AssetNotTradeableException = PluginException.AssetNotTradeable
+typealias OrderIdNotFoundException = PluginException.OrderIdNotFound
 
 interface PluginDependencies<F> : MonadDefer<F>
 {
     val client: IClient
     val pluginSettings: PluginSettings
     val natives: ZorroNatives
+
+    fun printOnZorro(message: String)
+    {
+        natives.jcallback_BrokerError(message)
+    }
 
     companion object
     {
@@ -107,8 +118,4 @@ object PluginApi
         }
         return resultRelay.value!!
     }
-
-    fun contractsToAmount(contracts: Int) = Math.abs(contracts) / lotScale
-
-    fun amountToContracts(amount: Double) = (amount * lotScale).toInt()
 }

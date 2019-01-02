@@ -74,7 +74,7 @@ object BrokerHistoryApi
                 }
             }
         }.handleError {
-            logger.debug("Fetching bars failed with ${it.message}")
+            logger.debug("Fetching ticks failed with ${it.message}")
             BROKER_HISTORY_UNAVAILABLE
         }
 

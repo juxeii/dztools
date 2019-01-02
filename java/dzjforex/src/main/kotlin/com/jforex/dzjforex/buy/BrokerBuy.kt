@@ -8,11 +8,9 @@ import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
-import com.dukascopy.api.impl.connect.JForexAPI.submitOrder
 import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.InstrumentApi.filterTradeable
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.InstrumentApi.fromAssetNameTradeable
-import com.jforex.dzjforex.misc.PluginApi.contractsToAmount
 import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
 import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.zorroId
@@ -71,7 +69,12 @@ object BrokerBuyApi
         slippage: Double,
         orderText: String
     ): Kind<F, BrokerBuyResult> =
-        fromAssetNameTradeable(assetName)
+        fromAssetName(assetName)
+            .flatMap { instrument ->
+                logger.debug("$instrument is tradeable ${instrument.isTradable}")
+                logger.debug("$instrument is tradeable via engine ${jfContext.engine.isTradable(instrument)}")
+                filterTradeable(instrument)
+            }
             .flatMap { instrument ->
                 createBuyParameter(
                     instrument = instrument,
@@ -83,7 +86,13 @@ object BrokerBuyApi
                 )
             }
             .flatMap {
-                logger.debug("Called BrokerBuy: assetName $assetName contracts $contracts slDistance $slDistance limitPrice $limitPrice isTradeable ${it.instrument.isTradable}")
+                logger.debug(
+                    "Called BrokerBuy: assetName $assetName" +
+                            " contracts $contracts " +
+                            "slDistance $slDistance" +
+                            " limitPrice $limitPrice" +
+                            " isTradeable ${it.instrument.isTradable}"
+                )
                 submitOrder(it)
             }
             .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0) }
@@ -109,7 +118,7 @@ object BrokerBuyApi
         val label = createLabel().bind()
         val isLimitOrder = limitPrice != 0.0
         val orderCommand = createOrderCommand(contracts, isLimitOrder)
-        val amount = contractsToAmount(contracts)
+        val amount = contracts.toAmount()
         val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
         val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
 
@@ -128,7 +137,7 @@ object BrokerBuyApi
     }
 
     private fun <F> QuoteDependencies<F>.submitOrder(buyParameter: BuyParameter): Kind<F, IOrder> =
-        catch {
+        invoke {
             engine
                 .submit(
                     label = buyParameter.label,
@@ -150,7 +159,7 @@ object BrokerBuyApi
         }
 
     fun <F> QuoteDependencies<F>.createLabel(): Kind<F, String> =
-        just(pluginSettings.labelPrefix() + System.currentTimeMillis().toString())
+        invoke { pluginSettings.labelPrefix() + System.currentTimeMillis().toString() }
 
     fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand =
         when

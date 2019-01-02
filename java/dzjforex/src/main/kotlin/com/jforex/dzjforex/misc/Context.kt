@@ -3,8 +3,6 @@ package com.jforex.dzjforex.misc
 import arrow.Kind
 import arrow.effects.ForIO
 import com.dukascopy.api.*
-import com.jforex.dzjforex.quote.QuoteProviderDependencies
-import com.jforex.dzjforex.quote.createQuoteProviderApi
 
 lateinit var contextApi: ContextDependencies<ForIO>
 
@@ -14,9 +12,6 @@ fun initContextApi(context: IContext)
 }
 
 fun createContextApi(context: IContext) = ContextDependencies(context, pluginApi)
-
-fun createQuoteApi(context: IContext) =
-    QuoteDependencies(createContextApi(context), createQuoteProviderApi())
 
 interface ContextDependencies<F> : PluginDependencies<F>
 {
@@ -39,21 +34,6 @@ interface ContextDependencies<F> : PluginDependencies<F>
                 override val account = context.account
                 override val history = context.history
             }
-    }
-}
-
-interface QuoteDependencies<F> : ContextDependencies<F>, QuoteProviderDependencies
-{
-    companion object
-    {
-        operator fun <F> invoke(
-            contextDependencies: ContextDependencies<F>,
-            quoteProviderDependencies: QuoteProviderDependencies
-        ): QuoteDependencies<F> =
-            object : QuoteDependencies<F>,
-                ContextDependencies<F> by contextDependencies,
-                QuoteProviderDependencies by quoteProviderDependencies
-            {}
     }
 }
 

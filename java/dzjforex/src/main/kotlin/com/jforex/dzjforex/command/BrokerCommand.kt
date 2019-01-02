@@ -4,20 +4,22 @@ import arrow.Kind
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.some
+import arrow.typeclasses.binding
 import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.asset.BrokerAssetApi.getMarginCost
-import com.jforex.dzjforex.asset.createBrokerAssetApi
+import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.QuoteDependencies
+import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.runDirect
 import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.dzjforex.zorro.BROKER_COMMAND_ERROR
 import com.jforex.dzjforex.zorro.BROKER_COMMAND_OK
 import com.jforex.kforexutils.instrument.noOfDecimalPlaces
+import com.jforex.kforexutils.instrument.tick
 import com.jforex.kforexutils.price.Pips
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -91,11 +93,11 @@ object BrokerCommandApi
 
     fun <F> ContextDependencies<F>.getMaxTicks(): Kind<F, Double> = just(pluginSettings.maxTicks().toDouble())
 
-    fun <F> QuoteDependencies<F>.getTime(): Kind<F, Double> = invoke {
+    fun <F> ContextDependencies<F>.getTime(): Kind<F, Double> = binding {
         logger.debug("doBrokerCommand GET_TIME called")
-        quotes
-            .values
-            .map { it.tick.time }
+        getSubscribedInstruments()
+            .bind()
+            .map { it.tick().time }
             .max()!!
             .toUTCTime()
     }
@@ -129,6 +131,6 @@ object BrokerCommandApi
     fun <F> ContextDependencies<F>.getMarginInit(bytes: ByteArray): Kind<F, Double> = bindingCatch {
         val symbol = String(bytes)
         logger.debug("doBrokerCommand GET_MARGININIT called for symbol $symbol")
-        brokerCommandGetSymbolData(bytes) { runDirect(createBrokerAssetApi().getMarginCost(it)) }.bind()
+        brokerCommandGetSymbolData(bytes) { runDirect(contextApi.getMarginCost(it)) }.bind()
     }
 }

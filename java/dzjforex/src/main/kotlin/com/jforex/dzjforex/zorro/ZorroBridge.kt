@@ -7,10 +7,8 @@ import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
 import com.jforex.dzjforex.account.BrokerAccountSuccess
 import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.asset.BrokerAssetSuccess
-import com.jforex.dzjforex.asset.createBrokerAssetApi
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
 import com.jforex.dzjforex.buy.BrokerBuySuccess
-import com.jforex.dzjforex.buy.createBrokerBuyApi
 import com.jforex.dzjforex.command.BrokerCommandApi.getAccount
 import com.jforex.dzjforex.command.BrokerCommandApi.getDigits
 import com.jforex.dzjforex.command.BrokerCommandApi.getMarginInit
@@ -33,12 +31,10 @@ import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.sell.BrokerSellApi.brokerSell
 import com.jforex.dzjforex.stop.BrokerStopApi.brokerStop
 import com.jforex.dzjforex.subscribe.BrokerSubscribeApi.brokerSubscribe
-import com.jforex.dzjforex.subscribe.createBrokerSubscribeApi
 import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
 import com.jforex.dzjforex.time.BrokerTimeSuccess
 import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 import com.jforex.dzjforex.trade.BrokerTradeSuccess
-import com.jforex.dzjforex.trade.createBrokerTradeApi
 
 class ZorroBridge
 {
@@ -78,11 +74,11 @@ class ZorroBridge
     }
 
     fun doSubscribeAsset(assetName: String) =
-        runWithProgress(createBrokerSubscribeApi().run { brokerSubscribe(assetName) })
+        runWithProgress(contextApi.brokerSubscribe(assetName))
 
     fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray): Int
     {
-        val brokerAssetResult = runDirect(createBrokerAssetApi().brokerAsset(assetName))
+        val brokerAssetResult = runDirect(contextApi.brokerAsset(assetName))
         if (brokerAssetResult is BrokerAssetSuccess)
         {
             val iPrice = 0
@@ -124,7 +120,7 @@ class ZorroBridge
 
     fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray): Int
     {
-        val brokerTradeResult = runDirect(createBrokerTradeApi().brokerTrade(orderId))
+        val brokerTradeResult = runDirect(contextApi.brokerTrade(orderId))
         if (brokerTradeResult is BrokerTradeSuccess)
         {
             val iOpen = 0
@@ -148,7 +144,7 @@ class ZorroBridge
     ): Int
     {
         val brokerBuyResult = runWithProgress(
-            createBrokerBuyApi().brokerBuy(
+            contextApi.brokerBuy(
                 assetName = assetName,
                 contracts = contracts,
                 slDistance = slDistance,
@@ -206,7 +202,7 @@ class ZorroBridge
                 GET_MAXLOT -> getMaxLot(bytes)
                 GET_MINLOT -> getMinLot(bytes)
                 GET_MARGININIT -> getMarginInit(bytes)
-                GET_TIME -> createQuoteApi(jfContext).getTime()
+                GET_TIME -> getTime()
                 GET_TRADEALLOWED -> getTradeAllowed(bytes)
                 GET_MAXTICKS -> getMaxTicks()
                 else -> IO.monad().just(BROKER_COMMAND_UNAVAILABLE)

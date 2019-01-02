@@ -5,13 +5,14 @@ import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.account.AccountApi.pipCost
-import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.quote.QuotesProviderApi.getSpread
-import com.jforex.dzjforex.quote.QuotesProviderApi.getTick
-import com.jforex.dzjforex.quote.createQuoteProviderApi
+import com.jforex.dzjforex.misc.getStackTrace
+import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
+import com.jforex.kforexutils.instrument.spread
+import com.jforex.kforexutils.instrument.tick
 import com.jforex.kforexutils.misc.asCost
 
 data class BrokerAssetData(
@@ -31,11 +32,9 @@ sealed class BrokerAssetResult(val returnCode: Int)
 typealias BrokerAssetFailure = BrokerAssetResult.Failure
 typealias BrokerAssetSuccess = BrokerAssetResult.Success
 
-fun createBrokerAssetApi() = QuoteDependencies(contextApi, createQuoteProviderApi())
-
 object BrokerAssetApi
 {
-    fun <F> QuoteDependencies<F>.brokerAsset(assetName: String): Kind<F, BrokerAssetResult> =
+    fun <F> ContextDependencies<F>.brokerAsset(assetName: String): Kind<F, BrokerAssetResult> =
         fromAssetName(assetName)
             .flatMap { instrument -> createAssetData(instrument) }
             .map { assetData -> BrokerAssetSuccess(ASSET_AVAILABLE, assetData) }
@@ -44,12 +43,12 @@ object BrokerAssetApi
                 BrokerAssetFailure(ASSET_UNAVAILABLE)
             }
 
-    fun <F> QuoteDependencies<F>.createAssetData(instrument: Instrument): Kind<F, BrokerAssetData> =
+    fun <F> ContextDependencies<F>.createAssetData(instrument: Instrument): Kind<F, BrokerAssetData> =
         bindingCatch {
-            val tick = getTick(instrument)
+            val tick = instrument.tick()
             val assetData = BrokerAssetData(
                 price = tick.ask,
-                spread = getSpread(instrument),
+                spread = instrument.spread(),
                 volume = tick.askVolume,
                 pip = instrument.pipValue,
                 pipCost = pipCost(instrument).bind(),
@@ -60,14 +59,14 @@ object BrokerAssetApi
             assetData
         }
 
-    fun <F> QuoteDependencies<F>.getRateToAccountCurrency(instrument: Instrument): Kind<F, Double> = invoke {
+    fun <F> ContextDependencies<F>.getRateToAccountCurrency(instrument: Instrument): Kind<F, Double> = invoke {
         if (instrument.primaryJFCurrency == account.accountCurrency) 1.0
         else jfContext
             .utils
             .getRate(instrument.primaryJFCurrency, account.accountCurrency, OfferSide.ASK)
     }
 
-    fun <F> QuoteDependencies<F>.getMarginCost(instrument: Instrument): Kind<F, Double> = bindingCatch {
+    fun <F> ContextDependencies<F>.getMarginCost(instrument: Instrument): Kind<F, Double> = bindingCatch {
         val rateToAccountCurrency = getRateToAccountCurrency(instrument).bind()
         (rateToAccountCurrency * (instrument.minTradeAmount / account.leverage)).asCost()
     }

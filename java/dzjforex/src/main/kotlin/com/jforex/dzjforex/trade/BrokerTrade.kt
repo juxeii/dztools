@@ -1,15 +1,14 @@
 package com.jforex.dzjforex.trade
 
 import arrow.Kind
-import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.quote.QuotesProviderApi.getAsk
-import com.jforex.dzjforex.quote.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.BROKER_TRADE_FAIL
+import com.jforex.kforexutils.instrument.ask
+import com.jforex.kforexutils.instrument.bid
 import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.order.extension.isFilled
 import com.jforex.kforexutils.order.extension.isOpened
@@ -28,11 +27,9 @@ sealed class BrokerTradeResult(val returnCode: Int)
 typealias BrokerTradeFailure = BrokerTradeResult.Failure
 typealias BrokerTradeSuccess = BrokerTradeResult.Success
 
-fun createBrokerTradeApi(): QuoteDependencies<ForIO> = createQuoteApi(contextApi.jfContext)
-
 object BrokerTradeApi
 {
-    fun <F> QuoteDependencies<F>.brokerTrade(orderId: Int): Kind<F, BrokerTradeResult> =
+    fun <F> ContextDependencies<F>.brokerTrade(orderId: Int): Kind<F, BrokerTradeResult> =
         getOrderForId(orderId)
             .flatMap { order ->
                 binding {
@@ -52,7 +49,7 @@ object BrokerTradeApi
                 BrokerTradeFailure(BROKER_TRADE_FAIL)
             }
 
-    fun <F> QuoteDependencies<F>.createTradeData(order: IOrder): Kind<F, BrokerTradeData> =
+    fun <F> ContextDependencies<F>.createTradeData(order: IOrder): Kind<F, BrokerTradeData> =
         binding {
             val tradeData = BrokerTradeData(
                 open = order.openPrice,
@@ -63,13 +60,13 @@ object BrokerTradeApi
             tradeData
         }
 
-    fun <F> QuoteDependencies<F>.quoteForOrder(order: IOrder): Kind<F, Double> =
+    fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder): Kind<F, Double> =
         invoke {
             val instrument = order.instrument
-            if (order.isLong) getBid(instrument) else getAsk(instrument)
+            if (order.isLong) instrument.bid() else instrument.ask()
         }
 
-    fun <F> QuoteDependencies<F>.createReturnValue(order: IOrder): Kind<F, Int> =
+    fun <F> ContextDependencies<F>.createReturnValue(order: IOrder): Kind<F, Int> =
         invoke {
             with(order) {
                 val contracts = amount.toContracts()

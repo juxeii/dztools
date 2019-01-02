@@ -7,8 +7,9 @@ import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.account.AccountApi.pipCost
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.QuotesProviderApi.getSpread
-import com.jforex.dzjforex.misc.QuotesProviderApi.getTick
+import com.jforex.dzjforex.quote.QuotesProviderApi.getSpread
+import com.jforex.dzjforex.quote.QuotesProviderApi.getTick
+import com.jforex.dzjforex.quote.createQuoteProviderApi
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
 import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 import com.jforex.kforexutils.misc.asCost

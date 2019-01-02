@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.misc
+package com.jforex.dzjforex.quote
 
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
@@ -9,7 +9,8 @@ typealias Quotes = Map<Instrument, TickQuote>
 
 val quotesRelay: BehaviorRelay<Quotes> = BehaviorRelay.createDefault(emptyMap())
 
-fun createQuoteProviderApi() = QuoteProviderDependencies(getQuotes())
+fun createQuoteProviderApi() =
+    QuoteProviderDependencies(getQuotes())
 
 fun saveQuote(quote: TickQuote)
 {

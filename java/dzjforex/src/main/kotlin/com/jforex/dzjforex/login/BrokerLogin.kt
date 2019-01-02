@@ -27,9 +27,14 @@ object LoginApi
                 password = password,
                 accountType = accountType
             ).bind()
+            logger.debug("Successfully logged in.")
             LOGIN_OK
         }.handleError { loginError ->
-            logger.error("BrokerLogin failed! Error: ${loginError.message} Stack trace: ${getStackTrace(loginError)}")
+            logger.error(
+                "BrokerLogin failed! Error message: " +
+                        "${loginError.message} " +
+                        "Stack trace: ${getStackTrace(loginError)}"
+            )
             LOGIN_FAIL
         }
 
@@ -39,6 +44,7 @@ object LoginApi
         accountType: String
     ): Kind<F, Unit>
     {
+        logger.debug("Starting login: username $username accountType $accountType")
         val loginCredentials = LoginCredentials(username = username, password = password)
         val loginType = getLoginType(accountType)
         return client.login(loginCredentials, loginType, this)

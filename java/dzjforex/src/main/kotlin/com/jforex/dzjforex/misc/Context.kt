@@ -3,6 +3,8 @@ package com.jforex.dzjforex.misc
 import arrow.Kind
 import arrow.effects.ForIO
 import com.dukascopy.api.*
+import com.jforex.dzjforex.quote.QuoteProviderDependencies
+import com.jforex.dzjforex.quote.createQuoteProviderApi
 
 lateinit var contextApi: ContextDependencies<ForIO>
 

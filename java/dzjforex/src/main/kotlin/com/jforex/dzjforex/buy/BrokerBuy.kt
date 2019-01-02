@@ -11,9 +11,10 @@ import com.dukascopy.api.JFException
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.InstrumentApi.filterTradeable
 import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
-import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
-import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
+import com.jforex.dzjforex.quote.QuotesProviderApi.getAsk
+import com.jforex.dzjforex.quote.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.zorroId
+import com.jforex.dzjforex.quote.createQuoteProviderApi
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
 import com.jforex.dzjforex.zorro.BROKER_BUY_TIMEOUT

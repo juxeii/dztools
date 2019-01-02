@@ -3,6 +3,7 @@ package com.jforex.dzjforex.init
 import arrow.Kind
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.order.initOrderRepositoryApi
+import com.jforex.dzjforex.quote.saveQuote
 import com.jforex.dzjforex.zorro.BROKER_INIT_FAIL
 import com.jforex.dzjforex.zorro.BROKER_INIT_OK
 import com.jforex.kforexutils.misc.kForexUtils

@@ -5,8 +5,8 @@ import arrow.effects.ForIO
 import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.QuotesProviderApi.getAsk
-import com.jforex.dzjforex.misc.QuotesProviderApi.getBid
+import com.jforex.dzjforex.quote.QuotesProviderApi.getAsk
+import com.jforex.dzjforex.quote.QuotesProviderApi.getBid
 import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.BROKER_TRADE_FAIL

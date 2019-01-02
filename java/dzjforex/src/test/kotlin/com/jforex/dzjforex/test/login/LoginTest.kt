@@ -23,6 +23,7 @@ class LogoutTest : StringSpec()
                 .logout()
                 .fix()
                 .unsafeRunSync()
+
             verify(exactly = 1) { pluginApi.client.disconnect() }
             logoutResult.shouldBe(LOGOUT_OK)
         }

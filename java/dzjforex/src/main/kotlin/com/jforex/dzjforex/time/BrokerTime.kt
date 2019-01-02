@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.time
 
-import arrow.Kind
-import arrow.typeclasses.Alternative
 import arrow.typeclasses.binding
 import com.jforex.dzjforex.account.AccountApi.isTradingAllowed
 import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
@@ -22,7 +20,7 @@ typealias BrokerTimeSuccess = BrokerTimeResult.Success
 
 object BrokerTimeApi
 {
-    fun <F> ContextDependencies<F>.brokerTime(): Kind<F, BrokerTimeResult> = binding {
+    fun <F> ContextDependencies<F>.brokerTime() = binding {
         if (!isConnected().bind()) BrokerTimeFailure(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
         else
         {
@@ -33,28 +31,25 @@ object BrokerTimeApi
 
     fun <F> ContextDependencies<F>.getServerTime() = invoke { jfContext.time }
 
-    fun <F> ContextDependencies<F>.getConnectionState(serverTime: Long) =
-        binding {
-            when
-            {
-                isMarketClosed(serverTime).bind() -> CONNECTION_OK_BUT_MARKET_CLOSED
-                !areTradeOrdersAllowed().bind() -> CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
-                else -> CONNECTION_OK
-            }
+    fun <F> ContextDependencies<F>.getConnectionState(serverTime: Long) = binding {
+        when
+        {
+            isMarketClosed(serverTime).bind() -> CONNECTION_OK_BUT_MARKET_CLOSED
+            !areTradeOrdersAllowed().bind() -> CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+            else -> CONNECTION_OK
         }
+    }
 
-    fun <F> ContextDependencies<F>.isMarketClosed(serverTime: Long) =
-        invoke {
-            jfContext
-                .dataService
-                .isOfflineTime(serverTime)
-        }
+    fun <F> ContextDependencies<F>.isMarketClosed(serverTime: Long) = invoke {
+        jfContext
+            .dataService
+            .isOfflineTime(serverTime)
+    }
 
-    fun <F> ContextDependencies<F>.areTradeOrdersAllowed() =
-        binding {
-            if (!isTradingAllowed().bind()) false
-            else hasTradeableInstrument().bind()
-        }
+    fun <F> ContextDependencies<F>.areTradeOrdersAllowed() = binding {
+        if (!isTradingAllowed().bind()) false
+        else hasTradeableInstrument().bind()
+    }
 
     fun <F> ContextDependencies<F>.hasTradeableInstrument() =
         getSubscribedInstruments()

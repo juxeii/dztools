@@ -16,10 +16,6 @@ interface PluginSettings : Config
     @Config.DefaultValue("5000")
     fun loginRetryDelay(): Long
 
-    @Config.Key("zorro.progressinterval")
-    @Config.DefaultValue("250")
-    fun zorroProgressInterval(): Long
-
     @Config.Key("order.labelprefix")
     @Config.DefaultValue("zorro")
     fun labelPrefix(): String
@@ -47,5 +43,9 @@ interface PluginSettings : Config
     @Config.Key("plugin.maxticks")
     @Config.DefaultValue("1500")
     fun maxTicks(): Int
+
+    @Config.Key("plugin.progressinterval")
+    @Config.DefaultValue("250")
+    fun zorroProgressInterval(): Long
 }
 

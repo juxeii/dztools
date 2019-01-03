@@ -1,7 +1,5 @@
 package com.jforex.dzjforex.history
 
-import arrow.Kind
-import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.BrokerHistoryApi.fillData
@@ -25,43 +23,43 @@ object TickFetchApi
         endTime: Long,
         noOfTicks: Int,
         out_TickInfoToFill: DoubleArray
-    ): Kind<F, Int> =
-        bindingCatch {
-            val endTickTime = getLatesTickTime(instrument, endTime).bind()
-            logger.debug("fetchTicks endTickTime ${endTickTime.asUnixTimeFormat()}")
-            val fetchedTicks = getTicksWithShift(instrument, endTickTime, noOfTicks)
-            logger.debug("fetchTicks size ${fetchedTicks.size}")
+    ) = bindingCatch {
+        val endTickTime = getLatesTickTime(instrument, endTime).bind()
+        logger.debug("fetchTicks endTickTime ${endTickTime.asUnixTimeFormat()}")
+        val fetchedTicks = getTicksWithShift(instrument, endTickTime, noOfTicks)
+        logger.debug(
+            "FetchTicks size ${fetchedTicks.size}" +
+                    " first tick ${fetchedTicks.first()}" +
+                    " last tick ${fetchedTicks.last()}"
+        )
 
-            val endCondition: (tick: ITick) -> Boolean = { it.time < startTime }
-            val fillCall: (tick: ITick, index: Int) -> Unit = { tick, index ->
-                fillTickInfo(tick, instrument, out_TickInfoToFill, index)
-            }
-            val fillParams = FillParams(fetchedTicks, endCondition, fillCall)
-            fillData(fillParams, noOfTicks).bind()
-        }.handleError { error ->
-            logger.error("FetchTicks error! ${error.message} Stack trace: ${getStackTrace(error)}")
-            BROKER_HISTORY_UNAVAILABLE
+        val endCondition: (tick: ITick) -> Boolean = { it.time < startTime }
+        val fillCall: (tick: ITick, index: Int) -> Unit = { tick, index ->
+            fillTickInfo(tick, instrument, out_TickInfoToFill, index)
         }
+        val fillParams = FillParams(fetchedTicks, endCondition, fillCall)
+        fillData(fillParams, noOfTicks).bind()
+    }.handleError { error ->
+        logger.error("FetchTicks error! ${error.message} Stack trace: ${getStackTrace(error)}")
+        BROKER_HISTORY_UNAVAILABLE
+    }
 
-    fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long): Kind<F, Long> =
+    fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) =
         catch { minOf(history.getTimeOfLastTick(instrument), endTime) }
 
     fun <F> ContextDependencies<F>.getTicksWithShift(
         instrument: Instrument,
         endTime: Long,
         shift: Int
-    ): List<ITick>
-    {
-        return Observable
-            .defer { startDates(instrument, endTime) }
-            .map { startDate ->
-                history.getTicks(instrument, startDate, startDate + pluginSettings.tickfetchmillis() - 1)
-            }
-            .concatMapIterable { it }
-            .take(shift.toLong())
-            .toList()
-            .blockingGet()
-    }
+    ) = Observable
+        .defer { startDates(instrument, endTime) }
+        .map { startDate ->
+            history.getTicks(instrument, startDate, startDate + pluginSettings.tickfetchmillis() - 1)
+        }
+        .concatMapIterable { it }
+        .take(shift.toLong())
+        .toList()
+        .blockingGet()
 
     fun <F> ContextDependencies<F>.startDates(instrument: Instrument, endTime: Long) =
         Single

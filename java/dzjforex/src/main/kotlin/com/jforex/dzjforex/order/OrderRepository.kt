@@ -4,15 +4,12 @@ import arrow.Kind
 import arrow.core.Option
 import arrow.core.Try
 import arrow.effects.ForIO
-import arrow.effects.instances.io.monad.flatMap
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.filterTradeable
+import com.jforex.dzjforex.misc.InstrumentApi.filterTradeableInstrument
 import com.jforex.dzjforex.misc.OrderIdNotFoundException
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.logger
-import com.jforex.dzjforex.order.OrderRepositoryApi.filterTradeableOrder
-import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
 
 typealias OrderId = Int
 
@@ -25,7 +22,7 @@ fun initOrderRepositoryApi()
 
 fun IOrder.zorroId() = id.toInt()
 
-object OrderRepositoryApi
+object OrderLookupApi
 {
     fun <F> ContextDependencies<F>.getOrderForId(orderId: OrderId): Kind<F, IOrder> =
         getOrderForIdInOpenOrders(orderId).handleErrorWith { getOrderForIdInHistoryOrders(orderId) }
@@ -63,6 +60,6 @@ object OrderRepositoryApi
         getOpenOrders().map { orders -> orders.filter { it.label.startsWith(pluginSettings.labelPrefix()) } }*/
 
     fun <F> ContextDependencies<F>.filterTradeableOrder(order: IOrder): Kind<F, IOrder> =
-        filterTradeable(order.instrument).map { order }
+        filterTradeableInstrument(order.instrument).map { order }
 }
 

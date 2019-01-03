@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.misc
 
-import arrow.Kind
 import arrow.effects.ForIO
 import com.dukascopy.api.*
 
@@ -10,8 +9,6 @@ fun initContextApi(context: IContext)
 {
     contextApi = ContextDependencies(context, pluginApi)
 }
-
-fun createContextApi(context: IContext) = ContextDependencies(context, pluginApi)
 
 interface ContextDependencies<F> : PluginDependencies<F>
 {
@@ -39,10 +36,9 @@ interface ContextDependencies<F> : PluginDependencies<F>
 
 object ContextApi
 {
-    fun <F> ContextDependencies<F>.getSubscribedInstruments(): Kind<F, Set<Instrument>> =
-        invoke { jfContext.subscribedInstruments }
+    fun <F> ContextDependencies<F>.getSubscribedInstruments() = invoke { jfContext.subscribedInstruments }
 
-    fun <F> ContextDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>): Kind<F, Unit> =
+    fun <F> ContextDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>) =
         getSubscribedInstruments().map { subscribedInstruments ->
             jfContext.setSubscribedInstruments(subscribedInstruments + instrumentsToSubscribe, false)
         }

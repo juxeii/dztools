@@ -209,6 +209,7 @@ BrokerCommand(int nCommand,
         return -1;
     case GET_TIME:
     case GET_MAXTICKS:
+    case GET_SERVERSTATE:
     {
        return dllCallHandler.BrokerCommand(nCommand, &dummy, 8);
     }

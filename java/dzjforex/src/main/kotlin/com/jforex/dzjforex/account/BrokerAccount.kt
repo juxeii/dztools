@@ -10,26 +10,38 @@ import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
 import com.jforex.dzjforex.zorro.ACCOUNT_UNAVAILABLE
 
-data class BrokerAccountData(val balance: Double, val tradeVal: Double, val marginVal: Double)
-sealed class BrokerAccountResult(val returnCode: Int)
-{
-    data class Failure(val code: Int) : BrokerAccountResult(code)
-    data class Success(val code: Int, val data: BrokerAccountData) : BrokerAccountResult(code)
-}
-typealias BrokerAccountFailure = BrokerAccountResult.Failure
-typealias BrokerAccountSuccess = BrokerAccountResult.Success
-
 object BrokerAccountApi
 {
-    fun <F> ContextDependencies<F>.brokerAccount(): Kind<F, BrokerAccountResult> =
+    data class BrokerAccountData(val balance: Double, val tradeVal: Double, val marginVal: Double)
+
+    fun <F> ContextDependencies<F>.brokerAccount(out_AccountInfoToFill: DoubleArray): Kind<F, Int> =
         getAccountData()
-            .map { accountData -> BrokerAccountSuccess(ACCOUNT_AVAILABLE, accountData) }
+            .flatMap { accountData -> fillAccountData(out_AccountInfoToFill, accountData) }
+            .map { ACCOUNT_AVAILABLE }
             .handleError { error ->
-                logger.error("BrokerAccount failed! Error: $error Stack trace: ${getStackTrace(error)}")
-                BrokerAccountFailure(ACCOUNT_UNAVAILABLE)
+                logger.error(
+                    "BrokerAccount failed! Error message: ${error.message} " +
+                            "Stack trace: ${getStackTrace(error)}"
+                )
+                ACCOUNT_UNAVAILABLE
             }
 
     fun <F> ContextDependencies<F>.getAccountData(): Kind<F, BrokerAccountData> =
         map(baseEequity(), tradeVal(), usedMargin())
         { BrokerAccountData(balance = it.a, tradeVal = it.b, marginVal = it.c) }
+
+    fun <F> ContextDependencies<F>.fillAccountData(
+        out_AccountInfoToFill: DoubleArray,
+        accontParams: BrokerAccountData
+    ) =
+        invoke {
+            val iBalance = 0
+            val iTradeVal = 1
+            val iMarginVal = 2
+            with(accontParams) {
+                out_AccountInfoToFill[iBalance] = balance
+                out_AccountInfoToFill[iTradeVal] = tradeVal
+                out_AccountInfoToFill[iMarginVal] = marginVal
+            }
+        }
 }

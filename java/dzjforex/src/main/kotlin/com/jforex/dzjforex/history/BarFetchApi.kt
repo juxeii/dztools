@@ -1,7 +1,6 @@
 package com.jforex.dzjforex.history
 
 import arrow.Kind
-import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.*
 import com.dukascopy.api.Unit
 import com.dukascopy.charts.data.datacache.DataCacheUtils

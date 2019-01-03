@@ -8,23 +8,23 @@ import com.jforex.kforexutils.misc.asCost
 
 object AccountApi
 {
-    fun <F> ContextDependencies<F>.baseEequity() = invoke { account.baseEquity }
+    fun <F> ContextDependencies<F>.baseEequity() = delay { account.baseEquity }
 
-    fun <F> ContextDependencies<F>.tradeVal() = invoke { account.equity - account.baseEquity }
+    fun <F> ContextDependencies<F>.tradeVal() = delay { account.equity - account.baseEquity }
 
-    fun <F> ContextDependencies<F>.usedMargin() = invoke { account.usedMargin }
+    fun <F> ContextDependencies<F>.usedMargin() = delay { account.usedMargin }
 
-    fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = invoke {
+    fun <F> ContextDependencies<F>.pipCost(instrument: Instrument) = delay {
         val pipCost = jfContext
             .utils
             .convertPipToCurrency(instrument, account.accountCurrency, OfferSide.ASK) * instrument.minTradeAmount
         pipCost.asCost()
     }
 
-    fun <F> ContextDependencies<F>.isTradingAllowed() = invoke {
+    fun <F> ContextDependencies<F>.isTradingAllowed() = delay {
         account.accountState == IAccount.AccountState.OK ||
                 account.accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
     }
 
-    fun <F> ContextDependencies<F>.accountName() = invoke { account.accountId }
+    fun <F> ContextDependencies<F>.accountName() = delay { account.accountId }
 }

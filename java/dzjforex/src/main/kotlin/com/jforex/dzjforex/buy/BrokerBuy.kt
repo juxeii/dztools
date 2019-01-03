@@ -1,16 +1,12 @@
 package com.jforex.dzjforex.buy
 
 import arrow.Kind
-import arrow.core.Option
-import arrow.typeclasses.ApplicativeError
-import arrow.typeclasses.binding
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.JFException
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.InstrumentApi.filterTradeable
-import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
+import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
+import com.jforex.dzjforex.misc.InstrumentApi.filterTradeableInstrument
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
@@ -25,56 +21,21 @@ import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-sealed class BrokerBuyResult(val returnCode: Int)
-{
-    data class Failure(val code: Int) : BrokerBuyResult(code)
-    data class Success(val code: Int, val price: Double) : BrokerBuyResult(code)
-}
-typealias BrokerBuyFailure = BrokerBuyResult.Failure
-typealias BrokerBuySuccess = BrokerBuyResult.Success
-
-class LocalDataSource<F>(A: ApplicativeError<F, Throwable>) : ApplicativeError<F, Throwable> by A
-{
-
-    private val localCache: Map<Int, List<Double>> =
-        mapOf(1 to listOf(3.0))
-
-    fun allTasksByUser(user: Int): Kind<F, List<Double>> =
-        Option.fromNullable(localCache[user]).fold(
-            { raiseError(JFException("")) },
-            { just(it) }
-        )
-}
-
 object BrokerBuyApi
 {
-    private data class BuyParameter(
-        val label: String,
-        val instrument: Instrument,
-        val orderCommand: IEngine.OrderCommand,
-        val amount: Double,
-        val slPrice: Double,
-        val price: Double,
-        val slippage: Double,
-        val comment: String
-    )
-
     fun <F> ContextDependencies<F>.brokerBuy(
         assetName: String,
         contracts: Int,
         slDistance: Double,
         limitPrice: Double,
         slippage: Double,
-        orderText: String
-    ): Kind<F, BrokerBuyResult> =
-        fromAssetName(assetName)
+        orderText: String,
+        out_BuyInfoToFill: DoubleArray
+    ): Kind<F, Int> =
+        createInstrument(assetName)
+            .flatMap { instrument -> filterTradeableInstrument(instrument) }
             .flatMap { instrument ->
-                logger.debug("$instrument is tradeable ${instrument.isTradable}")
-                logger.debug("$instrument is tradeable via engine ${jfContext.engine.isTradable(instrument)}")
-                filterTradeable(instrument)
-            }
-            .flatMap { instrument ->
-                createBuyParameter(
+                submitOrder(
                     instrument = instrument,
                     contracts = contracts,
                     slDistance = slDistance,
@@ -83,72 +44,53 @@ object BrokerBuyApi
                     orderText = orderText
                 )
             }
-            .flatMap {
-                logger.debug(
-                    "Called BrokerBuy: assetName $assetName" +
-                            " contracts $contracts " +
-                            "slDistance $slDistance" +
-                            " limitPrice $limitPrice" +
-                            " isTradeable ${it.instrument.isTradable}"
-                )
-                submitOrder(it)
-            }
-            .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0) }
+            .flatMap { processOrderAndGetResult(it, slDistance, limitPrice != 0.0, out_BuyInfoToFill) }
             .handleError { error ->
                 when (error)
                 {
-                    is AssetNotTradeableException -> natives.jcallback_BrokerError("Asset $assetName currently not tradeable!")
-                    is TimeoutException -> natives.jcallback_BrokerError("BrokerBuy timeout!")
-                    else -> logger.error("BrokerBuy failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                    is AssetNotTradeableException ->
+                    {
+                        logger.error("Asset $assetName currently not tradeable!")
+                        printOnZorro("Asset $assetName currently not tradeable!")
+                    }
+                    is TimeoutException ->
+                    {
+                        logger.error("BrokerBuy timeout for $assetName!")
+                        printOnZorro("BrokerBuy timeout for $assetName!")
+                    }
+                    else -> logger.error(
+                        "BrokerBuy failed! Error: ${error.message}" +
+                                " Stack trace: ${getStackTrace(error)}"
+                    )
                 }
-                val errorCode = if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
-                BrokerBuyFailure(errorCode)
+                if (error is TimeoutException) BROKER_BUY_TIMEOUT else BROKER_BUY_FAIL
             }
 
-    private fun <F> ContextDependencies<F>.createBuyParameter(
+    private fun <F> ContextDependencies<F>.submitOrder(
         instrument: Instrument,
         contracts: Int,
         slDistance: Double,
         limitPrice: Double,
         slippage: Double,
         orderText: String
-    ): Kind<F, BuyParameter> = binding {
-        val label = createLabel().bind()
-        val isLimitOrder = limitPrice != 0.0
-        val orderCommand = createOrderCommand(contracts, isLimitOrder)
-        val amount = contracts.toAmount()
-        val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
-        val slPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice)
-
-        val buyParameter = BuyParameter(
-            label = label,
-            instrument = instrument,
-            orderCommand = orderCommand,
-            amount = amount,
-            slPrice = slPrice,
-            price = roundedLimitPrice,
-            slippage = slippage,
-            comment = orderText
-        )
-        logger.debug("BuyParameter: $buyParameter")
-        buyParameter
-    }
-
-    private fun <F> ContextDependencies<F>.submitOrder(buyParameter: BuyParameter): Kind<F, IOrder> =
-        invoke {
+    ): Kind<F, IOrder> =
+        binding {
+            val isLimitOrder = limitPrice != 0.0
+            val roundedLimitPrice = createLimitPrice(instrument, limitPrice)
+            val orderCommand = createOrderCommand(contracts, isLimitOrder)
             engine
                 .submit(
-                    label = buyParameter.label,
-                    instrument = buyParameter.instrument,
-                    orderCommand = buyParameter.orderCommand,
-                    amount = buyParameter.amount,
-                    stopLossPrice = buyParameter.slPrice,
-                    price = buyParameter.price,
-                    slippage = buyParameter.slippage,
-                    comment = buyParameter.comment
+                    label = createLabel().bind(),
+                    instrument = instrument,
+                    orderCommand = orderCommand,
+                    amount = contracts.toAmount(),
+                    stopLossPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice),
+                    price = roundedLimitPrice,
+                    slippage = slippage,
+                    comment = orderText
                 )
                 .filter {
-                    if (buyParameter.price != 0.0) it.type == OrderEventType.SUBMIT_OK
+                    if (roundedLimitPrice != 0.0) it.type == OrderEventType.SUBMIT_OK
                     else it.type == OrderEventType.FULLY_FILLED
                 }
                 .timeout(pluginSettings.maxSecondsForOrderBuy(), TimeUnit.SECONDS)
@@ -157,7 +99,7 @@ object BrokerBuyApi
         }
 
     fun <F> ContextDependencies<F>.createLabel(): Kind<F, String> =
-        invoke { pluginSettings.labelPrefix() + System.currentTimeMillis().toString() }
+        delay { pluginSettings.labelPrefix() + System.currentTimeMillis().toString() }
 
     fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand =
         when
@@ -189,13 +131,20 @@ object BrokerBuyApi
     fun <F> ContextDependencies<F>.processOrderAndGetResult(
         order: IOrder,
         slDistance: Double,
-        isLimitOrder: Boolean
-    ): Kind<F, BrokerBuyResult> =
-        catch {
+        isLimitOrder: Boolean,
+        out_BuyInfoToFill: DoubleArray
+    ): Kind<F, Int> =
+        binding {
+            fillBuyData(out_BuyInfoToFill, order.openPrice).bind()
             val returnCode = if (order.state == if (isLimitOrder) IOrder.State.OPENED else IOrder.State.FILLED)
             {
                 if (slDistance == -1.0) BROKER_BUY_OPPOSITE_CLOSE else order.zorroId()
             } else BROKER_BUY_FAIL
-            BrokerBuySuccess(returnCode, order.openPrice)
+            returnCode
         }
+
+    fun <F> ContextDependencies<F>.fillBuyData(out_BuyInfoToFill: DoubleArray, price: Double) = delay {
+        val iPrice = 0
+        out_BuyInfoToFill[iPrice] = price
+    }
 }

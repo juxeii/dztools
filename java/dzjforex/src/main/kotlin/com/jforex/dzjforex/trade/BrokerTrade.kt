@@ -1,10 +1,9 @@
 package com.jforex.dzjforex.trade
 
 import arrow.Kind
-import arrow.typeclasses.binding
 import com.dukascopy.api.IOrder
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.order.OrderRepositoryApi.getOrderForId
+import com.jforex.dzjforex.order.OrderLookupApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.BROKER_TRADE_FAIL
 import com.jforex.kforexutils.instrument.ask
@@ -13,61 +12,57 @@ import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.order.extension.isFilled
 import com.jforex.kforexutils.order.extension.isOpened
 
-data class BrokerTradeData(
-    val open: Double,
-    val close: Double,
-    val profit: Double
-)
-
-sealed class BrokerTradeResult(val returnCode: Int)
-{
-    data class Failure(val code: Int) : BrokerTradeResult(code)
-    data class Success(val code: Int, val data: BrokerTradeData) : BrokerTradeResult(code)
-}
-typealias BrokerTradeFailure = BrokerTradeResult.Failure
-typealias BrokerTradeSuccess = BrokerTradeResult.Success
-
 object BrokerTradeApi
 {
-    fun <F> ContextDependencies<F>.brokerTrade(orderId: Int): Kind<F, BrokerTradeResult> =
+    data class BrokerTradeData(val open: Double, val close: Double, val profit: Double)
+
+    fun <F> ContextDependencies<F>.brokerTrade(
+        orderId: Int,
+        out_TradeInfoToFill: DoubleArray
+    ): Kind<F, Int> =
         getOrderForId(orderId)
-            .flatMap { order ->
-                binding {
-                    val tradeData = createTradeData(order).bind()
-                    val returnCode = createReturnValue(order).bind()
-                    BrokerTradeSuccess(returnCode, tradeData)
-                }
-            }
+            .flatMap { order -> processOrder(order, out_TradeInfoToFill) }
             .handleError { error ->
                 when (error)
                 {
                     is OrderIdNotFoundException ->
-                        natives.jcallback_BrokerError("BrokerTrade: order id ${error.orderId} not found!")
+                    {
+                        logger.error("BrokerTrade: order id ${error.orderId} not found!")
+                        printOnZorro("BrokerTrade: order id ${error.orderId} not found!")
+                    }
                     else ->
-                        logger.error("BrokerTrade failed! Error: $error Stack trace: ${getStackTrace(error)}")
+                        logger.error(
+                            "BrokerTrade failed! Error message: ${error.message} " +
+                                    "Stack trace: ${getStackTrace(error)}"
+                        )
                 }
-                BrokerTradeFailure(BROKER_TRADE_FAIL)
+                BROKER_TRADE_FAIL
             }
 
-    fun <F> ContextDependencies<F>.createTradeData(order: IOrder): Kind<F, BrokerTradeData> =
+    fun <F> ContextDependencies<F>.processOrder(order: IOrder, out_TradeInfoToFill: DoubleArray) =
         binding {
-            val tradeData = BrokerTradeData(
-                open = order.openPrice,
-                close = quoteForOrder(order).bind(),
-                profit = order.profitLossInAccountCurrency
+            val iOpen = 0
+            val iClose = 1
+            val iProfit = 3
+            out_TradeInfoToFill[iOpen] = order.openPrice
+            out_TradeInfoToFill[iClose] = quoteForOrder(order).bind()
+            out_TradeInfoToFill[iProfit] = order.profitLossInAccountCurrency
+            logger.debug(
+                "${order.instrument} TradeData: openPrice ${out_TradeInfoToFill[iOpen]}" +
+                        " close ${out_TradeInfoToFill[iClose]} " +
+                        "profit ${out_TradeInfoToFill[iProfit]}"
             )
-            logger.debug("TradeData: $tradeData OrderData $order order state ${order.state}")
-            tradeData
+            createReturnValue(order).bind()
         }
 
-    fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder): Kind<F, Double> =
-        invoke {
+    fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder) =
+        delay {
             val instrument = order.instrument
             if (order.isLong) instrument.bid() else instrument.ask()
         }
 
-    fun <F> ContextDependencies<F>.createReturnValue(order: IOrder): Kind<F, Int> =
-        invoke {
+    fun <F> ContextDependencies<F>.createReturnValue(order: IOrder) =
+        delay {
             with(order) {
                 val contracts = amount.toContracts()
                 when

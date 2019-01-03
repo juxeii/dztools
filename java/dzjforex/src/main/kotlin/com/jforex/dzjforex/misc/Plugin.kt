@@ -99,7 +99,7 @@ interface PluginDependencies<F> : MonadDefer<F>
 
 object PluginApi
 {
-    fun <F> PluginDependencies<F>.isConnected() = invoke { client.isConnected }
+    fun <F> PluginDependencies<F>.isConnected() = delay { client.isConnected }
 
     fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T
     {

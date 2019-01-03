@@ -5,7 +5,7 @@ import arrow.core.Option
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.order.OrderRepositoryApi.getTradeableOrderForId
+import com.jforex.dzjforex.order.OrderLookupApi.getTradeableOrderForId
 import com.jforex.dzjforex.order.zorroId
 import com.jforex.dzjforex.zorro.BROKER_SELL_FAIL
 import com.jforex.kforexutils.misc.asPrice
@@ -47,7 +47,7 @@ object BrokerSellApi
                 BROKER_SELL_FAIL
             }
 
-    private fun <F> ContextDependencies<F>.logError(error: Throwable): Kind<F, Unit> = invoke {
+    private fun <F> ContextDependencies<F>.logError(error: Throwable): Kind<F, Unit> = delay {
         when (error)
         {
             is OrderIdNotFoundException ->
@@ -66,7 +66,7 @@ object BrokerSellApi
     }
 
     private fun <F> ContextDependencies<F>.closeOrder(closeParams: CloseParams): Kind<F, OrderEvent> =
-        invoke {
+        delay {
             closeParams
                 .order
                 .close(

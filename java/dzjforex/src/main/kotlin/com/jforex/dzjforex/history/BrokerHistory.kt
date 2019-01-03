@@ -1,22 +1,15 @@
 package com.jforex.dzjforex.history
 
 import arrow.Kind
-import arrow.effects.ForIO
-import arrow.effects.IO
-import arrow.effects.instances.io.monadError.monadError
-import arrow.typeclasses.MonadError
-import arrow.typeclasses.bindingCatch
-import com.dukascopy.api.ITick
-import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.history.BarFetchApi.fetchBars
 import com.jforex.dzjforex.history.TickFetchApi.fetchTicks
-import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
+import com.jforex.dzjforex.misc.ContextDependencies
+import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
 import com.jforex.dzjforex.misc.PluginApi.isConnected
+import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUnixTimeFormat
 import com.jforex.dzjforex.time.toUnixTime
 import com.jforex.dzjforex.zorro.BROKER_HISTORY_UNAVAILABLE
-import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.zipWith
 
@@ -42,7 +35,7 @@ object BrokerHistoryApi
             if (!isConnected().bind()) BROKER_HISTORY_UNAVAILABLE
             else
             {
-                val instrument = fromAssetName(assetName).bind()
+                val instrument = createInstrument(assetName).bind()
                 val startTime = utcStartDate.toUnixTime()
                 val endTime = utcEndDate.toUnixTime()
 

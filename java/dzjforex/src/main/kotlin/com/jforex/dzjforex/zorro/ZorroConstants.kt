@@ -2,8 +2,6 @@ package com.jforex.dzjforex.zorro
 
 const val LOGIN_OK = 1
 const val LOGIN_FAIL = 0
-const val BROKER_INIT_OK = 1
-const val BROKER_INIT_FAIL = 0
 const val LOGOUT_OK = 0
 
 const val SUBSCRIBE_OK = 1
@@ -52,6 +50,7 @@ const val GET_MAXLOT = 25
 const val GET_MARGININIT = 29
 const val GET_MAXTICKS = 43
 const val GET_ACCOUNT = 54
+const val GET_SERVERSTATE = 68
 const val SET_SLIPPAGE = 129
 const val SET_ORDERTEXT = 131
 const val SET_LIMIT = 135

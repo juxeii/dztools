@@ -4,14 +4,12 @@ import arrow.Kind
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.some
-import arrow.typeclasses.binding
-import arrow.typeclasses.bindingCatch
 import com.dukascopy.api.Instrument
 import com.jakewharton.rxrelay2.BehaviorRelay
 import com.jforex.dzjforex.asset.BrokerAssetApi.getMarginCost
 import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.fromAssetName
+import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
 import com.jforex.dzjforex.misc.contextApi
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.misc.runDirect
@@ -36,6 +34,9 @@ fun maybeBcLimitPrice() = bcLimitPrice.value!!
 val bcOrderText: BehaviorRelay<String> = BehaviorRelay.createDefault("")
 fun getBcOrderText() = bcOrderText.value!!
 
+val bcServerState: BehaviorRelay<Int> = BehaviorRelay.createDefault(2)
+fun getBcServerState() = bcServerState.value!!
+
 object BrokerCommandApi
 {
     fun <F> ContextDependencies<F>.brokerCommandStringReturn(string: String, bytes: ByteArray): Kind<F, Double> =
@@ -48,7 +49,7 @@ object BrokerCommandApi
             BROKER_COMMAND_OK
         }
 
-    fun <F> ContextDependencies<F>.getLittleEndianBuffer(bytes: ByteArray): Kind<F, ByteBuffer> = invoke {
+    fun <F> ContextDependencies<F>.getLittleEndianBuffer(bytes: ByteArray): Kind<F, ByteBuffer> = delay {
         ByteBuffer
             .wrap(bytes)
             .order(ByteOrder.LITTLE_ENDIAN)
@@ -63,7 +64,7 @@ object BrokerCommandApi
     fun <F> ContextDependencies<F>.brokerCommandGetSymbolData(
         bytes: ByteArray,
         dataProvider: (Instrument) -> Double
-    ): Kind<F, Double> = fromAssetName(String(bytes))
+    ): Kind<F, Double> = createInstrument(String(bytes))
         .map(dataProvider)
         .handleError { BROKER_COMMAND_ERROR }
 
@@ -81,7 +82,7 @@ object BrokerCommandApi
         BROKER_COMMAND_OK
     }
 
-    fun <F> ContextDependencies<F>.setOrderText(bytes: ByteArray): Kind<F, Double> = invoke {
+    fun <F> ContextDependencies<F>.setOrderText(bytes: ByteArray): Kind<F, Double> = delay {
         val orderText = String(bytes)
         bcOrderText.accept(orderText)
         logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
@@ -100,6 +101,22 @@ object BrokerCommandApi
             .map { it.tick().time }
             .max()!!
             .toUTCTime()
+    }
+
+    fun <F> ContextDependencies<F>.getServerState(): Kind<F, Double> = binding {
+        logger.debug("doBrokerCommand GET_SERVERSTATE called")
+        if (client.isConnected)
+        {
+            bcServerState.accept(1)
+            if (getBcServerState() == 2)
+                3.toDouble()
+            else
+                1.toDouble()
+        } else
+        {
+            bcServerState.accept(2)
+            2.toDouble()
+        }
     }
 
     fun <F> ContextDependencies<F>.getDigits(bytes: ByteArray): Kind<F, Double> = bindingCatch {

@@ -7,13 +7,13 @@ import com.jforex.kforexutils.instrument.InstrumentFactory
 
 object InstrumentApi
 {
-    fun <F> ContextDependencies<F>.fromAssetName(assetName: String): Kind<F, Instrument> =
+    fun <F> ContextDependencies<F>.createInstrument(assetName: String): Kind<F, Instrument> =
         InstrumentFactory
             .fromName(assetName)
             .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
 
-    fun <F> ContextDependencies<F>.filterTradeable(instrument: Instrument): Kind<F, Instrument> =
-        invoke {
+    fun <F> ContextDependencies<F>.filterTradeableInstrument(instrument: Instrument): Kind<F, Instrument> =
+        delay {
             if (!instrument.isTradable) throw AssetNotTradeableException(instrument)
             instrument
         }

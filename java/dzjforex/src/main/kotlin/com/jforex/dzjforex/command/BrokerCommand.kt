@@ -23,8 +23,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.Charset
 
-typealias CommandCall = (ByteArray) -> Double
-
 val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
 fun getBcSlippage() = bcSlippage.value!!.toDouble()
 

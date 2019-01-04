@@ -1,6 +1,7 @@
 #include "DllCallHandler.hpp"
 #include "JNIHandler.hpp"
 #include "JReferences.hpp"
+#include "ZorroDto.hpp"
 #include <cstring>
 #include <bitset>
 
@@ -79,20 +80,15 @@ DllCallHandler::BrokerLogout()
 int
 DllCallHandler::BrokerTime(DATE *pTimeUTC)
 {
-    jdoubleArray utcTimeArray = env->NewDoubleArray(1);
-    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                             JData::doBrokerTime.methodID,
-                                             utcTimeArray);
+    constexpr int CONNECTION_LOST_NEW_LOGIN_REQUIRED = 0;
 
-    if (pTimeUTC)
-    {
-        jdouble *utcTime = env->GetDoubleArrayElements(utcTimeArray, 0);
-        if (!isPatchValueActive(PatchValue::SERVER_TIME)) *pTimeUTC = utcTime[0];
-        env->ReleaseDoubleArrayElements(utcTimeArray, utcTime, 0);
-    }
-    env->DeleteLocalRef((jobject) utcTimeArray);
+    jobject brokerTimeObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::doBrokerTime.methodID);
+    ZorroDto timeDto(env, brokerTimeObject);
 
-    return res;
+    int returnCode = timeDto.getReturnCode();
+    if (returnCode != CONNECTION_LOST_NEW_LOGIN_REQUIRED) *pTimeUTC = timeDto.getDouble("serverTime");
+
+    return returnCode;
 }
 
 int
@@ -120,37 +116,29 @@ DllCallHandler::BrokerAsset(char* Asset,
                             double *pRollLong,
                             double *pRollShort)
 {
+    constexpr int ASSET_AVAILABLE = 1;
+
     jstring jAsset = env->NewStringUTF(Asset);
-    jdoubleArray jAssetParamsArray = env->NewDoubleArray(9);
+    jobject brokerAssetObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
+        JData::doBrokerAsset.methodID,
+        jAsset);
+    ZorroDto assetDto(env, brokerAssetObject);
 
-    jint res = (jlong) env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-                                             JData::doBrokerAsset.methodID,
-                                             jAsset,
-                                             jAssetParamsArray);
-    jdouble *assetParams = env->GetDoubleArrayElements(jAssetParamsArray, 0);
-
-    if (pPrice)
-        *pPrice = assetParams[0];
-    if (pSpread)
-        *pSpread = assetParams[1];
-    if (pVolume)
-        *pVolume = assetParams[2];
-    if (pPip)
-        *pPip = assetParams[3];
-    if (pPipCost)
-        *pPipCost = assetParams[4];
-    if (pLotAmount)
-        *pLotAmount = assetParams[5];
-    if (pMarginCost)
-        *pMarginCost = assetParams[6];
-    if (pRollLong) //not supported
-    if (pRollShort)  //not supported
-
+    int returnCode = assetDto.getReturnCode();
+    if (returnCode == ASSET_AVAILABLE) {
+        *pPrice = assetDto.getDouble("price");
+        *pSpread = assetDto.getDouble("spread");
+        if(pVolume) *pVolume = assetDto.getDouble("volume");
+        if(pPip) *pPip = assetDto.getDouble("pip");
+        if(pPipCost) *pPipCost = assetDto.getDouble("pipCost");
+        if (pLotAmount) *pLotAmount = assetDto.getDouble("lotAmount");
+        if (pMarginCost) *pMarginCost = assetDto.getDouble("marginCost");
+        // pRollLong not supported
+        // pRollShort not supported
+    }
     env->DeleteLocalRef(jAsset);
-    env->ReleaseDoubleArrayElements(jAssetParamsArray, assetParams, 0);
-    env->DeleteLocalRef((jobject) jAssetParamsArray);
 
-    return res;
+    return returnCode;
 }
 
 int

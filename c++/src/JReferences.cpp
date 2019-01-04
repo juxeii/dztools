@@ -13,9 +13,10 @@ jclass ExceptionClass;
 JMethodDesc constructor =      { nullptr, "<init>",           "()V" };
 JMethodDesc doLogin =          { nullptr, "doLogin",          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I" };
 JMethodDesc doLogout =         { nullptr, "doLogout",         "()I" };
-JMethodDesc doBrokerTime =     { nullptr, "doBrokerTime",     "([D)I" };
+JMethodDesc doBrokerTime = { nullptr, "doBrokerTime",     "()Lcom/jforex/dzjforex/time/BrokerTimeData;" };
 JMethodDesc doSubscribeAsset = { nullptr, "doSubscribeAsset", "(Ljava/lang/String;)I" };
-JMethodDesc doBrokerAsset =    { nullptr, "doBrokerAsset",    "(Ljava/lang/String;[D)I" };
+JMethodDesc doBrokerAsset = { nullptr, "doBrokerAsset",    "(Ljava/lang/String;)Lcom/jforex/dzjforex/asset/BrokerAssetData;" };
+
 JMethodDesc doBrokerAccount =  { nullptr, "doBrokerAccount",  "([D)I" };
 JMethodDesc doBrokerBuy2 =     { nullptr, "doBrokerBuy2",     "(Ljava/lang/String;IDD[D)I" };
 JMethodDesc doBrokerTrade =    { nullptr, "doBrokerTrade",    "(I[D)I" };

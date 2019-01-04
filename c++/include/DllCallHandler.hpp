@@ -8,7 +8,6 @@ class DllCallHandler
 {
 
 public:
-
     int
     BrokerLogin(const char *User,
                 const char *Pwd,

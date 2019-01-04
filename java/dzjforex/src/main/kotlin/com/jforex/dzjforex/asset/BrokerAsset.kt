@@ -15,46 +15,32 @@ import com.jforex.kforexutils.misc.asCost
 
 object BrokerAssetApi
 {
-    fun <F> ContextDependencies<F>.brokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray) =
+    fun <F> ContextDependencies<F>.brokerAsset(assetName: String) =
         createInstrument(assetName)
-            .flatMap { instrument -> fillAssetData(instrument, out_AssetParamsToFill) }
-            .map { ASSET_AVAILABLE }
+            .flatMap { instrument -> getAssetData(instrument) }
             .handleError { error ->
                 logger.error(
                     "BrokerAsset failed! Error message: ${error.message} " +
                             "Stack trace: ${getStackTrace(error)}"
                 )
-                ASSET_UNAVAILABLE
+                BrokerAssetData(ASSET_UNAVAILABLE)
             }
 
-    fun <F> ContextDependencies<F>.fillAssetData(instrument: Instrument, out_AssetParamsToFill: DoubleArray) =
+    fun <F> ContextDependencies<F>.getAssetData(instrument: Instrument) =
         bindingCatch {
-            val iPrice = 0
-            val iSpread = 1
-            val iVolume = 2
-            val iPip = 3
-            val iPipCost = 4
-            val iLotAmount = 5
-            val iMarginCost = 6
             val tick = instrument.tick()
-
-            out_AssetParamsToFill[iPrice] = tick.ask
-            out_AssetParamsToFill[iSpread] = instrument.spread()
-            out_AssetParamsToFill[iVolume] = tick.askVolume
-            out_AssetParamsToFill[iPip] = instrument.pipValue
-            out_AssetParamsToFill[iPipCost] = pipCost(instrument).bind()
-            out_AssetParamsToFill[iLotAmount] = instrument.minTradeAmount
-            out_AssetParamsToFill[iMarginCost] = getMarginCost(instrument).bind()
-
-            logger.debug(
-                "$instrument AssetData: price ${out_AssetParamsToFill[iPrice]} " +
-                        "spread ${out_AssetParamsToFill[iSpread]} " +
-                        "volume ${out_AssetParamsToFill[iVolume]} " +
-                        "pipValue ${out_AssetParamsToFill[iPip]} " +
-                        "pipCost ${out_AssetParamsToFill[iPipCost]} " +
-                        "lotAmount ${out_AssetParamsToFill[iLotAmount]} " +
-                        "marginCost ${out_AssetParamsToFill[iMarginCost]}"
+            val assetData = BrokerAssetData(
+                returnCode = ASSET_AVAILABLE,
+                price = tick.ask,
+                spread = instrument.spread(),
+                volume = tick.askVolume,
+                pip = instrument.pipValue,
+                pipCost = pipCost(instrument).bind(),
+                lotAmount = instrument.minTradeAmount,
+                marginCost = getMarginCost(instrument).bind()
             )
+            logger.debug("$instrument $assetData")
+            assetData
         }
 
     fun <F> ContextDependencies<F>.getMarginCost(instrument: Instrument) = bindingCatch {

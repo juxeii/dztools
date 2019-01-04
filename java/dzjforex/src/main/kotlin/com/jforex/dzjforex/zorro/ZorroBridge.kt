@@ -47,12 +47,11 @@ class ZorroBridge
 
     fun doLogout() = runDirect(pluginApi.logout())
 
-    fun doBrokerTime(out_ServerTimeToFill: DoubleArray) = runDirect(contextApi.brokerTime(out_ServerTimeToFill))
+    fun doBrokerTime() = runDirect(contextApi.brokerTime())
 
     fun doSubscribeAsset(assetName: String) = runWithProgress(contextApi.brokerSubscribe(assetName))
 
-    fun doBrokerAsset(assetName: String, out_AssetParamsToFill: DoubleArray) =
-        runDirect(contextApi.brokerAsset(assetName, out_AssetParamsToFill))
+    fun doBrokerAsset(assetName: String) = runDirect(contextApi.brokerAsset(assetName))
 
     fun doBrokerAccount(out_AccountInfoToFill: DoubleArray): Int =
         runDirect(contextApi.brokerAccount(out_AccountInfoToFill))

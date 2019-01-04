@@ -1,0 +1,12 @@
+/.idea/
+/.gradle/
+/.project
+c++/.vs/
+c++/Debug/
+c++/Release/
+*.tlog
+*.lib
+*.log
+*.obj
+*.pdb
+*.exp

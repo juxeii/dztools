@@ -36,7 +36,7 @@ interface ContextDependencies<F> : PluginDependencies<F>
 
 object ContextApi
 {
-    fun <F> ContextDependencies<F>.getSubscribedInstruments() = invoke { jfContext.subscribedInstruments }
+    fun <F> ContextDependencies<F>.getSubscribedInstruments() = delay { jfContext.subscribedInstruments }
 
     fun <F> ContextDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>) =
         getSubscribedInstruments().map { subscribedInstruments ->

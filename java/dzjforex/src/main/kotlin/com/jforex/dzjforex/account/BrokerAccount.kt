@@ -34,7 +34,7 @@ object BrokerAccountApi
         out_AccountInfoToFill: DoubleArray,
         accontParams: BrokerAccountData
     ) =
-        invoke {
+        delay {
             val iBalance = 0
             val iTradeVal = 1
             val iMarginVal = 2

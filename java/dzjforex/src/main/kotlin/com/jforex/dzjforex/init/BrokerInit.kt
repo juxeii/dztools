@@ -20,12 +20,12 @@ object BrokerInitApi
                 )
             }
 
-    fun <F> PluginDependencies<F>.startStrategy() = invoke {
+    fun <F> PluginDependencies<F>.startStrategy() = delay {
         val strategy = KForexUtilsStrategy()
         client.startStrategy(strategy)
     }
 
-    fun <F> PluginDependencies<F>.initApis() = invoke {
+    fun <F> PluginDependencies<F>.initApis() = delay {
         initContextApi(kForexUtils.context)
         initOrderRepositoryApi()
     }

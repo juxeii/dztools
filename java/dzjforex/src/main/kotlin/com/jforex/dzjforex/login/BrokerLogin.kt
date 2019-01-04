@@ -68,7 +68,7 @@ object LoginApi
         out_AccountNamesToFill[iAccountNames] = accountName
     }
 
-    fun <F> PluginDependencies<F>.logout() = invoke {
+    fun <F> PluginDependencies<F>.logout() = delay {
         client.disconnect()
         LOGOUT_OK
     }

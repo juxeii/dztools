@@ -80,10 +80,9 @@ object BrokerCommandApi
         BROKER_COMMAND_OK
     }
 
-    fun <F> ContextDependencies<F>.setOrderText(bytes: ByteArray): Kind<F, Double> = delay {
-        val orderText = String(bytes)
+    fun <F> ContextDependencies<F>.setOrderText(orderText:String): Kind<F, Double> = delay {
         bcOrderText.accept(orderText)
-        logger.debug("doBrokerCommand SET_ORDERTEXT called with ordertext $orderText")
+        logger.debug("doBrokerCommand NEW SET_ORDERTEXT called with ordertext $orderText")
         BROKER_COMMAND_OK
     }
 

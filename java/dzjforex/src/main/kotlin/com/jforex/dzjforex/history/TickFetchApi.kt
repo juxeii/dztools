@@ -1,6 +1,5 @@
 package com.jforex.dzjforex.history
 
-import arrow.Kind
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.ContextDependencies
@@ -54,24 +53,29 @@ object TickFetchApi
         startTime: Long,
         endTime: Long,
         numberOfTicks: Int
-    ): Kind<F, List<T6Data>> =
-        delay {
-            Observable
-                .defer { createStartDates(endTime) }
-                .map { startDate ->
-                    val endDate = startDate + pluginSettings.tickfetchmillis() - 1L
-                    history.getTicks(instrument, startDate, endDate).asReversed()
-                }
-                .concatMapIterable { it }
-                .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }
-                .take(numberOfTicks.toLong())
-                .takeUntil { it.time < startTime }
-                .map { tick -> createT6Data(tick, instrument) }
-                .toList()
-                .blockingGet()
-        }
+    ) = delay {
+        Observable
+            .defer { createStartDates(endTime) }
+            .map { startDate ->
+                val endDate = startDate + pluginSettings.tickfetchmillis() - 1L
+                history.getTicks(instrument, startDate, endDate).asReversed()
+            }
+            .concatMapIterable { it }
+            .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }
+            .take(numberOfTicks.toLong())
+            .takeUntil { it.time < startTime }
+            .map { tick ->
+                val t6Data = createT6Data(tick, instrument)
+                logger.debug(
+                    "Stored bar time ${t6Data.time.asUTCTimeFormat()} ask ${t6Data.high} spread ${t6Data.value}"
+                )
+                t6Data
+            }
+            .toList()
+            .blockingGet()
+    }
 
-    fun <F> ContextDependencies<F>.createStartDates(endTime: Long) =
+    fun <F> ContextDependencies<F>.createStartDates(endTime: Long): Observable<Long> =
         Single
             .just(endTime)
             .flatMapObservable { countStreamForTickFetch(it) }
@@ -84,27 +88,16 @@ object TickFetchApi
         return Observable.fromIterable(seq.asIterable())
     }
 
-    fun createT6Data(
-        tick: ITick,
-        instrument: Instrument
-    ): T6Data
-    {
-        val t6Data = with(tick) {
-            val ask = ask.toFloat()
-            T6Data(
-                time = time.toUTCTime(),
-                high = ask,
-                low = ask,
-                open = ask,
-                close = ask,
-                value = Price(instrument, bid - ask).toDouble().toFloat(),
-                volume = askVolume.toFloat()
-            )
-        }
-
-        logger.debug(
-            "Stored TIMW ${t6Data.time.asUTCTimeFormat()} ask ${t6Data.high} spread ${t6Data.value}"
+    fun createT6Data(tick: ITick, instrument: Instrument) = with(tick) {
+        val ask = ask.toFloat()
+        T6Data(
+            time = time.toUTCTime(),
+            high = ask,
+            low = ask,
+            open = ask,
+            close = ask,
+            value = Price(instrument, bid - ask).toDouble().toFloat(),
+            volume = askVolume.toFloat()
         )
-        return t6Data
     }
 }

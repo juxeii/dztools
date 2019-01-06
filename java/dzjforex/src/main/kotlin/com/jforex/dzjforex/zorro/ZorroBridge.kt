@@ -33,6 +33,7 @@ import com.jforex.dzjforex.subscribe.BrokerSubscribeApi.brokerSubscribe
 import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
 import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 
+@Suppress("unused")
 class ZorroBridge
 {
     fun brokerLogin(username: String, password: String, accountType: String) =
@@ -93,12 +94,13 @@ class ZorroBridge
         )
     )
 
+    fun bcSetOrderText(orderText: String): Double = runDirect(contextApi.setOrderText(orderText))
+
     fun brokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
     {
         val commandCall = with(contextApi) {
             when (commandId)
             {
-                SET_ORDERTEXT -> setOrderText(bytes)
                 SET_SLIPPAGE -> setSlippage(bytes)
                 SET_LIMIT -> setLimit(bytes)
                 GET_ACCOUNT -> getAccount(bytes)

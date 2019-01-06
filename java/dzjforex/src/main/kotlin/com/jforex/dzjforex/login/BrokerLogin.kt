@@ -20,8 +20,7 @@ object LoginApi
     fun <F> PluginDependencies<F>.brokerLogin(
         username: String,
         password: String,
-        accountType: String,
-        out_AccountNamesToFill: Array<String>
+        accountType: String
     ) = bindingCatch {
         if (!isConnected().bind()) connect(
             username = username,
@@ -34,8 +33,7 @@ object LoginApi
         .flatMap { brokerInit() }
         .map {
             logger.debug("Strategy successfully initialized.")
-            fillAccountName(out_AccountNamesToFill, contextApi.account.accountId)
-            LOGIN_OK
+            BrokerLoginData(LOGIN_OK, contextApi.account.accountId)
         }
         .handleError { loginError ->
             logger.error(
@@ -43,7 +41,7 @@ object LoginApi
                         "${loginError.message} " +
                         "Stack trace: ${getStackTrace(loginError)}"
             )
-            LOGIN_FAIL
+            BrokerLoginData(LOGIN_FAIL)
         }
 
     fun <F> PluginDependencies<F>.connect(
@@ -61,12 +59,6 @@ object LoginApi
     fun getLoginType(accountType: String) =
         if (accountType == realLoginType) LoginType.LIVE
         else LoginType.DEMO
-
-    fun fillAccountName(out_AccountNamesToFill: Array<String>, accountName: String)
-    {
-        val iAccountNames = 0
-        out_AccountNamesToFill[iAccountNames] = accountName
-    }
 
     fun <F> PluginDependencies<F>.logout() = delay {
         client.disconnect()

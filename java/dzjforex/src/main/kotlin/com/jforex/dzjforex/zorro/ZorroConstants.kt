@@ -19,7 +19,7 @@ const val ACCOUNT_UNAVAILABLE = 0
 const val ACCOUNT_AVAILABLE = 1
 
 const val BROKER_BUY_FAIL = 0
-const val BROKER_BUY_TIMEOUT = -2
+const val BROKER_BUY_NO_RESPONSE = -2
 const val BROKER_BUY_OPPOSITE_CLOSE = 1
 
 const val BROKER_SELL_FAIL = 0
@@ -38,6 +38,8 @@ const val heartBeatIndication = 1
 const val demoLoginType = "Demo"
 const val realLoginType = "Real"
 const val lotScale = 1000000.0
+const val fillTimeout = 30L
+const val tickPeriod = 0
 
 const val BROKER_COMMAND_OK = 1.0
 const val BROKER_COMMAND_UNAVAILABLE = 0.0

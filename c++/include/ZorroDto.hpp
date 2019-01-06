@@ -12,7 +12,11 @@ public:
 
     double getDouble(char* fieldId, bool printValue = false);
 
+    float getFloat(char* fieldId, bool printValue = false);
+
     int getInt(char* fieldId, bool printValue = false);
+
+    std::string getString(char* fieldId, bool printValue = false);
 
 private:
     JNIEnv *env;

@@ -11,19 +11,18 @@ jclass JDukaZorroNativesClass;
 jclass ExceptionClass;
 
 JMethodDesc constructor =      { nullptr, "<init>",           "()V" };
-JMethodDesc doLogin =          { nullptr, "doLogin",          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)I" };
-JMethodDesc doLogout =         { nullptr, "doLogout",         "()I" };
-JMethodDesc doBrokerTime = { nullptr, "doBrokerTime",     "()Lcom/jforex/dzjforex/time/BrokerTimeData;" };
-JMethodDesc doSubscribeAsset = { nullptr, "doSubscribeAsset", "(Ljava/lang/String;)I" };
-JMethodDesc doBrokerAsset = { nullptr, "doBrokerAsset",    "(Ljava/lang/String;)Lcom/jforex/dzjforex/asset/BrokerAssetData;" };
-
-JMethodDesc doBrokerAccount =  { nullptr, "doBrokerAccount",  "([D)I" };
-JMethodDesc doBrokerBuy2 =     { nullptr, "doBrokerBuy2",     "(Ljava/lang/String;IDD[D)I" };
-JMethodDesc doBrokerTrade =    { nullptr, "doBrokerTrade",    "(I[D)I" };
-JMethodDesc doBrokerStop =     { nullptr, "doBrokerStop",     "(ID)I" };
-JMethodDesc doBrokerSell =     { nullptr, "doBrokerSell",     "(II)I" };
-JMethodDesc doBrokerHistory2 = { nullptr, "doBrokerHistory2", "(Ljava/lang/String;DDII[D)I" };
-JMethodDesc doBrokerCommand =  { nullptr, "doBrokerCommand",   "(I[B[D)V" };
+JMethodDesc brokerLogin =          { nullptr, "brokerLogin",          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;" };
+JMethodDesc brokerLogout =         { nullptr, "brokerLogout",         "()I" };
+JMethodDesc brokerTime = { nullptr, "brokerTime",     "()Lcom/jforex/dzjforex/time/BrokerTimeData;" };
+JMethodDesc brokerSubscribeAsset = { nullptr, "brokerSubscribeAsset", "(Ljava/lang/String;)I" };
+JMethodDesc brokerAsset = { nullptr, "brokerAsset",    "(Ljava/lang/String;)Lcom/jforex/dzjforex/asset/BrokerAssetData;" };
+JMethodDesc brokerAccount =  { nullptr, "brokerAccount",  "()Lcom/jforex/dzjforex/account/BrokerAccountData;" };
+JMethodDesc brokerBuy2 =     { nullptr, "brokerBuy2",     "(Ljava/lang/String;IDD)Lcom/jforex/dzjforex/buy/BrokerBuyData;" };
+JMethodDesc brokerTrade =    { nullptr, "brokerTrade",    "(I)Lcom/jforex/dzjforex/trade/BrokerTradeData;" };
+JMethodDesc brokerStop =     { nullptr, "brokerStop",     "(ID)I" };
+JMethodDesc brokerSell =     { nullptr, "brokerSell",     "(II)I" };
+JMethodDesc brokerHistory2 = { nullptr, "brokerHistory2", "(Ljava/lang/String;DDII)Lcom/jforex/dzjforex/history/BrokerHistoryData;" };
+JMethodDesc brokerCommand =  { nullptr, "brokerCommand",   "(I[B[D)V" };
 
 JMethodDesc excGetMessage=     { nullptr, "getMessage",       "()Ljava/lang/String;" };
 JMethodDesc excGetName=        { nullptr, "getName",          "()Ljava/lang/String;" };
@@ -37,18 +36,18 @@ const char* ZorroNativesPath =    "com/jforex/dzjforex/zorro/ZorroNatives";
 const char* ExcPath =             "java/lang/Class";
 
 const std::vector<JMethodDesc*> dukaZorroBridgeMethods = { &constructor,
-                                                           &doLogin,
-                                                           &doLogout,
-                                                           &doBrokerTime,
-                                                           &doSubscribeAsset,
-                                                           &doBrokerAsset,
-                                                           &doBrokerAccount,
-                                                           &doBrokerBuy2,
-                                                           &doBrokerTrade,
-                                                           &doBrokerStop,
-                                                           &doBrokerSell,
-                                                           &doBrokerHistory2,
-                                                           &doBrokerCommand };
+                                                           &brokerLogin,
+                                                           &brokerLogout,
+                                                           &brokerTime,
+                                                           &brokerSubscribeAsset,
+                                                           &brokerAsset,
+                                                           &brokerAccount,
+                                                           &brokerBuy2,
+                                                           &brokerTrade,
+                                                           &brokerStop,
+                                                           &brokerSell,
+                                                           &brokerHistory2,
+                                                           &brokerCommand };
 
 const int nativesTableSize = sizeof(nativesTable) / sizeof(nativesTable[0]);
 

@@ -1,12 +1,12 @@
 package com.jforex.dzjforex.history
 
+import arrow.Kind
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
-import com.jforex.dzjforex.history.BrokerHistoryApi.fillData
-import com.jforex.dzjforex.history.BrokerHistoryApi.sizeOfT6Struct
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.misc.logger
+import com.jforex.dzjforex.time.asUTCTimeFormat
 import com.jforex.dzjforex.time.asUnixTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.dzjforex.zorro.BROKER_HISTORY_UNAVAILABLE
@@ -14,93 +14,97 @@ import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.Single
 
-
 object TickFetchApi
 {
     fun <F> ContextDependencies<F>.fetchTicks(
         instrument: Instrument,
         startTime: Long,
         endTime: Long,
-        noOfTicks: Int,
-        out_TickInfoToFill: DoubleArray
+        noOfTicks: Int
     ) = bindingCatch {
-        val endTickTime = getLatesTickTime(instrument, endTime).bind()
-        logger.debug("fetchTicks endTickTime ${endTickTime.asUnixTimeFormat()}")
-        val fetchedTicks = getTicksWithShift(instrument, endTickTime, noOfTicks)
         logger.debug(
-            "FetchTicks size ${fetchedTicks.size}" +
+            "Fetching $noOfTicks ticks for $instrument \n" +
+                    " startTime ${startTime.asUnixTimeFormat()}" +
+                    " endTime ${endTime.asUnixTimeFormat()}"
+        )
+
+        val endTickTime = getLatesTickTime(instrument, endTime).bind()
+        val fetchedTicks = getTicks(
+            instrument = instrument,
+            startTime = startTime,
+            endTime = endTickTime,
+            numberOfTicks = noOfTicks
+        ).bind()
+        logger.debug(
+            "Fetched ${fetchedTicks.size} ticks \n" +
                     " first tick ${fetchedTicks.first()}" +
                     " last tick ${fetchedTicks.last()}"
         )
-
-        val endCondition: (tick: ITick) -> Boolean = { it.time < startTime }
-        val fillCall: (tick: ITick, index: Int) -> Unit = { tick, index ->
-            fillTickInfo(tick, instrument, out_TickInfoToFill, index)
-        }
-        val fillParams = FillParams(fetchedTicks, endCondition, fillCall)
-        fillData(fillParams, noOfTicks).bind()
+        BrokerHistoryData(fetchedTicks.size, fetchedTicks)
     }.handleError { error ->
         logger.error("FetchTicks error! ${error.message} Stack trace: ${getStackTrace(error)}")
-        BROKER_HISTORY_UNAVAILABLE
+        BrokerHistoryData(BROKER_HISTORY_UNAVAILABLE)
     }
 
     fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) =
         catch { minOf(history.getTimeOfLastTick(instrument), endTime) }
 
-    fun <F> ContextDependencies<F>.getTicksWithShift(
+    fun <F> ContextDependencies<F>.getTicks(
         instrument: Instrument,
+        startTime: Long,
         endTime: Long,
-        shift: Int
-    ) = Observable
-        .defer { startDates(instrument, endTime) }
-        .map { startDate ->
-            history.getTicks(instrument, startDate, startDate + pluginSettings.tickfetchmillis() - 1)
+        numberOfTicks: Int
+    ): Kind<F, List<T6Data>> =
+        delay {
+            Observable
+                .defer { createStartDates(endTime) }
+                .map { startDate ->
+                    val endDate = startDate + pluginSettings.tickfetchmillis() - 1L
+                    history.getTicks(instrument, startDate, endDate).asReversed()
+                }
+                .concatMapIterable { it }
+                .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }
+                .take(numberOfTicks.toLong())
+                .takeUntil { it.time < startTime }
+                .map { tick -> createT6Data(tick, instrument) }
+                .toList()
+                .blockingGet()
         }
-        .concatMapIterable { it }
-        .take(shift.toLong())
-        .toList()
-        .blockingGet()
 
-    fun <F> ContextDependencies<F>.startDates(instrument: Instrument, endTime: Long) =
+    fun <F> ContextDependencies<F>.createStartDates(endTime: Long) =
         Single
             .just(endTime)
             .flatMapObservable { countStreamForTickFetch(it) }
 
     fun <F> ContextDependencies<F>.countStreamForTickFetch(endTime: Long): Observable<Long>
     {
-        val seq = generateSequence(0) { it + 1 }.map { counter ->
+        val seq = generateSequence(1) { it + 1 }.map { counter ->
             endTime - counter * pluginSettings.tickfetchmillis() + 1
         }
         return Observable.fromIterable(seq.asIterable())
     }
 
-    fun fillTickInfo(
+    fun createT6Data(
         tick: ITick,
-        instrument: Instrument,
-        out_TickInfoToFill: DoubleArray,
-        tickIndex: Int
-    )
+        instrument: Instrument
+    ): T6Data
     {
-        val startIndex = tickIndex * sizeOfT6Struct
-        val ask = tick.ask
-        val utcTime = tick.time.toUTCTime()
-        val spread = Price(instrument, tick.bid - tick.ask).toDouble()
-        val volume = tick.askVolume
+        val t6Data = with(tick) {
+            val ask = ask.toFloat()
+            T6Data(
+                time = time.toUTCTime(),
+                high = ask,
+                low = ask,
+                open = ask,
+                close = ask,
+                value = Price(instrument, bid - ask).toDouble().toFloat(),
+                volume = askVolume.toFloat()
+            )
+        }
 
-        out_TickInfoToFill[startIndex] = ask;
-        out_TickInfoToFill[startIndex + 1] = ask;
-        out_TickInfoToFill[startIndex + 2] = ask;
-        out_TickInfoToFill[startIndex + 3] = ask;
-        out_TickInfoToFill[startIndex + 4] = utcTime;
-        out_TickInfoToFill[startIndex + 5] = spread;
-        out_TickInfoToFill[startIndex + 6] = volume;
-
-        /*logger.debug(
-            "Stored tick for " + instrument
-                    + " ask " + ask
-                    + " time " + formatUTCTime(utcTime)
-                    + " spread " + spread
-                    + " volume " + volume
-        )*/
+        logger.debug(
+            "Stored TIMW ${t6Data.time.asUTCTimeFormat()} ask ${t6Data.high} spread ${t6Data.value}"
+        )
+        return t6Data
     }
 }

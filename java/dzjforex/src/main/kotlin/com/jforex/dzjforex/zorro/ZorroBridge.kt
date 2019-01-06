@@ -35,36 +35,32 @@ import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 
 class ZorroBridge
 {
-    fun doLogin(username: String, password: String, accountType: String, out_AccountNamesToFill: Array<String>) =
+    fun brokerLogin(username: String, password: String, accountType: String) =
         runWithProgress(
             pluginApi.brokerLogin(
                 username = username,
                 password = password,
-                accountType = accountType,
-                out_AccountNamesToFill = out_AccountNamesToFill
+                accountType = accountType
             )
         )
 
-    fun doLogout() = runDirect(pluginApi.logout())
+    fun brokerLogout() = runDirect(pluginApi.logout())
 
-    fun doBrokerTime() = runDirect(contextApi.brokerTime())
+    fun brokerTime() = runDirect(contextApi.brokerTime())
 
-    fun doSubscribeAsset(assetName: String) = runWithProgress(contextApi.brokerSubscribe(assetName))
+    fun brokerSubscribeAsset(assetName: String) = runWithProgress(contextApi.brokerSubscribe(assetName))
 
-    fun doBrokerAsset(assetName: String) = runDirect(contextApi.brokerAsset(assetName))
+    fun brokerAsset(assetName: String) = runDirect(contextApi.brokerAsset(assetName))
 
-    fun doBrokerAccount(out_AccountInfoToFill: DoubleArray): Int =
-        runDirect(contextApi.brokerAccount(out_AccountInfoToFill))
+    fun brokerAccount() = runDirect(contextApi.brokerAccount())
 
-    fun doBrokerTrade(orderId: Int, out_TradeInfoToFill: DoubleArray) =
-        runDirect(contextApi.brokerTrade(orderId, out_TradeInfoToFill))
+    fun brokerTrade(orderId: Int) = runDirect(contextApi.brokerTrade(orderId))
 
-    fun doBrokerBuy2(
+    fun brokerBuy2(
         assetName: String,
         contracts: Int,
         slDistance: Double,
-        limitPrice: Double,
-        out_BuyInfoToFill: DoubleArray
+        limitPrice: Double
     ) = runWithProgress(
         contextApi.brokerBuy(
             assetName = assetName,
@@ -72,35 +68,32 @@ class ZorroBridge
             slDistance = slDistance,
             limitPrice = limitPrice,
             slippage = getBcSlippage(),
-            orderText = getBcOrderText(),
-            out_BuyInfoToFill = out_BuyInfoToFill
+            orderText = getBcOrderText()
         )
     )
 
-    fun doBrokerSell(orderId: Int, contracts: Int) =
+    fun brokerSell(orderId: Int, contracts: Int) =
         runWithProgress(contextApi.brokerSell(orderId, contracts, maybeBcLimitPrice(), getBcSlippage()))
 
-    fun doBrokerStop(orderId: Int, slPrice: Double) = runWithProgress(contextApi.brokerStop(orderId, slPrice))
+    fun brokerStop(orderId: Int, slPrice: Double) = runWithProgress(contextApi.brokerStop(orderId, slPrice))
 
-    fun doBrokerHistory2(
+    fun brokerHistory2(
         assetName: String,
         utcStartDate: Double,
         utcEndDate: Double,
         periodInMinutes: Int,
-        noOfTicks: Int,
-        out_TickInfoToFill: DoubleArray
+        noOfTicks: Int
     ) = runWithProgress(
         contextApi.brokerHistory(
             assetName = assetName,
             utcStartDate = utcStartDate,
             utcEndDate = utcEndDate,
             periodInMinutes = periodInMinutes,
-            noOfTicks = noOfTicks,
-            out_TickInfoToFill = out_TickInfoToFill
+            noOfTicks = noOfTicks
         )
     )
 
-    fun doBrokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
+    fun brokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
     {
         val commandCall = with(contextApi) {
             when (commandId)

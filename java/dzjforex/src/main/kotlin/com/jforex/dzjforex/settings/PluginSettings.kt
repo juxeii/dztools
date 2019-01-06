@@ -20,10 +20,6 @@ interface PluginSettings : Config
     @Config.DefaultValue("zorro")
     fun labelPrefix(): String
 
-    @Config.Key("order.trade.maxwait")
-    @Config.DefaultValue("30")
-    fun maxSecondsForOrderBuy(): Long
-
     @Config.Key("history.access.retries")
     @Config.DefaultValue("10")
     fun historyAccessRetries(): Long

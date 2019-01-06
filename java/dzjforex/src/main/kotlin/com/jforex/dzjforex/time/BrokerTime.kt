@@ -5,7 +5,6 @@ import com.jforex.dzjforex.account.AccountApi.isTradingAllowed
 import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.isConnected
-import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
 import com.jforex.dzjforex.zorro.CONNECTION_OK
 import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
@@ -17,11 +16,12 @@ object BrokerTimeApi
         if (!isConnected().bind()) BrokerTimeData(CONNECTION_LOST_NEW_LOGIN_REQUIRED)
         else
         {
-            val serverTime = jfContext.time
-            logger.debug("UTC time : ${serverTime.toUTCTime()} ")
+            val serverTime = getServerTime().bind()
             BrokerTimeData(getConnectionState(serverTime).bind(), serverTime.toUTCTime())
         }
     }
+
+    fun <F> ContextDependencies<F>.getServerTime() = delay { jfContext.time }
 
     fun <F> ContextDependencies<F>.getConnectionState(serverTime: Long) = binding {
         when

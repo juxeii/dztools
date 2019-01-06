@@ -5,6 +5,7 @@ import arrow.core.Try
 import arrow.effects.*
 import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
+import com.dukascopy.api.IEngine
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
@@ -60,6 +61,9 @@ fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK
 fun Int.toAmount() = Math.abs(this) / lotScale
 
 fun Double.toContracts() = (this * lotScale).toInt()
+
+fun Double.toSignedContracts(command: IEngine.OrderCommand) =
+    if (command == IEngine.OrderCommand.BUY) toContracts() else -toContracts()
 
 sealed class PluginException() : Throwable()
 {

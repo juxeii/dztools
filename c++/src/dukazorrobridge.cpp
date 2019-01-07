@@ -1,7 +1,7 @@
 #include "dukazorrobridge.hpp"
 #include "DllCallHandler.hpp"
+#include "JReferences.hpp"
 #include <string>
-
 
 #define DLLFUNC extern "C" __declspec(dllexport)
 
@@ -13,8 +13,8 @@ static DllCallHandler dllCallHandler;
 
 BOOL APIENTRY
 DllMain(HMODULE hModule,
-        DWORD ul_reason_for_call,
-        LPVOID lpReserved)
+    DWORD ul_reason_for_call,
+    LPVOID lpReserved)
 {
     switch (ul_reason_for_call)
     {
@@ -32,8 +32,8 @@ DllMain(HMODULE hModule,
 
 int
 jcallback_BrokerError(JNIEnv *env,
-                      jclass clazz,
-                      jstring msg)
+    jclass clazz,
+    jstring msg)
 {
     int result = 0;
     const char *ctxt = env->GetStringUTFChars(msg, nullptr);
@@ -47,44 +47,44 @@ jcallback_BrokerError(JNIEnv *env,
 
 int
 jcallback_BrokerProgress(JNIEnv *env,
-                         jclass clazz,
-                         jint progress)
+    jclass clazz,
+    jint progress)
 {
     return BrokerProgress(progress);
 }
 
 DLLFUNC int
 BrokerOpen(char *Name,
-           FARPROC fpError,
-           FARPROC fpProgress)
+    FARPROC fpError,
+    FARPROC fpProgress)
 {
-	strcpy_s(Name, 10, "Dukascopy");
-    (FARPROC&) BrokerError = fpError;
-    (FARPROC&) BrokerProgress = fpProgress;
+    strcpy_s(Name, 10, "Dukascopy");
+    (FARPROC&)BrokerError = fpError;
+    (FARPROC&)BrokerProgress = fpProgress;
 
     return PLUGIN_VERSION;
 }
 
 DLLFUNC void
 BrokerHTTP(FARPROC fpSend,
-           FARPROC fpStatus,
-           FARPROC fpResult,
-           FARPROC fpFree)
+    FARPROC fpStatus,
+    FARPROC fpResult,
+    FARPROC fpFree)
 {
     //BrokerError("BrokerHTTP not yet supported!");
 }
 
 DLLFUNC int
 BrokerLogin(const char *User,
-            const char *Pwd,
-            const char *Type,
-            char *Accounts)
+    const char *Pwd,
+    const char *Type,
+    char *Accounts)
 {
     if (User)
         return dllCallHandler.BrokerLogin(User,
-                                          Pwd,
-                                          Type,
-                                          Accounts);
+            Pwd,
+            Type,
+            Accounts);
     return dllCallHandler.BrokerLogout();
 }
 
@@ -96,157 +96,152 @@ BrokerTime(DATE *pTimeUTC)
 
 DLLFUNC int
 BrokerAsset(char* Asset,
-            double *pPrice,
-            double *pSpread,
-            double *pVolume,
-            double *pPip,
-            double *pPipCost,
-            double *pLotAmount,
-            double *pMarginCost,
-            double *pRollLong,
-            double *pRollShort)
+    double *pPrice,
+    double *pSpread,
+    double *pVolume,
+    double *pPip,
+    double *pPipCost,
+    double *pLotAmount,
+    double *pMarginCost,
+    double *pRollLong,
+    double *pRollShort)
 {
     if (!pPrice)
         return dllCallHandler.SubscribeAsset(Asset);
     else
         return dllCallHandler.BrokerAsset(Asset,
-                                          pPrice,
-                                          pSpread,
-                                          pVolume,
-                                          pPip,
-                                          pPipCost,
-                                          pLotAmount,
-                                          pMarginCost,
-                                          pRollLong,
-                                          pRollShort);
+            pPrice,
+            pSpread,
+            pVolume,
+            pPip,
+            pPipCost,
+            pLotAmount,
+            pMarginCost,
+            pRollLong,
+            pRollShort);
 }
 
 DLLFUNC int
 BrokerHistory2(char* Asset,
-               DATE tStart,
-               DATE tEnd,
-               int nTickMinutes,
-               int nTicks,
-               T6* ticks)
+    DATE tStart,
+    DATE tEnd,
+    int nTickMinutes,
+    int nTicks,
+    T6* ticks)
 {
     return dllCallHandler.BrokerHistory2(Asset,
-                                         tStart,
-                                         tEnd,
-                                         nTickMinutes,
-                                         nTicks,
-                                         ticks);
+        tStart,
+        tEnd,
+        nTickMinutes,
+        nTicks,
+        ticks);
 }
 
 DLLFUNC int
 BrokerAccount(char* Account,
-              double *pBalance,
-              double *pTradeVal,
-              double *pMarginVal)
+    double *pBalance,
+    double *pTradeVal,
+    double *pMarginVal)
 {
     return dllCallHandler.BrokerAccount(Account,
-                                        pBalance,
-                                        pTradeVal,
-                                        pMarginVal);
+        pBalance,
+        pTradeVal,
+        pMarginVal);
 }
 
 DLLFUNC int
 BrokerBuy2(char* Asset,
-          int nAmount,
-          double dStopDist,
-          double limit,
-          double *pPrice,
-          double *pFill)
+    int nAmount,
+    double dStopDist,
+    double limit,
+    double *pPrice,
+    double *pFill)
 {
     return dllCallHandler.BrokerBuy2(Asset,
-                                    nAmount,
-                                    dStopDist,
-                                    limit,
-                                    pPrice,
-                                    pFill);
+        nAmount,
+        dStopDist,
+        limit,
+        pPrice,
+        pFill);
 }
 
 DLLFUNC int
 BrokerTrade(int nTradeID,
-            double *pOpen,
-            double *pClose,
-            double *pRoll,
-            double *pProfit)
+    double *pOpen,
+    double *pClose,
+    double *pRoll,
+    double *pProfit)
 
 {
     return dllCallHandler.BrokerTrade(nTradeID,
-                                      pOpen,
-                                      pClose,
-                                      pRoll,
-                                      pProfit);
+        pOpen,
+        pClose,
+        pRoll,
+        pProfit);
 }
 
 DLLFUNC int
 BrokerStop(int nTradeID,
-           double dStop)
+    double dStop)
 {
     return dllCallHandler.BrokerStop(nTradeID, dStop);
 }
 
 DLLFUNC int
 BrokerSell(int nTradeID,
-           int nAmount)
+    int nAmount)
 {
     return dllCallHandler.BrokerSell(nTradeID, nAmount);
 }
 
 DLLFUNC var
 BrokerCommand(int nCommand,
-              DWORD dwParameter)
+    DWORD dwParameter)
 {
-    double dummy = 42.0;
+    jmethodID methodID;
     switch (nCommand)
     {
-    case SET_ORDERTEXT:
-    {
-        char* orderText = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcSetOrderText(orderText);
-    }
     case GET_MAXREQUESTS:
         return 0;
     case GET_PRICETYPE:
         return 1;
     case GET_LOCK:
         return -1;
-    case GET_TIME:
-    case GET_MAXTICKS:
-    case GET_SERVERSTATE:
-    {
-       return dllCallHandler.BrokerCommand(nCommand, &dummy, 8);
-    }
-        
-    case GET_DIGITS:
-    case GET_TRADEALLOWED:
-    case GET_MINLOT:
-    case GET_MAXLOT:
-    case GET_MARGININIT:
-    case GET_ACCOUNT:
-    {
-        char* text = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.BrokerCommand(nCommand, text, strlen(text));
-    }
-    case SET_LIMIT:
-    {
-        double* pValue = reinterpret_cast<double*>(dwParameter);
-        return dllCallHandler.BrokerCommand(nCommand, pValue, 8);
-    }
     case SET_PATCH:
     {
         bcPatch = static_cast<int>(dwParameter);
         return 1;
     }
-    case SET_SLIPPAGE:
+    case SET_ORDERTEXT: methodID = JData::bcSetOrderText.methodID;
+    case GET_DIGITS: methodID = JData::bcGetDigits.methodID;
+    case GET_MAXLOT: methodID = JData::bcGetMaxLot.methodID;
+    case GET_MINLOT: methodID = JData::bcGetMinLot.methodID;
+    case GET_MARGININIT: methodID = JData::bcGetMarginInit.methodID;
+    case GET_TRADEALLOWED: methodID = JData::bcGetTradeAllowed.methodID;
     {
-        int slippage = static_cast<int>(dwParameter);
-        return dllCallHandler.BrokerCommand(nCommand, &slippage, 8);
+        char* text = reinterpret_cast<char*>(dwParameter);
+        return dllCallHandler.bcForText(text, methodID);
+    }
+    case GET_TIME: methodID = JData::bcGetTime.methodID;
+    case GET_MAXTICKS: methodID = JData::bcGetMaxTicks.methodID;
+    case GET_SERVERSTATE: methodID = JData::bcGetServerState.methodID;
+    {
+        return dllCallHandler.bcNoParam(methodID);
+    }
+    case GET_ACCOUNT: methodID = JData::bcGetAccount.methodID;
+    {
+        char* stringToWrite = reinterpret_cast<char*>(dwParameter);
+        return dllCallHandler.bcForGetString(stringToWrite, methodID);
+    }
+    case SET_SLIPPAGE: methodID = JData::bcSetSlippage.methodID;
+    case SET_LIMIT: methodID = JData::bcSetLimit.methodID;
+    {
+        double* pValue = reinterpret_cast<double*>(dwParameter);
+        return dllCallHandler.bcForDouble(*pValue, methodID);
     }
     default:
-        {
+    {
         return 0.0;
-        }
+    }
     }
 }

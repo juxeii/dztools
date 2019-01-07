@@ -27,4 +27,6 @@ object AccountApi
     }
 
     fun <F> ContextDependencies<F>.accountName() = delay { account.accountId }
+
+    fun <F> ContextDependencies<F>.isNFAAccount() = delay { account.isGlobal }
 }

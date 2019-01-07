@@ -22,7 +22,7 @@ object BrokerTradeApi
                     is OrderIdNotFoundException ->
                     {
                         logger.error("BrokerTrade: order id ${error.orderId} not found!")
-                        printOnZorro("BrokerTrade: order id ${error.orderId} not found!")
+                        printErrorOnZorro("BrokerTrade: order id ${error.orderId} not found!")
                     }
                     else ->
                         logger.error(

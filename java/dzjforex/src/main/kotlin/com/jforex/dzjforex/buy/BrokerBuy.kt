@@ -1,13 +1,12 @@
 package com.jforex.dzjforex.buy
 
-import arrow.Kind
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
+import com.jforex.dzjforex.account.AccountApi.isNFAAccount
 import com.jforex.dzjforex.misc.*
-import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
-import com.jforex.dzjforex.misc.InstrumentApi.filterTradeableInstrument
-import com.jforex.dzjforex.order.zorroId
+import com.jforex.dzjforex.misc.PluginApi.createInstrument
+import com.jforex.dzjforex.misc.PluginApi.filterTradeableInstrument
 import com.jforex.dzjforex.time.BrokerTimeApi.getServerTime
 import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
 import com.jforex.dzjforex.zorro.BROKER_BUY_NO_RESPONSE
@@ -25,8 +24,7 @@ import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
 
-object BrokerBuyApi
-{
+object BrokerBuyApi {
     fun <F> ContextDependencies<F>.brokerBuy(
         assetName: String,
         contracts: Int,
@@ -34,35 +32,31 @@ object BrokerBuyApi
         limitPrice: Double,
         slippage: Double,
         orderText: String
-    ) =
-        createInstrument(assetName)
-            .flatMap { instrument -> filterTradeableInstrument(instrument) }
-            .flatMap { instrument ->
-                submitOrder(
-                    instrument = instrument,
-                    contracts = contracts,
-                    slDistance = slDistance,
-                    limitPrice = limitPrice,
-                    slippage = slippage,
-                    orderText = orderText
+    ) = createInstrument(assetName)
+        .flatMap { instrument -> filterTradeableInstrument(instrument) }
+        .flatMap { instrument ->
+            submitOrder(
+                instrument = instrument,
+                contracts = contracts,
+                slDistance = slDistance,
+                limitPrice = limitPrice,
+                slippage = slippage,
+                orderText = orderText
+            )
+        }
+        .flatMap { processOrderAndGetResult(it, slDistance) }
+        .handleError { error ->
+            when (error) {
+                is AssetNotTradeableException -> {
+                    logAndPrintErrorOnZorro("BrokerBuy: Asset $assetName currently not tradeable!")
+                }
+                else -> logger.error(
+                    "BrokerBuy failed! Error: ${error.message}" +
+                            " Stack trace: ${getStackTrace(error)}"
                 )
             }
-            .flatMap { processOrderAndGetResult(it, slDistance) }
-            .handleError { error ->
-                when (error)
-                {
-                    is AssetNotTradeableException ->
-                    {
-                        logger.error("Asset $assetName currently not tradeable!")
-                        printOnZorro("Asset $assetName currently not tradeable!")
-                    }
-                    else -> logger.error(
-                        "BrokerBuy failed! Error: ${error.message}" +
-                                " Stack trace: ${getStackTrace(error)}"
-                    )
-                }
-                BrokerBuyData(returnCode = BROKER_BUY_FAIL)
-            }
+            BrokerBuyData(returnCode = BROKER_BUY_FAIL)
+        }
 
     private fun <F> ContextDependencies<F>.submitOrder(
         instrument: Instrument,
@@ -71,58 +65,58 @@ object BrokerBuyApi
         limitPrice: Double,
         slippage: Double,
         orderText: String
-    ): Kind<F, IOrder> =
-        binding {
-            val isLimitOrder = limitPrice != 0.0
-            val roundedLimitPrice = roundedLimitPrice(instrument, limitPrice)
-            val orderCommand = createOrderCommand(contracts, isLimitOrder)
-            val goodTillTime = if (isLimitOrder) getServerTime().bind() + fillTimeout * 1000L
-            else TradingSettings.defaultGTT
-            engine
-                .submit(
-                    label = createLabel().bind(),
-                    instrument = instrument,
-                    orderCommand = orderCommand,
-                    amount = contracts.toAmount(),
-                    stopLossPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice),
-                    price = roundedLimitPrice,
-                    slippage = slippage,
-                    goodTillTime = goodTillTime,
-                    comment = orderText
-                )
-                .map { it.order }
-                .doOnNext { logger.debug("Order update: $it") }
-                .takeUntil { it.isFilled || it.isCanceled }
-                .take(fillTimeout, TimeUnit.SECONDS)
-                .blockingLast()
-        }
+    ) = binding {
+        val isLimitOrder = isLimitOrder(limitPrice)
+        val orderCommand = createOrderCommand(contracts, isLimitOrder)
+        engine
+            .submit(
+                label = createLabel().bind(),
+                instrument = instrument,
+                orderCommand = orderCommand,
+                amount = contracts.toAmount(),
+                stopLossPrice = createSLPrice(slDistance, instrument, orderCommand, limitPrice),
+                price = roundedLimitPrice(instrument, limitPrice),
+                slippage = slippage,
+                goodTillTime = createGTT(limitPrice).bind(),
+                comment = orderText
+            )
+            .map { it.order }
+            .doOnNext { logger.debug("Brokerbuy: Order update: $it") }
+            .takeUntil { it.isFilled || it.isCanceled }
+            .take(fillTimeout, TimeUnit.SECONDS)
+            .blockingLast()
+    }
 
-    fun <F> ContextDependencies<F>.createLabel(): Kind<F, String> =
-        delay { pluginSettings.labelPrefix() + System.currentTimeMillis().toString() }
+    fun isLimitOrder(limitPrice: Double) = limitPrice != 0.0
 
-    fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand =
-        when
-        {
-            contracts >= 0 && !isLimitOrder -> IEngine.OrderCommand.BUY
-            contracts >= 0 && isLimitOrder -> IEngine.OrderCommand.BUYLIMIT
-            contracts < 0 && !isLimitOrder -> IEngine.OrderCommand.SELL
-            else -> IEngine.OrderCommand.SELLLIMIT
-        }
+    fun <F> ContextDependencies<F>.createGTT(limitPrice: Double) = binding {
+        if (isLimitOrder(limitPrice)) getServerTime().bind() + fillTimeout * 1000L
+        else TradingSettings.defaultGTT
+    }
+
+    fun <F> ContextDependencies<F>.createLabel() = delay {
+        pluginSettings.labelPrefix() + System.currentTimeMillis().toString()
+    }
+
+    fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand = when {
+        contracts >= 0 && !isLimitOrder -> IEngine.OrderCommand.BUY
+        contracts >= 0 && isLimitOrder -> IEngine.OrderCommand.BUYLIMIT
+        contracts < 0 && !isLimitOrder -> IEngine.OrderCommand.SELL
+        else -> IEngine.OrderCommand.SELLLIMIT
+    }
 
     fun roundedLimitPrice(instrument: Instrument, limitPrice: Double) =
-        if (limitPrice != 0.0) Price(instrument, limitPrice).toDouble() else 0.0
+        if (isLimitOrder(limitPrice)) Price(instrument, limitPrice).toDouble() else 0.0
 
     fun <F> ContextDependencies<F>.createSLPrice(
         slDistance: Double,
         instrument: Instrument,
         orderCommand: IEngine.OrderCommand,
         limitPrice: Double
-    ): Double
-    {
+    ): Double {
         if (slDistance <= 0) return TradingSettings.noSLPrice
-        val openPrice = when
-        {
-            limitPrice != 0.0 -> limitPrice
+        val openPrice = when {
+            isLimitOrder(limitPrice) -> limitPrice
             orderCommand == IEngine.OrderCommand.BUY -> instrument.ask()
             else -> instrument.bid()
         }
@@ -131,20 +125,18 @@ object BrokerBuyApi
         return slPrice.asPrice(instrument)
     }
 
-    fun <F> ContextDependencies<F>.processOrderAndGetResult(
-        order: IOrder,
-        slDistance: Double
-    ) =
-        binding {
-            val returnCode = when
-            {
-                slDistance == -1.0 -> BROKER_BUY_OPPOSITE_CLOSE
-                order.isCreated -> BROKER_BUY_NO_RESPONSE
-                order.isPartiallyFilled -> BROKER_BUY_FAIL
-                else -> order.zorroId()
-            }
-            val fill = if (order.isPartiallyFilled) order.amount.toSignedContracts(order.orderCommand).toDouble()
-            else 0.0
-            BrokerBuyData(returnCode = returnCode, price = order.openPrice, fill = fill)
+    fun <F> ContextDependencies<F>.processOrderAndGetResult(order: IOrder, slDistance: Double) = binding {
+        val returnCode = when {
+            slDistance == -1.0 -> BROKER_BUY_OPPOSITE_CLOSE
+            order.isCreated -> BROKER_BUY_NO_RESPONSE
+            order.isPartiallyFilled -> BROKER_BUY_FAIL
+            else -> order.zorroId()
         }
+        val fill = if (order.isPartiallyFilled) order.toSignedContracts().toDouble()
+        else 0.0
+        if (isNFAAccount().bind()) {
+
+        }
+        BrokerBuyData(returnCode = returnCode, price = order.openPrice, fill = fill)
+    }
 }

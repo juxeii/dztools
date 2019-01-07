@@ -22,7 +22,6 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3EFA7600-DA50-4037-9CA5-6544E57CD8F3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -72,9 +71,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\programs\Java\jdk1.8.0_192_32\include\win32;D:\programs\Java\jdk1.8.0_192_32\include;D:\data\Projects\repos\dztools\c++\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\programs\Java\jdk1.8.0_192_32\lib;$(LibraryPath)</LibraryPath>
     <TargetName>dukascopy</TargetName>
+    <IncludePath>D:\data\Projects\dztools\c++\include;D:\programs\Java\jdk1.8.0_32_192\include\win32;D:\programs\Java\jdk1.8.0_32_192\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\programs\Java\jdk1.8.0_32_192\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um;D:\programs\Java\jdk1.8.0_172\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

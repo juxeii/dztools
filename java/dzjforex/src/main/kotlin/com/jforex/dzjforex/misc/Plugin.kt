@@ -6,6 +6,7 @@ import arrow.effects.*
 import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
 import com.dukascopy.api.IEngine
+import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
@@ -17,6 +18,7 @@ import com.jforex.dzjforex.zorro.ZorroNatives
 import com.jforex.dzjforex.zorro.heartBeatIndication
 import com.jforex.dzjforex.zorro.lotScale
 import com.jforex.kforexutils.client.init
+import com.jforex.kforexutils.instrument.InstrumentFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.aeonbits.owner.ConfigFactory
@@ -43,8 +45,7 @@ fun getClient(): IClient =
         throw(JFException("Error retrieving IClient instance! ${it.message}"))
     }) { it }
 
-fun getStackTrace(it: Throwable): String
-{
+fun getStackTrace(it: Throwable): String {
     val ex = Exception(it)
     val writer = StringWriter()
     val printWriter = PrintWriter(writer)
@@ -65,35 +66,41 @@ fun Double.toContracts() = (this * lotScale).toInt()
 fun Double.toSignedContracts(command: IEngine.OrderCommand) =
     if (command == IEngine.OrderCommand.BUY) toContracts() else -toContracts()
 
-sealed class PluginException() : Throwable()
-{
+fun IOrder.toSignedContracts() = amount.toSignedContracts(orderCommand)
+
+fun IOrder.zorroId() = id.toInt()
+
+sealed class PluginException() : Throwable() {
     data class AssetNotTradeable(val instrument: Instrument) : PluginException()
     data class OrderIdNotFound(val orderId: Int) : PluginException()
 }
 typealias AssetNotTradeableException = PluginException.AssetNotTradeable
 typealias OrderIdNotFoundException = PluginException.OrderIdNotFound
 
-interface PluginDependencies<F> : MonadDefer<F>
-{
+typealias OrderId = Int
+
+interface PluginDependencies<F> : MonadDefer<F> {
     val client: IClient
     val pluginSettings: PluginSettings
     val natives: ZorroNatives
 
-    fun printOnZorro(message: String)
-    {
+    fun printErrorOnZorro(message: String) {
         natives.jcallback_BrokerError(message)
     }
 
-    companion object
-    {
+    fun logAndPrintErrorOnZorro(message: String) {
+        logger.error(message)
+        printErrorOnZorro(message)
+    }
+
+    companion object {
         operator fun <F> invoke(
             client: IClient,
             pluginSettings: PluginSettings,
             natives: ZorroNatives,
             MD: MonadDefer<F>
         ): PluginDependencies<F> =
-            object : PluginDependencies<F>, MonadDefer<F> by MD
-            {
+            object : PluginDependencies<F>, MonadDefer<F> by MD {
                 override val client = client
                 override val pluginSettings = pluginSettings
                 override val natives = natives
@@ -101,25 +108,35 @@ interface PluginDependencies<F> : MonadDefer<F>
     }
 }
 
-object PluginApi
-{
+object PluginApi {
     fun <F> PluginDependencies<F>.isConnected() = delay { client.isConnected }
 
-    fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T
-    {
+    fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T {
         val resultRelay = BehaviorRelay.create<T>()
         task.unsafeRunAsync { result ->
             result.fold(
-                { logger.debug("Error while progress progressWait task!") },
+                { error ->
+                    "ProgressWait failed! Error message: ${error.message} " +
+                            "Stack trace: ${getStackTrace(error)}"
+                },
                 { resultRelay.accept(it) })
         }
         runBlocking {
-            while (!resultRelay.hasValue())
-            {
+            while (!resultRelay.hasValue()) {
                 natives.jcallback_BrokerProgress(heartBeatIndication)
                 delay(pluginSettings.zorroProgressInterval())
             }
         }
         return resultRelay.value!!
+    }
+
+    fun <F> PluginDependencies<F>.createInstrument(assetName: String) =
+        InstrumentFactory
+            .fromName(assetName)
+            .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
+
+    fun <F> PluginDependencies<F>.filterTradeableInstrument(instrument: Instrument) = delay {
+        if (!instrument.isTradable) throw AssetNotTradeableException(instrument)
+        instrument
     }
 }

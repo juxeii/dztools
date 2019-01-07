@@ -13,7 +13,7 @@ import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.Single
 
-object TickFetchApi
+object TickFetch
 {
     fun <F> ContextDependencies<F>.fetchTicks(
         instrument: Instrument,

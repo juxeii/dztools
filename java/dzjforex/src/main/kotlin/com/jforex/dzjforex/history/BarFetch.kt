@@ -8,8 +8,7 @@ import com.jforex.dzjforex.time.asUnixTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
 import io.reactivex.Observable
 
-object BarFetchApi
-{
+object BarFetch {
     fun <F> ContextDependencies<F>.fetchBars(
         instrument: Instrument,
         startTime: Long,
@@ -38,8 +37,9 @@ object BarFetchApi
         BrokerHistoryData(fetchedBars.size, fetchedBars)
     }
 
-    fun <F> ContextDependencies<F>.createPeriod(barMinutes: Int) =
-        catch { Period.createCustomPeriod(Unit.Minute, barMinutes) }
+    fun <F> ContextDependencies<F>.createPeriod(barMinutes: Int) = catch {
+        Period.createCustomPeriod(Unit.Minute, barMinutes)
+    }
 
     fun <F> ContextDependencies<F>.getBarEndTime(
         instrument: Instrument,
@@ -62,8 +62,7 @@ object BarFetchApi
         val startTimeAdapted =
             if (startTimeForZorroStartTime < rawStartBarTime) startTimeForZorroStartTime + period.getInterval()
             else startTimeForZorroStartTime
-        val finalBarStart = minOf(startTimeAdapted, startTimeForNBarsBack)
-        finalBarStart
+        maxOf(startTimeAdapted, startTimeForNBarsBack)
     }
 
     fun <F> ContextDependencies<F>.getBars(
@@ -76,24 +75,21 @@ object BarFetchApi
             .fromIterable(
                 history.getBars(instrument, period, OfferSide.ASK, Filter.NO_FILTER, from, to).asReversed()
             )
-            .map { bar -> createT6Data(bar) }
+            .map { bar ->
+                logger.debug("Stored Bar time ${bar.time.asUnixTimeFormat()}")
+                createT6Data(bar)
+            }
             .toList()
             .blockingGet()
     }
 
-    fun createT6Data(bar: IBar): T6Data
-    {
-        val data = T6Data(
-            time = bar.time.toUTCTime(),
-            high = bar.high.toFloat(),
-            low = bar.low.toFloat(),
-            open = bar.open.toFloat(),
-            close = bar.close.toFloat(),
-            value = 0.0F,
-            volume = bar.volume.toFloat()
-        )
-
-        logger.debug("Stored Bar ${bar.time.asUnixTimeFormat()}")
-        return data
-    }
+    fun createT6Data(bar: IBar) = T6Data(
+        time = bar.time.toUTCTime(),
+        high = bar.high.toFloat(),
+        low = bar.low.toFloat(),
+        open = bar.open.toFloat(),
+        close = bar.close.toFloat(),
+        value = 0.0F,
+        volume = bar.volume.toFloat()
+    )
 }

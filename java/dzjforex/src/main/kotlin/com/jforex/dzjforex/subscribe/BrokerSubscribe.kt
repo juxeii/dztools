@@ -3,7 +3,8 @@ package com.jforex.dzjforex.subscribe
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.ContextApi.setSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
+import com.jforex.dzjforex.misc.PluginApi.createInstrument
+import com.jforex.dzjforex.misc.PluginApi.filterTradeableInstrument
 import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.SUBSCRIBE_FAIL

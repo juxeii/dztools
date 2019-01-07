@@ -9,75 +9,82 @@ class DllCallHandler
 
 public:
     int
-    BrokerLogin(const char *User,
-                const char *Pwd,
-                const char *Type,
-                char *Account);
+        BrokerLogin(const char *User,
+            const char *Pwd,
+            const char *Type,
+            char *Account);
 
     int
-    BrokerLogout();
+        BrokerLogout();
 
     int
-    BrokerTime(DATE *pTimeUTC);
+        BrokerTime(DATE *pTimeUTC);
 
     int
-    SubscribeAsset(const char* Asset);
+        SubscribeAsset(const char* Asset);
 
     int
-    BrokerAsset(char* Asset,
-                double *pPrice,
-                double *pSpread,
-                double *pVolume,
-                double *pPip,
-                double *pPipCost,
-                double *pLotAmount,
-                double *pMarginCost,
-                double *pRollLong,
-                double *pRollShort);
+        BrokerAsset(char* Asset,
+            double *pPrice,
+            double *pSpread,
+            double *pVolume,
+            double *pPip,
+            double *pPipCost,
+            double *pLotAmount,
+            double *pMarginCost,
+            double *pRollLong,
+            double *pRollShort);
 
     int
-    BrokerHistory2(const char *Asset,
-                   const DATE tStart,
-                   const DATE tEnd,
-                   const int nTickMinutes,
-                   const int nTicks,
-                   T6 *ticks);
+        BrokerHistory2(const char *Asset,
+            const DATE tStart,
+            const DATE tEnd,
+            const int nTickMinutes,
+            const int nTicks,
+            T6 *ticks);
 
     int
-    BrokerAccount(const char *Account,
-                  double *pBalance,
-                  double *pTradeVal,
-                  double *pMarginVal);
+        BrokerAccount(const char *Account,
+            double *pBalance,
+            double *pTradeVal,
+            double *pMarginVal);
 
     int
-    BrokerBuy2(char* Asset,
-        int nAmount,
-        double dStopDist,
-        double limit,
-        double *pPrice,
-        double *pFill);
+        BrokerBuy2(char* Asset,
+            int nAmount,
+            double dStopDist,
+            double limit,
+            double *pPrice,
+            double *pFill);
 
     int
-    BrokerTrade(const int nTradeID,
-                double *pOpen,
-                double *pClose,
-                double *pRoll,
-                double *pProfit);
+        BrokerTrade(const int nTradeID,
+            double *pOpen,
+            double *pClose,
+            double *pRoll,
+            double *pProfit);
 
     int
-    BrokerStop(const int nTradeID,
-               const double dStop);
+        BrokerStop(const int nTradeID,
+            const double dStop);
 
     int
-    BrokerSell(const int nTradeID,
-               const int nAmount);
+        BrokerSell(const int nTradeID,
+            const int nAmount);
 
     var
-    BrokerCommand(int command,
-                  void* data,
-                  int size);
+        bcForText(char* orderText,
+            jmethodID methodID);
 
-    var bcSetOrderText(char* orderText);
+    var
+        bcForDouble(double value,
+            jmethodID methodID);
+
+    var
+        bcForGetString(char *stringToWrite, jmethodID methodID);
+
+    var
+        bcNoParam(jmethodID methodID);
 
 private:
     JNIHandler jniHandler;

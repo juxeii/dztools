@@ -32,7 +32,7 @@ object BrokerStopApi
             is AssetNotTradeableException ->
             {
                 logger.error("BrokerStop: ${error.instrument} currently not tradeable!")
-                printOnZorro("BrokerStop: ${error.instrument} currently not tradeable!")
+                printErrorOnZorro("BrokerStop: ${error.instrument} currently not tradeable!")
             }
             else ->
                 logger.error(

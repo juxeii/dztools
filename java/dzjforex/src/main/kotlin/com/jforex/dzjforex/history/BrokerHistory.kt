@@ -1,9 +1,9 @@
 package com.jforex.dzjforex.history
 
-import com.jforex.dzjforex.history.BarFetchApi.fetchBars
-import com.jforex.dzjforex.history.TickFetchApi.fetchTicks
+import com.jforex.dzjforex.history.BarFetch.fetchBars
+import com.jforex.dzjforex.history.TickFetch.fetchTicks
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
+import com.jforex.dzjforex.misc.PluginApi.createInstrument
 import com.jforex.dzjforex.misc.PluginApi.isConnected
 import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.misc.logger

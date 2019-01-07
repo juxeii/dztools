@@ -94,27 +94,27 @@ class ZorroBridge
         )
     )
 
-    fun bcSetOrderText(orderText: String): Double = runDirect(contextApi.setOrderText(orderText))
+    fun bcSetOrderText(orderText: String) = runDirect(contextApi.setOrderText(orderText))
 
-    fun brokerCommand(commandId: Int, bytes: ByteArray, out_CommandResultToFill: DoubleArray)
-    {
-        val commandCall = with(contextApi) {
-            when (commandId)
-            {
-                SET_SLIPPAGE -> setSlippage(bytes)
-                SET_LIMIT -> setLimit(bytes)
-                GET_ACCOUNT -> getAccount(bytes)
-                GET_DIGITS -> getDigits(bytes)
-                GET_MAXLOT -> getMaxLot(bytes)
-                GET_MINLOT -> getMinLot(bytes)
-                GET_MARGININIT -> getMarginInit(bytes)
-                GET_TIME -> getTime()
-                GET_TRADEALLOWED -> getTradeAllowed(bytes)
-                GET_MAXTICKS -> getMaxTicks()
-                GET_SERVERSTATE -> getServerState()
-                else -> IO.monad().just(BROKER_COMMAND_UNAVAILABLE)
-            }
-        }
-        out_CommandResultToFill[0] = runDirect(commandCall)
-    }
+    fun bcSetSlippage(slippage: Double) = runDirect(contextApi.setSlippage(slippage))
+
+    fun bcSetLimit(limit: Double) = runDirect(contextApi.setLimit(limit))
+
+    fun bcGetAccount() = runDirect(contextApi.getAccount())
+
+    fun bcGetDigits(assetName: String) = runDirect(contextApi.getDigits(assetName))
+
+    fun bcGetMaxLot(assetName: String) = runDirect(contextApi.getMaxLot(assetName))
+
+    fun bcGetMinLot(assetName: String) = runDirect(contextApi.getMinLot(assetName))
+
+    fun bcGetMarginInit(assetName: String) = runDirect(contextApi.getMarginInit(assetName))
+
+    fun bcGetTradeAllowed(assetName: String) = runDirect(contextApi.getTradeAllowed(assetName))
+
+    fun bcGetTime() = runDirect(contextApi.getTime())
+
+    fun bcGetMaxTicks() = runDirect(contextApi.getMaxTicks())
+
+    fun bcGetServerState() = runDirect(contextApi.getServerState())
 }

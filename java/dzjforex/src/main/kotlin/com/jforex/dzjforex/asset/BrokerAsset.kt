@@ -4,7 +4,6 @@ import com.dukascopy.api.Instrument
 import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.account.AccountApi.pipCost
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.InstrumentApi.createInstrument
 import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.ASSET_AVAILABLE
@@ -12,6 +11,7 @@ import com.jforex.dzjforex.zorro.ASSET_UNAVAILABLE
 import com.jforex.kforexutils.instrument.spread
 import com.jforex.kforexutils.instrument.tick
 import com.jforex.kforexutils.misc.asCost
+import com.jforex.dzjforex.misc.PluginApi.createInstrument
 
 object BrokerAssetApi
 {

@@ -22,15 +22,15 @@ extern int
 
 var
 brokerCommand(int command,
-              DWORD parameter);
+    DWORD parameter);
 
 extern int
 jcallback_BrokerError(JNIEnv *env,
-                      jclass clazz,
-                      jstring msg);
+    jclass clazz,
+    jstring msg);
 extern int
 jcallback_BrokerProgress(JNIEnv *env,
-                         jclass clazz,
-                         jint progress);
+    jclass clazz,
+    jint progress);
 
 #endif /* DUKAZORROBRIDGE_HPP */

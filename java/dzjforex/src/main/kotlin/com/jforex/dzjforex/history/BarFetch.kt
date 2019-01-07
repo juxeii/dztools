@@ -28,6 +28,10 @@ object BarFetch {
             rawStartBarTime = startTime,
             numberOfBars = numberOfBars
         ).bind()
+        logger.debug("Fetching $numberOfBars bars: \n" +
+                " endBarTime ${endBarTime.asUnixTimeFormat()}" +
+                " startBarTime ${startBarTime.asUnixTimeFormat()}" +
+                " period $period")
         val fetchedBars = getBars(
             instrument = instrument,
             period = period,

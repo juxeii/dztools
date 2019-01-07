@@ -1,6 +1,8 @@
 package com.jforex.dzjforex.sell
 
+import arrow.Kind
 import arrow.core.Option
+import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.order.OrderLookupApi.getTradeableOrderForId
@@ -14,6 +16,8 @@ import com.jforex.kforexutils.settings.TradingSettings
 
 object BrokerSellApi {
 
+    data class CloseParams(val order: IOrder, val amount: Double, val price: Double, val slippage: Double)
+
     fun <F> ContextDependencies<F>.brokerSell(
         orderId: Int,
         contracts: Int,
@@ -21,25 +25,45 @@ object BrokerSellApi {
         slippage: Double
     ) =
         getTradeableOrderForId(orderId)
-            .map { order ->
+            .flatMap { order ->
                 if (order.isClosed) {
                     logger.warn("BrokerSell: trying to close already closed order $order!")
-                    order.zorroId()
+                    just(order.zorroId())
                 } else
-                    order
-                        .close(
-                            amount = contracts.toAmount(),
-                            price = getLimitPrice(maybeLimitPrice, order.instrument),
-                            slippage = slippage
-                        ) {}
-                        .map { orderEvent -> processOrderEventAndGetResult(orderEvent) }
-                        .blockingLast()
+                {
+                    logger.debug("BrokerSell called orderId $orderId contracts $contracts order $order")
+                    val closeParams = CloseParams(
+                        order = order,
+                        amount = contracts.toAmount(),
+                        price = getLimitPrice(maybeLimitPrice, order.instrument),
+                        slippage = slippage
+                    )
+                    logger.debug("BrokerSell: closing $closeParams")
+                    closeOrder(closeParams).map { orderEvent -> processOrderEventAndGetResult(orderEvent) }
+                }
             }.handleError { error ->
                 logError(error)
                 BROKER_SELL_FAIL
             }
 
-    private fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+    fun <F> ContextDependencies<F>.closeOrder(closeParams: CloseParams): Kind<F, OrderEvent> =
+        delay {
+            closeParams
+                .order
+                .close(
+                    amount = closeParams.amount,
+                    price = closeParams.price,
+                    slippage = closeParams.slippage
+                ) {}
+                .blockingLast()
+        }
+
+    fun processOrderEventAndGetResult(orderEvent: OrderEvent) =
+        if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
+            orderEvent.order.zorroId()
+        else BROKER_SELL_FAIL
+
+    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
         when (error) {
             is OrderIdNotFoundException -> {
                 logAndPrintErrorOnZorro("BrokerSell: orderId ${error.orderId} not found!")
@@ -53,12 +77,7 @@ object BrokerSellApi {
         }
     }
 
-    private fun processOrderEventAndGetResult(orderEvent: OrderEvent) =
-        if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
-            orderEvent.order.zorroId()
-        else BROKER_SELL_FAIL
-
-    private fun getLimitPrice(maybeLimitPrice: Option<Double>, instrument: Instrument) =
+    fun getLimitPrice(maybeLimitPrice: Option<Double>, instrument: Instrument) =
         maybeLimitPrice
             .fold({ TradingSettings.noPreferredClosePrice })
             { limitPrice -> limitPrice.asPrice(instrument) }

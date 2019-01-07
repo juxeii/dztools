@@ -22,11 +22,10 @@ namespace JData
     JMethodDesc brokerStop = { nullptr, "brokerStop","(ID)I" };
     JMethodDesc brokerSell = { nullptr, "brokerSell","(II)I" };
     JMethodDesc brokerHistory2 = { nullptr, "brokerHistory2", "(Ljava/lang/String;DDII)Lcom/jforex/dzjforex/history/BrokerHistoryData;" };
-    JMethodDesc brokerCommand = { nullptr, "brokerCommand","(I[B[D)V" };
     JMethodDesc bcSetOrderText = { nullptr, "bcSetOrderText","(Ljava/lang/String;)D" };
-    JMethodDesc bcSetSlippage = { nullptr, "bcSetSlippage","(Ljava/lang/String;)D" };
+    JMethodDesc bcSetSlippage = { nullptr, "bcSetSlippage","(D)D" };
     JMethodDesc bcSetLimit = { nullptr, "bcSetLimit","(D)D" };
-    JMethodDesc bcGetAccount = { nullptr, "bcGetAccount","()Ljava/lang/String;" };
+    JMethodDesc bcGetAccount = { nullptr, "bcGetAccount","()Lcom/jforex/dzjforex/command/BrokerCommandData;" };
     JMethodDesc bcGetDigits = { nullptr, "bcGetDigits","(Ljava/lang/String;)D" };
     JMethodDesc bcGetMaxLot = { nullptr, "bcGetMaxLot","(Ljava/lang/String;)D" };
     JMethodDesc bcGetMinLot = { nullptr, "bcGetMinLot","(Ljava/lang/String;)D" };

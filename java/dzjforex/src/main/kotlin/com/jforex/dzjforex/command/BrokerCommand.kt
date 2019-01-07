@@ -11,6 +11,7 @@ import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.createInstrument
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.toUTCTime
+import com.jforex.dzjforex.zorro.BROKER_COMMAND_ERROR
 import com.jforex.dzjforex.zorro.BROKER_COMMAND_OK
 import com.jforex.kforexutils.instrument.noOfDecimalPlaces
 import com.jforex.kforexutils.instrument.tick
@@ -57,11 +58,14 @@ object BrokerCommandApi {
 
     fun <F> ContextDependencies<F>.getAccount() = bindingCatch {
         BrokerCommandData(BROKER_COMMAND_OK.toInt(), accountName().bind())
+    }.handleError { BrokerCommandData(BROKER_COMMAND_ERROR.toInt(), "") }
+
+    fun <F> ContextDependencies<F>.getMaxTicks() = delay {
+        logger.debug("Broker command GET_MAXTICKS called")
+        pluginSettings.maxTicks().toDouble()
     }
 
-    fun <F> ContextDependencies<F>.getMaxTicks() = just(pluginSettings.maxTicks().toDouble())
-
-    fun <F> ContextDependencies<F>.getTime() = binding {
+    fun <F> ContextDependencies<F>.getTime() = bindingCatch {
         logger.debug("Broker command GET_TIME called")
         getSubscribedInstruments()
             .bind()
@@ -70,7 +74,7 @@ object BrokerCommandApi {
             .toUTCTime()
     }
 
-    fun <F> ContextDependencies<F>.getServerState() = binding {
+    fun <F> ContextDependencies<F>.getServerState() = bindingCatch {
         logger.debug("Broker command GET_SERVERSTATE called")
         if (client.isConnected) {
             bcServerState.accept(ServerState.CONNECTED)

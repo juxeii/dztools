@@ -11,6 +11,21 @@ int
 (__cdecl *BrokerProgress)(const int percent) = nullptr;
 static DllCallHandler dllCallHandler;
 
+std::map<int, jmethodID> bcMethodIdMap = {
+                {SET_ORDERTEXT,JData::bcSetOrderText.methodID},
+                {GET_DIGITS,JData::bcGetDigits.methodID},
+                {GET_MAXLOT,JData::bcGetMaxLot.methodID},
+                {GET_MINLOT,JData::bcGetMinLot.methodID},
+                {GET_MARGININIT,JData::bcGetMarginInit.methodID},
+                {GET_TRADEALLOWED,JData::bcGetTradeAllowed.methodID},
+                {GET_TIME,JData::bcGetTime.methodID},
+                {GET_MAXTICKS,JData::bcGetMaxTicks.methodID},
+                {GET_SERVERSTATE,JData::bcGetServerState.methodID},
+                {GET_ACCOUNT,JData::bcGetAccount.methodID},
+                {SET_SLIPPAGE,JData::bcSetSlippage.methodID},
+                {SET_LIMIT,JData::bcSetLimit.methodID}
+};
+
 BOOL APIENTRY
 DllMain(HMODULE hModule,
     DWORD ul_reason_for_call,
@@ -194,11 +209,18 @@ BrokerSell(int nTradeID,
     return dllCallHandler.BrokerSell(nTradeID, nAmount);
 }
 
+jmethodID getBcMethodId(int nCommand) {
+    auto it = bcMethodIdMap.find(nCommand);
+    if (it != bcMethodIdMap.end()) {
+        return it->second;
+    }
+    else return nullptr;
+}
+
 DLLFUNC var
 BrokerCommand(int nCommand,
     DWORD dwParameter)
 {
-    jmethodID methodID;
     switch (nCommand)
     {
     case GET_MAXREQUESTS:
@@ -212,32 +234,32 @@ BrokerCommand(int nCommand,
         bcPatch = static_cast<int>(dwParameter);
         return 1;
     }
-    case SET_ORDERTEXT: methodID = JData::bcSetOrderText.methodID;
-    case GET_DIGITS: methodID = JData::bcGetDigits.methodID;
-    case GET_MAXLOT: methodID = JData::bcGetMaxLot.methodID;
-    case GET_MINLOT: methodID = JData::bcGetMinLot.methodID;
-    case GET_MARGININIT: methodID = JData::bcGetMarginInit.methodID;
-    case GET_TRADEALLOWED: methodID = JData::bcGetTradeAllowed.methodID;
+    case SET_ORDERTEXT:
+    case GET_DIGITS:
+    case GET_MAXLOT:
+    case GET_MINLOT:
+    case GET_MARGININIT:
+    case GET_TRADEALLOWED:
     {
         char* text = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForText(text, methodID);
+        return dllCallHandler.bcForText(text, getBcMethodId(nCommand));
     }
-    case GET_TIME: methodID = JData::bcGetTime.methodID;
-    case GET_MAXTICKS: methodID = JData::bcGetMaxTicks.methodID;
-    case GET_SERVERSTATE: methodID = JData::bcGetServerState.methodID;
+    case GET_TIME:
+    case GET_MAXTICKS:
+    case GET_SERVERSTATE:
     {
-        return dllCallHandler.bcNoParam(methodID);
+        return dllCallHandler.bcNoParam(getBcMethodId(nCommand));
     }
-    case GET_ACCOUNT: methodID = JData::bcGetAccount.methodID;
+    case GET_ACCOUNT:
     {
         char* stringToWrite = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForGetString(stringToWrite, methodID);
+        return dllCallHandler.bcForGetString(stringToWrite, getBcMethodId(nCommand));
     }
-    case SET_SLIPPAGE: methodID = JData::bcSetSlippage.methodID;
-    case SET_LIMIT: methodID = JData::bcSetLimit.methodID;
+    case SET_SLIPPAGE:
+    case SET_LIMIT:
     {
         double* pValue = reinterpret_cast<double*>(dwParameter);
-        return dllCallHandler.bcForDouble(*pValue, methodID);
+        return dllCallHandler.bcForDouble(*pValue, getBcMethodId(nCommand));
     }
     default:
     {

@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <iostream>
 #include <sstream>
+#include <map>
 #include <jni.h>
 #include "trading.h"
 #include "PatchValue.hpp"

@@ -23,6 +23,7 @@ JMethodDesc brokerStop =     { nullptr, "brokerStop",     "(ID)I" };
 JMethodDesc brokerSell =     { nullptr, "brokerSell",     "(II)I" };
 JMethodDesc brokerHistory2 = { nullptr, "brokerHistory2", "(Ljava/lang/String;DDII)Lcom/jforex/dzjforex/history/BrokerHistoryData;" };
 JMethodDesc brokerCommand =  { nullptr, "brokerCommand",   "(I[B[D)V" };
+JMethodDesc bcSetOrderText = { nullptr, "bcSetOrderText",   "(Ljava/lang/String;)D" };
 
 JMethodDesc excGetMessage=     { nullptr, "getMessage",       "()Ljava/lang/String;" };
 JMethodDesc excGetName=        { nullptr, "getName",          "()Ljava/lang/String;" };
@@ -47,7 +48,8 @@ const std::vector<JMethodDesc*> dukaZorroBridgeMethods = { &constructor,
                                                            &brokerStop,
                                                            &brokerSell,
                                                            &brokerHistory2,
-                                                           &brokerCommand };
+                                                           &brokerCommand,
+&bcSetOrderText };
 
 const int nativesTableSize = sizeof(nativesTable) / sizeof(nativesTable[0]);
 

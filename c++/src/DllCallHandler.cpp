@@ -343,3 +343,14 @@ DllCallHandler::BrokerCommand(int command,
 
     return res;
 }
+
+var DllCallHandler::bcSetOrderText(char* orderText)
+{
+    jstring jOrderText = env->NewStringUTF(orderText);
+    jdouble returnCode = env->CallDoubleMethod(JData::JDukaZorroBridgeObject,
+        JData::bcSetOrderText.methodID,
+        jOrderText);
+    env->DeleteLocalRef(jOrderText);
+
+    return returnCode;
+}

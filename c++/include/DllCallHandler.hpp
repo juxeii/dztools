@@ -77,6 +77,8 @@ public:
                   void* data,
                   int size);
 
+    var bcSetOrderText(char* orderText);
+
 private:
     JNIHandler jniHandler;
     JNIEnv *env;

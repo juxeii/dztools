@@ -201,6 +201,11 @@ BrokerCommand(int nCommand,
     double dummy = 42.0;
     switch (nCommand)
     {
+    case SET_ORDERTEXT:
+    {
+        char* orderText = reinterpret_cast<char*>(dwParameter);
+        return dllCallHandler.bcSetOrderText(orderText);
+    }
     case GET_MAXREQUESTS:
         return 0;
     case GET_PRICETYPE:
@@ -220,7 +225,6 @@ BrokerCommand(int nCommand,
     case GET_MAXLOT:
     case GET_MARGININIT:
     case GET_ACCOUNT:
-    case SET_ORDERTEXT:
     {
         char* text = reinterpret_cast<char*>(dwParameter);
         return dllCallHandler.BrokerCommand(nCommand, text, strlen(text));

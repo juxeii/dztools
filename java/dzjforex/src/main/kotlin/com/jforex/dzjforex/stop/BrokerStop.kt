@@ -12,8 +12,7 @@ import com.jforex.kforexutils.order.event.OrderEvent
 import com.jforex.kforexutils.order.event.OrderEventType
 import com.jforex.kforexutils.order.extension.setSL
 
-object BrokerStopApi
-{
+object BrokerStopApi {
     fun <F> ContextDependencies<F>.brokerStop(orderId: Int, slPrice: Double) =
         getTradeableOrderForId(orderId)
             .flatMap { order ->
@@ -27,13 +26,9 @@ object BrokerStopApi
             }
 
     private fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
-        when (error)
-        {
+        when (error) {
             is AssetNotTradeableException ->
-            {
-                logger.error("BrokerStop: ${error.instrument} currently not tradeable!")
-                printErrorOnZorro("BrokerStop: ${error.instrument} currently not tradeable!")
-            }
+                natives.logAndPrintErrorOnZorro("BrokerStop: ${error.instrument} currently not tradeable!")
             else ->
                 logger.error(
                     "BrokerStop failed! Error: ${error.message} " +
@@ -43,20 +38,17 @@ object BrokerStopApi
     }
 
     fun evaluateCloseEvent(orderEvent: OrderEvent) =
-        if (orderEvent.type == OrderEventType.CHANGED_SL)
-        {
+        if (orderEvent.type == OrderEventType.CHANGED_SL) {
             logger.debug("BrokerStop: stop loss price successfully set for order ${orderEvent.order}")
             BROKER_ADJUST_SL_OK
-        } else
-        {
+        } else {
             logger.debug("BrokerStop: setting stop loss failed for order ${orderEvent.order} event $orderEvent")
             BROKER_ADJUST_SL_FAIL
         }
 
-    fun <F> ContextDependencies<F>.setSLPrice(order: IOrder, slPrice: Double) =
-        catch {
-            order
-                .setSL(slPrice = slPrice) {}
-                .blockingLast()
-        }
+    fun <F> ContextDependencies<F>.setSLPrice(order: IOrder, slPrice: Double) = catch {
+        order
+            .setSL(slPrice = slPrice) {}
+            .blockingLast()
+    }
 }

@@ -1,9 +1,18 @@
 package com.jforex.dzjforex.zorro
 
+import com.jforex.dzjforex.misc.logger
 import com.sun.corba.se.impl.activation.ServerMain
 
-class ZorroNatives
-{
+class ZorroNatives {
+    fun printErrorOnZorro(message: String) {
+        jcallback_BrokerError(message)
+    }
+
+    fun logAndPrintErrorOnZorro(message: String) {
+        logger.error(message)
+        printErrorOnZorro(message)
+    }
+
     fun showInZorroWindow(errorMsg: String) = jcallback_BrokerError(errorMsg)
 
     fun logToZorroFile(errorMsg: String) = showInZorroWindow("#$errorMsg")

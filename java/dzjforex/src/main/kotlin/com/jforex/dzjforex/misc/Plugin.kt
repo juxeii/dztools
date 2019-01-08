@@ -5,10 +5,7 @@ import arrow.core.Try
 import arrow.effects.*
 import arrow.effects.instances.io.monadDefer.monadDefer
 import arrow.effects.typeclasses.MonadDefer
-import com.dukascopy.api.IEngine
-import com.dukascopy.api.IOrder
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.JFException
 import com.dukascopy.api.system.ClientFactory
 import com.dukascopy.api.system.IClient
 import com.jakewharton.rxrelay2.BehaviorRelay
@@ -16,7 +13,6 @@ import com.jforex.dzjforex.misc.PluginApi.progressWait
 import com.jforex.dzjforex.settings.PluginSettings
 import com.jforex.dzjforex.zorro.ZorroNatives
 import com.jforex.dzjforex.zorro.heartBeatIndication
-import com.jforex.dzjforex.zorro.lotScale
 import com.jforex.kforexutils.client.init
 import com.jforex.kforexutils.instrument.InstrumentFactory
 import kotlinx.coroutines.delay
@@ -35,15 +31,21 @@ val pluginApi = PluginDependencies(
     IO.monadDefer()
 )
 
-fun getClient(): IClient =
-    Try {
-        val client = ClientFactory.getDefaultInstance()
-        client.init()
-        client
-    }.fold({
-        logger.error("Error retrieving IClient instance! ${it.message}")
-        throw(JFException("Error retrieving IClient instance! ${it.message}"))
-    }) { it }
+sealed class PluginException() : Throwable() {
+    data class AssetNotTradeable(val instrument: Instrument) : PluginException()
+    data class OrderIdNotFound(val orderId: Int) : PluginException()
+    data class InvalidAssetName(val assetName: String) : PluginException()
+}
+typealias AssetNotTradeableException = PluginException.AssetNotTradeable
+typealias OrderIdNotFoundException = PluginException.OrderIdNotFound
+typealias InvalidAssetNameException = PluginException.InvalidAssetName
+typealias OrderId = Int
+
+fun getClient() = Try {
+    val client = ClientFactory.getDefaultInstance()
+    client.init()
+    client
+}.fold({ throw it }) { it }
 
 fun getStackTrace(it: Throwable): String {
     val ex = Exception(it)
@@ -59,39 +61,10 @@ fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
 
 fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
-fun Int.toAmount() = Math.abs(this) / lotScale
-
-fun Double.toContracts() = (this * lotScale).toInt()
-
-fun Double.toSignedContracts(command: IEngine.OrderCommand) =
-    if (command == IEngine.OrderCommand.BUY) toContracts() else -toContracts()
-
-fun IOrder.toSignedContracts() = amount.toSignedContracts(orderCommand)
-
-fun IOrder.zorroId() = id.toInt()
-
-sealed class PluginException() : Throwable() {
-    data class AssetNotTradeable(val instrument: Instrument) : PluginException()
-    data class OrderIdNotFound(val orderId: Int) : PluginException()
-}
-typealias AssetNotTradeableException = PluginException.AssetNotTradeable
-typealias OrderIdNotFoundException = PluginException.OrderIdNotFound
-
-typealias OrderId = Int
-
 interface PluginDependencies<F> : MonadDefer<F> {
     val client: IClient
     val pluginSettings: PluginSettings
     val natives: ZorroNatives
-
-    fun printErrorOnZorro(message: String) {
-        natives.jcallback_BrokerError(message)
-    }
-
-    fun logAndPrintErrorOnZorro(message: String) {
-        logger.error(message)
-        printErrorOnZorro(message)
-    }
 
     companion object {
         operator fun <F> invoke(
@@ -133,10 +106,10 @@ object PluginApi {
     fun <F> PluginDependencies<F>.createInstrument(assetName: String) =
         InstrumentFactory
             .fromName(assetName)
-            .fromOption { JFException("Asset name $assetName is not a valid instrument!") }
+            .fromOption { InvalidAssetNameException(assetName) }
 
     fun <F> PluginDependencies<F>.filterTradeableInstrument(instrument: Instrument) = delay {
-        if (!instrument.isTradable) throw AssetNotTradeableException(instrument)
+        if (!instrument.isTradable) raiseError<AssetNotTradeableException>(AssetNotTradeableException(instrument))
         instrument
     }
 }

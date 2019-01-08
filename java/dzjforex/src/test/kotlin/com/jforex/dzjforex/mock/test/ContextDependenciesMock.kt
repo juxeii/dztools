@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.test.mock
+package com.jforex.dzjforex.mock.test
 
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.IContext
@@ -23,4 +23,5 @@ interface ContextDependenciesForTest<F> : ContextDependencies<F>
     }
 }
 
-fun getContextDependenciesForTest_IO() = ContextDependenciesForTest(getPluginDependenciesForTest_IO())
+fun getContextDependenciesForTest_IO() =
+    ContextDependenciesForTest(getPluginDependenciesForTest_IO())

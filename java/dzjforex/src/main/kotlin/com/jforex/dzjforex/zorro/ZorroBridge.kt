@@ -34,8 +34,7 @@ import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
 import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 
 @Suppress("unused")
-class ZorroBridge
-{
+class ZorroBridge {
     fun brokerLogin(username: String, password: String, accountType: String) =
         runWithProgress(
             pluginApi.brokerLogin(
@@ -94,32 +93,32 @@ class ZorroBridge
         )
     )
 
-    fun bcSetOrderText(orderText: String) = runBrokerCommand(contextApi.setOrderText(orderText))
+    fun bcSetOrderText(orderText: String) = runBrokerCommand { contextApi.setOrderText(orderText) }
 
-    fun bcSetSlippage(slippage: Double) = runBrokerCommand(contextApi.setSlippage(slippage))
+    fun bcSetSlippage(slippage: Double) = runBrokerCommand { contextApi.setSlippage(slippage) }
 
-    fun bcSetLimit(limit: Double) = runBrokerCommand(contextApi.setLimit(limit))
+    fun bcSetLimit(limit: Double) = runBrokerCommand { contextApi.setLimit(limit) }
 
     fun bcGetAccount() = runDirect(contextApi.getAccount())
 
-    fun bcGetDigits(assetName: String) = runBrokerCommand(contextApi.getDigits(assetName))
+    fun bcGetDigits(assetName: String) = runBrokerCommand { contextApi.getDigits(assetName) }
 
-    fun bcGetMaxLot(assetName: String) = runBrokerCommand(contextApi.getMaxLot(assetName))
+    fun bcGetMaxLot(assetName: String) = runBrokerCommand { contextApi.getMaxLot(assetName) }
 
-    fun bcGetMinLot(assetName: String) = runBrokerCommand(contextApi.getMinLot(assetName))
+    fun bcGetMinLot(assetName: String) = runBrokerCommand { contextApi.getMinLot(assetName) }
 
-    fun bcGetMarginInit(assetName: String) = runBrokerCommand(contextApi.getMarginInit(assetName))
+    fun bcGetMarginInit(assetName: String) = runBrokerCommand { contextApi.getMarginInit(assetName) }
 
-    fun bcGetTradeAllowed(assetName: String) = runBrokerCommand(contextApi.getTradeAllowed(assetName))
+    fun bcGetTradeAllowed(assetName: String) = runBrokerCommand { contextApi.getTradeAllowed(assetName) }
 
-    fun bcGetTime() = runBrokerCommand(contextApi.getTime())
+    fun bcGetTime() = runBrokerCommand { contextApi.getTime() }
 
-    fun bcGetMaxTicks() = runBrokerCommand(contextApi.getMaxTicks())
+    fun bcGetMaxTicks() = runBrokerCommand { contextApi.getMaxTicks() }
 
-    fun bcGetServerState() = runBrokerCommand(contextApi.getServerState())
+    fun bcGetServerState() = runBrokerCommand { contextApi.getServerState() }
 
-    fun runBrokerCommand(bc: Kind<ForIO, Double>): Double = contextApi.run {
+    private fun runBrokerCommand(bc: () -> Kind<ForIO, Double>) = pluginApi.run {
         if (!client.isConnected) BROKER_COMMAND_ERROR
-        else runDirect(bc.handleError { BROKER_COMMAND_ERROR })
+        else runDirect(bc().handleError { BROKER_COMMAND_ERROR })
     }
 }

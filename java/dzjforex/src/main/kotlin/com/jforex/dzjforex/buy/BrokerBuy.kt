@@ -46,17 +46,22 @@ object BrokerBuyApi {
         }
         .flatMap { processOrderAndGetResult(it, slDistance) }
         .handleError { error ->
-            when (error) {
-                is AssetNotTradeableException -> {
-                    logAndPrintErrorOnZorro("BrokerBuy: Asset $assetName currently not tradeable!")
-                }
-                else -> logger.error(
-                    "BrokerBuy failed! Error: ${error.message}" +
-                            " Stack trace: ${getStackTrace(error)}"
-                )
-            }
-            BrokerBuyData(returnCode = BROKER_BUY_FAIL)
+            logError(error)
+            BrokerBuyData(BROKER_BUY_FAIL)
         }
+
+    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+        when (error) {
+            is InvalidAssetNameException ->
+                natives.logAndPrintErrorOnZorro("BrokerBuy: Asset name ${error.assetName} is invalid!")
+            is AssetNotTradeableException ->
+                natives.logAndPrintErrorOnZorro("BrokerBuy: Asset ${error.instrument} currently not tradeable!")
+            else -> logger.error(
+                "BrokerBuy failed! Error: ${error.message}" +
+                        " Stack trace: ${getStackTrace(error)}"
+            )
+        }
+    }
 
     private fun <F> ContextDependencies<F>.submitOrder(
         instrument: Instrument,

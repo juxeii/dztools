@@ -29,17 +29,15 @@ object BrokerSellApi {
                 if (order.isClosed) {
                     logger.warn("BrokerSell: trying to close already closed order $order!")
                     just(order.zorroId())
-                } else
-                {
-                    logger.debug("BrokerSell called orderId $orderId contracts $contracts order $order")
+                } else {
                     val closeParams = CloseParams(
                         order = order,
                         amount = contracts.toAmount(),
                         price = getLimitPrice(maybeLimitPrice, order.instrument),
                         slippage = slippage
                     )
-                    logger.debug("BrokerSell: closing $closeParams")
-                    closeOrder(closeParams).map { orderEvent -> processOrderEventAndGetResult(orderEvent) }
+                    logger.debug("BrokerSell: $closeParams")
+                    closeOrder(closeParams).flatMap { orderEvent -> processOrderEventAndGetResult(orderEvent) }
                 }
             }.handleError { error ->
                 logError(error)
@@ -58,22 +56,20 @@ object BrokerSellApi {
                 .blockingLast()
         }
 
-    fun processOrderEventAndGetResult(orderEvent: OrderEvent) =
+    fun <F> ContextDependencies<F>.processOrderEventAndGetResult(orderEvent: OrderEvent) = delay {
         if (orderEvent.type == OrderEventType.CLOSE_OK || orderEvent.type == OrderEventType.PARTIAL_CLOSE_OK)
             orderEvent.order.zorroId()
         else BROKER_SELL_FAIL
+    }
 
     fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
         when (error) {
-            is OrderIdNotFoundException -> {
-                logAndPrintErrorOnZorro("BrokerSell: orderId ${error.orderId} not found!")
-            }
-            is AssetNotTradeableException -> {
-                logAndPrintErrorOnZorro("BrokerSell: asset ${error.instrument} currently not tradeable!")
-            }
-            else -> {
+            is OrderIdNotFoundException ->
+                natives.logAndPrintErrorOnZorro("BrokerSell: orderId ${error.orderId} not found!")
+            is AssetNotTradeableException ->
+                natives.logAndPrintErrorOnZorro("BrokerSell: asset ${error.instrument} currently not tradeable!")
+            else ->
                 logger.error("BrokerSell failed! Error: ${error.message} Stack trace: ${getStackTrace(error)}")
-            }
         }
     }
 

@@ -32,8 +32,6 @@ const val BROKER_HISTORY_UNAVAILABLE = 0
 const val BROKER_ADJUST_SL_FAIL = 0
 const val BROKER_ADJUST_SL_OK = 1
 
-const val UNKNOWN_ORDER_ID = 0
-
 const val heartBeatIndication = 1
 const val demoLoginType = "Demo"
 const val realLoginType = "Real"
@@ -42,17 +40,4 @@ const val fillTimeout = 30L
 const val tickPeriod = 0
 
 const val BROKER_COMMAND_OK = 1.0
-const val BROKER_COMMAND_UNAVAILABLE = 0.0
 const val BROKER_COMMAND_ERROR = 0.0
-const val GET_TIME = 5
-const val GET_DIGITS = 12
-const val GET_TRADEALLOWED = 22
-const val GET_MINLOT = 23
-const val GET_MAXLOT = 25
-const val GET_MARGININIT = 29
-const val GET_MAXTICKS = 43
-const val GET_ACCOUNT = 54
-const val GET_SERVERSTATE = 68
-const val SET_SLIPPAGE = 129
-const val SET_ORDERTEXT = 131
-const val SET_LIMIT = 135

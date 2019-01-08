@@ -11,27 +11,26 @@ import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.order.extension.isFilled
 import com.jforex.kforexutils.order.extension.isOpened
 
-object BrokerTradeApi
-{
+object BrokerTradeApi {
     fun <F> ContextDependencies<F>.brokerTrade(orderId: Int) =
         getOrderForId(orderId)
             .flatMap { order -> processOrder(order) }
             .handleError { error ->
-                when (error)
-                {
-                    is OrderIdNotFoundException ->
-                    {
-                        logger.error("BrokerTrade: order id ${error.orderId} not found!")
-                        printErrorOnZorro("BrokerTrade: order id ${error.orderId} not found!")
-                    }
-                    else ->
-                        logger.error(
-                            "BrokerTrade failed! Error message: ${error.message} " +
-                                    "Stack trace: ${getStackTrace(error)}"
-                        )
-                }
+                logError(error)
                 BrokerTradeData(BROKER_TRADE_FAIL)
             }
+
+    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+        when (error) {
+            is OrderIdNotFoundException ->
+                natives.logAndPrintErrorOnZorro("BrokerTrade: order id ${error.orderId} not found!")
+            else ->
+                logger.error(
+                    "BrokerTrade failed! Error message: ${error.message} " +
+                            "Stack trace: ${getStackTrace(error)}"
+                )
+        }
+    }
 
     fun <F> ContextDependencies<F>.processOrder(order: IOrder) =
         binding {
@@ -55,8 +54,7 @@ object BrokerTradeApi
         delay {
             with(order) {
                 val contracts = amount.toContracts()
-                when
-                {
+                when {
                     isFilled -> contracts
                     isOpened -> BROKER_ORDER_NOT_YET_FILLED
                     isClosed -> -contracts

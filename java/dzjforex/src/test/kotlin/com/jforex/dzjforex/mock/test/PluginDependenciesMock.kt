@@ -1,4 +1,4 @@
-package com.jforex.dzjforex.test.mock
+package com.jforex.dzjforex.mock.test
 
 import arrow.effects.IO
 import arrow.effects.instances.io.monadDefer.monadDefer

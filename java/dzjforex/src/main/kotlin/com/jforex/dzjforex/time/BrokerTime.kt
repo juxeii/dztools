@@ -2,13 +2,12 @@ package com.jforex.dzjforex.time
 
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.account.AccountApi.isTradingAllowed
+import com.jforex.dzjforex.buy.BrokerBuyApi.logError
+import com.jforex.dzjforex.buy.BrokerBuyData
 import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.isConnected
-import com.jforex.dzjforex.zorro.CONNECTION_LOST_NEW_LOGIN_REQUIRED
-import com.jforex.dzjforex.zorro.CONNECTION_OK
-import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_MARKET_CLOSED
-import com.jforex.dzjforex.zorro.CONNECTION_OK_BUT_TRADING_NOT_ALLOWED
+import com.jforex.dzjforex.zorro.*
 
 object BrokerTimeApi
 {

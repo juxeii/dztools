@@ -10,7 +10,7 @@ void JNIHandler::init()
 
 void JNIHandler::initializeJVM()
 {
-    if(isJVMLoaded) return;
+    if (isJVMLoaded) return;
 
     JavaVMInitArgs args;
     JavaVMOption options[1];
@@ -22,11 +22,11 @@ void JNIHandler::initializeJVM()
     args.ignoreUnrecognized = JNI_FALSE;
 
     jint res = JNI_CreateJavaVM(&jvm, (void **)&env, &args);
-    assert(res ==  JNI_OK);
+    assert(res == JNI_OK);
     isJVMLoaded = true;
 }
 
-JNIEnv* JNIHandler::getJNIEnvironment(){
+JNIEnv* JNIHandler::getJNIEnvironment() {
     return env;
 }
 
@@ -35,14 +35,14 @@ JNIEnv* JNIHandler::getEnvForCurrentThread()
     int envStat = jvm->GetEnv((void **)&env, JData::JNI_VERSION);
     if (envStat == JNI_EDETACHED) {
         jint res = jvm->AttachCurrentThread((void**)&env, NULL);
-        assert (res == JNI_OK);
+        assert(res == JNI_OK);
     }
     return env;
 }
 
 void JNIHandler::initializeJavaReferences()
 {
-    if(areJavaReferencesInitialized) return;
+    if (areJavaReferencesInitialized) return;
 
     initExceptionHandling();
     initBridgeObject();
@@ -74,7 +74,7 @@ void JNIHandler::registerNatives()
 
 void JNIHandler::registerClassMethods()
 {
-    for(auto *desc : JData::dukaZorroBridgeMethods)
+    for (auto *desc : JData::dukaZorroBridgeMethods)
     {
         desc->methodID = env->GetMethodID(JData::JDukaZorroBridgeClass, desc->name, desc->signature);
         checkJNIExcpetion(env);

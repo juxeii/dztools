@@ -15,41 +15,35 @@ import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
 
-object LoginApi
-{
+object LoginApi {
     fun <F> PluginDependencies<F>.brokerLogin(
         username: String,
         password: String,
         accountType: String
     ) = bindingCatch {
-        if (!isConnected().bind()) connect(
-            username = username,
-            password = password,
-            accountType = accountType
-        ).bind()
+        if (!isConnected().bind()) {
+            logger.debug("Initializing strategy...")
+            connect(username = username, password = password, accountType = accountType).bind()
+            brokerInit().bind()
+        }
         logger.debug("Successfully logged in.")
-        logger.debug("Initializing strategy...")
+    }.map {
+        logger.debug("Strategy successfully initialized.")
+        BrokerLoginData(LOGIN_OK, contextApi.account.accountId)
+    }.handleError { error ->
+        logger.error(
+            "BrokerLogin failed! Error message: " +
+                    "${error.message} " +
+                    "Stack trace: ${getStackTrace(error)}"
+        )
+        BrokerLoginData(LOGIN_FAIL)
     }
-        .flatMap { brokerInit() }
-        .map {
-            logger.debug("Strategy successfully initialized.")
-            BrokerLoginData(LOGIN_OK, contextApi.account.accountId)
-        }
-        .handleError { loginError ->
-            logger.error(
-                "BrokerLogin failed! Error message: " +
-                        "${loginError.message} " +
-                        "Stack trace: ${getStackTrace(loginError)}"
-            )
-            BrokerLoginData(LOGIN_FAIL)
-        }
 
     fun <F> PluginDependencies<F>.connect(
         username: String,
         password: String,
         accountType: String
-    ): Kind<F, Unit>
-    {
+    ): Kind<F, Unit> {
         logger.debug("Starting login: username $username accountType $accountType")
         val loginCredentials = LoginCredentials(username = username, password = password)
         val loginType = getLoginType(accountType)

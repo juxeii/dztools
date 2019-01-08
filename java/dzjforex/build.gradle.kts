@@ -29,7 +29,8 @@ dependencies {
     compile("org.aeonbits.owner:owner:1.0.10")
 
     testCompile("io.kotlintest:kotlintest-runner-junit5:3.1.11")
-    testCompile("io.mockk:mockk:1.8.13")
+    testCompile("io.mockk:mockk:1.9")
+    testCompile("org.slf4j:slf4j-simple:1.7.25")
     testImplementation(files(Jvm.current().toolsJar))
 }
 

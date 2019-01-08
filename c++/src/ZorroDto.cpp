@@ -55,7 +55,7 @@ int ZorroDto::getInt(char* fieldId, bool printValue) {
     return (int)jvalue;
 }
 
-std::string ZorroDto::getString(char* fieldId,  bool printValue) {
+std::string ZorroDto::getString(char* fieldId, bool printValue) {
     jfieldID stringId = env->GetFieldID(pluginClass, fieldId, "Ljava/lang/String;");
     jstring stringObj = (jstring)env->GetObjectField(pluginObject, stringId);
     const char *c_str = env->GetStringUTFChars(stringObj, NULL);

@@ -3,30 +3,20 @@ package com.jforex.dzjforex.history
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
 import com.jforex.dzjforex.misc.ContextDependencies
-import com.jforex.dzjforex.misc.getStackTrace
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUTCTimeFormat
-import com.jforex.dzjforex.time.asUnixTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
-import com.jforex.dzjforex.zorro.BROKER_HISTORY_UNAVAILABLE
 import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.Single
 
-object TickFetch
-{
+object TickFetch {
     fun <F> ContextDependencies<F>.fetchTicks(
         instrument: Instrument,
         startTime: Long,
         endTime: Long,
         noOfTicks: Int
     ) = bindingCatch {
-        logger.debug(
-            "Fetching $noOfTicks ticks for $instrument \n" +
-                    " startTime ${startTime.asUnixTimeFormat()}" +
-                    " endTime ${endTime.asUnixTimeFormat()}"
-        )
-
         val endTickTime = getLatesTickTime(instrument, endTime).bind()
         val fetchedTicks = getTicks(
             instrument = instrument,
@@ -34,19 +24,12 @@ object TickFetch
             endTime = endTickTime,
             numberOfTicks = noOfTicks
         ).bind()
-        logger.debug(
-            "Fetched ${fetchedTicks.size} ticks \n" +
-                    " first tick ${fetchedTicks.first()}" +
-                    " last tick ${fetchedTicks.last()}"
-        )
         BrokerHistoryData(fetchedTicks.size, fetchedTicks)
-    }.handleError { error ->
-        logger.error("FetchTicks error! ${error.message} Stack trace: ${getStackTrace(error)}")
-        BrokerHistoryData(BROKER_HISTORY_UNAVAILABLE)
     }
 
-    fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) =
-        catch { minOf(history.getTimeOfLastTick(instrument), endTime) }
+    fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) = catch {
+        minOf(history.getTimeOfLastTick(instrument), endTime)
+    }
 
     fun <F> ContextDependencies<F>.getTicks(
         instrument: Instrument,
@@ -55,10 +38,9 @@ object TickFetch
         numberOfTicks: Int
     ) = delay {
         Observable
-            .defer { createStartDates(endTime) }
-            .map { startDate ->
-                val endDate = startDate + pluginSettings.tickfetchmillis() - 1L
-                history.getTicks(instrument, startDate, endDate).asReversed()
+            .defer { createFetchTimes(endTime) }
+            .map { fetchTimes ->
+                history.getTicks(instrument, fetchTimes.first, fetchTimes.second).asReversed()
             }
             .concatMapIterable { it }
             .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }
@@ -75,17 +57,15 @@ object TickFetch
             .blockingGet()
     }
 
-    fun <F> ContextDependencies<F>.createStartDates(endTime: Long): Observable<Long> =
-        Single
-            .just(endTime)
-            .flatMapObservable { countStreamForTickFetch(it) }
-
-    fun <F> ContextDependencies<F>.countStreamForTickFetch(endTime: Long): Observable<Long>
-    {
+    fun <F> ContextDependencies<F>.createFetchTimes(endTime: Long): Observable<Pair<Long, Long>> {
         val seq = generateSequence(1) { it + 1 }.map { counter ->
-            endTime - counter * pluginSettings.tickfetchmillis() + 1
+            val startTickTime = endTime - counter * pluginSettings.tickfetchmillis() + 1L
+            val endTickTime = startTickTime + pluginSettings.tickfetchmillis() - 1L
+            Pair(startTickTime, endTickTime)
         }
-        return Observable.fromIterable(seq.asIterable())
+        return Single
+            .just(endTime)
+            .flatMapObservable { Observable.fromIterable(seq.asIterable()) }
     }
 
     fun createT6Data(tick: ITick, instrument: Instrument) = with(tick) {

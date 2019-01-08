@@ -28,10 +28,6 @@ object BarFetch {
             rawStartBarTime = startTime,
             numberOfBars = numberOfBars
         ).bind()
-        logger.debug("Fetching $numberOfBars bars: \n" +
-                " endBarTime ${endBarTime.asUnixTimeFormat()}" +
-                " startBarTime ${startBarTime.asUnixTimeFormat()}" +
-                " period $period")
         val fetchedBars = getBars(
             instrument = instrument,
             period = period,
@@ -81,14 +77,14 @@ object BarFetch {
             )
             .map { bar ->
                 logger.debug("Stored Bar time ${bar.time.asUnixTimeFormat()}")
-                createT6Data(bar)
+                createT6Data(bar, period)
             }
             .toList()
             .blockingGet()
     }
 
-    fun createT6Data(bar: IBar) = T6Data(
-        time = bar.time.toUTCTime(),
+    fun createT6Data(bar: IBar, period: Period) = T6Data(
+        time = (bar.time + period.getInterval()).toUTCTime(),
         high = bar.high.toFloat(),
         low = bar.low.toFloat(),
         open = bar.open.toFloat(),

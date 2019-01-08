@@ -25,6 +25,7 @@ namespace JData
     JMethodDesc bcSetOrderText = { nullptr, "bcSetOrderText","(Ljava/lang/String;)D" };
     JMethodDesc bcSetSlippage = { nullptr, "bcSetSlippage","(D)D" };
     JMethodDesc bcSetLimit = { nullptr, "bcSetLimit","(D)D" };
+    JMethodDesc bcSetHWND = { nullptr, "bcSetHWND","(D)D" };
     JMethodDesc bcGetAccount = { nullptr, "bcGetAccount","()Lcom/jforex/dzjforex/command/BrokerCommandData;" };
     JMethodDesc bcGetDigits = { nullptr, "bcGetDigits","(Ljava/lang/String;)D" };
     JMethodDesc bcGetMaxLot = { nullptr, "bcGetMaxLot","(Ljava/lang/String;)D" };
@@ -38,8 +39,10 @@ namespace JData
     JMethodDesc excGetMessage = { nullptr, "getMessage","()Ljava/lang/String;" };
     JMethodDesc excGetName = { nullptr, "getName","()Ljava/lang/String;" };
 
-    const JNINativeMethod nativesTable[2]{ { (char*)"jcallback_BrokerError",    (char*)"(Ljava/lang/String;)I", (void *)&jcallback_BrokerError },
-                                            { (char*)"jcallback_BrokerProgress", (char*)"(I)I",                  (void *)&jcallback_BrokerProgress } };
+    const JNINativeMethod nativesTable[3]{ 
+    { (char*)"jcallback_BrokerError",    (char*)"(Ljava/lang/String;)I", (void *)&jcallback_BrokerError },
+    { (char*)"jcallback_BrokerProgress", (char*)"(I)I",                  (void *)&jcallback_BrokerProgress },
+    { (char*)"triggerQuoteReq", (char*)"()V",                  (void *)&triggerQuoteReq } };
 
     const char* JVMClassPathOption = "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.6.jar";
     const char* DukaZorroBridgePath = "com/jforex/dzjforex/zorro/ZorroBridge";

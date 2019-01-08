@@ -22,4 +22,6 @@ class ZorroNatives {
     external fun jcallback_BrokerError(errorMsg: String): Int
 
     external fun jcallback_BrokerProgress(progress: Int): Int
+
+    external fun triggerQuoteReq()
 }

@@ -68,6 +68,12 @@ jcallback_BrokerProgress(JNIEnv *env,
     return BrokerProgress(progress);
 }
 
+void
+triggerQuoteReq()
+{
+    if (zorroWindow) PostMessage(zorroWindow, WM_APP + 1, 0, 0);
+}
+
 DLLFUNC int
 BrokerOpen(char *Name,
     FARPROC fpError,
@@ -254,6 +260,11 @@ BrokerCommand(int nCommand,
     {
         char* stringToWrite = reinterpret_cast<char*>(dwParameter);
         return dllCallHandler.bcForGetString(stringToWrite, getBcMethodId(nCommand));
+    }
+    case SET_HWND:
+    {
+        zorroWindow = (HWND)dwParameter;
+        return 1;
     }
     case SET_SLIPPAGE:
     case SET_LIMIT:

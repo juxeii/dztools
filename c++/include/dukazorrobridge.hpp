@@ -14,6 +14,7 @@ typedef jlong DukaTime;
 static const int PLUGIN_VERSION = 2u;
 
 static int bcPatch = 0;
+static HWND zorroWindow{};
 bool isPatchValueActive(PatchValue pv);
 
 extern int
@@ -33,5 +34,8 @@ extern int
 jcallback_BrokerProgress(JNIEnv *env,
     jclass clazz,
     jint progress);
+
+void
+triggerQuoteReq();
 
 #endif /* DUKAZORROBRIDGE_HPP */

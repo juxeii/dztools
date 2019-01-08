@@ -35,6 +35,7 @@ namespace JData
     extern JMethodDesc bcSetOrderText;
     extern JMethodDesc bcSetSlippage;
     extern JMethodDesc bcSetLimit;
+    extern JMethodDesc bcSetHWND;
     extern JMethodDesc bcGetAccount;
     extern JMethodDesc bcGetDigits;
     extern JMethodDesc bcGetMaxLot;
@@ -48,7 +49,7 @@ namespace JData
     extern JMethodDesc excGetMessage;
     extern JMethodDesc excGetName;
 
-    extern const JNINativeMethod nativesTable[2];
+    extern const JNINativeMethod nativesTable[3];
     extern const int nativesTableSize;
 
     extern const char* JVMClassPathOption;

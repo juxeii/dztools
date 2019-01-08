@@ -6,12 +6,15 @@ import com.jforex.dzjforex.misc.initContextApi
 import com.jforex.dzjforex.misc.logger
 import com.jforex.kforexutils.misc.kForexUtils
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 
 object BrokerInitApi
 {
     fun <F> PluginDependencies<F>.brokerInit() =
         startStrategy()
             .map { initContextApi(kForexUtils.context) }
+            .flatMap { startTickTriggerRoutine() }
             .handleError { error ->
                 logger.error(
                     "BrokerInit failed! Error message: ${error.message}" +
@@ -22,5 +25,13 @@ object BrokerInitApi
     fun <F> PluginDependencies<F>.startStrategy() = delay {
         val strategy = KForexUtilsStrategy()
         client.startStrategy(strategy)
+    }
+
+    fun <F> PluginDependencies<F>.startTickTriggerRoutine() = delay {
+        logger.debug("Starting tick trigger deamon...")
+        kForexUtils
+            .tickQuotes
+            .observeOn(Schedulers.io())
+            .subscribeBy(onNext = { natives.triggerQuoteReq()})
     }
 }

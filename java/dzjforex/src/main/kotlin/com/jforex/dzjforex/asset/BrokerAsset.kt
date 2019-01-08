@@ -46,7 +46,6 @@ object BrokerAssetApi {
             lotAmount = instrument.minTradeAmount,
             marginCost = getMarginCost(instrument).bind()
         )
-        logger.debug("$instrument $assetData")
         assetData
     }
 

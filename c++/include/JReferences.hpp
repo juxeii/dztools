@@ -35,7 +35,6 @@ namespace JData
     extern JMethodDesc bcSetOrderText;
     extern JMethodDesc bcSetSlippage;
     extern JMethodDesc bcSetLimit;
-    extern JMethodDesc bcSetHWND;
     extern JMethodDesc bcGetAccount;
     extern JMethodDesc bcGetDigits;
     extern JMethodDesc bcGetMaxLot;

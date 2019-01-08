@@ -25,7 +25,6 @@ namespace JData
     JMethodDesc bcSetOrderText = { nullptr, "bcSetOrderText","(Ljava/lang/String;)D" };
     JMethodDesc bcSetSlippage = { nullptr, "bcSetSlippage","(D)D" };
     JMethodDesc bcSetLimit = { nullptr, "bcSetLimit","(D)D" };
-    JMethodDesc bcSetHWND = { nullptr, "bcSetHWND","(D)D" };
     JMethodDesc bcGetAccount = { nullptr, "bcGetAccount","()Lcom/jforex/dzjforex/command/BrokerCommandData;" };
     JMethodDesc bcGetDigits = { nullptr, "bcGetDigits","(Ljava/lang/String;)D" };
     JMethodDesc bcGetMaxLot = { nullptr, "bcGetMaxLot","(Ljava/lang/String;)D" };

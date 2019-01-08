@@ -14,17 +14,16 @@ import com.jforex.kforexutils.instrument.spread
 import com.jforex.kforexutils.instrument.tick
 import com.jforex.kforexutils.misc.asCost
 
-object BrokerAssetApi {
+object BrokerAssetApi
+{
     fun <F> ContextDependencies<F>.brokerAsset(assetName: String) =
         createInstrument(assetName)
             .flatMap { instrument -> getAssetData(instrument) }
-            .handleError { error ->
-                logError(error)
-                BrokerAssetData(ASSET_UNAVAILABLE)
-            }
+            .handleErrorWith { error -> processError(error) }
 
-    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
-        when (error) {
+    fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
+        when (error)
+        {
             is InvalidAssetNameException ->
                 natives.logAndPrintErrorOnZorro("BrokerAsset: Asset name ${error.assetName} is invalid!")
             else -> logger.error(
@@ -32,6 +31,7 @@ object BrokerAssetApi {
                         "Stack trace: ${getStackTrace(error)}"
             )
         }
+        BrokerAssetData(ASSET_UNAVAILABLE)
     }
 
     fun <F> ContextDependencies<F>.getAssetData(instrument: Instrument) = bindingCatch {

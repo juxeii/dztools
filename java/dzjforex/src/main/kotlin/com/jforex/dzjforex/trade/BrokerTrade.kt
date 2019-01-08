@@ -1,7 +1,10 @@
 package com.jforex.dzjforex.trade
 
 import com.dukascopy.api.IOrder
-import com.jforex.dzjforex.misc.*
+import com.jforex.dzjforex.misc.ContextDependencies
+import com.jforex.dzjforex.misc.OrderIdNotFoundException
+import com.jforex.dzjforex.misc.getStackTrace
+import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.order.OrderLookupApi.getOrderForId
 import com.jforex.dzjforex.zorro.BROKER_ORDER_NOT_YET_FILLED
 import com.jforex.dzjforex.zorro.BROKER_TRADE_FAIL
@@ -15,12 +18,9 @@ object BrokerTradeApi {
     fun <F> ContextDependencies<F>.brokerTrade(orderId: Int) =
         getOrderForId(orderId)
             .flatMap { order -> processOrder(order) }
-            .handleError { error ->
-                logError(error)
-                BrokerTradeData(BROKER_TRADE_FAIL)
-            }
+            .handleErrorWith { error -> processError(error) }
 
-    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+    fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
         when (error) {
             is OrderIdNotFoundException ->
                 natives.logAndPrintErrorOnZorro("BrokerTrade: order id ${error.orderId} not found!")
@@ -30,6 +30,7 @@ object BrokerTradeApi {
                             "Stack trace: ${getStackTrace(error)}"
                 )
         }
+        BrokerTradeData(BROKER_TRADE_FAIL)
     }
 
     fun <F> ContextDependencies<F>.processOrder(order: IOrder) =

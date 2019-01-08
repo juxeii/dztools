@@ -45,12 +45,9 @@ object BrokerBuyApi {
             )
         }
         .flatMap { processOrderAndGetResult(it, slDistance) }
-        .handleError { error ->
-            logError(error)
-            BrokerBuyData(BROKER_BUY_FAIL)
-        }
+        .handleErrorWith { error -> processError(error) }
 
-    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+    fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
         when (error) {
             is InvalidAssetNameException ->
                 natives.logAndPrintErrorOnZorro("BrokerBuy: Asset name ${error.assetName} is invalid!")
@@ -61,6 +58,7 @@ object BrokerBuyApi {
                         " Stack trace: ${getStackTrace(error)}"
             )
         }
+        BrokerBuyData(BROKER_BUY_FAIL)
     }
 
     private fun <F> ContextDependencies<F>.submitOrder(
@@ -70,7 +68,7 @@ object BrokerBuyApi {
         limitPrice: Double,
         slippage: Double,
         orderText: String
-    ) = binding {
+    ) = bindingCatch {
         val isLimitOrder = isLimitOrder(limitPrice)
         val orderCommand = createOrderCommand(contracts, isLimitOrder)
         engine

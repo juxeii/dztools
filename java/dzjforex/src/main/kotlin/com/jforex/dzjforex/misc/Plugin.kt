@@ -31,7 +31,8 @@ val pluginApi = PluginDependencies(
     IO.monadDefer()
 )
 
-sealed class PluginException() : Throwable() {
+sealed class PluginException() : Throwable()
+{
     data class AssetNotTradeable(val instrument: Instrument) : PluginException()
     data class OrderIdNotFound(val orderId: Int) : PluginException()
     data class InvalidAssetName(val assetName: String) : PluginException()
@@ -47,7 +48,8 @@ fun getClient() = Try {
     client
 }.fold({ throw it }) { it }
 
-fun getStackTrace(it: Throwable): String {
+fun getStackTrace(it: Throwable): String
+{
     val ex = Exception(it)
     val writer = StringWriter()
     val printWriter = PrintWriter(writer)
@@ -61,19 +63,22 @@ fun <D> runDirect(kind: Kind<ForIO, D>) = kind.fix().unsafeRunSync()
 
 fun <D> runWithProgress(kind: Kind<ForIO, D>) = pluginApi.progressWait(DeferredK { runDirect(kind) })
 
-interface PluginDependencies<F> : MonadDefer<F> {
+interface PluginDependencies<F> : MonadDefer<F>
+{
     val client: IClient
     val pluginSettings: PluginSettings
     val natives: ZorroNatives
 
-    companion object {
+    companion object
+    {
         operator fun <F> invoke(
             client: IClient,
             pluginSettings: PluginSettings,
             natives: ZorroNatives,
             MD: MonadDefer<F>
         ): PluginDependencies<F> =
-            object : PluginDependencies<F>, MonadDefer<F> by MD {
+            object : PluginDependencies<F>, MonadDefer<F> by MD
+            {
                 override val client = client
                 override val pluginSettings = pluginSettings
                 override val natives = natives
@@ -81,10 +86,12 @@ interface PluginDependencies<F> : MonadDefer<F> {
     }
 }
 
-object PluginApi {
+object PluginApi
+{
     fun <F> PluginDependencies<F>.isConnected() = delay { client.isConnected }
 
-    fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T {
+    fun <F, T> PluginDependencies<F>.progressWait(task: DeferredK<T>): T
+    {
         val resultRelay = BehaviorRelay.create<T>()
         task.unsafeRunAsync { result ->
             result.fold(
@@ -95,7 +102,8 @@ object PluginApi {
                 { resultRelay.accept(it) })
         }
         runBlocking {
-            while (!resultRelay.hasValue()) {
+            while (!resultRelay.hasValue())
+            {
                 natives.jcallback_BrokerProgress(heartBeatIndication)
                 delay(pluginSettings.zorroProgressInterval())
             }
@@ -109,7 +117,7 @@ object PluginApi {
             .fromOption { InvalidAssetNameException(assetName) }
 
     fun <F> PluginDependencies<F>.filterTradeableInstrument(instrument: Instrument) = delay {
-        if (!instrument.isTradable) raiseError<AssetNotTradeableException>(AssetNotTradeableException(instrument))
+        if (!instrument.isTradable) throw AssetNotTradeableException(instrument)
         instrument
     }
 }

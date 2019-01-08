@@ -20,12 +20,9 @@ object BrokerStopApi {
                 setSLPrice(order, slPrice)
             }
             .map(::evaluateCloseEvent)
-            .handleError { error ->
-                logError(error)
-                BROKER_ADJUST_SL_FAIL
-            }
+            .handleErrorWith { error -> processError(error) }
 
-    private fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+    private fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
         when (error) {
             is AssetNotTradeableException ->
                 natives.logAndPrintErrorOnZorro("BrokerStop: ${error.instrument} currently not tradeable!")
@@ -35,6 +32,7 @@ object BrokerStopApi {
                             "Stack trace: ${getStackTrace(error)}"
                 )
         }
+        BROKER_ADJUST_SL_FAIL
     }
 
     fun evaluateCloseEvent(orderEvent: OrderEvent) =

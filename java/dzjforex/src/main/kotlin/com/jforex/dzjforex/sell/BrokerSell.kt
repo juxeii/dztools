@@ -39,10 +39,7 @@ object BrokerSellApi {
                     logger.debug("BrokerSell: $closeParams")
                     closeOrder(closeParams).flatMap { orderEvent -> processOrderEventAndGetResult(orderEvent) }
                 }
-            }.handleError { error ->
-                logError(error)
-                BROKER_SELL_FAIL
-            }
+            }.handleErrorWith { error -> processError(error) }
 
     fun <F> ContextDependencies<F>.closeOrder(closeParams: CloseParams): Kind<F, OrderEvent> =
         delay {
@@ -62,7 +59,7 @@ object BrokerSellApi {
         else BROKER_SELL_FAIL
     }
 
-    fun <F> ContextDependencies<F>.logError(error: Throwable) = delay {
+    fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
         when (error) {
             is OrderIdNotFoundException ->
                 natives.logAndPrintErrorOnZorro("BrokerSell: orderId ${error.orderId} not found!")
@@ -71,6 +68,7 @@ object BrokerSellApi {
             else ->
                 logger.error("BrokerSell failed! Error: ${error.message} Stack trace: ${getStackTrace(error)}")
         }
+        BROKER_SELL_FAIL
     }
 
     fun getLimitPrice(maybeLimitPrice: Option<Double>, instrument: Instrument) =

@@ -251,9 +251,9 @@ DllCallHandler::BrokerBuy2(char* Asset,
     ZorroDto buyDto(env, brokerBuysObject);
 
     int returnCode = buyDto.getReturnCode();
-    if (pPrice) *pPrice = buyDto.getDouble("price", true);
+    if (pPrice) *pPrice = buyDto.getDouble("price");
     if (pFill) {
-        double fillAmount = buyDto.getDouble("fill", true);
+        double fillAmount = buyDto.getDouble("fill");
         if (fillAmount != 0) *pFill = fillAmount;
     }
 

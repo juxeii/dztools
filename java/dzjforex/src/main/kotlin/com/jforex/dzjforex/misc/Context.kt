@@ -6,11 +6,13 @@ import com.jforex.dzjforex.zorro.lotScale
 
 lateinit var contextApi: ContextDependencies<ForIO>
 
-fun initContextApi(context: IContext) {
+fun initContextApi(context: IContext)
+{
     contextApi = ContextDependencies(context, pluginApi)
 }
 
-interface ContextDependencies<F> : PluginDependencies<F> {
+interface ContextDependencies<F> : PluginDependencies<F>
+{
     val jfContext: IContext
     val engine: IEngine
     val account: IAccount
@@ -27,12 +29,14 @@ interface ContextDependencies<F> : PluginDependencies<F> {
 
     fun IOrder.zorroId() = id.toInt()
 
-    companion object {
+    companion object
+    {
         operator fun <F> invoke(
             context: IContext,
             pluginDependencies: PluginDependencies<F>
         ): ContextDependencies<F> =
-            object : ContextDependencies<F>, PluginDependencies<F> by pluginDependencies {
+            object : ContextDependencies<F>, PluginDependencies<F> by pluginDependencies
+            {
                 override val jfContext = context
                 override val engine = context.engine
                 override val account = context.account
@@ -41,7 +45,8 @@ interface ContextDependencies<F> : PluginDependencies<F> {
     }
 }
 
-object ContextApi {
+object ContextApi
+{
     fun <F> ContextDependencies<F>.getSubscribedInstruments() = delay { jfContext.subscribedInstruments }
 
     fun <F> ContextDependencies<F>.setSubscribedInstruments(instrumentsToSubscribe: Set<Instrument>) =

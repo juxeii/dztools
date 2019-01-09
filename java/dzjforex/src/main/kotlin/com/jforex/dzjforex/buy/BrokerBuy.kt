@@ -8,10 +8,7 @@ import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.misc.PluginApi.createInstrument
 import com.jforex.dzjforex.misc.PluginApi.filterTradeableInstrument
 import com.jforex.dzjforex.time.BrokerTimeApi.getServerTime
-import com.jforex.dzjforex.zorro.BROKER_BUY_FAIL
-import com.jforex.dzjforex.zorro.BROKER_BUY_NO_RESPONSE
-import com.jforex.dzjforex.zorro.BROKER_BUY_OPPOSITE_CLOSE
-import com.jforex.dzjforex.zorro.fillTimeout
+import com.jforex.dzjforex.zorro.*
 import com.jforex.kforexutils.engine.submit
 import com.jforex.kforexutils.instrument.ask
 import com.jforex.kforexutils.instrument.bid
@@ -24,7 +21,8 @@ import com.jforex.kforexutils.price.Price
 import com.jforex.kforexutils.settings.TradingSettings
 import java.util.concurrent.TimeUnit
 
-object BrokerBuyApi {
+object BrokerBuyApi
+{
     fun <F> ContextDependencies<F>.brokerBuy(
         assetName: String,
         contracts: Int,
@@ -48,7 +46,8 @@ object BrokerBuyApi {
         .handleErrorWith { error -> processError(error) }
 
     fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
-        when (error) {
+        when (error)
+        {
             is InvalidAssetNameException ->
                 natives.logAndPrintErrorOnZorro("BrokerBuy: Asset name ${error.assetName} is invalid!")
             is AssetNotTradeableException ->
@@ -101,7 +100,8 @@ object BrokerBuyApi {
         pluginSettings.labelPrefix() + System.currentTimeMillis().toString()
     }
 
-    fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand = when {
+    fun createOrderCommand(contracts: Int, isLimitOrder: Boolean): IEngine.OrderCommand = when
+    {
         contracts >= 0 && !isLimitOrder -> IEngine.OrderCommand.BUY
         contracts >= 0 && isLimitOrder -> IEngine.OrderCommand.BUYLIMIT
         contracts < 0 && !isLimitOrder -> IEngine.OrderCommand.SELL
@@ -116,9 +116,11 @@ object BrokerBuyApi {
         instrument: Instrument,
         orderCommand: IEngine.OrderCommand,
         limitPrice: Double
-    ): Double {
+    ): Double
+    {
         if (slDistance <= 0) return TradingSettings.noSLPrice
-        val openPrice = when {
+        val openPrice = when
+        {
             isLimitOrder(limitPrice) -> limitPrice
             orderCommand == IEngine.OrderCommand.BUY -> instrument.ask()
             else -> instrument.bid()
@@ -129,17 +131,26 @@ object BrokerBuyApi {
     }
 
     fun <F> ContextDependencies<F>.processOrderAndGetResult(order: IOrder, slDistance: Double) = binding {
-        val returnCode = when {
-            slDistance == -1.0 -> BROKER_BUY_OPPOSITE_CLOSE
-            order.isCreated -> BROKER_BUY_NO_RESPONSE
-            order.isPartiallyFilled -> BROKER_BUY_FAIL
-            else -> order.zorroId()
+        when
+        {
+            order.isCreated -> BrokerBuyData(BROKER_BUY_NO_RESPONSE)
+            order.isPartiallyFilled ->
+            {
+                if (!isNFAAccount().bind()) order.close()
+                BrokerBuyData(
+                    returnCode = BROKER_BUY_FILL_TIMEOUT,
+                    price = order.openPrice,
+                    fill = order.toSignedContracts().toDouble()
+                )
+            }
+            slDistance == -1.0 -> BrokerBuyData(
+                returnCode = BROKER_BUY_OPPOSITE_CLOSE,
+                price = order.openPrice
+            )
+            else -> BrokerBuyData(
+                returnCode = order.zorroId(),
+                price = order.openPrice
+            )
         }
-        val fill = if (order.isPartiallyFilled) order.toSignedContracts().toDouble()
-        else 0.0
-        if (isNFAAccount().bind()) {
-
-        }
-        BrokerBuyData(returnCode = returnCode, price = order.openPrice, fill = fill)
     }
 }

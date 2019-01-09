@@ -28,9 +28,10 @@ object BrokerInitApi
     }
 
     fun <F> PluginDependencies<F>.startTickTriggerRoutine() = delay {
-        logger.debug("Starting tick trigger deamon...")
+        logger.debug("Starting tick trigger daemon...")
         kForexUtils
             .tickQuotes
+            .distinctUntilChanged { quoteA, quoteB -> quoteA.tick.ask == quoteB.tick.ask }
             .observeOn(Schedulers.io())
             .subscribeBy(onNext = { natives.triggerQuoteReq()})
     }

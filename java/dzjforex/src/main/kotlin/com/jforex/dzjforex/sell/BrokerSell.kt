@@ -14,7 +14,8 @@ import com.jforex.kforexutils.order.extension.close
 import com.jforex.kforexutils.order.extension.isClosed
 import com.jforex.kforexutils.settings.TradingSettings
 
-object BrokerSellApi {
+object BrokerSellApi
+{
 
     data class CloseParams(val order: IOrder, val amount: Double, val price: Double, val slippage: Double)
 
@@ -26,10 +27,12 @@ object BrokerSellApi {
     ) =
         getTradeableOrderForId(orderId)
             .flatMap { order ->
-                if (order.isClosed) {
+                if (order.isClosed)
+                {
                     logger.warn("BrokerSell: trying to close already closed order $order!")
                     just(order.zorroId())
-                } else {
+                } else
+                {
                     val closeParams = CloseParams(
                         order = order,
                         amount = contracts.toAmount(),
@@ -60,7 +63,8 @@ object BrokerSellApi {
     }
 
     fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
-        when (error) {
+        when (error)
+        {
             is OrderIdNotFoundException ->
                 natives.logAndPrintErrorOnZorro("BrokerSell: orderId ${error.orderId} not found!")
             is AssetNotTradeableException ->

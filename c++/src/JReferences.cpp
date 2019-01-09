@@ -43,7 +43,7 @@ namespace JData
     { (char*)"jcallback_BrokerProgress", (char*)"(I)I",                  (void *)&jcallback_BrokerProgress },
     { (char*)"triggerQuoteReq", (char*)"()V",                  (void *)&triggerQuoteReq } };
 
-    const char* JVMClassPathOption = "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.6.jar";
+    const char* JVMClassPathOption = "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.7.jar";
     const char* DukaZorroBridgePath = "com/jforex/dzjforex/zorro/ZorroBridge";
     const char* ZorroNativesPath = "com/jforex/dzjforex/zorro/ZorroNatives";
     const char* ExcPath = "java/lang/Class";

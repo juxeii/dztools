@@ -1,11 +1,17 @@
 package com.jforex.dzjforex.mock.test
 
+import arrow.effects.ForIO
 import com.dukascopy.api.IAccount
 import com.dukascopy.api.IContext
 import com.dukascopy.api.IEngine
 import com.dukascopy.api.IHistory
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginDependencies
+import com.jforex.kforexutils.misc.initKForexUtils
+import com.jforex.kforexutils.misc.kForexUtils
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 
 interface ContextDependenciesForTest<F> : ContextDependencies<F>
@@ -23,5 +29,9 @@ interface ContextDependenciesForTest<F> : ContextDependencies<F>
     }
 }
 
-fun getContextDependenciesForTest_IO() =
-    ContextDependenciesForTest(getPluginDependenciesForTest_IO())
+fun getContextDependenciesForTest_IO():ContextDependenciesForTest<ForIO> {
+    val contextApi = ContextDependenciesForTest(getPluginDependenciesForTest_IO())
+    every { contextApi.natives.logAndPrintErrorOnZorro(any()) } just Runs
+    return contextApi
+}
+

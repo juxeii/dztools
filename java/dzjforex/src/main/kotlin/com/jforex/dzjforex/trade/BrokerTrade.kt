@@ -33,34 +33,31 @@ object BrokerTradeApi {
         BrokerTradeData(BROKER_TRADE_FAIL)
     }
 
-    fun <F> ContextDependencies<F>.processOrder(order: IOrder) =
-        binding {
-            val tradeData = BrokerTradeData(
-                returnCode = createReturnValue(order).bind(),
-                open = order.openPrice,
-                close = quoteForOrder(order).bind(),
-                profit = order.profitLossInAccountCurrency
-            )
-            logger.debug("${order.instrument} $tradeData")
-            tradeData
-        }
+    fun <F> ContextDependencies<F>.processOrder(order: IOrder) = binding {
+        val tradeData = BrokerTradeData(
+            returnCode = createReturnValue(order).bind(),
+            open = order.openPrice,
+            close = quoteForOrder(order).bind(),
+            profit = order.profitLossInAccountCurrency
+        )
+        logger.debug("${order.instrument} $tradeData")
+        tradeData
+    }
 
-    fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder) =
-        delay {
-            val instrument = order.instrument
-            if (order.isLong) instrument.bid() else instrument.ask()
-        }
+    fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder) = delay {
+        val instrument = order.instrument
+        if (order.isLong) instrument.bid() else instrument.ask()
+    }
 
-    fun <F> ContextDependencies<F>.createReturnValue(order: IOrder) =
-        delay {
-            with(order) {
-                val contracts = amount.toContracts()
-                when {
-                    isFilled -> contracts
-                    isOpened -> BROKER_ORDER_NOT_YET_FILLED
-                    isClosed -> -contracts
-                    else -> BROKER_TRADE_FAIL
-                }
+    fun <F> ContextDependencies<F>.createReturnValue(order: IOrder) = delay {
+        with(order) {
+            val contracts = amount.toContracts()
+            when {
+                isFilled -> contracts
+                isOpened -> BROKER_ORDER_NOT_YET_FILLED
+                isClosed -> -contracts
+                else -> BROKER_TRADE_FAIL
             }
         }
+    }
 }

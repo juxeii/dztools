@@ -6,6 +6,7 @@ import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUnixTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
+import com.jforex.kforexutils.history.retry
 import io.reactivex.Observable
 
 object BarFetch {
@@ -46,8 +47,8 @@ object BarFetch {
         period: Period,
         endTime: Long
     ) = catch {
-        val latestBarTime = history.getBar(instrument, period, OfferSide.ASK, 1).time
-        val barStartForEndTime = history.getBarStart(period, endTime)
+        val latestBarTime = history.retry { getBar(instrument, period, OfferSide.ASK, 1).time }
+        val barStartForEndTime = history.retry { getBarStart(period, endTime) }
         minOf(latestBarTime, barStartForEndTime)
     }
 
@@ -57,8 +58,8 @@ object BarFetch {
         rawStartBarTime: Long,
         numberOfBars: Int
     ) = delay {
-        val startTimeForNBarsBack = history.getTimeForNBarsBack(period, endBarTime, numberOfBars)
-        val startTimeForZorroStartTime = history.getBarStart(period, rawStartBarTime)
+        val startTimeForNBarsBack = history.retry { getTimeForNBarsBack(period, endBarTime, numberOfBars) }
+        val startTimeForZorroStartTime = history.retry { getBarStart(period, rawStartBarTime) }
         val startTimeAdapted =
             if (startTimeForZorroStartTime < rawStartBarTime) startTimeForZorroStartTime + period.getInterval()
             else startTimeForZorroStartTime
@@ -73,7 +74,7 @@ object BarFetch {
     ) = delay {
         Observable
             .fromIterable(
-                history.getBars(instrument, period, OfferSide.ASK, Filter.NO_FILTER, from, to).asReversed()
+                history.retry { getBars(instrument, period, OfferSide.ASK, Filter.NO_FILTER, from, to).asReversed() }
             )
             .map { bar ->
                 logger.debug("Stored Bar time ${bar.time.asUnixTimeFormat()}")

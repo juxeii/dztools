@@ -2,10 +2,12 @@ package com.jforex.dzjforex.history
 
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
+import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUTCTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
+import com.jforex.kforexutils.history.retry
 import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -28,7 +30,7 @@ object TickFetch {
     }
 
     fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) = catch {
-        minOf(history.getTimeOfLastTick(instrument), endTime)
+        minOf(history.retry { getTimeOfLastTick(instrument)}, endTime)
     }
 
     fun <F> ContextDependencies<F>.getTicks(
@@ -40,7 +42,7 @@ object TickFetch {
         Observable
             .defer { createFetchTimes(endTime) }
             .map { fetchTimes ->
-                history.getTicks(instrument, fetchTimes.first, fetchTimes.second).asReversed()
+                history.retry { getTicks(instrument, fetchTimes.first, fetchTimes.second).asReversed()}
             }
             .concatMapIterable { it }
             .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }

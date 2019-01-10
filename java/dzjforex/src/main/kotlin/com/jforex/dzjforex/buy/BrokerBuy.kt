@@ -111,7 +111,7 @@ object BrokerBuyApi
     fun roundedLimitPrice(instrument: Instrument, limitPrice: Double) =
         if (isLimitOrder(limitPrice)) Price(instrument, limitPrice).toDouble() else 0.0
 
-    fun <F> ContextDependencies<F>.createSLPrice(
+    fun createSLPrice(
         slDistance: Double,
         instrument: Instrument,
         orderCommand: IEngine.OrderCommand,

@@ -26,24 +26,24 @@ The plugin stores its logs to *dukascopy/logs/dzplugin.log*(the default log leve
 You can also change the log level for Dukascopy via *dztools/dzplugin/log4j.properties*.
 
 ## Remarks
-- The following broker commands are supported:
-GET_MAXREQUESTS
-GET_PRICETYPE
-GET_LOCK
-SET_PATCH
-SET_ORDERTEXT
-GET_DIGITS
-GET_MAXLOT
-GET_MINLOT
-GET_MARGININIT
-GET_TRADEALLOWED
-GET_TIME
-GET_MAXTICKS
-GET_SERVERSTATE
-GET_ACCOUNT
-SET_HWND
-SET_SLIPPAGE
-SET_LIMIT
+The following broker commands are supported:
+- GET_MAXREQUESTS
+- GET_PRICETYPE
+- GET_LOCK
+- SET_PATCH
+- SET_ORDERTEXT
+- GET_DIGITS
+- GET_MAXLOT
+- GET_MINLOT
+- GET_MARGININIT
+- GET_TRADEALLOWED
+- GET_TIME
+- GET_MAXTICKS
+- GET_SERVERSTATE
+- GET_ACCOUNT
+- SET_HWND
+- SET_SLIPPAGE
+- SET_LIMIT
 
-- Plugin triggers Zorro on each tick change(thank AndrewAMD!) to get a high tick resolution
+- Plugin triggers Zorro on each tick change(thanks AndrewAMD!) to get a high tick resolution
 - You can adapt the plugin.maxticks parameter in the Plugin.properties file. The higher the value the more data is fetched from Dukascopy when you want to download bars/ticks.

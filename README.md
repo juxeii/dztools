@@ -6,13 +6,13 @@ This a plugin for [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/
 
 1.) Download and install the latest **32-bit** [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). Make sure it is the 32-bit version(x86 suffix) since the plugin DLL is a 32-bit library. In case you already have a 32-bit JDK installation(check it with *java -version*) you might skip this step.
 
-2.) Add *${yourJDKinstallPath}\jre\bin* and *${yourJDKinstallPath}\jre\bin\client* to the **front** of your *Path* environment variable([here](http://www.computerhope.com/issues/ch000549.htm) is a howto).
+2.) Install [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/download.php) if not already on your machine.
 
-3.) Install [Zorro](http://www.takemoneyfromtherichandgiveittothepoor.com/download.php) if not already on your machine.
+3.) Download the [dukascopy.zip](https://github.com/juxeii/dztools/releases/download/v0.9.7/dzjforex-0.9.7.zip) archive.
 
-4.) Download the [dukascopy.zip](https://github.com/juxeii/dztools/releases) archive.
+4.) Extract the archive into *${yourZorroInstallPath}* folder.
 
-5.) Extract the archive into *${yourZorroInstallPath\Plugin}* folder.
+5.) You will find the file *zorroDukascopy.bat* in your installation path. Edit it with a text editor and adapt the path to your Java installation. Save the file and run it. Now the dukascopy entry is visible in the drop down box for the brokers.
 
 ## Configuration/Usage
 
@@ -25,9 +25,25 @@ The plugin stores its logs to *dukascopy/logs/dzplugin.log*(the default log leve
 
 You can also change the log level for Dukascopy via *dztools/dzplugin/log4j.properties*.
 
-Please use [pastebin](http://pastebin.com/) for uploading the logs.
-
 ## Remarks
-- Currently **only Forex** is supported(no Stocks, CFDs etc.)
-- The history downloading from Dukascopy servers is sometimes not reliable; just try again in case of errors
-- Follow discussions for this project on the [forum](http://www.opserver.de/ubb7/ubbthreads.php?ubb=showflat&Number=447697&#Post447697)
+- The following broker commands are supported:
+GET_MAXREQUESTS
+GET_PRICETYPE
+GET_LOCK
+SET_PATCH
+SET_ORDERTEXT
+GET_DIGITS
+GET_MAXLOT
+GET_MINLOT
+GET_MARGININIT
+GET_TRADEALLOWED
+GET_TIME
+GET_MAXTICKS
+GET_SERVERSTATE
+GET_ACCOUNT
+SET_HWND
+SET_SLIPPAGE
+SET_LIMIT
+
+- Plugin triggers Zorro on each tick change(thank AndrewAMD!) to get a high tick resolution
+- You can adapt the plugin.maxticks parameter in the Plugin.properties file. The higher the value the more data is fetched from Dukascopy when you want to download bars/ticks.

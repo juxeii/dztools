@@ -9,7 +9,8 @@ import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.kforexutils.history.retry
 import io.reactivex.Observable
 
-object BarFetch {
+object BarFetch
+{
     fun <F> ContextDependencies<F>.fetchBars(
         instrument: Instrument,
         startTime: Long,
@@ -17,7 +18,7 @@ object BarFetch {
         periodInMinutes: Int,
         numberOfBars: Int
     ) = bindingCatch {
-        val period = createPeriod(periodInMinutes).bind()
+        val period = getPeriod(periodInMinutes).bind()
         val endBarTime = getBarEndTime(
             instrument = instrument,
             period = period,
@@ -36,10 +37,6 @@ object BarFetch {
             to = endBarTime
         ).bind()
         BrokerHistoryData(fetchedBars.size, fetchedBars)
-    }
-
-    fun <F> ContextDependencies<F>.createPeriod(barMinutes: Int) = catch {
-        Period.createCustomPeriod(Unit.Minute, barMinutes)
     }
 
     fun <F> ContextDependencies<F>.getBarEndTime(
@@ -93,4 +90,20 @@ object BarFetch {
         value = 0.0F,
         volume = bar.volume.toFloat()
     )
+
+    fun <F> ContextDependencies<F>.getPeriod(periodInMinutes: Int) = delay {
+        when (periodInMinutes)
+        {
+            1 -> Period.ONE_MIN
+            5 -> Period.FIVE_MINS
+            10 -> Period.TEN_MINS
+            15 -> Period.FIFTEEN_MINS
+            20 -> Period.TWENTY_MINS
+            30 -> Period.THIRTY_MINS
+            60 -> Period.ONE_HOUR
+            240 -> Period.FOUR_HOURS
+            1440 -> Period.DAILY
+            else -> Period.createCustomPeriod(Unit.Minute, periodInMinutes)
+        }
+    }
 }

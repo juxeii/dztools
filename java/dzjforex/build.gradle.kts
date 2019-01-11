@@ -36,10 +36,10 @@ dependencies {
 
 val jarFileName = "${project.name}-$version"
 val zorroPath: String by project
-val deployFolder = "${buildDir}/zorro"
-val historyFolder = "${deployFolder}/History"
-val pluginFolder = "${deployFolder}/Plugin"
-val zorroDukascopyFolder = "${zorroPath}/Plugin/dukascopy"
+val deployFolder = "$buildDir/zorro"
+val historyFolder = "$deployFolder/History"
+val pluginFolder = "$deployFolder/Plugin"
+val zorroDukascopyFolder = "$zorroPath/Plugin/dukascopy"
 
 tasks.withType<Test> {
     useJUnitPlatform()
@@ -71,7 +71,7 @@ tasks.create("createZorroFolders") {
     outputs.upToDateWhen{ false }
     dependsOn("jar")
 
-    val dukascopyFolder = "${pluginFolder}/dukascopy"
+    val dukascopyFolder = "$pluginFolder/dukascopy"
     val configFolder = "src/main/config"
     File(pluginFolder).deleteRecursively()
     copy {
@@ -79,11 +79,11 @@ tasks.create("createZorroFolders") {
         into(pluginFolder)
     }
     copy {
-        from("${buildDir}/libs/${jarFileName}.jar")
+        from("$buildDir/libs/$jarFileName.jar")
         into(dukascopyFolder)
     }
     copy {
-        from("${configFolder}/."){
+        from("$configFolder/."){
             exclude ("AssetsDukascopy.csv", "zorroDukascopy.bat")
         }
         into(dukascopyFolder)
@@ -97,6 +97,11 @@ tasks.create("createZorroFolders") {
     copy {
         from("${configFolder}/AssetsDukascopy.csv")
         into(historyFolder)
+    }
+
+    copy {
+        from("${configFolder}/zorroDukascopy.bat")
+        into(deployFolder)
     }
 
     copy {

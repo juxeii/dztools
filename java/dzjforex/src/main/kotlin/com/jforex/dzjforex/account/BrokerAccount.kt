@@ -16,14 +16,12 @@ object BrokerAccountApi
 
     fun <F> ContextDependencies<F>.createAccountData() =
         map(baseEequity(), tradeVal(), usedMargin()) {
-            val accountData = BrokerAccountData(
+            BrokerAccountData(
                 returnCode = ACCOUNT_AVAILABLE,
                 balance = it.a,
                 tradeVal = it.b,
                 marginVal = it.c
             )
-            logger.debug("$accountData")
-            accountData
         }
 
     fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {

@@ -32,6 +32,7 @@ object BrokerInitApi
         kForexUtils
             .tickQuotes
             .distinctUntilChanged { quoteA, quoteB -> quoteA.tick.ask == quoteB.tick.ask }
+            .takeUntil { !client.isConnected }
             .observeOn(Schedulers.io())
             .subscribeBy(onNext = { natives.triggerQuoteReq()})
     }

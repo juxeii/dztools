@@ -75,13 +75,13 @@ object BarFetch
             .fromIterable(
                 history.retry { getBars(instrument, period, OfferSide.ASK, Filter.NO_FILTER, from, to).asReversed() }
             )
-            .map { bar -> createT6Data(bar, period) }
+            .map(::createT6Data)
             .toList()
             .blockingGet()
     }
 
-    fun createT6Data(bar: IBar, period: Period) = T6Data(
-        time = (bar.time + period.getInterval()).toUTCTime(),
+    fun createT6Data(bar: IBar) = T6Data(
+        time = bar.time.toUTCTime(),
         high = bar.high.toFloat(),
         low = bar.low.toFloat(),
         open = bar.open.toFloat(),

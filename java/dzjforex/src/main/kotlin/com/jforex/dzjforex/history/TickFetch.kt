@@ -7,7 +7,7 @@ import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUTCTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.kforexutils.history.retry
-import com.jforex.kforexutils.price.Price
+import com.jforex.kforexutils.instrument.spread
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -75,7 +75,7 @@ object TickFetch
             low = ask,
             open = ask,
             close = ask,
-            value = Price(instrument, bid - ask).toDouble().toFloat(),
+            value = instrument.spread().toFloat(),
             volume = askVolume.toFloat()
         )
     }

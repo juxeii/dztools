@@ -64,6 +64,7 @@ DllCallHandler::BrokerLogin(const char *User,
     env->DeleteLocalRef(jUser);
     env->DeleteLocalRef(jPwd);
     env->DeleteLocalRef(jType);
+    env->DeleteLocalRef(brokerLoginObject);
 
     return returnCode;
 }
@@ -85,6 +86,8 @@ DllCallHandler::BrokerTime(DATE *pTimeUTC)
 
     int returnCode = timeDto.getReturnCode();
     if (returnCode != CONNECTION_LOST_NEW_LOGIN_REQUIRED && pTimeUTC) *pTimeUTC = timeDto.getDouble("serverTime");
+
+    env->DeleteLocalRef(brokerTimeObject);
 
     return returnCode;
 }
@@ -135,6 +138,7 @@ DllCallHandler::BrokerAsset(char* Asset,
         // pRollShort not supported
     }
     env->DeleteLocalRef(jAsset);
+    env->DeleteLocalRef(brokerAssetObject);
 
     return returnCode;
 }
@@ -202,6 +206,7 @@ DllCallHandler::BrokerHistory2(const char *Asset,
         env->DeleteLocalRef(listObject);
     }
     env->DeleteLocalRef(jAsset);
+    env->DeleteLocalRef(brokerHistoryObject);
 
     return returnCode;
 }
@@ -229,6 +234,7 @@ DllCallHandler::BrokerAccount(const char *Account,
         if (pTradeVal) *pTradeVal = accountDto.getDouble("tradeVal");
         if (pMarginVal) *pMarginVal = accountDto.getDouble("marginVal");
     }
+    env->DeleteLocalRef(brokerAccountObject);
 
     return returnCode;
 }
@@ -258,6 +264,7 @@ DllCallHandler::BrokerBuy2(char* Asset,
     }
 
     env->DeleteLocalRef(jAsset);
+    env->DeleteLocalRef(brokerBuysObject);
 
     return returnCode;
 }
@@ -279,6 +286,7 @@ DllCallHandler::BrokerTrade(const int nTradeID,
     if (pClose) *pClose = tradeDto.getDouble("close");
     if (pProfit) *pProfit = tradeDto.getDouble("profit");
     //pRoll not supported
+    env->DeleteLocalRef(brokerTradeObject);
 
     return returnCode;
 }
@@ -325,6 +333,8 @@ DllCallHandler::bcForGetString(char *stringToWrite, jmethodID methodID)
         std::string string = commandDto.getString("data");
         strncpy_s(stringToWrite, string.size(), string.c_str(), string.size());
     }
+    env->DeleteLocalRef(brokerCommandDataObject);
+
 
     return  commandDto.getReturnCode();
 }

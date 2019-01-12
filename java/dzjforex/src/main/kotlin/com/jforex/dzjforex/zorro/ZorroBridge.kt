@@ -3,6 +3,7 @@ package com.jforex.dzjforex.zorro
 import arrow.Kind
 import arrow.effects.ForIO
 import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
+import com.jforex.dzjforex.account.BrokerAccountData
 import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
 import com.jforex.dzjforex.command.BrokerCommandApi.getAccount
@@ -23,10 +24,7 @@ import com.jforex.dzjforex.command.maybeBcLimitPrice
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.login.LoginApi.brokerLogin
 import com.jforex.dzjforex.login.LoginApi.logout
-import com.jforex.dzjforex.misc.contextApi
-import com.jforex.dzjforex.misc.pluginApi
-import com.jforex.dzjforex.misc.runDirect
-import com.jforex.dzjforex.misc.runWithProgress
+import com.jforex.dzjforex.misc.*
 import com.jforex.dzjforex.sell.BrokerSellApi.brokerSell
 import com.jforex.dzjforex.stop.BrokerStopApi.brokerStop
 import com.jforex.dzjforex.subscribe.BrokerSubscribeApi.brokerSubscribe
@@ -52,7 +50,11 @@ class ZorroBridge {
 
     fun brokerAsset(assetName: String) = runDirect(contextApi.brokerAsset(assetName))
 
-    fun brokerAccount() = runDirect(contextApi.brokerAccount())
+    fun brokerAccount(): BrokerAccountData
+    {
+        printHeapInfo()
+        return runDirect(contextApi.brokerAccount())
+    }
 
     fun brokerTrade(orderId: Int) = runDirect(contextApi.brokerTrade(orderId))
 

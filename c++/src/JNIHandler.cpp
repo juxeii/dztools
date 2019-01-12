@@ -1,6 +1,9 @@
 #include <assert.h>
+#include <vector>
 #include "JNIHandler.hpp"
 #include "JReferences.hpp"
+#include "PropertiesParser.h"
+using namespace cppproperties;
 
 void JNIHandler::init()
 {
@@ -13,13 +16,21 @@ void JNIHandler::initializeJVM()
     if (isJVMLoaded) return;
 
     JavaVMInitArgs args;
-    JavaVMOption options[1];
+    constexpr int noOfOptions = 2;
+    JavaVMOption options[noOfOptions];
+
+    Properties props = PropertiesParser::Read("Plugin/dukascopy/Plugin.properties");
+    auto names = props.GetPropertyNames();
+    auto heapSize = props.GetProperty("plugin.maxheapsize");
+    auto maxHeapSizeString = "-Xmx" + heapSize + "m";
+
+    options[0].optionString = (char*)JData::JVMClassPathOption;
+    options[1].optionString = (char*)maxHeapSizeString.c_str();
 
     args.version = JData::JNI_VERSION;
-    args.nOptions = 1;
     args.options = options;
-    options[0].optionString = (char*)JData::JVMClassPathOption;
-    args.ignoreUnrecognized = JNI_FALSE;
+    args.nOptions = noOfOptions;
+    args.ignoreUnrecognized = JNI_TRUE;
 
     jint res = JNI_CreateJavaVM(&jvm, (void **)&env, &args);
     assert(res == JNI_OK);

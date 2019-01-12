@@ -90,22 +90,22 @@ tasks.create("createZorroFolders") {
     }
     copy {
         from(configurations.runtime)
-        into("${dukascopyFolder}/lib")
+        into("$dukascopyFolder/lib")
     }
 
     File(historyFolder).deleteRecursively()
     copy {
-        from("${configFolder}/AssetsDukascopy.csv")
+        from("$configFolder/AssetsDukascopy.csv")
         into(historyFolder)
     }
 
     copy {
-        from("${configFolder}/zorroDukascopy.bat")
+        from("$configFolder/zorroDukascopy.bat")
         into(deployFolder)
     }
 
     copy {
-        from("${configFolder}/zorroDukascopy.bat")
+        from("$configFolder/zorroDukascopy.bat")
         into(deployFolder)
     }
 }
@@ -117,6 +117,6 @@ tasks.register<Copy>("copyFoldersToZorro") {
     File(zorroDukascopyFolder).deleteRecursively()
     copy {
         from(deployFolder)
-        into("${zorroPath}")
+        into("$zorroPath")
     }
 }

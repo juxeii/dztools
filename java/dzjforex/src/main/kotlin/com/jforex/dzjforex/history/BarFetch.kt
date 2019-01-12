@@ -4,7 +4,7 @@ import com.dukascopy.api.*
 import com.dukascopy.api.Unit
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.logger
-import com.jforex.dzjforex.time.asUnixTimeFormat
+import com.jforex.dzjforex.time.asUTCTimeFormat
 import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.kforexutils.history.retry
 import io.reactivex.Observable
@@ -18,7 +18,7 @@ object BarFetch
         periodInMinutes: Int,
         numberOfBars: Int
     ) = bindingCatch {
-        val period = getPeriod(periodInMinutes).bind()
+        val period = getPeriod(periodInMinutes)
         val endBarTime = getBarEndTime(
             instrument = instrument,
             period = period,
@@ -36,6 +36,8 @@ object BarFetch
             from = startBarTime,
             to = endBarTime
         ).bind()
+        logger.debug("First stored bar time ${fetchedBars.first().time.asUTCTimeFormat()}")
+        logger.debug("Last stored bar time ${fetchedBars.last().time.asUTCTimeFormat()}")
         BrokerHistoryData(fetchedBars.size, fetchedBars)
     }
 
@@ -73,10 +75,7 @@ object BarFetch
             .fromIterable(
                 history.retry { getBars(instrument, period, OfferSide.ASK, Filter.NO_FILTER, from, to).asReversed() }
             )
-            .map { bar ->
-                logger.debug("Stored Bar time ${bar.time.asUnixTimeFormat()}")
-                createT6Data(bar, period)
-            }
+            .map { bar -> createT6Data(bar, period) }
             .toList()
             .blockingGet()
     }
@@ -91,19 +90,17 @@ object BarFetch
         volume = bar.volume.toFloat()
     )
 
-    fun <F> ContextDependencies<F>.getPeriod(periodInMinutes: Int) = delay {
-        when (periodInMinutes)
-        {
-            1 -> Period.ONE_MIN
-            5 -> Period.FIVE_MINS
-            10 -> Period.TEN_MINS
-            15 -> Period.FIFTEEN_MINS
-            20 -> Period.TWENTY_MINS
-            30 -> Period.THIRTY_MINS
-            60 -> Period.ONE_HOUR
-            240 -> Period.FOUR_HOURS
-            1440 -> Period.DAILY
-            else -> Period.createCustomPeriod(Unit.Minute, periodInMinutes)
-        }
+    fun getPeriod(periodInMinutes: Int) = when (periodInMinutes)
+    {
+        1 -> Period.ONE_MIN
+        5 -> Period.FIVE_MINS
+        10 -> Period.TEN_MINS
+        15 -> Period.FIFTEEN_MINS
+        20 -> Period.TWENTY_MINS
+        30 -> Period.THIRTY_MINS
+        60 -> Period.ONE_HOUR
+        240 -> Period.FOUR_HOURS
+        1440 -> Period.DAILY
+        else -> Period.createCustomPeriod(Unit.Minute, periodInMinutes)
     }
 }

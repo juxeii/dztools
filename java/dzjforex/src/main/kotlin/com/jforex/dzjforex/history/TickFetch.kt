@@ -2,7 +2,6 @@ package com.jforex.dzjforex.history
 
 import com.dukascopy.api.ITick
 import com.dukascopy.api.Instrument
-import com.dukascopy.api.OfferSide
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.time.asUTCTimeFormat
@@ -12,7 +11,8 @@ import com.jforex.kforexutils.price.Price
 import io.reactivex.Observable
 import io.reactivex.Single
 
-object TickFetch {
+object TickFetch
+{
     fun <F> ContextDependencies<F>.fetchTicks(
         instrument: Instrument,
         startTime: Long,
@@ -26,11 +26,13 @@ object TickFetch {
             endTime = endTickTime,
             numberOfTicks = noOfTicks
         ).bind()
+        logger.debug("First stored tick time ${fetchedTicks.first().time.asUTCTimeFormat()}")
+        logger.debug("Last stored tick time ${fetchedTicks.last().time.asUTCTimeFormat()}")
         BrokerHistoryData(fetchedTicks.size, fetchedTicks)
     }
 
     fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) = catch {
-        minOf(history.retry { getTimeOfLastTick(instrument)}, endTime)
+        minOf(history.retry { getTimeOfLastTick(instrument) }, endTime)
     }
 
     fun <F> ContextDependencies<F>.getTicks(
@@ -42,24 +44,19 @@ object TickFetch {
         Observable
             .defer { createFetchTimes(endTime) }
             .map { fetchTimes ->
-                history.retry { getTicks(instrument, fetchTimes.first, fetchTimes.second).asReversed()}
+                history.retry { getTicks(instrument, fetchTimes.first, fetchTimes.second).asReversed() }
             }
             .concatMapIterable { it }
             .distinctUntilChanged { tickA, tickB -> tickA.ask == tickB.ask }
             .take(numberOfTicks.toLong())
             .takeUntil { it.time < startTime }
-            .map { tick ->
-                val t6Data = createT6Data(tick, instrument)
-                logger.debug(
-                    "Stored bar time ${t6Data.time.asUTCTimeFormat()} ask ${t6Data.high} spread ${t6Data.value}"
-                )
-                t6Data
-            }
+            .map { tick -> createT6Data(tick, instrument) }
             .toList()
             .blockingGet()
     }
 
-    fun <F> ContextDependencies<F>.createFetchTimes(endTime: Long): Observable<Pair<Long, Long>> {
+    fun <F> ContextDependencies<F>.createFetchTimes(endTime: Long): Observable<Pair<Long, Long>>
+    {
         val seq = generateSequence(1) { it + 1 }.map { counter ->
             val startTickTime = endTime - counter * pluginSettings.tickfetchmillis() + 1L
             val endTickTime = startTickTime + pluginSettings.tickfetchmillis() - 1L

@@ -1,13 +1,12 @@
 package com.jforex.dzjforex.init
 
-import com.jforex.dzjforex.misc.PluginDependencies
-import com.jforex.dzjforex.misc.getStackTrace
-import com.jforex.dzjforex.misc.initContextApi
-import com.jforex.dzjforex.misc.logger
+import com.jforex.dzjforex.misc.*
 import com.jforex.kforexutils.misc.kForexUtils
 import com.jforex.kforexutils.strategy.KForexUtilsStrategy
+import io.reactivex.Observable
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 
 object BrokerInitApi
 {
@@ -33,6 +32,11 @@ object BrokerInitApi
             .tickQuotes
             .distinctUntilChanged { quoteA, quoteB -> quoteA.tick.ask == quoteB.tick.ask }
             .observeOn(Schedulers.io())
-            .subscribeBy(onNext = { natives.triggerQuoteReq()})
+            .subscribeBy(onNext = { natives.triggerQuoteReq() })
+
+        Observable
+            .interval(0L, 1L, TimeUnit.MINUTES)
+            .observeOn(Schedulers.io())
+            .subscribeBy(onNext = { printHeapInfo() })
     }
 }

@@ -47,7 +47,7 @@ object LoginApi {
         logger.debug("Starting login: username $username accountType $accountType")
         val loginCredentials = LoginCredentials(username = username, password = password)
         val loginType = getLoginType(accountType)
-        return client.login(loginCredentials, loginType, this)
+        return client.login(loginCredentials, loginType, pluginSettings.useLoginPin(), this)
     }
 
     fun getLoginType(accountType: String) =

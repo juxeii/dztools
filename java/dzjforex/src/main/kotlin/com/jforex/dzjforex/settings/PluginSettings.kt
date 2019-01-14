@@ -35,5 +35,9 @@ interface PluginSettings : Config
     @Config.Key("plugin.progressinterval")
     @Config.DefaultValue("250")
     fun zorroProgressInterval(): Long
+
+    @Config.Key("dukascopy.usepin")
+    @Config.DefaultValue("false")
+    fun useLoginPin(): Boolean
 }
 

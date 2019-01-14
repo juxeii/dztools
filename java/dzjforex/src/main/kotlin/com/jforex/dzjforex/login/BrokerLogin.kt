@@ -15,14 +15,15 @@ import com.jforex.kforexutils.authentification.LoginCredentials
 import com.jforex.kforexutils.authentification.LoginType
 import com.jforex.kforexutils.client.login
 
-object LoginApi {
+object LoginApi
+{
     fun <F> PluginDependencies<F>.brokerLogin(
         username: String,
         password: String,
         accountType: String
     ) = bindingCatch {
-        if (!isConnected().bind()) {
-            logger.debug("Initializing strategy...")
+        if (!isConnected().bind())
+        {
             connect(username = username, password = password, accountType = accountType).bind()
             brokerInit().bind()
         }
@@ -31,7 +32,7 @@ object LoginApi {
         logger.debug("Strategy successfully initialized.")
         BrokerLoginData(LOGIN_OK, contextApi.account.accountId)
     }.handleError { error ->
-        logger.error(
+        natives.logAndPrintErrorOnZorro(
             "BrokerLogin failed! Error message: " +
                     "${error.message} " +
                     "Stack trace: ${getStackTrace(error)}"
@@ -43,7 +44,8 @@ object LoginApi {
         username: String,
         password: String,
         accountType: String
-    ): Kind<F, Unit> {
+    ): Kind<F, Unit>
+    {
         logger.debug("Starting login: username $username accountType $accountType")
         val loginCredentials = LoginCredentials(username = username, password = password)
         val loginType = getLoginType(accountType)

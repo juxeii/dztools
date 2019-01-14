@@ -68,7 +68,7 @@ std::string ZorroDto::getString(char* fieldId, bool printValue) {
     }
     std::string string(c_str);
     env->ReleaseStringUTFChars(stringObj, c_str);
-    env->DeleteLocalRef(stringObj);
+    //env->DeleteLocalRef(stringObj);
 
     return string;
 }

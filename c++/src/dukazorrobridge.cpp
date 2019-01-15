@@ -1,6 +1,15 @@
 #include "dukazorrobridge.hpp"
 #include "DllCallHandler.hpp"
-#include "JReferences.hpp"
+#include "BrokerSubscribe.hpp"
+#include "BrokerLogin.hpp"
+#include "BrokerTime.hpp"
+#include "BrokerAsset.hpp"
+#include "BrokerTrade.hpp"
+#include "BrokerAccount.hpp"
+#include "BrokerStop.hpp"
+#include "BrokerSell.hpp"
+#include "BrokerBuy.hpp"
+#include "BrokerHistory.hpp"
 #include <string>
 
 #define DLLFUNC extern "C" __declspec(dllexport)
@@ -9,7 +18,18 @@ int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
 int
 (__cdecl *BrokerProgress)(const int percent) = nullptr;
-static DllCallHandler dllCallHandler;
+static JNIHandler jniHandler;
+static DllCallHandler dllCallHandler(jniHandler);
+static BrokerSubscribe brokerSusbcribe(jniHandler);
+static BrokerLogin brokerLogin(jniHandler);
+static BrokerTime brokerTime(jniHandler);
+static BrokerAsset brokerAsset(jniHandler);
+static BrokerTrade brokerTrade(jniHandler);
+static BrokerAccount brokerAccount(jniHandler);
+static BrokerStop brokerStop(jniHandler);
+static BrokerSell brokerSell(jniHandler);
+static BrokerBuy brokerBuy(jniHandler);
+static BrokerHistory brokerHistory(jniHandler);
 
 BOOL APIENTRY
 DllMain(HMODULE hModule,
@@ -86,18 +106,13 @@ BrokerLogin(const char *User,
     const char *Type,
     char *Accounts)
 {
-    if (User)
-        return dllCallHandler.BrokerLogin(User,
-            Pwd,
-            Type,
-            Accounts);
-    return dllCallHandler.BrokerLogout();
+    return User ? brokerLogin.runLogin(User, Pwd, Type, Accounts) : brokerLogin.runLogout();
 }
 
 DLLFUNC int
 BrokerTime(DATE *pTimeUTC)
 {
-    return dllCallHandler.BrokerTime(pTimeUTC);
+    return brokerTime.run(pTimeUTC);
 }
 
 DLLFUNC int
@@ -112,19 +127,17 @@ BrokerAsset(char* Asset,
     double *pRollLong,
     double *pRollShort)
 {
-    if (!pPrice)
-        return dllCallHandler.SubscribeAsset(Asset);
-    else
-        return dllCallHandler.BrokerAsset(Asset,
-            pPrice,
-            pSpread,
-            pVolume,
-            pPip,
-            pPipCost,
-            pLotAmount,
-            pMarginCost,
-            pRollLong,
-            pRollShort);
+    return pPrice? brokerAsset.run(Asset,
+        pPrice,
+        pSpread,
+        pVolume,
+        pPip,
+        pPipCost,
+        pLotAmount,
+        pMarginCost,
+        pRollLong,
+        pRollShort)
+        : brokerSusbcribe.run(Asset);
 }
 
 DLLFUNC int
@@ -135,7 +148,7 @@ BrokerHistory2(char* Asset,
     int nTicks,
     T6* ticks)
 {
-    return dllCallHandler.BrokerHistory2(Asset,
+    return brokerHistory.run(Asset,
         tStart,
         tEnd,
         nTickMinutes,
@@ -149,7 +162,7 @@ BrokerAccount(char* Account,
     double *pTradeVal,
     double *pMarginVal)
 {
-    return dllCallHandler.BrokerAccount(Account,
+    return brokerAccount.run(Account,
         pBalance,
         pTradeVal,
         pMarginVal);
@@ -163,7 +176,7 @@ BrokerBuy2(char* Asset,
     double *pPrice,
     double *pFill)
 {
-    return dllCallHandler.BrokerBuy2(Asset,
+    return brokerBuy.run(Asset,
         nAmount,
         dStopDist,
         limit,
@@ -179,7 +192,7 @@ BrokerTrade(int nTradeID,
     double *pProfit)
 
 {
-    return dllCallHandler.BrokerTrade(nTradeID,
+    return brokerTrade.run(nTradeID,
         pOpen,
         pClose,
         pRoll,
@@ -190,45 +203,20 @@ DLLFUNC int
 BrokerStop(int nTradeID,
     double dStop)
 {
-    return dllCallHandler.BrokerStop(nTradeID, dStop);
+    return brokerStop.run(nTradeID, dStop);
 }
 
 DLLFUNC int
 BrokerSell(int nTradeID,
     int nAmount)
 {
-    return dllCallHandler.BrokerSell(nTradeID, nAmount);
-}
-
-jmethodID getBcMethodId(int nCommand, const std::map<int, jmethodID> bcMethodIdMap) {
-    auto it = bcMethodIdMap.find(nCommand);
-    if (it != bcMethodIdMap.end()) {
-        return it->second;
-    }
-    else {
-        return nullptr;
-    }
+    return brokerSell.run(nTradeID, nAmount);
 }
 
 DLLFUNC var
 BrokerCommand(int nCommand,
     DWORD dwParameter)
 {
-    const std::map<int, jmethodID> bcMethodIdMap = {
-                {SET_ORDERTEXT,JData::bcSetOrderText.methodID},
-                {GET_DIGITS,JData::bcGetDigits.methodID},
-                {GET_MAXLOT,JData::bcGetMaxLot.methodID},
-                {GET_MINLOT,JData::bcGetMinLot.methodID},
-                {GET_MARGININIT,JData::bcGetMarginInit.methodID},
-                {GET_TRADEALLOWED,JData::bcGetTradeAllowed.methodID},
-                {GET_TIME,JData::bcGetTime.methodID},
-                {GET_MAXTICKS,JData::bcGetMaxTicks.methodID},
-                {GET_SERVERSTATE,JData::bcGetServerState.methodID},
-                {GET_ACCOUNT,JData::bcGetAccount.methodID},
-                {SET_SLIPPAGE,JData::bcSetSlippage.methodID},
-                {SET_LIMIT,JData::bcSetLimit.methodID}
-    };
-
     switch (nCommand)
     {
     case GET_MAXREQUESTS:
@@ -250,18 +238,18 @@ BrokerCommand(int nCommand,
     case GET_TRADEALLOWED:
     {
         char* text = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForText(text, getBcMethodId(nCommand, bcMethodIdMap));
+        return dllCallHandler.bcForText(text, nCommand);
     }
     case GET_TIME:
     case GET_MAXTICKS:
     case GET_SERVERSTATE:
     {
-        return dllCallHandler.bcNoParam(getBcMethodId(nCommand, bcMethodIdMap));
+        return dllCallHandler.bcNoParam(nCommand);
     }
     case GET_ACCOUNT:
     {
         char* stringToWrite = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForGetString(stringToWrite, getBcMethodId(nCommand, bcMethodIdMap));
+        return dllCallHandler.bcForGetString(stringToWrite, nCommand);
     }
     case SET_HWND:
     {
@@ -271,12 +259,12 @@ BrokerCommand(int nCommand,
     case SET_SLIPPAGE:
     {
         double pValue = (double)dwParameter;
-        return dllCallHandler.bcForDouble(pValue, getBcMethodId(nCommand, bcMethodIdMap));
+        return dllCallHandler.bcForDouble(pValue, nCommand);
     }
     case SET_LIMIT:
     {
         double* pValue = reinterpret_cast<double*>(dwParameter);
-        return dllCallHandler.bcForDouble(*pValue, getBcMethodId(nCommand, bcMethodIdMap));
+        return dllCallHandler.bcForDouble(*pValue, nCommand);
     }
     default:
     {

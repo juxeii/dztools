@@ -1,5 +1,4 @@
-#ifndef DUKAZORROBRIDGE_HPP
-#define DUKAZORROBRIDGE_HPP
+#pragma once
 
 #include <windows.h>
 #include <iostream>
@@ -37,5 +36,3 @@ jcallback_BrokerProgress(JNIEnv *env,
 
 void
 triggerQuoteReq();
-
-#endif /* DUKAZORROBRIDGE_HPP */

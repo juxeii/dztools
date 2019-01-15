@@ -121,17 +121,35 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\BrokerSell.cpp" />
+    <ClCompile Include="src\BrokerAccount.cpp" />
+    <ClCompile Include="src\BrokerAsset.cpp" />
+    <ClCompile Include="src\BrokerBuy.cpp" />
+    <ClCompile Include="src\BrokerHistory.cpp" />
+    <ClCompile Include="src\BrokerLogin.cpp" />
+    <ClCompile Include="src\BrokerStop.cpp" />
+    <ClCompile Include="src\BrokerSubscribe.cpp" />
+    <ClCompile Include="src\BrokerTime.cpp" />
+    <ClCompile Include="src\BrokerTrade.cpp" />
     <ClCompile Include="src\DllCallHandler.cpp" />
     <ClCompile Include="src\dukazorrobridge.cpp" />
     <ClCompile Include="src\JNIHandler.cpp" />
-    <ClCompile Include="src\JReferences.cpp" />
     <ClCompile Include="src\ZorroDto.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\BrokerAccount.hpp" />
+    <ClInclude Include="include\BrokerAsset.hpp" />
+    <ClInclude Include="include\BrokerBuy.hpp" />
+    <ClInclude Include="include\BrokerHistory.hpp" />
+    <ClInclude Include="include\BrokerLogin.hpp" />
+    <ClInclude Include="include\BrokerSell.hpp" />
+    <ClInclude Include="include\BrokerStop.hpp" />
+    <ClInclude Include="include\BrokerSubscribe.hpp" />
+    <ClInclude Include="include\BrokerTime.hpp" />
+    <ClInclude Include="include\BrokerTrade.hpp" />
     <ClInclude Include="include\DllCallHandler.hpp" />
     <ClInclude Include="include\dukazorrobridge.hpp" />
     <ClInclude Include="include\JNIHandler.hpp" />
-    <ClInclude Include="include\JReferences.hpp" />
     <ClInclude Include="include\PatchValue.hpp" />
     <ClInclude Include="include\ZorroDto.hpp" />
   </ItemGroup>

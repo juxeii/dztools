@@ -6,8 +6,9 @@
 
 class DllCallHandler
 {
-
 public:
+    DllCallHandler(const JNIHandler& jniHandler);
+
     int
         BrokerLogin(const char *User,
             const char *Pwd,
@@ -74,17 +75,17 @@ public:
 
     var
         bcForText(char* orderText,
-            jmethodID methodID);
+            int nCommand);
 
     var
         bcForDouble(double value,
-            jmethodID methodID);
+            int nCommand);
 
     var
-        bcForGetString(char *stringToWrite, jmethodID methodID);
+        bcForGetString(char *stringToWrite, int nCommand);
 
     var
-        bcNoParam(jmethodID methodID);
+        bcNoParam(int nCommand);
 
 private:
     JNIHandler jniHandler;

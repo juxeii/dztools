@@ -1,6 +1,5 @@
 #include "DllCallHandler.hpp"
 #include "JNIHandler.hpp"
-#include "JReferences.hpp"
 #include "ZorroDto.hpp"
 #include <cstring>
 #include <bitset>
@@ -9,6 +8,10 @@ bool isPatchValueActive(PatchValue pv) {
     std::bitset<32> bitset(bcPatch);
     return bitset.test(pv);
 }
+
+DllCallHandler::DllCallHandler(const JNIHandler& jniHandler)
+    :jniHandler(jniHandler)
+{}
 
 int
 DllCallHandler::BrokerLogin(const char *User,
@@ -40,8 +43,8 @@ DllCallHandler::BrokerLogin(const char *User,
     else
         jType = env->NewStringUTF("");
 
-    jobject brokerLoginObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerLogin.methodID,
+    jobject brokerLoginObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerLogin,
         jUser,
         jPwd,
         jType);
@@ -72,8 +75,8 @@ DllCallHandler::BrokerLogin(const char *User,
 int
 DllCallHandler::BrokerLogout()
 {
-    return (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerLogout.methodID);
+    return (jlong)env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerLogout);
 }
 
 int
@@ -81,7 +84,7 @@ DllCallHandler::BrokerTime(DATE *pTimeUTC)
 {
     constexpr int CONNECTION_LOST_NEW_LOGIN_REQUIRED = 0;
 
-    jobject brokerTimeObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject, JData::brokerTime.methodID);
+    jobject brokerTimeObject = env->CallObjectMethod(jniHandler.zorroBridgeObject, jniHandler.brokerTime);
     ZorroDto timeDto(env, brokerTimeObject);
 
     int returnCode = timeDto.getReturnCode();
@@ -97,8 +100,8 @@ DllCallHandler::SubscribeAsset(const char* Asset)
 {
     jstring jAsset = env->NewStringUTF(Asset);
 
-    jint res = (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerSubscribeAsset.methodID,
+    jint res = (jlong)env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerSubscribeAsset,
         jAsset);
     env->DeleteLocalRef(jAsset);
 
@@ -120,8 +123,8 @@ DllCallHandler::BrokerAsset(char* Asset,
     constexpr int ASSET_AVAILABLE = 1;
 
     jstring jAsset = env->NewStringUTF(Asset);
-    jobject brokerAssetObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerAsset.methodID,
+    jobject brokerAssetObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerAsset,
         jAsset);
     ZorroDto assetDto(env, brokerAssetObject);
 
@@ -154,8 +157,8 @@ DllCallHandler::BrokerHistory2(const char *Asset,
     constexpr int BROKER_HISTORY_UNAVAILABLE = 0;
 
     jstring jAsset = env->NewStringUTF(Asset);
-    jobject brokerHistoryObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerHistory2.methodID,
+    jobject brokerHistoryObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerHistory2,
         jAsset,
         tStart,
         tEnd,
@@ -224,8 +227,8 @@ DllCallHandler::BrokerAccount(const char *Account,
     }
     constexpr int ACCOUNT_AVAILABLE = 1;
 
-    jobject brokerAccountObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerAccount.methodID);
+    jobject brokerAccountObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerAccount);
     ZorroDto accountDto(env, brokerAccountObject);
 
     int returnCode = accountDto.getReturnCode();
@@ -248,8 +251,8 @@ DllCallHandler::BrokerBuy2(char* Asset,
     double *pFill)
 {
     jstring jAsset = env->NewStringUTF(Asset);
-    jobject brokerBuysObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerBuy2.methodID,
+    jobject brokerBuysObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerBuy2,
         jAsset,
         nAmount,
         dStopDist,
@@ -276,8 +279,8 @@ DllCallHandler::BrokerTrade(const int nTradeID,
     double *pRoll,
     double *pProfit)
 {
-    jobject brokerTradeObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerTrade.methodID,
+    jobject brokerTradeObject = env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerTrade,
         nTradeID);
     ZorroDto tradeDto(env, brokerTradeObject);
 
@@ -295,8 +298,8 @@ int
 DllCallHandler::BrokerStop(const int nTradeID,
     const double dStop)
 {
-    return (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerStop.methodID,
+    return (jlong)env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerStop,
         nTradeID,
         dStop);
 }
@@ -305,18 +308,18 @@ int
 DllCallHandler::BrokerSell(const int nTradeID,
     const int nAmount)
 {
-    return (jlong)env->CallObjectMethod(JData::JDukaZorroBridgeObject,
-        JData::brokerSell.methodID,
+    return (jlong)env->CallObjectMethod(jniHandler.zorroBridgeObject,
+        jniHandler.brokerSell,
         nTradeID,
         nAmount);
 }
 
 var
-DllCallHandler::bcForText(char* orderText, jmethodID methodID)
+DllCallHandler::bcForText(char* orderText, int nCommand)
 {
     jstring jText = env->NewStringUTF(orderText);
-    jdouble returnCode = env->CallDoubleMethod(JData::JDukaZorroBridgeObject,
-        methodID,
+    jdouble returnCode = env->CallDoubleMethod(jniHandler.zorroBridgeObject,
+        jniHandler.getBcMethodId(nCommand),
         jText);
     env->DeleteLocalRef(jText);
 
@@ -324,9 +327,9 @@ DllCallHandler::bcForText(char* orderText, jmethodID methodID)
 }
 
 var
-DllCallHandler::bcForGetString(char *stringToWrite, jmethodID methodID)
+DllCallHandler::bcForGetString(char *stringToWrite, int nCommand)
 {
-    jobject brokerCommandDataObject = env->CallObjectMethod(JData::JDukaZorroBridgeObject, methodID);
+    jobject brokerCommandDataObject = env->CallObjectMethod(jniHandler.zorroBridgeObject, jniHandler.getBcMethodId(nCommand));
     ZorroDto commandDto(env, brokerCommandDataObject);
     int returnCode = commandDto.getReturnCode();
     if (returnCode != 0) {
@@ -340,16 +343,16 @@ DllCallHandler::bcForGetString(char *stringToWrite, jmethodID methodID)
 }
 
 var
-DllCallHandler::bcForDouble(double value, jmethodID methodID)
+DllCallHandler::bcForDouble(double value, int nCommand)
 {
 
-    return env->CallDoubleMethod(JData::JDukaZorroBridgeObject,
-        methodID,
+    return env->CallDoubleMethod(jniHandler.zorroBridgeObject,
+        jniHandler.getBcMethodId(nCommand),
         value);
 }
 
 var
-DllCallHandler::bcNoParam(jmethodID methodID)
+DllCallHandler::bcNoParam(int nCommand)
 {
-    return env->CallDoubleMethod(JData::JDukaZorroBridgeObject, methodID);
+    return env->CallDoubleMethod(jniHandler.zorroBridgeObject, jniHandler.getBcMethodId(nCommand));
 }

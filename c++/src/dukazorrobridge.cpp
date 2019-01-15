@@ -1,35 +1,15 @@
-#include "dukazorrobridge.hpp"
-#include "DllCallHandler.hpp"
-#include "BrokerSubscribe.hpp"
-#include "BrokerLogin.hpp"
-#include "BrokerTime.hpp"
-#include "BrokerAsset.hpp"
-#include "BrokerTrade.hpp"
-#include "BrokerAccount.hpp"
-#include "BrokerStop.hpp"
-#include "BrokerSell.hpp"
-#include "BrokerBuy.hpp"
-#include "BrokerHistory.hpp"
-#include <string>
-
+#pragma once
 #define DLLFUNC extern "C" __declspec(dllexport)
+
+#include "dukazorrobridge.hpp"
+#include "CommandDispatcher.hpp"
+#include <string>
 
 int
 (__cdecl *BrokerError)(const char *txt) = nullptr;
 int
 (__cdecl *BrokerProgress)(const int percent) = nullptr;
-static JNIHandler jniHandler;
-static DllCallHandler dllCallHandler(jniHandler);
-static BrokerSubscribe brokerSusbcribe(jniHandler);
-static BrokerLogin brokerLogin(jniHandler);
-static BrokerTime brokerTime(jniHandler);
-static BrokerAsset brokerAsset(jniHandler);
-static BrokerTrade brokerTrade(jniHandler);
-static BrokerAccount brokerAccount(jniHandler);
-static BrokerStop brokerStop(jniHandler);
-static BrokerSell brokerSell(jniHandler);
-static BrokerBuy brokerBuy(jniHandler);
-static BrokerHistory brokerHistory(jniHandler);
+static CommandDispatcher dispatcher;
 
 BOOL APIENTRY
 DllMain(HMODULE hModule,
@@ -76,7 +56,8 @@ jcallback_BrokerProgress(JNIEnv *env,
 void
 triggerQuoteReq()
 {
-    if (zorroWindow) PostMessage(zorroWindow, WM_APP + 1, 0, 0);
+    HWND hwnd = dispatcher.getZorroHWND();
+    if (hwnd) PostMessage(hwnd, WM_APP + 1, 0, 0);
 }
 
 DLLFUNC int
@@ -106,13 +87,13 @@ BrokerLogin(const char *User,
     const char *Type,
     char *Accounts)
 {
-    return User ? brokerLogin.runLogin(User, Pwd, Type, Accounts) : brokerLogin.runLogout();
+    return User ? dispatcher.brokerLogin(User, Pwd, Type, Accounts) : dispatcher.brokerLogout();
 }
 
 DLLFUNC int
 BrokerTime(DATE *pTimeUTC)
 {
-    return brokerTime.run(pTimeUTC);
+    return dispatcher.brokerTime(pTimeUTC);
 }
 
 DLLFUNC int
@@ -127,7 +108,7 @@ BrokerAsset(char* Asset,
     double *pRollLong,
     double *pRollShort)
 {
-    return pPrice? brokerAsset.run(Asset,
+    return pPrice? dispatcher.brokerAsset(Asset,
         pPrice,
         pSpread,
         pVolume,
@@ -137,7 +118,7 @@ BrokerAsset(char* Asset,
         pMarginCost,
         pRollLong,
         pRollShort)
-        : brokerSusbcribe.run(Asset);
+        : dispatcher.brokerSubscribe(Asset);
 }
 
 DLLFUNC int
@@ -148,7 +129,7 @@ BrokerHistory2(char* Asset,
     int nTicks,
     T6* ticks)
 {
-    return brokerHistory.run(Asset,
+    return dispatcher.brokerHistory(Asset,
         tStart,
         tEnd,
         nTickMinutes,
@@ -162,7 +143,7 @@ BrokerAccount(char* Account,
     double *pTradeVal,
     double *pMarginVal)
 {
-    return brokerAccount.run(Account,
+    return dispatcher.brokerAccount(Account,
         pBalance,
         pTradeVal,
         pMarginVal);
@@ -176,7 +157,7 @@ BrokerBuy2(char* Asset,
     double *pPrice,
     double *pFill)
 {
-    return brokerBuy.run(Asset,
+    return dispatcher.brokerBuy(Asset,
         nAmount,
         dStopDist,
         limit,
@@ -192,7 +173,7 @@ BrokerTrade(int nTradeID,
     double *pProfit)
 
 {
-    return brokerTrade.run(nTradeID,
+    return dispatcher.brokerTrade(nTradeID,
         pOpen,
         pClose,
         pRoll,
@@ -203,72 +184,18 @@ DLLFUNC int
 BrokerStop(int nTradeID,
     double dStop)
 {
-    return brokerStop.run(nTradeID, dStop);
+    return dispatcher.brokerStop(nTradeID, dStop);
 }
 
 DLLFUNC int
 BrokerSell(int nTradeID,
     int nAmount)
 {
-    return brokerSell.run(nTradeID, nAmount);
+    return dispatcher.brokerSell(nTradeID, nAmount);
 }
 
 DLLFUNC var
-BrokerCommand(int nCommand,
-    DWORD dwParameter)
+BrokerCommand(int nCommand,DWORD dwParameter)
 {
-    switch (nCommand)
-    {
-    case GET_MAXREQUESTS:
-        return 0;
-    case GET_PRICETYPE:
-        return 1;
-    case GET_LOCK:
-        return -1;
-    case SET_PATCH:
-    {
-        bcPatch = static_cast<int>(dwParameter);
-        return 1;
-    }
-    case SET_ORDERTEXT:
-    case GET_DIGITS:
-    case GET_MAXLOT:
-    case GET_MINLOT:
-    case GET_MARGININIT:
-    case GET_TRADEALLOWED:
-    {
-        char* text = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForText(text, nCommand);
-    }
-    case GET_TIME:
-    case GET_MAXTICKS:
-    case GET_SERVERSTATE:
-    {
-        return dllCallHandler.bcNoParam(nCommand);
-    }
-    case GET_ACCOUNT:
-    {
-        char* stringToWrite = reinterpret_cast<char*>(dwParameter);
-        return dllCallHandler.bcForGetString(stringToWrite, nCommand);
-    }
-    case SET_HWND:
-    {
-        zorroWindow = (HWND)dwParameter;
-        return 1;
-    }
-    case SET_SLIPPAGE:
-    {
-        double pValue = (double)dwParameter;
-        return dllCallHandler.bcForDouble(pValue, nCommand);
-    }
-    case SET_LIMIT:
-    {
-        double* pValue = reinterpret_cast<double*>(dwParameter);
-        return dllCallHandler.bcForDouble(*pValue, nCommand);
-    }
-    default:
-    {
-        return 0.0;
-    }
-    }
+    return dispatcher.brokerCommand(nCommand, dwParameter);
 }

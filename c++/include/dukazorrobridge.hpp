@@ -1,21 +1,10 @@
 #pragma once
 
 #include <windows.h>
-#include <iostream>
-#include <sstream>
-#include <map>
 #include <jni.h>
 #include "trading.h"
-#include "PatchValue.hpp"
-
-typedef jlong DukaTime;
 
 static const int PLUGIN_VERSION = 2u;
-
-static int bcPatch = 0;
-static HWND zorroWindow{};
-bool isPatchValueActive(PatchValue pv);
-
 extern int
 (__cdecl *BrokerError)(const char *message);
 extern int

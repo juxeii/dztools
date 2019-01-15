@@ -24,12 +24,14 @@ object LoginApi
     ) = bindingCatch {
         if (!isConnected().bind())
         {
+            logger.debug("Starting login: username $username accountType $accountType")
             connect(username = username, password = password, accountType = accountType).bind()
+            logger.debug("Successfully logged in.")
+            logger.debug("Starting info strategy...")
             brokerInit().bind()
+            logger.debug("Info strategy successfully started.")
         }
-        logger.debug("Successfully logged in.")
     }.map {
-        logger.debug("Strategy successfully initialized.")
         BrokerLoginData(LOGIN_OK, contextApi.account.accountId)
     }.handleError { error ->
         natives.logAndPrintErrorOnZorro(
@@ -46,7 +48,6 @@ object LoginApi
         accountType: String
     ): Kind<F, Unit>
     {
-        logger.debug("Starting login: username $username accountType $accountType")
         val loginCredentials = LoginCredentials(username = username, password = password)
         val loginType = getLoginType(accountType)
         return client.login(loginCredentials, loginType, pluginSettings.useLoginPin(), this)

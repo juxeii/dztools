@@ -15,11 +15,9 @@ public:
 
     void checkJNIExcpetion(JNIEnv* env);
 
-    JavaVM* getJVM() { return jvm; }
-
     jobject callBridgeMethod(jmethodID, ...);
 
-    jmethodID getBcMethodId(int nCommand);
+    jdouble callDoubleBridgeMethod(jmethodID, ...);
 
     jmethodID registerMethod(const char*, const char*);
 
@@ -38,32 +36,7 @@ public:
     const char* zorroNativesPath = "com/jforex/dzjforex/zorro/ZorroNatives";
     const char* excPath = "java/lang/Class";
     const int JNI_VERSION = JNI_VERSION_1_8;
-    std::map<int, jmethodID> bcMethodIdMap;
-
     jmethodID constructor;
-    jmethodID brokerLogin;
-    jmethodID brokerLogout;
-    jmethodID brokerTime;
-    jmethodID brokerSubscribeAsset;
-    jmethodID brokerAsset;
-    jmethodID brokerAccount;
-    jmethodID brokerBuy2;
-    jmethodID brokerTrade;
-    jmethodID brokerStop;
-    jmethodID brokerSell;
-    jmethodID brokerHistory2;
-    jmethodID bcSetOrderText;
-    jmethodID bcSetSlippage;
-    jmethodID bcSetLimit;
-    jmethodID bcGetAccount;
-    jmethodID bcGetDigits;
-    jmethodID bcGetMaxLot;
-    jmethodID bcGetMinLot;
-    jmethodID bcGetMarginInit;
-    jmethodID bcGetTradeAllowed;
-    jmethodID bcGetTime;
-    jmethodID bcGetMaxTicks;
-    jmethodID bcGetServerState;
     jmethodID excGetName;
 
 private:
@@ -77,10 +50,6 @@ private:
     void initExceptionHandling();
 
     void registerNatives();
-
-    void registerClassMethods();
-
-    
 
     JavaVM *jvm = nullptr;
     JNIEnv * env = nullptr;

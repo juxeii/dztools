@@ -65,7 +65,7 @@ void JNIHandler::initializeJavaReferences()
 void JNIHandler::initBridgeObject()
 {
     zorroBridgeClass = env->FindClass(zorroBridgePath);
-    registerClassMethods();
+    constructor = registerMethod("<init>", "()V");
     zorroBridgeObject = env->NewObject(zorroBridgeClass, constructor);
     checkJNIExcpetion(env);
 }
@@ -81,59 +81,6 @@ void JNIHandler::registerNatives()
     zorroNativesClass = env->FindClass(zorroNativesPath);
     env->RegisterNatives(zorroNativesClass, nativesTable, nativesTableSize);
     checkJNIExcpetion(env);
-}
-
-void JNIHandler::registerClassMethods()
-{
-    constructor = registerMethod("<init>", "()V");
-    brokerLogin = registerMethod("brokerLogin", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;");
-    brokerLogout = registerMethod("brokerLogout", "()I");
-    brokerTime = registerMethod("brokerTime", "()Lcom/jforex/dzjforex/time/BrokerTimeData;");
-    brokerSubscribeAsset = registerMethod("brokerSubscribeAsset", "(Ljava/lang/String;)I");
-    brokerAsset = registerMethod("brokerAsset", "(Ljava/lang/String;)Lcom/jforex/dzjforex/asset/BrokerAssetData;");
-    brokerAccount = registerMethod("brokerAccount", "()Lcom/jforex/dzjforex/account/BrokerAccountData;");
-    brokerBuy2 = registerMethod("brokerBuy2", "(Ljava/lang/String;IDD)Lcom/jforex/dzjforex/buy/BrokerBuyData;");
-    brokerTrade = registerMethod("brokerTrade", "(I)Lcom/jforex/dzjforex/trade/BrokerTradeData;");
-    brokerStop = registerMethod("brokerStop", "(ID)I");
-    brokerSell = registerMethod("brokerSell", "(II)I");
-    brokerHistory2 = registerMethod("brokerHistory2", "(Ljava/lang/String;DDII)Lcom/jforex/dzjforex/history/BrokerHistoryData;");
-    bcSetOrderText = registerMethod("bcSetOrderText", "(Ljava/lang/String;)D");
-    bcSetSlippage = registerMethod("bcSetSlippage", "(D)D");
-    bcSetLimit = registerMethod("bcSetLimit", "(D)D");
-    bcGetAccount = registerMethod("bcGetAccount", "()Lcom/jforex/dzjforex/command/BrokerCommandData;");
-    bcGetDigits = registerMethod("bcGetDigits", "(Ljava/lang/String;)D");
-    bcGetMaxLot = registerMethod("bcGetMaxLot", "(Ljava/lang/String;)D");
-    bcGetMinLot = registerMethod("bcGetMinLot", "(Ljava/lang/String;)D");
-    bcGetMarginInit = registerMethod("bcGetMarginInit", "(Ljava/lang/String;)D");
-    bcGetTradeAllowed = registerMethod("bcGetTradeAllowed", "(Ljava/lang/String;)D");
-    bcGetTime = registerMethod("bcGetTime", "()D");
-    bcGetMaxTicks = registerMethod("bcGetMaxTicks", "()D");
-    bcGetServerState = registerMethod("bcGetServerState", "()D");
-
-    bcMethodIdMap = {
-                {SET_ORDERTEXT,bcSetOrderText},
-                {GET_DIGITS,bcGetDigits},
-                {GET_MAXLOT,bcGetMaxLot},
-                {GET_MINLOT,bcGetMinLot},
-                {GET_MARGININIT,bcGetMarginInit},
-                {GET_TRADEALLOWED,bcGetTradeAllowed},
-                {GET_TIME,bcGetTime},
-                {GET_MAXTICKS,bcGetMaxTicks},
-                {GET_SERVERSTATE,bcGetServerState},
-                {GET_ACCOUNT,bcGetAccount},
-                {SET_SLIPPAGE,bcSetSlippage},
-                {SET_LIMIT,bcSetLimit}
-    };
-}
-
-jmethodID JNIHandler::getBcMethodId(int nCommand) {
-    auto it = bcMethodIdMap.find(nCommand);
-    if (it != bcMethodIdMap.end()) {
-        return it->second;
-    }
-    else {
-        return nullptr;
-    }
 }
 
 jmethodID JNIHandler::registerMethod(const char* name, const char* signature)
@@ -169,7 +116,17 @@ jobject JNIHandler::callBridgeMethod(jmethodID methodId, ...)
     va_list args;
     jobject result;
     va_start(args, methodId);
-    result = env->CallObjectMethod(zorroBridgeObject, methodId, args);
+    result = env->CallObjectMethodV(zorroBridgeObject, methodId, args);
+    va_end(args);
+    return result;
+}
+
+jdouble JNIHandler::callDoubleBridgeMethod(jmethodID methodId, ...)
+{
+    va_list args;
+    jdouble result;
+    va_start(args, methodId);
+    result = env->CallDoubleMethodV(zorroBridgeObject, methodId, args);
     va_end(args);
     return result;
 }

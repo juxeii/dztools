@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\DllCallHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\dukazorrobridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,11 +54,14 @@
     <ClCompile Include="src\BrokerHistory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\BrokerCommandHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommandDispatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\DllCallHandler.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\dukazorrobridge.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -102,6 +102,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\BrokerHistory.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BrokerCommandHandler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandDispatcher.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

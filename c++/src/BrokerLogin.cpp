@@ -5,11 +5,7 @@
 
 BrokerLogin::BrokerLogin(JNIHandler& jniHandler)
     : jniHandler(jniHandler)
-{
-    env = jniHandler.getJNIEnvironment();
-    loginId = jniHandler.registerMethod("brokerLogin", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;");
-    logoutId = jniHandler.registerMethod("brokerLogout", "()I");
-}
+{   }
 
 int BrokerLogin::runLogin(const char *username,
     const char *password,
@@ -17,7 +13,8 @@ int BrokerLogin::runLogin(const char *username,
     char *account)
 {
     jniHandler.init();
-
+    loginId = jniHandler.registerMethod("brokerLogin", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;");
+    logoutId = jniHandler.registerMethod("brokerLogout", "()I");
     env = jniHandler.getJNIEnvironment();
 
     constexpr int LOGIN_OK = 1;

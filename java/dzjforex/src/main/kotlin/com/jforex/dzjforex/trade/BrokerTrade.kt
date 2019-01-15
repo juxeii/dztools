@@ -34,14 +34,12 @@ object BrokerTradeApi {
     }
 
     fun <F> ContextDependencies<F>.processOrder(order: IOrder) = binding {
-        val tradeData = BrokerTradeData(
+        BrokerTradeData(
             returnCode = createReturnValue(order).bind(),
             open = order.openPrice,
             close = quoteForOrder(order).bind(),
             profit = order.profitLossInAccountCurrency
         )
-        logger.debug("${order.instrument} $tradeData")
-        tradeData
     }
 
     fun <F> ContextDependencies<F>.quoteForOrder(order: IOrder) = delay {

@@ -3,11 +3,15 @@ package com.jforex.dzjforex.order
 import arrow.Kind
 import arrow.core.Option
 import arrow.core.Try
-import com.dukascopy.api.*
-import com.jforex.dzjforex.misc.*
+import com.dukascopy.api.IOrder
+import com.dukascopy.api.Instrument
+import com.jforex.dzjforex.misc.ContextDependencies
+import com.jforex.dzjforex.misc.OrderId
+import com.jforex.dzjforex.misc.OrderIdNotFoundException
 import com.jforex.dzjforex.misc.PluginApi.filterTradeableInstrument
 
-object OrderLookupApi {
+object OrderLookupApi
+{
 
     fun <F> ContextDependencies<F>.getOrderForId(orderId: OrderId) =
         getOrderForIdInOpenOrders(orderId).handleErrorWith { getOrderForIdInHistoryOrders(orderId) }
@@ -32,5 +36,21 @@ object OrderLookupApi {
 
     fun <F> ContextDependencies<F>.filterTradeableOrder(order: IOrder) =
         filterTradeableInstrument(order.instrument).map { order }
+
+    fun <F> ContextDependencies<F>.filterZorroOrder(order: IOrder) =
+        filterTradeableInstrument(order.instrument).map { order }
+
+    fun <F> ContextDependencies<F>.getOpenZorroOrders() = bindingCatch {
+        getOpenOrders()
+            .bind()
+            .filter { it.isFromZorro() }
+    }
+
+    fun <F> ContextDependencies<F>.getOpenZorroOrdersForInstrument(instrument: Instrument) = bindingCatch {
+        getOpenZorroOrders()
+            .bind()
+            .filter { it.instrument == instrument }
+    }
+
 }
 

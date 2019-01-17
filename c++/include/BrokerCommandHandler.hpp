@@ -41,9 +41,11 @@ private:
     jmethodID bcGetMinLot;
     jmethodID bcGetMarginInit;
     jmethodID bcGetTradeAllowed;
+	jmethodID bcGetPosition;
     jmethodID bcGetTime;
     jmethodID bcGetMaxTicks;
     jmethodID bcGetServerState;
+    jmethodID bcGetNTrades;
 
     int bcPatch = 0;
     HWND zorroWindow{};

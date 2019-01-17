@@ -34,9 +34,11 @@ object BrokerInitApi
             .observeOn(Schedulers.io())
             .subscribeBy(onNext = { natives.triggerQuoteReq() })
 
-        Observable
-            .interval(0L, 1L, TimeUnit.MINUTES)
-            .observeOn(Schedulers.io())
-            .subscribeBy(onNext = { printHeapInfo() })
+        if (pluginSettings.useTickCallback())
+            logger.debug("Using tickcallback")
+            Observable
+                .interval(0L, 1L, TimeUnit.MINUTES)
+                .observeOn(Schedulers.io())
+                .subscribeBy(onNext = { printHeapInfo() })
     }
 }

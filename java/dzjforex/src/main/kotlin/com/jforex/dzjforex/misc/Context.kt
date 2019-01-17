@@ -29,6 +29,8 @@ interface ContextDependencies<F> : PluginDependencies<F>
 
     fun IOrder.zorroId() = id.toInt()
 
+    fun IOrder.isFromZorro()= label.startsWith(pluginSettings.labelPrefix())
+
     companion object
     {
         operator fun <F> invoke(

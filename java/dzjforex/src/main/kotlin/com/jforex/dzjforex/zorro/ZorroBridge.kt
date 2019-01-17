@@ -11,6 +11,8 @@ import com.jforex.dzjforex.command.BrokerCommandApi.getMarginInit
 import com.jforex.dzjforex.command.BrokerCommandApi.getMaxLot
 import com.jforex.dzjforex.command.BrokerCommandApi.getMaxTicks
 import com.jforex.dzjforex.command.BrokerCommandApi.getMinLot
+import com.jforex.dzjforex.command.BrokerCommandApi.getNTrades
+import com.jforex.dzjforex.command.BrokerCommandApi.getPosition
 import com.jforex.dzjforex.command.BrokerCommandApi.getServerState
 import com.jforex.dzjforex.command.BrokerCommandApi.getTime
 import com.jforex.dzjforex.command.BrokerCommandApi.getTradeAllowed
@@ -112,11 +114,15 @@ class ZorroBridge
 
     fun bcGetTradeAllowed(assetName: String) = runBrokerCommand { contextApi.getTradeAllowed(assetName) }
 
+    fun bcGetPosition(assetName: String) = runBrokerCommand { contextApi.getPosition(assetName) }
+
     fun bcGetTime() = runBrokerCommand { contextApi.getTime() }
 
     fun bcGetMaxTicks() = runBrokerCommand { contextApi.getMaxTicks() }
 
     fun bcGetServerState() = runBrokerCommand { contextApi.getServerState() }
+
+    fun bcGetNTrades() = runBrokerCommand { contextApi.getNTrades() }
 
     private fun runBrokerCommand(bc: () -> Kind<ForIO, Double>) = pluginApi.run {
         if (!client.isConnected) BROKER_COMMAND_ERROR

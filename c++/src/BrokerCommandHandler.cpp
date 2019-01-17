@@ -19,23 +19,27 @@ BrokerCommandHandler::BrokerCommandHandler(JNIHandler& jniHandler)
     bcGetMinLot = jniHandler.registerMethod("bcGetMinLot", "(Ljava/lang/String;)D");
     bcGetMarginInit = jniHandler.registerMethod("bcGetMarginInit", "(Ljava/lang/String;)D");
     bcGetTradeAllowed = jniHandler.registerMethod("bcGetTradeAllowed", "(Ljava/lang/String;)D");
+	bcGetPosition = jniHandler.registerMethod("bcGetPosition", "(Ljava/lang/String;)D");
     bcGetTime = jniHandler.registerMethod("bcGetTime", "()D");
     bcGetMaxTicks = jniHandler.registerMethod("bcGetMaxTicks", "()D");
     bcGetServerState = jniHandler.registerMethod("bcGetServerState", "()D");
+    bcGetNTrades = jniHandler.registerMethod("bcGetNTrades", "()D");
 
     bcMethodIdMap = {
-                {SET_ORDERTEXT,bcSetOrderText},
-                {GET_DIGITS,bcGetDigits},
-                {GET_MAXLOT,bcGetMaxLot},
-                {GET_MINLOT,bcGetMinLot},
-                {GET_MARGININIT,bcGetMarginInit},
-                {GET_TRADEALLOWED,bcGetTradeAllowed},
-                {GET_TIME,bcGetTime},
-                {GET_MAXTICKS,bcGetMaxTicks},
-                {GET_SERVERSTATE,bcGetServerState},
-                {GET_ACCOUNT,bcGetAccount},
-                {SET_SLIPPAGE,bcSetSlippage},
-                {SET_LIMIT,bcSetLimit}
+                {SET_ORDERTEXT, bcSetOrderText},
+                {GET_DIGITS, bcGetDigits},
+                {GET_MAXLOT, bcGetMaxLot},
+                {GET_MINLOT, bcGetMinLot},
+                {GET_MARGININIT, bcGetMarginInit},
+                {GET_TRADEALLOWED, bcGetTradeAllowed},
+                {GET_POSITION, bcGetPosition},
+                {GET_TIME, bcGetTime},
+                {GET_MAXTICKS, bcGetMaxTicks},
+                {GET_SERVERSTATE, bcGetServerState},
+                {GET_NTRADES, bcGetNTrades},
+                {GET_ACCOUNT, bcGetAccount},
+                {SET_SLIPPAGE, bcSetSlippage},
+                {SET_LIMIT, bcSetLimit}
     };
 }
 
@@ -75,6 +79,7 @@ var BrokerCommandHandler::run(int nCommand, DWORD dwParameter)
     case GET_MINLOT:
     case GET_MARGININIT:
     case GET_TRADEALLOWED:
+    case GET_POSITION:
     {
         char* text = reinterpret_cast<char*>(dwParameter);
         return bcForText(text, nCommand);
@@ -82,6 +87,7 @@ var BrokerCommandHandler::run(int nCommand, DWORD dwParameter)
     case GET_TIME:
     case GET_MAXTICKS:
     case GET_SERVERSTATE:
+    case GET_NTRADES:
     {
         return bcNoParam(nCommand);
     }

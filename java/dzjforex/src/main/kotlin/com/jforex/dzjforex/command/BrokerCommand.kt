@@ -10,6 +10,8 @@ import com.jforex.dzjforex.misc.ContextApi.getSubscribedInstruments
 import com.jforex.dzjforex.misc.ContextDependencies
 import com.jforex.dzjforex.misc.PluginApi.createInstrument
 import com.jforex.dzjforex.misc.logger
+import com.jforex.dzjforex.order.OrderLookupApi.getOpenZorroOrders
+import com.jforex.dzjforex.order.OrderLookupApi.getOpenZorroOrdersForInstrument
 import com.jforex.dzjforex.time.toUTCTime
 import com.jforex.dzjforex.zorro.BROKER_COMMAND_ERROR
 import com.jforex.dzjforex.zorro.BROKER_COMMAND_OK
@@ -29,7 +31,8 @@ fun getBcOrderText() = bcOrderText.value!!
 val bcServerState: BehaviorRelay<ServerState> = BehaviorRelay.createDefault(ServerState.DISCONNECTED)
 fun getBcServerState() = bcServerState.value!!
 
-enum class ServerState(val value: Int) {
+enum class ServerState(val value: Int)
+{
     CONNECTED(1),
     DISCONNECTED(2),
     TEMPORARILY_DISCONNECTED(3);
@@ -37,7 +40,8 @@ enum class ServerState(val value: Int) {
     fun toDouble() = value.toDouble()
 }
 
-object BrokerCommandApi {
+object BrokerCommandApi
+{
     fun <F> ContextDependencies<F>.setSlippage(slippage: Double) = bindingCatch {
         bcSlippage.accept(Pips(slippage))
         logger.debug("Broker command SET_SLIPPAGE called with slippage $slippage")
@@ -76,16 +80,26 @@ object BrokerCommandApi {
 
     fun <F> ContextDependencies<F>.getServerState() = bindingCatch {
         logger.debug("Broker command GET_SERVERSTATE called")
-        if (client.isConnected) {
+        if (client.isConnected)
+        {
             bcServerState.accept(ServerState.CONNECTED)
             if (getBcServerState() == ServerState.DISCONNECTED)
                 ServerState.TEMPORARILY_DISCONNECTED.toDouble()
             else
                 ServerState.CONNECTED.toDouble()
-        } else {
+        } else
+        {
             bcServerState.accept(ServerState.DISCONNECTED)
             ServerState.DISCONNECTED.toDouble()
         }
+    }
+
+    fun <F> ContextDependencies<F>.getNTrades() = bindingCatch {
+        logger.debug("Broker command GET_NTRADES called.")
+        getOpenZorroOrders()
+            .bind()
+            .size
+            .toDouble()
     }
 
     fun <F> ContextDependencies<F>.getDigits(assetName: String) = bindingCatch {
@@ -121,5 +135,16 @@ object BrokerCommandApi {
         createInstrument(assetName)
             .flatMap { getMarginCost(it) }
             .bind()
+    }
+
+    fun <F> ContextDependencies<F>.getPosition(assetName: String) = bindingCatch {
+        logger.debug("Broker command GET_POSITION called for asset $assetName")
+        createInstrument(assetName)
+            .flatMap { getOpenZorroOrdersForInstrument(it) }
+            .bind()
+            .stream()
+            .mapToInt { it.toSignedContracts() }
+            .sum()
+            .toDouble()
     }
 }

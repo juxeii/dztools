@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.gradle.internal.jvm.Jvm
 
 group = "com.jforex.dzplugin"
-version = "0.9.7"
+version = "0.9.71"
 
 description = """
 The Java plugin part for Zorro which lets you trade with Dukascopy

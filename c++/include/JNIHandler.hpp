@@ -31,7 +31,7 @@ public:
     { (char*)"jcallback_BrokerProgress", (char*)"(I)I", (void *)&jcallback_BrokerProgress },
     { (char*)"triggerQuoteReq", (char*)"()V", (void *)&triggerQuoteReq } };
     const int nativesTableSize = sizeof(nativesTable) / sizeof(nativesTable[0]);
-    const char* JVMClassPathOption = "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.7.jar";
+    const char* JVMClassPathOption = "-Djava.class.path=Plugin/dukascopy/dzjforex-0.9.71.jar";
     const char* zorroBridgePath = "com/jforex/dzjforex/zorro/ZorroBridge";
     const char* zorroNativesPath = "com/jforex/dzjforex/zorro/ZorroNatives";
     const char* excPath = "java/lang/Class";

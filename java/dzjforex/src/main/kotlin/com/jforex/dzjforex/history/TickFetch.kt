@@ -19,7 +19,7 @@ object TickFetch
         endTime: Long,
         noOfTicks: Int
     ) = bindingCatch {
-        val endTickTime = getLatesTickTime(instrument, endTime).bind()
+        val endTickTime = getLatestTickTime(instrument, endTime).bind()
         val fetchedTicks = getTicks(
             instrument = instrument,
             startTime = startTime,
@@ -31,7 +31,7 @@ object TickFetch
         BrokerHistoryData(fetchedTicks.size, fetchedTicks)
     }
 
-    fun <F> ContextDependencies<F>.getLatesTickTime(instrument: Instrument, endTime: Long) = catch {
+    fun <F> ContextDependencies<F>.getLatestTickTime(instrument: Instrument, endTime: Long) = catch {
         minOf(history.retry { getTimeOfLastTick(instrument) }, endTime)
     }
 

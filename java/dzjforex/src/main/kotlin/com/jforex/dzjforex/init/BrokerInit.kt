@@ -22,8 +22,10 @@ object BrokerInitApi
             }
 
     fun <F> PluginDependencies<F>.startStrategy() = delay {
+        logger.debug("Starting info strategy...")
         val strategy = KForexUtilsStrategy()
         client.startStrategy(strategy)
+        logger.debug("Info strategy successfully started.")
     }
 
     fun <F> PluginDependencies<F>.startTickTriggerRoutine() = delay {

@@ -19,52 +19,54 @@ import com.jforex.kforexutils.instrument.noOfDecimalPlaces
 import com.jforex.kforexutils.instrument.tick
 import com.jforex.kforexutils.price.Pips
 
-val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
-fun getBcSlippage() = bcSlippage.value!!.toDouble()
-
-val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
-fun maybeBcLimitPrice() = bcLimitPrice.value!!
-
-val bcOrderText: BehaviorRelay<String> = BehaviorRelay.createDefault("")
-fun getBcOrderText() = bcOrderText.value!!
-
-val bcServerState: BehaviorRelay<ServerState> = BehaviorRelay.createDefault(ServerState.DISCONNECTED)
-fun getBcServerState() = bcServerState.value!!
-
-enum class ServerState(val value: Int)
-{
-    CONNECTED(1),
-    DISCONNECTED(2),
-    TEMPORARILY_DISCONNECTED(3);
-
-    fun toDouble() = value.toDouble()
-}
-
 object BrokerCommandApi
 {
-    fun <F> ContextDependencies<F>.setSlippage(slippage: Double) = bindingCatch {
+    private val bcSlippage: BehaviorRelay<Pips> = BehaviorRelay.createDefault(Pips(5.0))
+    private val bcLimitPrice: BehaviorRelay<Option<Double>> = BehaviorRelay.createDefault(None)
+    private val bcOrderText: BehaviorRelay<String> = BehaviorRelay.createDefault("")
+    private val bcServerState: BehaviorRelay<ServerState> = BehaviorRelay.createDefault(ServerState.DISCONNECTED)
+
+    enum class ServerState(val value: Int)
+    {
+        CONNECTED(1),
+        DISCONNECTED(2),
+        TEMPORARILY_DISCONNECTED(3);
+
+        fun toDouble() = value.toDouble()
+    }
+
+    fun getBcSlippage() = bcSlippage.value!!.toDouble()
+
+    fun maybeBcLimitPrice() = bcLimitPrice.value!!
+
+    fun getBcOrderText() = bcOrderText.value!!
+
+    fun getBcServerState() = bcServerState.value!!
+
+    fun <F> ContextDependencies<F>.setSlippage(slippage: Double) = catch {
         bcSlippage.accept(Pips(slippage))
         logger.debug("Broker command SET_SLIPPAGE called with slippage $slippage")
         BROKER_COMMAND_OK
     }
 
-    fun <F> ContextDependencies<F>.setLimit(limit: Double) = bindingCatch {
+    fun <F> ContextDependencies<F>.setLimit(limit: Double) = catch {
         bcLimitPrice.accept(limit.some())
         logger.debug("Broker command SET_LIMIT called with limit $limit")
         BROKER_COMMAND_OK
     }
 
-    fun <F> ContextDependencies<F>.setOrderText(orderText: String) = delay {
+    fun <F> ContextDependencies<F>.setOrderText(orderText: String) = catch {
         bcOrderText.accept(orderText)
         logger.debug("Broker command SET_ORDERTEXT called with ordertext $orderText")
         BROKER_COMMAND_OK
     }
 
-    fun <F> ContextDependencies<F>.getAccount() = bindingCatch {
-        BrokerCommandData(BROKER_COMMAND_OK.toInt(), accountName().bind())
-    }.handleError { BrokerCommandData(BROKER_COMMAND_ERROR.toInt(), "") }
+    fun <F> ContextDependencies<F>.getAccount() = catch {
+        logger.debug("Broker command GET_ACCOUNT called")
+        BrokerCommandData(BROKER_COMMAND_OK.toInt(), accountName())
+    }
 
-    fun <F> ContextDependencies<F>.getMaxTicks() = delay {
+    fun <F> ContextDependencies<F>.getMaxTicks() = catch {
         logger.debug("Broker command GET_MAXTICKS called")
         pluginSettings.maxTicks().toDouble()
     }
@@ -78,15 +80,16 @@ object BrokerCommandApi
             .toUTCTime()
     }
 
-    fun <F> ContextDependencies<F>.getServerState() = bindingCatch {
+    fun <F> ContextDependencies<F>.getServerState() = catch {
         logger.debug("Broker command GET_SERVERSTATE called")
         if (client.isConnected)
         {
-            bcServerState.accept(ServerState.CONNECTED)
-            if (getBcServerState() == ServerState.DISCONNECTED)
+            val serverState = if (getBcServerState() == ServerState.DISCONNECTED)
                 ServerState.TEMPORARILY_DISCONNECTED.toDouble()
             else
                 ServerState.CONNECTED.toDouble()
+            bcServerState.accept(ServerState.CONNECTED)
+            serverState
         } else
         {
             bcServerState.accept(ServerState.DISCONNECTED)

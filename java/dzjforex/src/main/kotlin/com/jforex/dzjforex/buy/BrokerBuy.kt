@@ -136,7 +136,7 @@ object BrokerBuyApi
             order.isCreated -> BrokerBuyData(BROKER_BUY_NO_RESPONSE)
             order.isPartiallyFilled ->
             {
-                if (!isNFAAccount().bind()) order.close()
+                if (!isNFAAccount()) order.close()
                 BrokerBuyData(
                     returnCode = BROKER_BUY_FILL_TIMEOUT,
                     price = order.openPrice,

@@ -12,10 +12,13 @@ int BrokerLogin::runLogin(const char *username,
     const char *type,
     char *account)
 {
-    jniHandler.init();
-    loginId = jniHandler.registerMethod("brokerLogin", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;");
-    logoutId = jniHandler.registerMethod("brokerLogout", "()I");
-    env = jniHandler.getJNIEnvironment();
+    if (!jniHandler.isInitialized())
+    {
+        jniHandler.init();
+        loginId = jniHandler.registerMethod("brokerLogin", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jforex/dzjforex/login/BrokerLoginData;");
+        logoutId = jniHandler.registerMethod("brokerLogout", "()I");
+        env = jniHandler.getJNIEnvironment();
+    }
 
     constexpr int LOGIN_OK = 1;
     constexpr int ACCOUNT_LENGTH = 1024;
@@ -37,7 +40,7 @@ int BrokerLogin::runLogin(const char *username,
     else
         jType = env->NewStringUTF("");
 
-    jobject brokerLoginObject = jniHandler.callBridgeMethod(loginId, jUser, jPwd, jType);
+    jobject brokerLoginObject = jniHandler.callObjectBridgeMethod(loginId, jUser, jPwd, jType);
     ZorroDto loginDto(env, brokerLoginObject);
     int returnCode = loginDto.getReturnCode();
 
@@ -64,5 +67,5 @@ int BrokerLogin::runLogin(const char *username,
 
 int BrokerLogin::runLogout()
 {
-    return (jint)jniHandler.callBridgeMethod(logoutId);
+    return jniHandler.callIntBridgeMethod(logoutId);
 }

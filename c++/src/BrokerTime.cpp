@@ -14,7 +14,7 @@ int BrokerTime::run(DATE *pTimeUTC)
 {
     constexpr int CONNECTION_LOST_NEW_LOGIN_REQUIRED = 0;
 
-    jobject brokerTimeObject =jniHandler.callBridgeMethod(timeId);
+    jobject brokerTimeObject =jniHandler.callObjectBridgeMethod(timeId);
     ZorroDto timeDto(env, brokerTimeObject);
 
     int returnCode = timeDto.getReturnCode();

@@ -129,7 +129,7 @@ var BrokerCommandHandler::bcForText(char* orderText, int nCommand)
 
 var BrokerCommandHandler::bcForGetString(char *stringToWrite, int nCommand)
 {
-    jobject brokerCommandHandlerDataObject = jniHandler.callBridgeMethod(getBcMethodId(nCommand));
+    jobject brokerCommandHandlerDataObject = jniHandler.callObjectBridgeMethod(getBcMethodId(nCommand));
     ZorroDto commandDto(env, brokerCommandHandlerDataObject);
     int returnCode = commandDto.getReturnCode();
     if (returnCode != 0) {

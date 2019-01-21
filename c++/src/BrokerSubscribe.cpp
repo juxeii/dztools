@@ -12,7 +12,7 @@ BrokerSubscribe::BrokerSubscribe(JNIHandler& jniHandler)
 int BrokerSubscribe::run(const char* assetName)
 {
     jstring jAsset = env->NewStringUTF(assetName);
-    jint res = (jint)jniHandler.callBridgeMethod(subscribeId, jAsset);
+    jint res = jniHandler.callIntBridgeMethod(subscribeId, jAsset);
     env->DeleteLocalRef(jAsset);
 
     return res;

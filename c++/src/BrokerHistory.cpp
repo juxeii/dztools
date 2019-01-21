@@ -20,7 +20,7 @@ int BrokerHistory::run(const char *assetName,
     constexpr int BROKER_HISTORY_UNAVAILABLE = 0;
 
     jstring jAsset = env->NewStringUTF(assetName);
-    jobject brokerHistoryObject = jniHandler.callBridgeMethod(historyId, jAsset,
+    jobject brokerHistoryObject = jniHandler.callObjectBridgeMethod(historyId, jAsset,
         tStart,
         tEnd,
         nTickMinutes,

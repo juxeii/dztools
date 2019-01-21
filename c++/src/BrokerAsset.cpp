@@ -24,7 +24,7 @@ int BrokerAsset::run(char* assetName,
     constexpr int ASSET_AVAILABLE = 1;
 
     jstring jAsset = env->NewStringUTF(assetName);
-    jobject brokerAssetObject = jniHandler.callBridgeMethod(assetId, jAsset);
+    jobject brokerAssetObject = jniHandler.callObjectBridgeMethod(assetId, jAsset);
     ZorroDto assetDto(env, brokerAssetObject);
 
     int returnCode = assetDto.getReturnCode();

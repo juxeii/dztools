@@ -16,7 +16,7 @@ int BrokerTrade::run(const int nTradeID,
     double *pRoll,
     double *pProfit)
 {
-    jobject brokerTradeObject = jniHandler.callBridgeMethod(tradeId, nTradeID);
+    jobject brokerTradeObject = jniHandler.callObjectBridgeMethod(tradeId, nTradeID);
     ZorroDto tradeDto(env, brokerTradeObject);
 
     int returnCode = tradeDto.getReturnCode();

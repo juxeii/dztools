@@ -11,5 +11,5 @@ BrokerSell::BrokerSell(JNIHandler& jniHandler)
 
 int BrokerSell::run(const int nTradeID, const int nAmount)
 {
-    return (jint)jniHandler.callBridgeMethod(sellId, nTradeID, nAmount);
+    return jniHandler.callIntBridgeMethod(sellId, nTradeID, nAmount);
 }

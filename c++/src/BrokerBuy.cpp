@@ -18,7 +18,7 @@ int BrokerBuy::run(char* assetName,
     double *pFill)
 {
     jstring jAsset = env->NewStringUTF(assetName);
-    jobject brokerBuyObject = jniHandler.callBridgeMethod(buyId, jAsset,
+    jobject brokerBuyObject = jniHandler.callObjectBridgeMethod(buyId, jAsset,
         nAmount,
         dStopDist,
         limit);

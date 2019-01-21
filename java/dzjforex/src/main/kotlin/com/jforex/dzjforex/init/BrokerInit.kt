@@ -27,18 +27,20 @@ object BrokerInitApi
     }
 
     fun <F> PluginDependencies<F>.startTickTriggerRoutine() = delay {
-        logger.debug("Starting tick trigger daemon...")
-        kForexUtils
-            .tickQuotes
-            .distinctUntilChanged { quoteA, quoteB -> quoteA.tick.ask == quoteB.tick.ask }
-            .observeOn(Schedulers.io())
-            .subscribeBy(onNext = { natives.triggerQuoteReq() })
 
         if (pluginSettings.useTickCallback())
-            logger.debug("Using tickcallback")
-            Observable
-                .interval(0L, 1L, TimeUnit.MINUTES)
+        {
+            logger.debug("Starting tick trigger daemon for tick callback...")
+            kForexUtils
+                .tickQuotes
+                .distinctUntilChanged { quoteA, quoteB -> quoteA.tick.ask == quoteB.tick.ask }
                 .observeOn(Schedulers.io())
-                .subscribeBy(onNext = { printHeapInfo() })
+                .subscribeBy(onNext = { natives.triggerQuoteReq() })
+        }
+
+        Observable
+            .interval(1L, 1L, TimeUnit.MINUTES)
+            .observeOn(Schedulers.io())
+            .subscribeBy(onNext = { printHeapInfo() })
     }
 }

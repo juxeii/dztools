@@ -59,4 +59,6 @@ private:
     std::shared_ptr < BrokerBuy> brokerBuyHandler;
     std::shared_ptr < BrokerHistory> brokerHistoryHandler;
     std::shared_ptr < BrokerCommandHandler> brokerCommandHandler;
+
+    bool isInitialized = false;
 };

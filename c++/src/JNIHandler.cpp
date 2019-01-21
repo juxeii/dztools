@@ -37,6 +37,10 @@ void JNIHandler::initializeJVM()
     isJVMLoaded = true;
 }
 
+bool JNIHandler::isInitialized() const {
+    return isJVMLoaded;
+}
+
 JNIEnv* JNIHandler::getJNIEnvironment() const {
     return env;
 }
@@ -111,7 +115,7 @@ void JNIHandler::checkJNIExcpetion(JNIEnv* env)
     env->ExceptionClear();
 }
 
-jobject JNIHandler::callBridgeMethod(jmethodID methodId, ...)
+jobject JNIHandler::callObjectBridgeMethod(jmethodID methodId, ...)
 {
     va_list args;
     jobject result;
@@ -127,6 +131,16 @@ jdouble JNIHandler::callDoubleBridgeMethod(jmethodID methodId, ...)
     jdouble result;
     va_start(args, methodId);
     result = env->CallDoubleMethodV(zorroBridgeObject, methodId, args);
+    va_end(args);
+    return result;
+}
+
+jint JNIHandler::callIntBridgeMethod(jmethodID methodId, ...)
+{
+    va_list args;
+    jint result;
+    va_start(args, methodId);
+    result = env->CallIntMethodV(zorroBridgeObject, methodId, args);
     va_end(args);
     return result;
 }

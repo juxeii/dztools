@@ -15,17 +15,21 @@ int CommandDispatcher::brokerLogin(const char *username,
 {
     int returnCode = brokerLoginHandler->runLogin(username, password, type, account);
 
-    brokerLoginHandler = std::make_shared<BrokerLogin>(jniHandler);
-    brokerSusbcribeHandler = std::make_shared<BrokerSubscribe>(jniHandler);
-    brokerTimeHandler = std::make_shared<BrokerTime>(jniHandler);
-    brokerAssetHandler = std::make_shared<BrokerAsset>(jniHandler);
-    brokerTradeHandler = std::make_shared<BrokerTrade>(jniHandler);
-    brokerAccountHandler = std::make_shared<BrokerAccount>(jniHandler);
-    brokerStopHandler = std::make_shared<BrokerStop>(jniHandler);
-    brokerSellHandler = std::make_shared<BrokerSell>(jniHandler);
-    brokerBuyHandler = std::make_shared<BrokerBuy>(jniHandler);
-    brokerHistoryHandler = std::make_shared<BrokerHistory>(jniHandler);
-    brokerCommandHandler = std::make_shared<BrokerCommandHandler>(jniHandler);
+    if (!isInitialized)
+    {
+        brokerSusbcribeHandler = std::make_shared<BrokerSubscribe>(jniHandler);
+        brokerTimeHandler = std::make_shared<BrokerTime>(jniHandler);
+        brokerAssetHandler = std::make_shared<BrokerAsset>(jniHandler);
+        brokerTradeHandler = std::make_shared<BrokerTrade>(jniHandler);
+        brokerAccountHandler = std::make_shared<BrokerAccount>(jniHandler);
+        brokerStopHandler = std::make_shared<BrokerStop>(jniHandler);
+        brokerSellHandler = std::make_shared<BrokerSell>(jniHandler);
+        brokerBuyHandler = std::make_shared<BrokerBuy>(jniHandler);
+        brokerHistoryHandler = std::make_shared<BrokerHistory>(jniHandler);
+        brokerCommandHandler = std::make_shared<BrokerCommandHandler>(jniHandler);
+
+        isInitialized = true;
+    }
 
     return returnCode;
 }

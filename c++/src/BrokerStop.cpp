@@ -11,5 +11,5 @@ BrokerStop::BrokerStop(JNIHandler& jniHandler)
 
 int BrokerStop::run(const int nTradeID, const double dStop)
 {
-    return (jint)jniHandler.callBridgeMethod(stopId, nTradeID, dStop);
+    return jniHandler.callIntBridgeMethod(stopId, nTradeID, dStop);
 }

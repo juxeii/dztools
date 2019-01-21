@@ -22,7 +22,7 @@ int BrokerAccount::run(const char *Account,
     }
     constexpr int ACCOUNT_AVAILABLE = 1;
 
-    jobject brokerAccountObject = jniHandler.callBridgeMethod(accountId);
+    jobject brokerAccountObject = jniHandler.callObjectBridgeMethod(accountId);
     ZorroDto accountDto(env, brokerAccountObject);
 
     int returnCode = accountDto.getReturnCode();

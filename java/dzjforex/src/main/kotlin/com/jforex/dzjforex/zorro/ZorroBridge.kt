@@ -6,6 +6,8 @@ import com.jforex.dzjforex.account.BrokerAccountApi.brokerAccount
 import com.jforex.dzjforex.asset.BrokerAssetApi.brokerAsset
 import com.jforex.dzjforex.buy.BrokerBuyApi.brokerBuy
 import com.jforex.dzjforex.command.BrokerCommandApi.getAccount
+import com.jforex.dzjforex.command.BrokerCommandApi.getBcOrderText
+import com.jforex.dzjforex.command.BrokerCommandApi.getBcSlippage
 import com.jforex.dzjforex.command.BrokerCommandApi.getDigits
 import com.jforex.dzjforex.command.BrokerCommandApi.getMarginInit
 import com.jforex.dzjforex.command.BrokerCommandApi.getMaxLot
@@ -16,12 +18,10 @@ import com.jforex.dzjforex.command.BrokerCommandApi.getPosition
 import com.jforex.dzjforex.command.BrokerCommandApi.getServerState
 import com.jforex.dzjforex.command.BrokerCommandApi.getTime
 import com.jforex.dzjforex.command.BrokerCommandApi.getTradeAllowed
+import com.jforex.dzjforex.command.BrokerCommandApi.maybeBcLimitPrice
 import com.jforex.dzjforex.command.BrokerCommandApi.setLimit
 import com.jforex.dzjforex.command.BrokerCommandApi.setOrderText
 import com.jforex.dzjforex.command.BrokerCommandApi.setSlippage
-import com.jforex.dzjforex.command.getBcOrderText
-import com.jforex.dzjforex.command.getBcSlippage
-import com.jforex.dzjforex.command.maybeBcLimitPrice
 import com.jforex.dzjforex.history.BrokerHistoryApi.brokerHistory
 import com.jforex.dzjforex.login.LoginApi.brokerLogin
 import com.jforex.dzjforex.login.LoginApi.logout
@@ -36,8 +36,7 @@ import com.jforex.dzjforex.time.BrokerTimeApi.brokerTime
 import com.jforex.dzjforex.trade.BrokerTradeApi.brokerTrade
 
 @Suppress("unused")
-class ZorroBridge
-{
+class ZorroBridge {
     fun brokerLogin(username: String, password: String, accountType: String) =
         runWithProgress(
             pluginApi.brokerLogin(
@@ -76,7 +75,14 @@ class ZorroBridge
     )
 
     fun brokerSell(orderId: Int, contracts: Int) =
-        runWithProgress(contextApi.brokerSell(orderId, contracts, maybeBcLimitPrice(), getBcSlippage()))
+        runWithProgress(
+            contextApi.brokerSell(
+                orderId=orderId,
+                contracts=contracts,
+                maybeLimitPrice= maybeBcLimitPrice(),
+                slippage= getBcSlippage()
+            )
+        )
 
     fun brokerStop(orderId: Int, slPrice: Double) = runWithProgress(contextApi.brokerStop(orderId, slPrice))
 

@@ -26,7 +26,7 @@ object AccountApi
                 account.accountState == IAccount.AccountState.OK_NO_MARGIN_CALL
     }
 
-    fun <F> ContextDependencies<F>.accountName() = delay { account.accountId }
+    fun <F> ContextDependencies<F>.accountName() = account.accountId
 
-    fun <F> ContextDependencies<F>.isNFAAccount() = delay { account.isGlobal }
+    fun <F> ContextDependencies<F>.isNFAAccount() = account.isGlobal
 }

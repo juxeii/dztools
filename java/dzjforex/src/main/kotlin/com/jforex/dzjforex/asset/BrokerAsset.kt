@@ -35,17 +35,18 @@ object BrokerAssetApi
     }
 
     fun <F> ContextDependencies<F>.getAssetData(instrument: Instrument) = bindingCatch {
-        val tick = instrument.tick()
-        BrokerAssetData(
-            returnCode = ASSET_AVAILABLE,
-            price = tick.ask,
-            spread = instrument.spread(),
-            volume = tick.askVolume,
-            pip = instrument.pipValue,
-            pipCost = pipCost(instrument).bind(),
-            lotAmount = instrument.minTradeAmount,
-            marginCost = getMarginCost(instrument).bind()
-        )
+        with(instrument.tick()){
+            BrokerAssetData(
+                returnCode = ASSET_AVAILABLE,
+                price = ask,
+                spread = instrument.spread(),
+                volume = askVolume,
+                pip = instrument.pipValue,
+                pipCost = pipCost(instrument).bind(),
+                lotAmount = instrument.minTradeAmount,
+                marginCost = getMarginCost(instrument).bind()
+            )
+        }
     }
 
     fun <F> ContextDependencies<F>.getMarginCost(instrument: Instrument) = bindingCatch {

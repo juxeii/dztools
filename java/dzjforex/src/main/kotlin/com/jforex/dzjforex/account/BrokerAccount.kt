@@ -9,10 +9,17 @@ import com.jforex.dzjforex.misc.logger
 import com.jforex.dzjforex.zorro.ACCOUNT_AVAILABLE
 import com.jforex.dzjforex.zorro.ACCOUNT_UNAVAILABLE
 
-object BrokerAccountApi
-{
+object BrokerAccountApi {
+
     fun <F> ContextDependencies<F>.brokerAccount() =
-        createAccountData().handleErrorWith { error -> processError(error) }
+        createAccountData().handleError { error ->
+            logger.error(
+                "BrokerAccount failed! " +
+                        "Error message: ${error.message} " +
+                        "Stack trace: ${getStackTrace(error)}"
+            )
+            BrokerAccountData(ACCOUNT_UNAVAILABLE)
+        }
 
     fun <F> ContextDependencies<F>.createAccountData() =
         map(baseEequity(), tradeVal(), usedMargin()) {
@@ -23,13 +30,4 @@ object BrokerAccountApi
                 marginVal = it.c
             )
         }
-
-    fun <F> ContextDependencies<F>.processError(error: Throwable) = delay {
-        logger.error(
-            "BrokerAccount failed! " +
-                    "Error message: ${error.message} " +
-                    "Stack trace: ${getStackTrace(error)}"
-        )
-        BrokerAccountData(ACCOUNT_UNAVAILABLE)
-    }
 }

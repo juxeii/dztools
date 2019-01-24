@@ -1,6 +1,5 @@
-import org.gradle.internal.impldep.org.apache.ivy.osgi.util.ZipUtil.zip
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.gradle.internal.jvm.Jvm
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "com.jforex.dzplugin"
 version = "0.9.71"
@@ -11,7 +10,7 @@ Project name: ${project.name}
 """
 
 plugins {
-    kotlin("jvm") version "1.3.11"
+    kotlin("jvm") version "1.3.20"
     `maven-publish`
 }
 
